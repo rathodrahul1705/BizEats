@@ -1,0 +1,172 @@
+/* Container */
+.address-container {
+  max-width: 800px;
+  margin: auto;
+  padding: 20px;
+  font-family: 'Poppins', sans-serif;
+}
+
+/* Title */
+.address-title {
+  font-size: 1.5rem;
+  margin-bottom: 10px;
+  text-align: left;
+}
+
+/* Address List */
+.address-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.address-item {
+  padding: 10px;
+  border-radius: 8px;
+  background: #f9f9f9;
+  margin-bottom: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: background 0.3s;
+}
+
+.address-item:hover {
+  background: #e0e0e0;
+}
+
+.selected {
+  background: #d1e7dd;
+  font-weight: bold;
+}
+
+.selected-icon {
+  color: #28a745;
+  margin-right: 8px;
+}
+
+/* Add New Address Button */
+.add-btn {
+  display: inline-flex;
+  align-items: center;
+  background: #e65c00;
+  color: white;
+  padding: 10px 12px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.3s;
+  margin-top: 10px;
+}
+
+.add-btn:hover {
+  background: #cc5200;
+}
+
+/* Slide Panel (Modal) - Opens from Left */
+.slide-panel {
+  position: fixed;
+  left: -100%;
+  top: 0;
+  width: 100%;
+  max-width: 400px;
+  height: 100%;
+  background: white;
+  box-shadow: 2px 0px 10px rgba(0, 0, 0, 0.2);
+  padding: 20px;
+  transition: left 0.3s ease-in-out;
+  z-index: 1000;
+  overflow-y: auto;
+}
+
+.slide-panel.open {
+  left: 0;
+}
+
+.slide-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 1.2rem;
+  font-weight: bold;
+  padding-bottom: 10px;
+}
+
+.close-icon {
+  cursor: pointer;
+  color: red;
+}
+
+/* Map Container */
+.map-container {
+  width: 100%;
+  height: 300px;
+  margin-bottom: 15px;
+}
+
+/* Address Input Fields */
+.address-input {
+  width: 100%;
+  padding: 12px;
+  margin: 10px 0;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 1rem;
+  box-sizing: border-box;
+}
+
+/* Submit Button */
+.submit-btn {
+  width: 100%;
+  padding: 12px;
+  background: #e65c00;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.3s;
+  margin-top: 10px;
+}
+
+.submit-btn:hover {
+  background: #cc5200;
+}
+
+/* Proceed Button */
+.proceed-btn {
+  width: 100%;
+  padding: 12px;
+  background: #e65c00;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.3s;
+  margin-top: 10px;
+}
+
+.proceed-btn:hover {
+  background: #cc5200;
+}
+
+/* Background Overlay */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .slide-panel {
+    max-width: 100%;
+  }
+  .address-input {
+    padding: 10px;
+    font-size: 0.9rem;
+  }
+}

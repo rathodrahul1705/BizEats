@@ -1,0 +1,140 @@
+/* Sign In Modal */
+.signin-modal {
+    position: fixed;
+    top: 0;
+    right: -100%;
+    width: 90%; /* Make it responsive */
+    max-width: 350px; /* Prevent it from getting too large */
+    height: 100vh;
+    background: #fff;
+    box-shadow: -4px 0px 10px rgba(0, 0, 0, 0.2);
+    transition: right 0.4s ease-in-out;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    border-radius: 10px 0 0 10px;
+    box-sizing: border-box; /* Prevents padding from affecting width */
+    z-index: 5 !important;
+}
+
+/* Show Sign In Panel */
+.signin-modal.active {
+    right: 0;
+}
+
+/* Close Button */
+.close-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    color: #555;
+    transition: transform 0.2s ease-in-out;
+}
+
+.close-button:hover {
+    transform: scale(1.1);
+    color: #000;
+}
+
+/* Sign In Title */
+.signin-title {
+    font-size: 22px;
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: #333;
+    text-align: center;
+}
+
+/* Sign In Subtitle */
+.signin-subtext {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+/* Sign In Form */
+.signin-form {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+}
+
+/* Input Fields */
+.signin-input {
+    width: 100%;
+    max-width: 280px; /* Ensures it doesn't exceed modal width */
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 16px;
+    outline: none;
+    transition: border 0.2s ease-in-out;
+    box-sizing: border-box; /* Ensures padding doesn't expand the input */
+}
+
+.signin-input:focus {
+    border-color: #e65c00;
+}
+
+/* Sign In Button */
+.signin-button {
+    background: #e65c00 !important;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.3s ease-in-out;
+    width: 100%;
+    max-width: 280px; /* Matches input field width */
+}
+
+.signin-button:hover {
+    background: #e04e4e;
+}
+
+/* Sign In Footer */
+.signin-footer {
+    margin-top: 15px;
+    font-size: 14px;
+    color: #666;
+    text-align: center;
+}
+
+/* Sign Up Link */
+.signup-link {
+    color: #e65c00;
+    text-decoration: none;
+    font-weight: bold;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    margin-left: 5px;
+}
+
+.signup-link:hover {
+    text-decoration: underline;
+}
+
+/* Make it responsive */
+@media (max-width: 400px) {
+    .signin-modal {
+        width: 95%;
+        max-width: 320px;
+    }
+
+    .signin-input,
+    .signin-button {
+        max-width: 250px;
+    }
+}

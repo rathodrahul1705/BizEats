@@ -1,0 +1,227 @@
+/* Home Container */
+.home-container {
+  width: 100%;
+  margin: 0 auto;
+  font-family: 'Poppins', sans-serif;
+  background: #f8f9fa;  /* Unified background color for entire homepage */
+}
+
+/* Hero Section */
+.hero-section {
+  position: relative;
+  padding: 100px 20px;
+  color: #fff;
+  text-align: left;
+}
+
+.hero-section::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgb(4, 7, 186);
+  z-index: 1;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.hero-content h1 {
+  font-size: 48px;
+  margin-bottom: 20px;
+  text-align: left;
+}
+
+.hero-content p {
+  font-size: 20px;
+  margin-bottom: 30px;
+  text-align: left;
+}
+
+.order-now-btn {
+  background: #ff6b6b;
+  border: none;
+  padding: 15px 30px;
+  font-size: 18px;
+  color: #fff;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.order-now-btn:hover {
+  background: #e63946;
+}
+
+/* Section Headings */
+.section-heading {
+  font-size: 32px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 30px;
+  /* For Section 2 & 3, center the headings */
+  text-align: center;
+  padding: 0 20px;
+}
+
+/* Restaurants Section */
+.restaurants-section {
+  padding: 40px 20px;
+  background: #f8f9fa;  /* Using unified background color */
+}
+
+.restaurant-list {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.restaurant-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+.restaurant-card {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 15px;
+  width: 220px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  text-align: center;
+}
+
+.restaurant-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
+}
+
+.category-image {
+  width: 100%;
+  height: 130px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+
+.category-name {
+  font-size: 20px;
+  font-weight: bold;
+  color: #333;
+}
+
+/* How It Works Section */
+.how-it-works {
+  padding: 40px 20px;
+  background: #f8f9fa;  /* Using unified background color */
+}
+
+.steps-container {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.step-card {
+  background: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  width: 260px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  text-align: left;
+}
+
+.step-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
+}
+
+.step-card h3 {
+  font-size: 20px;
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.step-card p {
+  font-size: 16px;
+  color: #555;
+}
+
+/* Testimonials Section */
+.testimonials-section {
+  padding: 40px 20px;
+  background: #f8f9fa;  /* Unified background color */
+  text-align: center;
+}
+
+.testimonial-list {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.testimonial-card {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 12px;
+  width: 300px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.testimonial-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
+}
+
+.testimonial-card p {
+  font-size: 16px;
+  color: #555;
+  margin-bottom: 10px;
+}
+
+.testimonial-card span {
+  font-size: 14px;
+  color: #888;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .hero-content h1 {
+    font-size: 36px;
+  }
+  
+  .hero-content p {
+    font-size: 18px;
+  }
+  
+  .order-now-btn {
+    font-size: 16px;
+    padding: 12px 25px;
+  }
+  
+  .restaurant-list {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .steps-container {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .testimonial-list {
+    flex-direction: column;
+    align-items: center;
+  }
+}

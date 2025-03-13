@@ -1,0 +1,159 @@
+/* Food Grid Container */
+.food-grid-container {
+    background: #f8f9fa;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    width: 100%;
+}
+
+/* Section Title */
+.food-title {
+    font-size: 32px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 30px;  /* Increase spacing */
+    text-align: left;
+    letter-spacing: 1px;
+    width: 100%;
+}
+
+/* Food Card Wrapper */
+.food-card-wrapper {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 25px;  /* Adjusted gap for better spacing */
+    justify-content: center;
+    width: 100%;
+    max-width: 1200px;
+    margin-top: 10px; /* Add slight spacing between title and grid */
+}
+/* Remove underline from links */
+.food-card-wrapper a {
+    text-decoration: none;  /* Fix underline issue */
+    color: inherit;
+}
+
+/* Food Card */
+.food-card {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+    max-width: 300px;
+    text-align: left;
+    padding: 15px;
+}
+
+.food-card:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Proceed Button (Arrow) */
+.proceed-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #e65c00;
+    transition: transform 0.3s ease-in-out;
+}
+
+.proceed-button:hover {
+    transform: scale(1.2);
+}
+
+/* Food Details */
+.food-details {
+    flex: 1;
+    padding-right: 10px;
+}
+
+/* Food Name - More Emphasized */
+.food-name {
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 5px;
+    text-transform: capitalize;
+}
+
+/* Delivery & Location Styling */
+.food-location,
+.food-delivery {
+    font-size: 14px;
+    color: #555;
+    margin-bottom: 3px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+/* Remove ::before to prevent duplicate icons */
+.food-location::before,
+.food-delivery::before {
+    content: none;
+}
+
+/* Brand Name - Highlighted */
+.food-brand {
+    font-size: 14px;
+    font-weight: bold;
+    color: #222;
+    margin-bottom: 5px;
+    background: #fffae5;
+    padding: 2px 5px;
+    border-radius: 4px;
+    display: inline-block;
+}
+
+/* Price Section */
+.food-price {
+    font-size: 16px;
+    font-weight: bold;
+    color: #d32f2f;
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+/* Food Image */
+.food-image {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 1024px) {
+    .food-card-wrapper {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .food-card-wrapper {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
+    .food-card-wrapper {
+        grid-template-columns: repeat(1, 1fr);
+    }
+}

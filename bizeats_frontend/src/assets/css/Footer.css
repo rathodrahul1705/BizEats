@@ -1,0 +1,27 @@
+Footer Styling
+.footer {
+    background-color: #fff; /* Dark background */
+    color: 000; /* White text */
+    width: 100%;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Wrapper to center content */
+.footer-wrapper {
+    width: 90%;
+    max-width: 1200px;
+    text-align: center;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .footer-wrapper {
+        width: 95%;
+        font-size: 14px;
+    }
+}
