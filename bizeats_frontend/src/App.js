@@ -8,7 +8,7 @@ import FoodList from "./pages/FoodList";
 import Cart from "./pages/Cart";
 import OrderDetails from "./pages/OrderDetails";
 import PaymentOption from "./pages/PaymentOption";
-import Profile from "./pages/Profile";
+import Profile from "./customer/CusProfile";
 
 function App() {
   const [user, setUser] = useState(() => {

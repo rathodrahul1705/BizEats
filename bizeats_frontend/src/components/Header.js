@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { Home, ShoppingCart, LogIn, User, LogOut, List } from "lucide-react";
+import { Home, ShoppingCart, LogIn, User, LogOut} from "lucide-react";
 import SignIn from "./SignIn";
 import "../assets/css/Header.css";
 
@@ -72,10 +72,7 @@ const Header = ({ user, setUser }) => {
                     <Link to="/profile" className="dropdown-item">
                       <User size={16} className="icon" /> Profile
                     </Link>
-                    <Link to="/orders" className="dropdown-item">
-                      <List size={16} className="icon" /> Orders
-                    </Link>
-                    <button onClick={handleLogout} className="dropdown-item logout-btn">
+                    <button onClick={handleLogout} className="dropdown-item logout-btn-header">
                       <LogOut size={16} className="icon" /> Logout
                     </button>
                   </div>

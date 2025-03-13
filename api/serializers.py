@@ -14,10 +14,11 @@ class RegisterSerializer(serializers.ModelSerializer):
         fields = ['full_name', 'email', 'password']
 
     def create(self, validated_data):
+        contact_number = validated_data.get('contact_number', None)
         user = User.objects.create_user(
             email=validated_data['email'],
             full_name=validated_data['full_name'],
             password=validated_data['password'],
-            contact_number= None
+            contact_number= contact_number
         )
         return user

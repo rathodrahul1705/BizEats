@@ -6,8 +6,6 @@ class UserManager(BaseUserManager):
     def create_user(self, email, full_name, contact_number, password=None, role=1):  # Default to Customer
         if not email:
             raise ValueError("Users must have an email address")
-        if not contact_number:
-            raise ValueError("Users must have a contact number")
 
         email = self.normalize_email(email)
         user = self.model(email=email, full_name=full_name, contact_number=contact_number, role=role)
@@ -36,7 +34,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     full_name = models.CharField(max_length=255)
     email = models.EmailField(unique=True)
-    contact_number = models.CharField(max_length=15, unique=True, null=False, blank=False)  # Now required
+    contact_number = models.CharField(max_length=15, unique=True, null=True, blank=True)
     password = models.CharField(max_length=255)
     user_verified = models.BooleanField(default=False)
     created_at = models.DateTimeField(default=now)
