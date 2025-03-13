@@ -46,7 +46,7 @@ const Header = ({ user, setUser }) => {
             {user ? (
               <div className="user-menu">
                 <div
-                  className="user-info"
+                  className="login-user-info"
                   onClick={() => setShowDropdown(!showDropdown)}
                 >
                   <User size={20} className="icon" />
@@ -82,7 +82,7 @@ const Header = ({ user, setUser }) => {
           setUser={(userData) => {
             setUser(userData); // Update user state
             setShowSignIn(false); // Close modal
-            setShowDropdown(true); // Open Profile & Logout section
+            setShowDropdown(false); // Open Profile & Logout section
           }}
         />
       )}
