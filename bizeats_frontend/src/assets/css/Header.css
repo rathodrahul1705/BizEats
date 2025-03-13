@@ -58,6 +58,9 @@
     margin-right: 8px;
 }
 
+.product-logo{
+    text-decoration: none;
+}
 /* Hover Effects */
 .nav-link:hover, .signin-btn:hover {
     background: #e65c00;

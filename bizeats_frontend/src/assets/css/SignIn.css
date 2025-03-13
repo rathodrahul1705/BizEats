@@ -138,3 +138,26 @@
         max-width: 250px;
     }
 }
+
+/* 🔹 Overlay (Blur Effect) */
+.signin-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+    /* backdrop-filter: blur(2px); Adds blur effect */
+    display: none;
+    z-index: 4; /* Behind the modal */
+}
+
+/* Show overlay when active */
+.signin-overlay.active {
+    display: block;
+}
+
+/* 🔹 Blur the whole page when modal is active */
+body.modal-open {
+    overflow: hidden;
+}

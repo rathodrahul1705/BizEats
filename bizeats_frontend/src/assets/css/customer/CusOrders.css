@@ -3,77 +3,89 @@
     max-width: 800px;
     margin: 0 auto;
     padding: 20px;
-    background: #f9f9f9;
+    background: #fff;
     border-radius: 8px;
-  }
-  
-  /* Orders Title */
-  .orders-title {
+    box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Orders Title */
+.orders-title {
     font-size: 22px;
     font-weight: bold;
     color: #333;
     text-align: left;
     margin-bottom: 20px;
-  }
-  
-  /* No Orders Message */
-  .no-orders {
+}
+
+/* No Orders Message */
+.no-orders {
     font-size: 16px;
     color: #777;
     text-align: center;
-  }
-  
-  /* Order List */
-  .orders-list {
+}
+
+/* Order List */
+.orders-list {
     list-style: none;
     padding: 0;
-  }
-  
-  /* Order Item */
-  .order-item {
-    background: white;
+}
+
+/* Order Item */
+.order-item {
+    background: #f9f9f9;
     padding: 15px;
     border-radius: 8px;
-    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.05);
     margin-bottom: 15px;
     display: flex;
     flex-direction: column;
-  }
-  
-  /* Order Header */
-  .order-header {
+}
+
+/* Order Header */
+.order-header {
     display: flex;
     align-items: center;
-    gap: 15px;
-  }
-  
-  /* Order Image */
-  .order-image {
-    width: 100px;
-    height: 100px;
+    gap: 20px;
+}
+
+/* Order Image (Increased Size) */
+.order-image {
+    width: 120px;
+    height: 120px;
     border-radius: 8px;
     object-fit: cover;
     border: 2px solid #ddd;
-  }
-  
-  /* Order Details */
-  .order-details {
-    display: flex;
+}
+
+/* Order Details */
+.order-details {
+    /* display: flex; */
     flex-direction: column;
-    gap: 5px;
+    /* gap: 5px; */
     flex-grow: 1;
-  }
-  
-  .order-id, 
-  .order-date, 
-  .order-location {
+}
+
+/* Restaurant Name */
+.order-restaurant {
+    font-size: 16px;
+    font-weight: bold;
+    color: #222;
+}
+
+/* Order ID and Date */
+.order-id-date {
     font-size: 14px;
     color: #555;
-    margin: 3px 0;
-  }
-  
-  /* Order Status */
-  .order-status {
+}
+
+/* Order Location */
+.order-location {
+    font-size: 14px;
+    color: #888;
+}
+
+/* Order Status */
+.order-status {
     font-size: 14px;
     font-weight: bold;
     text-transform: uppercase;
@@ -81,68 +93,120 @@
     border-radius: 4px;
     display: inline-block;
     width: fit-content;
-  }
-  
-  .order-status.delivered {
+}
+
+.order-status.delivered {
     background: #28a745;
     color: white;
-  }
-  
-  .order-status.cancelled {
+}
+
+.order-status.cancelled {
     background: #dc3545;
     color: white;
-  }
-  
-  .order-status.processing {
+}
+
+.order-status.processing {
     background: #ffc107;
     color: #333;
-  }
-  
-  /* Order Footer */
-  .order-footer {
+}
+
+/* Order Footer (Items and Total Side-by-Side) */
+.order-footer {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: 15px;
-  }
-  
-  /* Order Total */
-  .order-total {
+    margin-top: 10px;
+}
+
+/* Order Items */
+.order-items {
+    font-size: 14px;
+    color: #555;
+    flex-grow: 1;
+}
+
+/* Order Total */
+.order-total {
     font-size: 16px;
     font-weight: bold;
     color: #333;
-  }
-  
-  /* Buttons */
-  .view-details-btn,
-  .show-more-btn {
+}
+
+/* Order Actions */
+.order-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin-top: 10px;
+}
+
+/* View More Details */
+.view-details-text {
+    font-size: 14px;
+    color: #e65c00;
+    cursor: pointer;
+}
+
+.view-details-text:hover {
+    text-decoration: underline;
+}
+
+/* Reorder Button */
+.reorder-btn {
     background: #e65c00;
     color: white;
     border: none;
-    padding: 8px 12px;
+    padding: 8px 14px;
     font-size: 14px;
     border-radius: 4px;
     cursor: pointer;
     transition: 0.3s;
-  }
-  
-  .view-details-btn:hover {
-    background: #e65c00;
-  }
-  
-  /* Show More Button */
-  .show-more-container {
+}
+
+.reorder-btn:hover {
+    background: #d35400;
+}
+
+/* View More Details */
+.view-details-text {
+    font-size: 14px;
+    color: #e65c00;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    margin-top: 5px;
+    transition: color 0.3s ease;
+}
+
+.view-details-text:hover {
+    text-decoration: underline;
+    color: #d35400;
+}
+
+/* Show More Orders Container */
+.show-more-container {
     display: flex;
     justify-content: center;
-    margin-top: 15px;
-  }
-  
-  .show-more-btn {
+    align-items: center;
+    margin-top: 20px;
+    padding: 10px 0;
+}
+
+/* Show More Orders Button */
+.show-more-btn {
     background: #e65c00;
     color: white;
-  }
-  
-  .show-more-btn:hover {
-    background: #e65c00;
-  }
-  
+    border: none;
+    padding: 10px 16px;
+    font-size: 14px;
+    font-weight: bold;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: 0.3s;
+    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.show-more-btn:hover {
+    background: #d35400;
+}

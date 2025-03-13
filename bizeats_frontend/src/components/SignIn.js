@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import "../assets/css/SignIn.css";
 
@@ -14,6 +14,11 @@ const SignIn = ({ onClose, setUser }) => {
   const [messageType, setMessageType] = useState("");
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    document.body.classList.add("modal-open"); // Prevent scrolling and blur background
+    return () => document.body.classList.remove("modal-open"); // Remove on close
+  }, []);
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -23,32 +28,12 @@ const SignIn = ({ onClose, setUser }) => {
     setMessage("");
 
     if (isSignUp) {
-      // Validation checks
-      if (!formData.full_name) {
-        setMessage("Full Name is required");
-        setMessageType("error");
-        return;
-      }
-      if (!formData.email) {
-        setMessage("Email is required");
-        setMessageType("error");
-        return;
-      }
-      if (!formData.password) {
-        setMessage("Password is required");
-        setMessageType("error");
-        return;
-      }
-      if (formData.password.length < 6) {
-        setMessage("Password must be at least 6 characters");
-        setMessageType("error");
-        return;
-      }
-      if (formData.password !== formData.confirmPassword) {
-        setMessage("Passwords do not match");
-        setMessageType("error");
-        return;
-      }
+      // Sign Up Validations
+      if (!formData.full_name) return setMessage("Full Name is required");
+      if (!formData.email) return setMessage("Email is required");
+      if (!formData.password) return setMessage("Password is required");
+      if (formData.password.length < 6) return setMessage("Password must be at least 6 characters");
+      if (formData.password !== formData.confirmPassword) return setMessage("Passwords do not match");
 
       try {
         setLoading(true);
@@ -64,13 +49,7 @@ const SignIn = ({ onClose, setUser }) => {
 
         const data = await response.json();
         setLoading(false);
-
-        if (!response.ok) {
-          if (data.email) {
-            throw new Error(data.email[0]);
-          }
-          throw new Error(data.message || "Registration failed");
-        }
+        if (!response.ok) throw new Error(data.message || "Registration failed");
 
         setMessage("Registration successful! Please sign in.");
         setMessageType("success");
@@ -81,17 +60,9 @@ const SignIn = ({ onClose, setUser }) => {
         setLoading(false);
       }
     } else {
-      // Login logic
-      if (!formData.email) {
-        setMessage("Email is required");
-        setMessageType("error");
-        return;
-      }
-      if (!formData.password) {
-        setMessage("Password is required");
-        setMessageType("error");
-        return;
-      }
+      // Sign In Validations
+      if (!formData.email) return setMessage("Email is required");
+      if (!formData.password) return setMessage("Password is required");
 
       try {
         setLoading(true);
@@ -106,21 +77,16 @@ const SignIn = ({ onClose, setUser }) => {
 
         const data = await response.json();
         setLoading(false);
+        if (!response.ok) throw new Error(data.message || "Login failed");
 
-        if (!response.ok) {
-          if (data.email) throw new Error(data.email[0]);
-          throw new Error(data.message || "Login failed");
-        }
-
-        // Store tokens and user info
         localStorage.setItem("accessToken", data.access);
         localStorage.setItem("refreshToken", data.refresh);
         localStorage.setItem("user", JSON.stringify(data.user));
 
-        setUser(data.user); // Update state in App.js
+        setUser(data.user);
         setMessage("Login successful! Redirecting...");
         setMessageType("success");
-        onClose(); // Close the modal after successful login
+        onClose();
       } catch (err) {
         setMessage(err.message);
         setMessageType("error");
@@ -130,72 +96,74 @@ const SignIn = ({ onClose, setUser }) => {
   };
 
   return (
-    <div className="signin-modal active">
-      <button className="close-button" onClick={onClose}>
-        <X size={24} />
-      </button>
+    <div className="signin-container">
+      {/* 🔹 Overlay (Blurred Background) */}
+      <div className="signin-overlay active" onClick={onClose}></div>
 
-      {message && <p className={`message ${messageType}`}>{message}</p>}
+      {/* 🔹 Sign In Modal */}
+      <div className="signin-modal active">
+        <button className="close-button" onClick={onClose}>
+          <X size={24} />
+        </button>
 
-      <h2 className="signin-title">
-        {isSignUp ? "Create Account 🎉" : "Welcome Back! 👋"}
-      </h2>
-      <p className="signin-subtext">
-        {isSignUp ? "Join us today!" : "Sign in to continue"}
-      </p>
+        {message && <p className={`message ${messageType}`}>{message}</p>}
 
-      <form className="signin-form" onSubmit={handleSubmit}>
-        {isSignUp && (
+        <h2 className="signin-title">{isSignUp ? "Create Account 🎉" : "Welcome Back! 👋"}</h2>
+        <p className="signin-subtext">{isSignUp ? "Join us today!" : "Sign in to continue"}</p>
+
+        <form className="signin-form" onSubmit={handleSubmit}>
+          {isSignUp && (
+            <input
+              type="text"
+              name="full_name"
+              placeholder="Full Name"
+              className="signin-input"
+              value={formData.full_name}
+              onChange={handleChange}
+              required
+            />
+          )}
           <input
             type="text"
-            name="full_name"
-            placeholder="Full Name"
+            name="email"
+            placeholder="Email"
             className="signin-input"
-            value={formData.full_name}
+            value={formData.email}
             onChange={handleChange}
             required
           />
-        )}
-        <input
-          type="text"
-          name="email"
-          placeholder="Email or Phone"
-          className="signin-input"
-          value={formData.email}
-          onChange={handleChange}
-          required
-        />
-        <input
-          type="password"
-          name="password"
-          placeholder="Password"
-          className="signin-input"
-          value={formData.password}
-          onChange={handleChange}
-          required
-        />
-        {isSignUp && (
           <input
             type="password"
-            name="confirmPassword"
-            placeholder="Confirm Password"
+            name="password"
+            placeholder="Password"
             className="signin-input"
-            value={formData.confirmPassword}
+            value={formData.password}
             onChange={handleChange}
             required
           />
-        )}
-        <button type="submit" className="signin-button" disabled={loading}>
-          {loading ? "Processing..." : isSignUp ? "Sign Up" : "Login"}
-        </button>
-      </form>
+          {isSignUp && (
+            <input
+              type="password"
+              name="confirmPassword"
+              placeholder="Confirm Password"
+              className="signin-input"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              required
+            />
+          )}
+          <button type="submit" className="signin-button" disabled={loading}>
+            {loading ? "Processing..." : isSignUp ? "Sign Up" : "Login"}
+          </button>
+        </form>
 
-      <p className="signin-footer">
-        {isSignUp ? "Already have an account?" : "Don't have an account?"}
-        <button className="signup-link" onClick={() => setIsSignUp(!isSignUp)}>
-          {isSignUp ? " Sign in" : " Sign up"}
-        </button>
-      </p>
+        <p className="signin-footer">
+          {isSignUp ? "Already have an account?" : "Don't have an account?"}
+          <button className="signup-link" onClick={() => setIsSignUp(!isSignUp)}>
+            {isSignUp ? " Sign in" : " Sign up"}
+          </button>
+        </p>
+      </div>
     </div>
   );
 };

@@ -19,9 +19,11 @@ const Header = ({ user, setUser }) => {
   return (
     <header className="header-container">
       {/* Logo */}
-      <div className="logo">
-        Biz<span className="logo-highlight">Eats</span>
-      </div>
+      <Link to="/" className="product-logo">
+        <div className="logo">
+          Biz<span className="logo-highlight">Eats</span>
+        </div>
+      </Link>
 
       {/* Navigation */}
       <nav className="nav-menu">
