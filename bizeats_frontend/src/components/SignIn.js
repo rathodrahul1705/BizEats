@@ -15,7 +15,7 @@ const SignIn = ({ onClose, setUser }) => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    document.body.classList.add("modal-open"); // Prevent scrolling and blur background
+    document.body.classList.add("modal-open"); // Prevent scrolling & blur background
     return () => document.body.classList.remove("modal-open"); // Remove on close
   }, []);
 

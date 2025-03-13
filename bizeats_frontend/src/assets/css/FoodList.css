@@ -1,13 +1,13 @@
 /* Food Grid Container */
 .food-grid-container {
-    background: #f8f9fa;
+    /* background: #f8f9fa; */
     text-align: center;
     display: flex;
     flex-direction: column;
-    min-height: 100vh;
+    /* min-height: 100vh; */
     justify-content: center;
     align-items: center;
-    padding: 20px;
+    padding:40px 15px 60px;
     width: 100%;
 }
 
@@ -30,7 +30,7 @@
     justify-content: center;
     width: 100%;
     max-width: 1200px;
-    margin-top: 10px; /* Add slight spacing between title and grid */
+    margin-top: 20px; /* Add slight spacing between title and grid */
 }
 /* Remove underline from links */
 .food-card-wrapper a {
@@ -41,24 +41,30 @@
 /* Food Card */
 .food-card {
     position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
     background: white;
     border-radius: 12px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
     overflow: hidden;
     transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
     max-width: 300px;
-    text-align: left;
-    padding: 15px;
 }
 
 .food-card:hover {
     transform: scale(1.05);
     box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
 }
-
+.food-card-inner{
+    position: relative;
+}
+.food-card-inner::before{
+    content: '';
+    position: absolute;
+    background: linear-gradient(rgba(27, 30, 36, 0) 0%, rgb(27, 30, 36) 84.21%);
+    height: 60px;
+    width: 100%;
+    left: 0;
+    bottom: 0;
+}
 /* Proceed Button (Arrow) */
 .proceed-button {
     position: absolute;
@@ -67,7 +73,7 @@
     background: none;
     border: none;
     cursor: pointer;
-    color: #e65c00;
+    color: #fff;
     transition: transform 0.3s ease-in-out;
 }
 
@@ -76,9 +82,10 @@
 }
 
 /* Food Details */
-.food-details {
+.food-section .food-details {
     flex: 1;
-    padding-right: 10px;
+    padding: 15px;
+    margin-top: 0;
 }
 
 /* Food Name - More Emphasized */
@@ -112,29 +119,32 @@
 .food-brand {
     font-size: 14px;
     font-weight: bold;
-    color: #222;
     margin-bottom: 5px;
-    background: #fffae5;
+    background: #e65c00;
     padding: 2px 5px;
     border-radius: 4px;
     display: inline-block;
+    color: #fff;
+    margin-top: 20px;
 }
 
 /* Price Section */
-.food-price {
-    font-size: 16px;
-    font-weight: bold;
-    color: #d32f2f;
-    margin-top: 8px;
-    display: flex;
-    align-items: center;
-    gap: 5px;
+.food-section .food-price {
+    font-size: 17px;
+    font-weight: 600;
+    position: absolute;
+    bottom: 0;
+    color: #fff;
+    width: 100%;
+    padding: 5px 15px;
+    text-align: left;
 }
 
 /* Food Image */
-.food-image {
-    width: 100px;
-    height: 100px;
+.food-grid-container .food-image {
+    width:100%;
+    display: block;
+    height: 150px;
     object-fit: cover;
     border-radius: 8px;
 }
@@ -150,10 +160,21 @@
     .food-card-wrapper {
         grid-template-columns: repeat(2, 1fr);
     }
+    .food-title{
+        font-size: 20px;
+    }
 }
 
 @media (max-width: 480px) {
     .food-card-wrapper {
         grid-template-columns: repeat(1, 1fr);
+    }
+    
+    .food-section{
+        width: 100%;
+    }
+    .food-card{
+        width: 100%;
+        max-width: 100%;
     }
 }

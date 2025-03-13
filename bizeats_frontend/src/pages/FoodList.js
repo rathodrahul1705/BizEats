@@ -123,6 +123,11 @@ const FoodGrid = () => {
           {foodData.map((food) => (
             <Link to="/order-details" className="food-card-wrapper-link" key={food.id}>
               <div className="food-card">
+                <div className="food-card-inner">
+                  <img src={food.image} alt={food.title} className="food-image" />
+                  <p className="food-price">ITEM AT ₹{food.price}</p> {/* Display price */}
+                </div>
+                
                 <button className="proceed-button">
                   <ArrowRightCircle size={20} />
                 </button>
@@ -131,9 +136,9 @@ const FoodGrid = () => {
                   <p className="food-location">📍 {food.location}</p>
                   <p className="food-delivery">⏳ {food.deliveryTime}</p>
                   <p className="food-brand">{food.brand}</p> {/* Display brand name */}
-                  <p className="food-price">ITEM AT ₹{food.price}</p> {/* Display price */}
+                  
                 </div>
-                <img src={food.image} alt={food.title} className="food-image" />
+                
               </div>
             </Link>
           ))}

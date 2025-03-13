@@ -1,16 +1,16 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { Home, ShoppingCart, LogIn, User, LogOut} from "lucide-react";
+import { Home, ShoppingCart, LogIn, User, LogOut } from "lucide-react";
 import SignIn from "./SignIn";
 import "../assets/css/Header.css";
 
 const Header = ({ user, setUser }) => {
   const [showSignIn, setShowSignIn] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
-  let dropdownTimeout;
 
   const handleLogout = () => {
     setUser(null);
+    setShowDropdown(false); // Hide dropdown on logout
     localStorage.removeItem("user");
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
@@ -44,33 +44,18 @@ const Header = ({ user, setUser }) => {
           {/* User Authentication Section */}
           <li className="auth-section">
             {user ? (
-              <div 
-                className="user-menu"
-                onMouseEnter={() => {
-                  clearTimeout(dropdownTimeout);
-                  setShowDropdown(true);
-                }}
-                onMouseLeave={() => {
-                  dropdownTimeout = setTimeout(() => setShowDropdown(false), 200);
-                }}
-              >
-                <div className="user-info">
+              <div className="user-menu">
+                <div
+                  className="user-info"
+                  onClick={() => setShowDropdown(!showDropdown)}
+                >
                   <User size={20} className="icon" />
                   <span className="username">{user.full_name}</span>
                 </div>
 
                 {/* Dropdown Menu */}
                 {showDropdown && (
-                  <div 
-                    className="dropdown-menu"
-                    onMouseEnter={() => {
-                      clearTimeout(dropdownTimeout);
-                      setShowDropdown(true);
-                    }}
-                    onMouseLeave={() => {
-                      dropdownTimeout = setTimeout(() => setShowDropdown(false), 200);
-                    }}
-                  >
+                  <div className="dropdown-menu">
                     <Link to="/profile" className="dropdown-item">
                       <User size={16} className="icon" /> Profile
                     </Link>
@@ -91,7 +76,16 @@ const Header = ({ user, setUser }) => {
       </nav>
 
       {/* Sign In Modal */}
-      {showSignIn && <SignIn onClose={() => setShowSignIn(false)} setUser={setUser} />}
+      {showSignIn && (
+        <SignIn
+          onClose={() => setShowSignIn(false)}
+          setUser={(userData) => {
+            setUser(userData); // Update user state
+            setShowSignIn(false); // Close modal
+            setShowDropdown(true); // Open Profile & Logout section
+          }}
+        />
+      )}
     </header>
   );
 };

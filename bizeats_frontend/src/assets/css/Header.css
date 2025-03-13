@@ -1,4 +1,11 @@
 /* Header Container */
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+    text-decoration: none;
+}
 .header-container {
     background: white;
     box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
@@ -43,8 +50,8 @@
     align-items: center;
     text-decoration: none;
     color: #333;
-    font-size: 18px;
-    font-weight: 500;
+    font-size: 16px;
+    font-weight: 600;
     padding: 8px 16px;
     border-radius: 6px;
     transition: all 0.3s ease-in-out;
@@ -58,35 +65,53 @@
     margin-right: 8px;
 }
 
-.product-logo{
-    text-decoration: none;
-}
 /* Hover Effects */
 .nav-link:hover, .signin-btn:hover {
     background: #e65c00;
     color: white;
 }
+.content{
+    min-height: calc(100vh - 108px);
+    background: #f8f9fa;
+}
 
 /* Responsive Design */
 @media (max-width: 768px) {
     .header-container {
-        padding: 12px 16px;
+        padding: 12px 15px;
     }
 
     .nav-menu ul {
-        gap: 10px;
+        gap: 0px;
     }
 
     .nav-link, .signin-btn {
-        font-size: 16px;
-        padding: 6px 10px;
+        font-size: 15px;
+        padding: 6px 8px;
     }
 
     .logo {
         font-size: 24px;
     }
+    .content{
+        min-height: calc(100vh - 93px);
+    }
 }
-
+@media (max-width: 400px) {
+    .nav-link, .signin-btn {
+        font-size: 13px;
+        padding: 6px 5px;
+    }
+}
+@media (max-width: 370px) {
+    .nav-link, .signin-btn {
+        font-size: 0px;
+        padding: 6px 8px;
+    }
+    .icon{
+        margin: 0;
+    }
+}
 /* User menu wrapper */
 .user-menu {
     position: relative;
@@ -129,13 +154,10 @@
   }
   
   /* Logout button style */
-  .logout-btn-header {
+  .logout-btn {
     background: none;
     border: none;
     text-align: left;
     width: 100%;
     cursor: pointer;
   }
-  
-  
-  

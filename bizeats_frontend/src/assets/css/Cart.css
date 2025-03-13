@@ -2,19 +2,25 @@
    .step-indicator {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 20px;
-    padding: 10px;
-    background: #f8f9fa;
+    margin: 20px 0;
+    background: #fff;
     border-radius: 8px;
   }
-  
+   
   .step {
     flex: 1;
     text-align: center;
-    padding: 8px;
+    padding: 15px 8px;
     font-weight: bold;
     color: gray;
     border-bottom: 3px solid transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 5px;
+  }
+  .step svg{
+    margin-right: 10px;
   }
   
   .step.active {
@@ -30,6 +36,10 @@
   
   .cart-title {
     text-align: left;
+    font-size: 26px;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 10px;
   }
   
   .cart-list {
@@ -39,29 +49,66 @@
   
   .cart-item {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
+    background: #fff;
+    padding: 15px;
     margin-bottom: 15px;
+    border-radius: 12px;
+    box-shadow: 0px 3px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease-in-out;
   }
   
   .cart-image {
-    width: 60px;
-    height: 60px;
+    width: 200px;
+    height: 100%;
     object-fit: cover;
-    border-radius: 8px;
-    margin-right: 10px;
+    border-radius: 10px;
+    margin-right: 15px;
+    height: 180px;
+    display: block;
   }
   
   .cart-details {
     flex: 1;
+    position: relative;
   }
-  
+  .cart-remove{
+    position: absolute;
+    right: 0px;
+    top: 0px;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    opacity: 0.5;
+    transition: all 0.3s;
+  }
+  .cart-remove:hover{
+    opacity: 1;
+  }
+  .total-section{
+    font-size: 20px;
+    line-height: 24px;
+    font-weight: 600;
+  }
   .cart-item-title {
-    font-size: 16px;
-    font-weight: bold;
+    font-size: 24px;
+    font-weight: 600;
+    color: #222;
+    margin-bottom: 15px;
+  }
+  .cart-item-description{
+    font-size: 14px;
+    color: #555;
+    line-height: 20px;
+    margin-bottom: 6px;
   }
   
   .cart-item-price {
-    color: #28a745;
+    font-size: 20px;
+    line-height: 24px;
+    font-weight: 600;
+    color: #000;
+    margin-top: 6px;
   }
   
   .cart-summary {
@@ -133,4 +180,20 @@
 .add-items-btn:hover {
   background: #e65c00;
   transform: scale(1.05);
+}
+
+@media (max-width: 600px) {
+  .cart-item{
+    display: block;
+  }
+  .cart-image{
+    width: 100%;
+    margin-right: 0;
+  }
+  .cart-details{
+    margin-top: 15px;
+  }
+  .cart-item-title{
+    font-size: 20px;
+  }
 }

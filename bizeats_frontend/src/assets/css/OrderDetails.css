@@ -4,7 +4,7 @@
     max-width: 800px;
     margin: auto;
     text-align: left;
-    font-family: 'Poppins', sans-serif;
+    /* min-height: calc(100vh - 100px); */
 }
 
 /* Store Name (Outside the Card) */
@@ -67,12 +67,13 @@
 }
 
 /* Food Image */
-.food-image {
-    width: 90px;
-    height: 90px;
+.food-list .food-image {
+    width: 200px;
+    height: 100%;
     object-fit: cover;
     border-radius: 10px;
     margin-right: 15px;
+    height: 180px;
 }
 
 /* Food Details */
@@ -83,16 +84,17 @@
 
 /* Food Title */
 .food-title {
-    font-size: 18px;
+    font-size: 24px;
     font-weight: 600;
     color: #222;
-    margin-bottom: 5px;
+    margin-bottom: 15px;
 }
 
 /* Food Description */
 .food-description {
     font-size: 14px;
     color: #555;
+    line-height: 20px;
     margin-bottom: 6px;
 }
 
@@ -104,10 +106,11 @@
 }
 
 /* Food Price */
-.food-price {
-    font-size: 17px;
+.food-list .food-price {
+    font-size: 20px;
+    line-height: 24px;
     font-weight: 600;
-    color: #e65c00;
+    color: #000;
     margin-top: 6px;
 }
 
@@ -115,7 +118,7 @@
 .cart-actions {
     display: flex;
     align-items: center;
-    margin-top: 10px;
+    margin-top: 15px;
 }
 
 /* Cart Buttons */
@@ -125,7 +128,9 @@
     cursor: pointer;
     transition: transform 0.2s;
 }
-
+.cart-actions .cart-btn svg{
+    stroke: #e65c00;
+}
 .cart-btn:hover {
     transform: scale(1.1);
 }
@@ -135,6 +140,7 @@
     font-size: 18px;
     font-weight: bold;
     margin: 0 12px;
+    color: #e65c00;
 }
 
 /* View Cart Button */
@@ -160,31 +166,6 @@
 
 .view-cart-btn:hover {
     background: #cc5200;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-    .food-item {
-        flex-direction: row;
-        align-items: center;
-    }
-
-    .food-image {
-        width: 80px;
-        height: 80px;
-    }
-
-    .store-title {
-        font-size: 22px;
-    }
-
-    .store-details-card {
-        padding: 15px;
-    }
-
-    .store-info {
-        font-size: 14px;
-    }
 }
 
 /* Filter Container */
@@ -221,3 +202,41 @@
 .filter-btn:hover {
     background: #ddd;
 }
+/* Responsive */
+@media (max-width: 768px) {
+    .food-item {
+        flex-direction: column;
+    }
+
+    .food-list .food-image {
+        width: 100%;
+        height: 150px;
+        margin-right: 0;
+    }
+    .food-details{
+        margin-top: 10px;
+    }
+    .store-title {
+        font-size: 22px;
+    }
+
+    .store-details-card {
+        padding: 15px;
+    }
+
+    .store-info {
+        font-size: 14px;
+    }
+    .filter-btn:hover {
+        background: #e65c00;
+    }
+    .food-title{
+        font-size: 20px;
+    }
+}
+@media (max-width: 480px) {
+    .filter-btn{
+        padding: 10px 15px 10px 10px;
+    }
+}
+

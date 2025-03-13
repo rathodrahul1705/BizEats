@@ -4,6 +4,7 @@ import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import "../assets/css/AddressSelection.css";
+import loactionIcon from "../assets/img/loactionIcon.svg";
 
 // Fix default icon issues in react-leaflet
 delete L.Icon.Default.prototype._getIconUrl;
@@ -109,7 +110,8 @@ const AddressSelection = ({ onAddressSelect }) => {
             onClick={() => handleSelectAddress(address)}
           >
             {selectedAddress === address && <CheckCircle size={20} className="selected-icon" />}
-            {address}
+            <span className="loactionName"><img src={loactionIcon} alt="Location Icon" /> Home</span>
+            <p className="addressData">{address}</p>
           </li>
         ))}
       </ul>

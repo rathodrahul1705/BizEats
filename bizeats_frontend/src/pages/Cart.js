@@ -127,9 +127,9 @@ const Cart = () => {
 
       {/* Step 3: Payment */}
       {step === 3 && selectedAddress && (
-        <div>
+        <div className="orderSummaryHolder">
           <h3>Order Summary</h3>
-          <p>
+          <p className="subTitleText">
             <strong>Deliver to:</strong> {selectedAddress}
           </p>
           <ul className="cart-list">
@@ -188,10 +188,11 @@ const Cart = () => {
                     <button className="cart-btn" onClick={() => increaseQuantity(item.id)}>
                       <PlusCircle size={20} />
                     </button>
-                    <button className="cart-remove" onClick={() => removeItem(item.id)}>
-                      <Trash2 size={20} />
-                    </button>
+                    
                   </div>
+                  <button className="cart-remove" onClick={() => removeItem(item.id)}>
+                    <Trash2 size={20} />
+                  </button>
                 </div>
               </li>
             ))}

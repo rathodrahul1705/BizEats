@@ -1,10 +1,31 @@
-/* Sign In Modal */
+/* 🔹 Overlay for Blurred Background */
+.signin-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5); /* Dark overlay */
+    z-index: 4; /* Below modal */
+    display: none;
+}
+
+.signin-overlay.active {
+    display: block;
+}
+
+/* 🔹 Prevent background scrolling when modal is open */
+body.modal-open {
+    overflow: hidden;
+}
+
+/* 🔹 Sign In Modal */
 .signin-modal {
     position: fixed;
     top: 0;
     right: -100%;
-    width: 90%; /* Make it responsive */
-    max-width: 350px; /* Prevent it from getting too large */
+    width: 90%;
+    max-width: 350px;
     height: 100vh;
     background: #fff;
     box-shadow: -4px 0px 10px rgba(0, 0, 0, 0.2);
@@ -14,7 +35,7 @@
     align-items: center;
     padding: 20px;
     border-radius: 10px 0 0 10px;
-    box-sizing: border-box; /* Prevents padding from affecting width */
+    box-sizing: border-box;
     z-index: 5 !important;
 }
 
@@ -69,14 +90,14 @@
 /* Input Fields */
 .signin-input {
     width: 100%;
-    max-width: 280px; /* Ensures it doesn't exceed modal width */
+    max-width: 280px;
     padding: 12px;
     border: 1px solid #ddd;
     border-radius: 8px;
     font-size: 16px;
     outline: none;
     transition: border 0.2s ease-in-out;
-    box-sizing: border-box; /* Ensures padding doesn't expand the input */
+    box-sizing: border-box;
 }
 
 .signin-input:focus {
@@ -95,7 +116,7 @@
     cursor: pointer;
     transition: background 0.3s ease-in-out;
     width: 100%;
-    max-width: 280px; /* Matches input field width */
+    max-width: 280px;
 }
 
 .signin-button:hover {
@@ -126,7 +147,32 @@
     text-decoration: underline;
 }
 
-/* Make it responsive */
+/* 🔹 Order Summary Styling */
+.orderSummaryHolder h3 {
+    font-size: 24px;
+    font-weight: 600;
+    color: #222;
+    margin-bottom: 15px;
+}
+
+.subTitleText {
+    font-size: 18px;
+    line-height: 20px;
+    margin-bottom: 20px;
+}
+
+/* 🔹 Make it Responsive */
+@media (max-width: 767px) {
+    .orderSummaryHolder h3 {
+        font-size: 20px;
+        line-height: 24px;
+    }
+
+    .subTitleText {
+        font-size: 16px;
+    }
+}
+
 @media (max-width: 400px) {
     .signin-modal {
         width: 95%;
@@ -137,27 +183,4 @@
     .signin-button {
         max-width: 250px;
     }
-}
-
-/* 🔹 Overlay (Blur Effect) */
-.signin-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
-    /* backdrop-filter: blur(2px); Adds blur effect */
-    display: none;
-    z-index: 4; /* Behind the modal */
-}
-
-/* Show overlay when active */
-.signin-overlay.active {
-    display: block;
-}
-
-/* 🔹 Blur the whole page when modal is active */
-body.modal-open {
-    overflow: hidden;
 }
