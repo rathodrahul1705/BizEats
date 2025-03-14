@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import "../assets/css/SignIn.css";
 
-const SignIn = ({ onClose, setUser }) => {
+const SignIn = ({ onClose, setUser = () => {} }) => {  // ✅ Default empty function for safety
   const [isSignUp, setIsSignUp] = useState(false);
   const [formData, setFormData] = useState({
     full_name: "",
@@ -82,8 +82,14 @@ const SignIn = ({ onClose, setUser }) => {
         localStorage.setItem("accessToken", data.access);
         localStorage.setItem("refreshToken", data.refresh);
         localStorage.setItem("user", JSON.stringify(data.user));
+        
+        console.log("data.user===",data.user)
+        if (typeof setUser === "function") {  // ✅ Ensure setUser is a function before calling it
+          setUser(data.user);
+        } else {
+          console.warn("setUser is not a function");
+        }
 
-        setUser(data.user);
         setMessage("Login successful! Redirecting...");
         setMessageType("success");
         onClose();

@@ -15,7 +15,7 @@ const foodData = [
   },
   {
     id: 2,
-    title: "Healthy Lunch ddddd",
+    title: "Healthy Lunch ddddd tttt",
     image: require("../assets/img/lunch_image.jpg"),
     deliveryTime: "25 min",
     location: "Urban Bites",

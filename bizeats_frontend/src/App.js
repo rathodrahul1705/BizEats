@@ -9,6 +9,8 @@ import Cart from "./pages/Cart";
 import OrderDetails from "./pages/OrderDetails";
 import PaymentOption from "./pages/PaymentOption";
 import Profile from "./customer/CusProfile";
+import RestHome from "./restaurent/RestHome";
+import RestaurantRegistration from "./restaurent/RestaurantRegistration";
 
 function PrivateRoute({ children, user }) {
   return user ? children : <Navigate to="/" />;
@@ -40,6 +42,17 @@ function App() {
             <Route path="/cart" element={<Cart />} />
             <Route path="/order-details" element={<OrderDetails />} />
             <Route path="/payments" element={<PaymentOption />} />
+            <Route path="/register-your-restaurent" element={<RestHome setUser={setUser} />} />
+
+            {/* Protected Restaurant Registration Route */}
+            <Route
+              path="/register-restaurant"
+              element={
+                <PrivateRoute user={user}>
+                  <RestaurantRegistration user={user} setUser={setUser} />
+                </PrivateRoute>
+              }
+            />
 
             {/* Protected Profile Route */}
             <Route

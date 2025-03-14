@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { Home, ShoppingCart, LogIn, User, LogOut } from "lucide-react";
+import { Home, ShoppingCart, LogIn, User, LogOut, Store } from "lucide-react";
 import SignIn from "./SignIn";
 import "../assets/css/Header.css";
 
@@ -10,7 +10,7 @@ const Header = ({ user, setUser }) => {
 
   const handleLogout = () => {
     setUser(null);
-    setShowDropdown(false); // Hide dropdown on logout
+    setShowDropdown(false);
     localStorage.removeItem("user");
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
@@ -32,6 +32,12 @@ const Header = ({ user, setUser }) => {
             <Link to="/" className="nav-link">
               <Home size={20} className="icon" />
               Home
+            </Link>
+          </li>
+          <li>
+            <Link to="/register-your-restaurent" className="nav-link">
+              <Store size={20} className="icon" />
+              Register Restaurent
             </Link>
           </li>
           <li>
