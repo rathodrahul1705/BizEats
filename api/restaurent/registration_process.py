@@ -163,11 +163,17 @@ class RestaurantByUserAPIView(APIView):
         try:
             # Fetch the user
             user = User.objects.get(id=user_id)
+
             # Fetch all restaurants associated with the user
-            restaurants = RestaurantMaster.objects.filter(user=user)
-            # Serialize the data
-            serializer = RestaurantSerializer(restaurants, many=True)
-            # Return the response
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            active_restaurants = RestaurantMaster.objects.filter(user=user, restaurant_status=1)
+            live_restaurants = RestaurantMaster.objects.filter(user=user, restaurant_status=2)
+
+            data = {
+                "active_restaurants": RestaurantSerializer(active_restaurants, many=True).data,
+                "live_restaurants": RestaurantSerializer(live_restaurants, many=True).data,
+            }
+
+            return Response(data, status=status.HTTP_200_OK)
+        
         except User.DoesNotExist:
             return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)

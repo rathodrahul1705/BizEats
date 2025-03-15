@@ -107,3 +107,7 @@ class RestaurantSerializer(serializers.ModelSerializer):
     class Meta:
         model = RestaurantMaster
         fields = ["restaurant_id", "restaurant_name", "restaurant_status"]
+
+class RestaurantListSerializer(serializers.Serializer):
+    active_restaurants = RestaurantSerializer(many=True)
+    live_restaurants = RestaurantSerializer(many=True)

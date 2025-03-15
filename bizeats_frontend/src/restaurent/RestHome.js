@@ -1,16 +1,18 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, CheckCircle } from "lucide-react";
 import SignIn from "../components/SignIn";
 import ExistingRestaurant from "./ExistingRestaurant"; // Import the modal
 import "../assets/css/restaurent/RestHome.css";
+import API_ENDPOINTS from "../components/config/apiConfig";
+import fetchData from "../components/services/apiService"
 
 const RestHome = ({ setUser }) => {
   const navigate = useNavigate();
   const [showSignIn, setShowSignIn] = useState(false);
   const [showExistingRestaurant, setShowExistingRestaurant] = useState(false); // State for modal visibility
+  const [restaurantsList, setrestaurantsList] = useState([]);
 
-  // Get user from localStorage
   const user = localStorage.getItem("user")
     ? JSON.parse(localStorage.getItem("user"))
     : null;
@@ -22,10 +24,28 @@ const RestHome = ({ setUser }) => {
       setShowSignIn(true);
     }
   };
+  
 
   const handleViewExistingApplication = () => {
     setShowExistingRestaurant(true); // Open the modal
   };
+
+  useEffect(() => {
+    if (!user?.user_id) return;
+
+    const fetchRestaurants = async () => {
+
+      try {
+        const response = await fetchData(API_ENDPOINTS.RESTAURANT.BY_USER(user?.user_id), "GET", null, localStorage.getItem("access"));
+        setrestaurantsList(response);
+      } catch (error) {
+        console.error("Error fetching restaurants:", error);
+      } finally {
+      }
+    };
+
+    fetchRestaurants();
+  }, [user?.user_id]);
 
   return (
     <div className="rest-home">
@@ -44,7 +64,7 @@ const RestHome = ({ setUser }) => {
             <ArrowRight size={20} className="cta-icon" />
           </button>
           {
-            user ? (
+            user && restaurantsList?.active_restaurants?.length > 0 ? (
 
               <button
               className="rest-cta secondary"
@@ -110,7 +130,7 @@ const RestHome = ({ setUser }) => {
 
       {/* Existing Restaurant Modal */}
       {showExistingRestaurant && (
-        <ExistingRestaurant onClose={() => setShowExistingRestaurant(false)}/>
+        <ExistingRestaurant onClose={() => setShowExistingRestaurant(false)} restaurantsList={restaurantsList}/>
       )}
     </div>
   );
