@@ -1,0 +1,185 @@
+/* Existing Restaurant Modal Styles */
+.existing-restaurant-modal {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1000;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+/* Overlay Styles */
+.existing-restaurant-modal .modal-overlay {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background-color: rgba(0, 0, 0, 0.6); /* Dark semi-transparent background */
+  backdrop-filter: blur(5px); /* Blur effect for the background */
+  z-index: 1001;
+}
+
+/* Modal Content */
+.existing-restaurant-modal .modal-content {
+  position: relative;
+  width: 500px;
+  height: 100%;
+  background-color: #fff;
+  box-shadow: -2px 0 10px rgba(0, 0, 0, 0.2);
+  z-index: 1002;
+  padding: 24px;
+  overflow-y: auto;
+  animation: slideIn 0.3s ease-in-out; /* Slide-in animation */
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+/* Close Button */
+.existing-restaurant-modal .close-button {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 20px;
+  color: #333;
+  transition: color 0.3s ease;
+}
+
+.existing-restaurant-modal .close-button:hover {
+  color: #ff0000;
+}
+
+/* Modal Header */
+.existing-restaurant-modal .modal-content h2 {
+  margin-bottom: 20px;
+  font-size: 24px;
+  color: #333;
+  font-weight: 600;
+}
+
+/* Tab Navigation */
+.existing-restaurant-modal .tab-navigation {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #eee;
+}
+
+.existing-restaurant-modal .tab-button {
+  flex: 1;
+  padding: 12px;
+  font-size: 16px;
+  font-weight: 500;
+  color: #666;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.existing-restaurant-modal .tab-button.active {
+  color: #007bff;
+  border-bottom: 2px solid #007bff;
+}
+
+.existing-restaurant-modal .tab-button:hover {
+  color: #007bff;
+}
+
+/* Card Container */
+.existing-restaurant-modal .card-container {
+  display: grid;
+  gap: 16px;
+}
+
+/* Card Styles */
+.existing-restaurant-modal .card {
+  background-color: #fff;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.existing-restaurant-modal .card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.existing-restaurant-modal .card h3 {
+  margin-bottom: 12px;
+  font-size: 18px;
+  color: #333;
+  font-weight: 600;
+}
+
+.existing-restaurant-modal .card p {
+  margin: 8px 0;
+  font-size: 14px;
+  color: #555;
+}
+
+.existing-restaurant-modal .card .status {
+  font-weight: 500;
+}
+
+.existing-restaurant-modal .card .status.in-progress {
+  color: #ffa500; /* Orange for In Progress */
+}
+
+.existing-restaurant-modal .card .status.completed {
+  color: #28a745; /* Green for Completed */
+}
+
+/* Card Button Styles */
+.existing-restaurant-modal .card-button {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #fff;
+  background-color: #007bff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  margin-top: 12px;
+}
+
+.existing-restaurant-modal .card-button.continue {
+  background-color: #007bff; /* Blue for Continue */
+}
+
+.existing-restaurant-modal .card-button.edit {
+  background-color: #6c757d; /* Gray for Edit */
+}
+
+.existing-restaurant-modal .card-button:hover {
+  opacity: 0.9;
+}
+
+/* Responsive Design */
+@media (max-width: 480px) {
+  .existing-restaurant-modal .modal-content {
+    width: 100%;
+    padding: 16px;
+  }
+
+  .existing-restaurant-modal .card-container {
+    grid-template-columns: 1fr;
+  }
+}

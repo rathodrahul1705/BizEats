@@ -51,6 +51,7 @@ class OTPVerificationView(APIView):
             
             # User details to be returned in the response
             user_data = {
+                "user_id": user.id,
                 "full_name": user.full_name,
                 "email": user.email,
                 "contact_number": user.contact_number,

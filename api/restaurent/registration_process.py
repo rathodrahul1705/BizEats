@@ -3,11 +3,12 @@ from rest_framework import status
 from django.views import View
 from django.http import JsonResponse
 from rest_framework.views import APIView
+from api.models import User
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
-from api.serializers import RestaurantMasterSerializer, RestaurantStep2Serializer
+from api.serializers import RestaurantMasterSerializer, RestaurantSerializer
 from api.models import RestaurantMaster, RestaurantCuisine, RestaurantDeliveryTiming, RestaurantDocuments
 
 class RestaurantStoreStepOne(APIView):
@@ -156,3 +157,17 @@ class RestaurantStoreStepFour(View):
                 {"detail": str(e)},
                 status=400,
             )
+        
+class RestaurantByUserAPIView(APIView):
+    def get(self, request, user_id):
+        try:
+            # Fetch the user
+            user = User.objects.get(id=user_id)
+            # Fetch all restaurants associated with the user
+            restaurants = RestaurantMaster.objects.filter(user=user)
+            # Serialize the data
+            serializer = RestaurantSerializer(restaurants, many=True)
+            # Return the response
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except User.DoesNotExist:
+            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)

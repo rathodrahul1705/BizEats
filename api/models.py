@@ -76,6 +76,8 @@ class RestaurantMaster(models.Model):
     restaurant_name = models.CharField(max_length=255)
     restaurant_status = models.PositiveSmallIntegerField(choices=((1, 'Active'), (2, 'Inactive')))
     profile_image = models.ImageField(upload_to="restaurant_profile_images/", blank=True, null=True)
+    created_at = models.DateTimeField(default=now)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         db_table = "restaurent_masters"
@@ -89,6 +91,8 @@ class RestaurantOwnerDetail(models.Model):
     owner_email_address = models.EmailField(max_length=255)
     owner_contact = models.CharField(max_length=15, blank=True, null=True)
     owner_primary_contact = models.CharField(max_length=15, blank=True, null=True)
+    created_at = models.DateTimeField(default=now)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         db_table = "restaurant_owner_details"
@@ -104,6 +108,8 @@ class RestaurantLocation(models.Model):
     area_sector_locality = models.CharField(max_length=255)
     city = models.CharField(max_length=100)
     nearby_locality = models.CharField(max_length=255, blank=True, null=True)
+    created_at = models.DateTimeField(default=now)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         db_table = "restaurant_location_details"
@@ -118,6 +124,8 @@ class RestaurantCuisine(models.Model):
         related_name="cuisines"  # One-to-many relationship
     )
     cuisine_name = models.CharField(max_length=100)  # Store a single cuisine per record
+    created_at = models.DateTimeField(default=now)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         db_table = "restaurant_cuisines"
@@ -135,6 +143,8 @@ class RestaurantDeliveryTiming(models.Model):
     open = models.BooleanField(default=False)
     start_time = models.TimeField(blank=True, null=True)
     end_time = models.TimeField(blank=True, null=True)
+    created_at = models.DateTimeField(default=now)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         db_table = "restaurant_delivery_timings"

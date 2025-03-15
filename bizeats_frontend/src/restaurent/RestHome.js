@@ -2,14 +2,18 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, CheckCircle } from "lucide-react";
 import SignIn from "../components/SignIn";
+import ExistingRestaurant from "./ExistingRestaurant"; // Import the modal
 import "../assets/css/restaurent/RestHome.css";
 
 const RestHome = ({ setUser }) => {
   const navigate = useNavigate();
   const [showSignIn, setShowSignIn] = useState(false);
+  const [showExistingRestaurant, setShowExistingRestaurant] = useState(false); // State for modal visibility
 
   // Get user from localStorage
-  const user = localStorage.getItem("user") ? JSON.parse(localStorage.getItem("user")) : null;
+  const user = localStorage.getItem("user")
+    ? JSON.parse(localStorage.getItem("user"))
+    : null;
 
   const handleGetStarted = () => {
     if (user) {
@@ -17,6 +21,10 @@ const RestHome = ({ setUser }) => {
     } else {
       setShowSignIn(true);
     }
+  };
+
+  const handleViewExistingApplication = () => {
+    setShowExistingRestaurant(true); // Open the modal
   };
 
   return (
@@ -29,25 +37,39 @@ const RestHome = ({ setUser }) => {
           <h1 className="rest-title">Register Your Restaurant & Grow Your Business</h1>
         )}
         <p className="rest-subtitle">Join the largest food network in just 10 minutes</p>
-        
+
         <div className="button-group">
           <button className="rest-cta" onClick={handleGetStarted}>
             Register Restaurant
             <ArrowRight size={20} className="cta-icon" />
           </button>
-          <button className="rest-cta secondary" onClick={"handleViewExistingApplication"}>
-            View Application
-            <ArrowRight size={20} className="cta-icon" />
-          </button>
-        </div>
+          {
+            user ? (
 
+              <button
+              className="rest-cta secondary"
+              onClick={handleViewExistingApplication}
+              >
+              View Application
+              <ArrowRight size={20} className="cta-icon" />
+              </button>
+
+            ) :""
+          }
+        </div>
       </header>
 
       {/* Steps Section */}
       <section className="rest-steps">
         <h2 className="steps-heading">How to Register?</h2>
         <ul className="steps-list">
-          {["PAN Card", "GST Number (if applicable)", "FSSAI License", "Menu & Profile Food Image", "Bank Account Details"].map((step, index) => (
+          {[
+            "PAN Card",
+            "GST Number (if applicable)",
+            "FSSAI License",
+            "Menu & Profile Food Image",
+            "Bank Account Details",
+          ].map((step, index) => (
             <li key={index} className="step-item">
               <CheckCircle size={24} className="step-icon" />
               <span className="step-text">{step}</span>
@@ -59,13 +81,18 @@ const RestHome = ({ setUser }) => {
       {/* About Section */}
       <section className="rest-about">
         <h2 className="about-heading">Why Register With Us?</h2>
-        <p className="about-text">Join thousands of restaurants that have grown their business with our platform. Get more customers, increase your visibility, and streamline your operations.</p>
+        <p className="about-text">
+          Join thousands of restaurants that have grown their business with our platform. Get more
+          customers, increase your visibility, and streamline your operations.
+        </p>
       </section>
 
       {/* Contact Section */}
       <section className="rest-contact">
         <h2 className="contact-heading">Need Help?</h2>
-        <p className="contact-text">Our support team is available 24/7 to assist you. Reach out to us anytime.</p>
+        <p className="contact-text">
+          Our support team is available 24/7 to assist you. Reach out to us anytime.
+        </p>
         <button className="contact-button">Contact Us</button>
       </section>
 
@@ -75,10 +102,15 @@ const RestHome = ({ setUser }) => {
           onClose={() => setShowSignIn(false)}
           setUser={(userData) => {
             localStorage.setItem("user", JSON.stringify(userData));
-            setUser(userData); //
+            setUser(userData);
             setShowSignIn(false);
           }}
         />
+      )}
+
+      {/* Existing Restaurant Modal */}
+      {showExistingRestaurant && (
+        <ExistingRestaurant onClose={() => setShowExistingRestaurant(false)}/>
       )}
     </div>
   );

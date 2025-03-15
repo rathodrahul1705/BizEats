@@ -12,16 +12,19 @@ import Profile from "./customer/CusProfile";
 import RestHome from "./restaurent/RestHome";
 import RestaurantRegistration from "./restaurent/RestaurantRegistration";
 
+// PrivateRoute component to protect routes
 function PrivateRoute({ children, user }) {
   return user ? children : <Navigate to="/" />;
 }
 
 function App() {
+  // Initialize user state from localStorage
   const [user, setUser] = useState(() => {
     const storedUser = localStorage.getItem("user");
     return storedUser ? JSON.parse(storedUser) : null;
   });
 
+  // Sync user state with localStorage
   useEffect(() => {
     if (user) {
       localStorage.setItem("user", JSON.stringify(user));
@@ -33,18 +36,25 @@ function App() {
   return (
     <Router>
       <div className="app-container">
+        {/* Header with user and setUser props */}
         <Header user={user} setUser={setUser} />
+
+        {/* Main content area */}
         <main className="content">
           <Routes>
+            {/* Public Routes */}
             <Route path="/" element={<Home />} />
             <Route path="/offers" element={<Offers />} />
             <Route path="/food-list" element={<FoodList />} />
             <Route path="/cart" element={<Cart />} />
             <Route path="/order-details" element={<OrderDetails />} />
             <Route path="/payments" element={<PaymentOption />} />
-            <Route path="/register-your-restaurent" element={<RestHome setUser={setUser} />} />
+            <Route
+              path="/register-your-restaurent"
+              element={<RestHome setUser={setUser} />}
+            />
 
-            {/* Protected Restaurant Registration Route */}
+            {/* Protected Routes */}
             <Route
               path="/register-restaurant"
               element={
@@ -53,8 +63,6 @@ function App() {
                 </PrivateRoute>
               }
             />
-
-            {/* Protected Profile Route */}
             <Route
               path="/profile"
               element={
@@ -63,8 +71,13 @@ function App() {
                 </PrivateRoute>
               }
             />
+
+            {/* Fallback Route for 404 Not Found */}
+            <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </main>
+
+        {/* Footer */}
         <Footer />
       </div>
     </Router>

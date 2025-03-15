@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { X } from "lucide-react";
 import "../assets/css/SignIn.css";
+import API_ENDPOINTS from "../components/config/apiConfig";
+import fetchData from "../components/services/apiService"
 
 const SignIn = ({ onClose, setUser = () => {} }) => {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -21,7 +23,7 @@ const SignIn = ({ onClose, setUser = () => {} }) => {
   // Create an array of refs for OTP input fields
   const otpRefs = useRef([]);
 
-  useEffect(() => {
+   useEffect(() => {
     document.body.classList.add("modal-open"); // Prevent scrolling & blur background
     let countdown;
     if (otpSent && timer > 0) {
@@ -57,38 +59,35 @@ const SignIn = ({ onClose, setUser = () => {} }) => {
     }
   };
 
+
   const handleRegister = async () => {
-    if (!formData.full_name) return setMessage("Full Name is required");
-    if (!formData.email) return setMessage("Email is required");
+  if (!formData.full_name) return setMessage("Full Name is required");
+  if (!formData.email) return setMessage("Email is required");
 
-    setLoading(true); // Set loading state to true
+  setLoading(true);
 
-    try {
-      const response = await fetch("http://127.0.0.1:8000/api/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          full_name: formData.full_name,
-          email: formData.email,
-        }),
-      });
-      const data = await response.json();
-      if (response.ok) {
-        setOtpSent(true);
-        setMessageType("success");
-        setIsRegistered(true); // Mark as registered
-      } else {
-        setMessage(data.message || "Registration failed.");
-        setMessageType("error");
-      }
-    } catch (error) {
-      setMessage("Error occurred while registering.");
+  try {
+    const userData = {
+      full_name: formData.full_name,
+      email: formData.email,
+    };
+
+    const response = await fetchData(API_ENDPOINTS.AUTH.REGISTER, "POST", userData);
+
+    if (response) {
+      setOtpSent(true);
+      setMessageType("success");
+      setIsRegistered(true);
+    } else {
+      setMessage("Registration failed.");
       setMessageType("error");
-    } finally {
-      setLoading(false); // Set loading state back to false
     }
+  } catch (error) {
+    setMessage("Error occurred while registering.");
+    setMessageType("error");
+  } finally {
+    setLoading(false);
+  }
   };
 
   const handleLogin = async () => {
@@ -97,86 +96,75 @@ const SignIn = ({ onClose, setUser = () => {} }) => {
     setLoading(true); // Set loading state to true
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: formData.email,
-        }),
-      });
-      const data = await response.json();
-      if (response.ok) {
+      const loginData = { email: formData.email };
+      const response = await fetchData(API_ENDPOINTS.AUTH.LOGIN, "POST", loginData);
+
+      if (response) {
         setOtpSent(true);
         setMessageType("success");
       } else {
-        setMessage(data.message || "Login failed.");
+        setMessage("Login failed.");
         setMessageType("error");
       }
     } catch (error) {
       setMessage("Error occurred while logging in.");
       setMessageType("error");
     } finally {
-      setLoading(false); // Set loading state back to false
+      setLoading(false);
     }
   };
 
   const handleVerifyOtp = async () => {
-    const otp = formData.otp.join("");
-    if (!otp) return setMessage("OTP is required");
+  const otp = formData.otp.join("");
+  if (!otp) return setMessage("OTP is required");
 
-    setLoading(true); // Set loading state to true
+  setLoading(true);
 
-    try {
-      const response = await fetch("http://127.0.0.1:8000/api/verify-otp", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: formData.email,
-          otp: otp,
-        }),
-      });
-      const data = await response.json();
-      if (response.ok) {
-        if (isSignUp) {
-          setMessageType("success");
-          setIsSignUp(false);
-          setIsRegistered(true);
-        } else {
-          localStorage.setItem('user', JSON.stringify(data.user));
-          localStorage.setItem('refresh', data.refresh);
-          localStorage.setItem('access', data.access);
-          setMessage("Login successful!");
-          setMessageType("success");
-          setIsLoggedIn(true);
-          setUser(data.user);
-          onClose();
-        }
+  try {
+    const otpData = {
+      email: formData.email,
+      otp: otp,
+    };
+
+    const response = await fetchData(API_ENDPOINTS.AUTH.VERIFY_OTP, "POST", otpData);
+
+    if (response) {
+      if (isSignUp) {
+        setMessageType("success");
+        setIsSignUp(false);
+        setIsRegistered(true);
       } else {
-        setMessage(data.message || "OTP verification failed.");
-        setMessageType("error");
+        localStorage.setItem("user", JSON.stringify(response.user));
+        localStorage.setItem("refresh", response.refresh);
+        localStorage.setItem("access", response.access);
+        setMessage("Login successful!");
+        setMessageType("success");
+        setIsLoggedIn(true);
+        setUser(response.user);
+        onClose();
       }
-    } catch (error) {
-      setMessage("Error occurred while verifying OTP.");
+    } else {
+      setMessage("OTP verification failed.");
       setMessageType("error");
-    } finally {
-      setLoading(false); // Set loading state back to false
     }
+  } catch (error) {
+    setMessage("Error occurred while verifying OTP.");
+    setMessageType("error");
+  } finally {
+    setLoading(false);
+  }
 
-    // Reset the form data and OTP state after verification
-    setFormData({
-      full_name: "",
-      email: "",
-      otp: Array(6).fill(""),
-    });
+  setFormData({
+    full_name: "",
+    email: "",
+    otp: Array(6).fill(""),
+  });
 
-    setOtpSent(false);
-    setOtpExpired(false);
-    setTimer(300);
+  setOtpSent(false);
+  setOtpExpired(false);
+  setTimer(300);
   };
+
 
   return (
     <div className="signin-container">

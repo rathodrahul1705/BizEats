@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { ArrowRight, Utensils, ClipboardList, FileCheck, FileSignature, CheckCircle } from "lucide-react";
 import "../assets/css/restaurent/RestaurantRegistration.css";
+import API_ENDPOINTS from "../components/config/apiConfig";
+import fetchData from "../components/services/apiService"
 
 const steps = [
   { id: 1, name: "Restaurant Info", icon: <Utensils size={22} /> },
@@ -83,215 +85,126 @@ const RestaurantRegistration = ({ user, setUser }) => {
   const handleNextStep = () => setStep((prev) => (prev < steps.length ? prev + 1 : prev));
   const handlePrevStep = () => setStep((prev) => (prev > 1 ? prev - 1 : prev));
 
-  const handleSubmitStep1 = async () => {
-    try {
-        const prepareStep1Payload = () => {
-            return {
-                restaurant_name: restaurantName,
-                owner_details: {
-                    owner_name: ownerDetails.fullName,
-                    owner_email_address: ownerDetails.email,
-                    owner_contact: ownerDetails.phone,
-                    owner_primary_contact: ownerDetails.primaryContactNumber,
-                },
-                restaurant_location: {
-                    shop_no_building: restaurantLocation.shopNoBuilding,
-                    floor_tower: restaurantLocation.floorTower,
-                    area_sector_locality: restaurantLocation.areaSectorLocality,
-                    city: restaurantLocation.city,
-                    nearby_locality: restaurantLocation.nearbyLocality,
-                },
-            };
-        };
+const handleSubmitStep1 = async () => {
+  try {
+    const payload = {
+      restaurant_name: restaurantName,
+      owner_details: {
+        owner_name: ownerDetails.fullName,
+        owner_email_address: ownerDetails.email,
+        owner_contact: ownerDetails.phone,
+        owner_primary_contact: ownerDetails.primaryContactNumber,
+      },
+      restaurant_location: {
+        shop_no_building: restaurantLocation.shopNoBuilding,
+        floor_tower: restaurantLocation.floorTower,
+        area_sector_locality: restaurantLocation.areaSectorLocality,
+        city: restaurantLocation.city,
+        nearby_locality: restaurantLocation.nearbyLocality,
+      },
+    };
 
-        const response = await fetch("http://127.0.0.1:8000/api/restaurant/store/step-one", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${localStorage.getItem("access") || ""}`
-            },
-            body: JSON.stringify(prepareStep1Payload()),
-        });
+    const response = await fetchData(API_ENDPOINTS.RESTAURANT.STEP_ONE, "POST", payload, localStorage.getItem("access"));
 
-        const data = await response.json();
-        if (!response.ok) {
-            throw new Error(data.message || "Failed to submit Step 1");
-        }
-
-        if (data.access) {
-            localStorage.setItem("access", data.access);
-        }
-
-        setrestaurantId(data?.restaurant_id);
-        handleNextStep();
-
-    } catch (error) {
-        console.error("Error:", error);
-    }
-  };
-
-  const handleSubmitStep2 = async () => {
-    try {
-      // Prepare the payload
-      const payload = {
-        restaurant_id: restaurantId,
-        profile_image: panDetails.ProfileFile,
-        cuisines: selectedCuisines.map((cuisine) => ({ cuisine_name: cuisine })), // Convert to array of objects
-        delivery_timings: Object.keys(deliveryTimings).map((day) => ({
-          day: day,
-          open: deliveryTimings[day].open,
-          start_time: deliveryTimings[day].start,
-          end_time: deliveryTimings[day].end,
-        })).filter((timing) => timing.open), // Include only open timings
-      };
-  
-      // Create FormData object
-      const formData = new FormData();
-  
-      // Append restaurant_id
-      formData.append("restaurant_id", payload.restaurant_id);
-  
-      // Append profile_image (if provided)
-      if (payload.profile_image) {
-        formData.append("profile_image", payload.profile_image);
-      }
-  
-      // Append cuisines as JSON
-      formData.append("cuisines", JSON.stringify(payload.cuisines));
-  
-      // Append delivery_timings as JSON
-      formData.append("delivery_timings", JSON.stringify(payload.delivery_timings));
-  
-      // Send the FormData to the backend API
-      const response = await fetch("http://127.0.0.1:8000/api/restaurant/store/step-two", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${localStorage.getItem("access") || ""}`,
-        },
-        body: formData,
-      });
-  
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to submit Step 2");
-      }
-  
-      if (data.access) {
-        localStorage.setItem("access", data.access);
-      }
-  
+    if (response) {
+      setrestaurantId(response?.restaurant_id);
       handleNextStep();
-  
-    } catch (error) {
-      console.error("Error:", error);
     }
-  };
+  } catch (error) {
+    console.error("Error:", error);
+  }
+};
 
-  const handleSubmitStep3 = async () => {
-    try {
-      // Prepare the payload
-      const payload = {
-        restaurant_id: restaurantId,
-        pan_number: panDetails.panNumber,
-        name_as_per_pan: panDetails.fullName,
-        registered_business_address: panDetails.address,
-        pan_image: panDetails.panFile,
-        fssai_number: fssaiDetails.fssaiNumber,
-        fssai_expiry_date: fssaiDetails.expiryDate,
-        fssai_licence_image: fssaiDetails.fssaiFile,
-        bank_account_number: bankDetails.accountNumber,
-        bank_account_ifsc_code: bankDetails.ifsc,
-        bank_account_type: bankDetails.accountType,
-      };
-  
-      // Create FormData object
+const handleSubmitStep2 = async () => {
+  try {
       const formData = new FormData();
-  
-      // Append all fields to FormData
-      for (const key in payload) {
-        if (payload[key] !== null && payload[key] !== undefined) {
-          formData.append(key, payload[key]);
-        }
+      formData.append("restaurant_id", restaurantId);
+      if (panDetails?.ProfileFile) {
+          formData.append("profile_image", panDetails.ProfileFile);
       }
-  
-      // Send the FormData to the backend API
-      const response = await fetch("http://127.0.0.1:8000/api/restaurant/store/step-three", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${localStorage.getItem("access") || ""}`
-        },
-        body: formData,
-      });
-  
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to submit Step 3");
+      formData.append("cuisines", JSON.stringify(selectedCuisines.map((cuisine) => ({ cuisine_name: cuisine }))));
+      formData.append("delivery_timings", JSON.stringify(
+          Object.keys(deliveryTimings)
+              .map((day) => ({
+                  day,
+                  open: deliveryTimings[day].open,
+                  start_time: deliveryTimings[day].start,
+                  end_time: deliveryTimings[day].end,
+              }))
+              .filter((timing) => timing.open)
+      ));
+
+      const response = await fetchData(API_ENDPOINTS.RESTAURANT.STEP_TWO, "POST", formData, localStorage.getItem("access"), true);
+
+      if (response) {
+          handleNextStep();
       }
-  
-      if (data.access) {
-        localStorage.setItem("access", data.access);
-      }
-  
+  } catch (error) {
+      console.error("Error:", error);
+  }
+};
+
+const handleSubmitStep3 = async () => {
+  try {
+    const formData = new FormData();
+
+    // Append only non-null values
+    if (restaurantId) formData.append("restaurant_id", restaurantId);
+    if (panDetails?.panNumber) formData.append("pan_number", panDetails.panNumber);
+    if (panDetails?.fullName) formData.append("name_as_per_pan", panDetails.fullName);
+    if (panDetails?.address) formData.append("registered_business_address", panDetails.address);
+    if (panDetails?.panFile) formData.append("pan_image", panDetails.panFile);
+    if (fssaiDetails?.fssaiNumber) formData.append("fssai_number", fssaiDetails.fssaiNumber);
+    if (fssaiDetails?.expiryDate) formData.append("fssai_expiry_date", fssaiDetails.expiryDate);
+    if (fssaiDetails?.fssaiFile) formData.append("fssai_licence_image", fssaiDetails.fssaiFile);
+    if (bankDetails?.accountNumber) formData.append("bank_account_number", bankDetails.accountNumber);
+    if (bankDetails?.ifsc) formData.append("bank_account_ifsc_code", bankDetails.ifsc);
+    if (bankDetails?.accountType) formData.append("bank_account_type", bankDetails.accountType);
+
+    const response = await fetchData(
+      API_ENDPOINTS.RESTAURANT.STEP_THREE,
+      "POST",
+      formData,
+      localStorage.getItem("access"),
+      true
+    );
+
+    if (response) {
       handleNextStep();
-  
-    } catch (error) {
-      console.error("Error:", error);
     }
-  };
+  } catch (error) {
+    console.error("Error:", error);
+  }
+};
 
-  const handleSubmitStep4 = async () => {
-    try {
-      console.log("Submitting Step 4...");
-  
-      // Prepare the payload
-      const payload = {
-        restaurant_id: restaurantId,
-        partner_contract_doc: contractFile,  // File upload
-        is_contract_checked: isContractChecked,  // Boolean field
-      };
-  
-      console.log("Payload:", payload);
-  
-      // Create FormData object
-      const formData = new FormData();
-  
-      // Append all fields to FormData
-      for (const key in payload) {
-        if (payload[key] !== null && payload[key] !== undefined) {
-          if (key === "is_contract_checked") {
-            formData.append(key, payload[key].toString());  // Convert boolean to string
-          } else {
-            formData.append(key, payload[key]);
-          }
-        }
-      }
-  
-      const response = await fetch("http://127.0.0.1:8000/api/restaurant/store/step-four", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${localStorage.getItem("access") || ""}`,
-        },
-        body: formData,
-      });
-  
-      const data = await response.json();
-      console.log("Response:", data);
-  
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to submit Step 4");
-      }
-  
-      if (data.access) {
-        localStorage.setItem("access", data.access);
-      }
-  
-      // Show success popup
+const handleSubmitStep4 = async () => {
+  try {
+    console.log("Submitting Step 4...");
+
+    const formData = new FormData();
+
+    // Append only non-null values
+    if (restaurantId) formData.append("restaurant_id", restaurantId);
+    if (contractFile) formData.append("partner_contract_doc", contractFile);
+    if (isContractChecked !== null && isContractChecked !== undefined) {
+      formData.append("is_contract_checked", isContractChecked.toString()); // Convert boolean to string
+    }
+
+    const response = await fetchData(
+      API_ENDPOINTS.RESTAURANT.STEP_FOUR,
+      "POST",
+      formData,
+      localStorage.getItem("access"),
+      true
+    );
+
+    if (response) {
       setShowSuccessPopup(true);
-  
-    } catch (error) {
-      console.error("Error:", error);
     }
-  };
+  } catch (error) {
+    console.error("Error:", error);
+  }
+};
 
   const SuccessPopup = ({ onClose }) => {
     return (
@@ -304,8 +217,6 @@ const RestaurantRegistration = ({ user, setUser }) => {
       </div>
     );
   };
-
-  console.log("step====",step)
 
   return (
     <div className="registration-container">
@@ -589,28 +500,28 @@ const RestaurantRegistration = ({ user, setUser }) => {
 
         {/* Navigation Buttons */}
         <div className="form-navigation">
-  {step > 1 && <button className="prev-btn" onClick={handlePrevStep}>Back</button>}
-  {step === 1 && (
-    <button className="next-btn" onClick={handleSubmitStep1}>
-      Next Step <ArrowRight size={18} />
-    </button>
-  )}
-  {step === 2 && (
-    <button className="next-btn" onClick={handleSubmitStep2}>
-      Next Step <ArrowRight size={18} />
-    </button>
-  )}
-  {step === 3 && (
-    <button className="next-btn" onClick={handleSubmitStep3}>
-      Next Step <ArrowRight size={18} />
-    </button>
-  )}
-  {step === 4 && (
-    <button className="next-btn" hidden={!isContractChecked} onClick={handleSubmitStep4}>
-      Submit <ArrowRight size={18} />
-    </button>
-  )}
-</div>
+          {step > 1 && <button className="prev-btn" onClick={handlePrevStep}>Back</button>}
+          {step === 1 && (
+            <button className="next-btn" onClick={handleSubmitStep1}>
+              Next Step <ArrowRight size={18} />
+            </button>
+          )}
+          {step === 2 && (
+            <button className="next-btn" onClick={handleSubmitStep2}>
+              Next Step <ArrowRight size={18} />
+            </button>
+          )}
+          {step === 3 && (
+            <button className="next-btn" onClick={handleSubmitStep3}>
+              Next Step <ArrowRight size={18} />
+            </button>
+          )}
+          {step === 4 && (
+            <button className="next-btn" hidden={!isContractChecked} onClick={handleSubmitStep4}>
+              Submit <ArrowRight size={18} />
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

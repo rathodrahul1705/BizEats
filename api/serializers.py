@@ -102,3 +102,8 @@ class RestaurantStep2Serializer(serializers.Serializer):
     profile_image = serializers.ImageField(required=False)
     cuisines = CuisineSerializer(many=True, required=True)  # List of cuisines
     delivery_timings = DeliveryTimingSerializer(many=True, required=True) 
+
+class RestaurantSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RestaurantMaster
+        fields = ["restaurant_id", "restaurant_name", "restaurant_status"]
