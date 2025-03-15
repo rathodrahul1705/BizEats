@@ -5,7 +5,7 @@ import { LogOut, User, CreditCard, MapPin, List, Edit } from "lucide-react";
 import CusOrders from "./CusOrders";
 import CusPaymentsDetails from "./CusPaymentsDetails";
 import CusAddresses from "./CusAddresses";
-import CusSettings from "./CusSettings";
+// import CusSettings from "./CusSettings";
 import "../assets/css/customer/CusProfile.css";
 
 const Profile = ({ user, setUser }) => {

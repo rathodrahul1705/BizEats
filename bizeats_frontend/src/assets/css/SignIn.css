@@ -184,3 +184,17 @@ body.modal-open {
         max-width: 250px;
     }
 }
+
+.otp-inputs {
+    display: flex;
+    justify-content: space-between;
+  }
+  
+  .otp-input {
+    width: 50px;
+    height: 50px;
+    text-align: center;
+    font-size: 1.5rem;
+    margin-right: 5px;
+  }
+  

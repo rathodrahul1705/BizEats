@@ -10,7 +10,10 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
+import os
 from pathlib import Path
+from datetime import timedelta
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -54,11 +57,21 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware'
 ]
 
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),  # Access token expiration time
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),  # Refresh token expiration time
+    'ROTATE_REFRESH_TOKENS': False,  # Whether to rotate refresh tokens on refresh
+    'BLACKLIST_AFTER_ROTATION': False,  # Whether to blacklist old refresh tokens
+    'ALGORITHM': 'HS256',  # Algorithm to sign the tokens
+    'SIGNING_KEY': 'BizEats',  # Secret key for signing the tokens
+}
+
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
 }
+
 
 DATABASES = {
     'default': {
@@ -74,10 +87,18 @@ DATABASES = {
     }
 }
 
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'rathodrahul1705@gmail.com'
+EMAIL_HOST_PASSWORD = 'hioc rvrq iara qowa'
 AUTH_USER_MODEL = 'api.User'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 ROOT_URLCONF = 'BizEats.urls'
+MEDIA_URL = "/media/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 TEMPLATES = [
     {

@@ -30,7 +30,7 @@ const RestHome = ({ setUser }) => {
         )}
         <p className="rest-subtitle">Join the largest food network in just 10 minutes</p>
         <button className="rest-cta" onClick={handleGetStarted}> 
-          Get Started - It only takes 10 minutes
+          Register Your Restaurant
           <ArrowRight size={20} className="cta-icon" />
         </button>
       </header>
@@ -43,8 +43,6 @@ const RestHome = ({ setUser }) => {
             <li key={index} className="step-item">
               <CheckCircle size={24} className="step-icon" />
               <span className="step-text">{step}</span>
-              {step === "FSSAI License" && <a href="#" className="step-link">Apply here</a>}
-              {step === "Menu & Profile Food Image" && <a href="#" className="step-link">Refer here</a>}
             </li>
           ))}
         </ul>
