@@ -19,6 +19,7 @@
     "react-scripts": "5.0.1",
     "react-spring": "^9.7.5",
     "react-tabs": "^6.1.0",
+    "swiper": "^11.2.5",
     "web-vitals": "^2.1.4"
   },
   "scripts": {

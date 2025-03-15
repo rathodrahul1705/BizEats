@@ -88,7 +88,19 @@ class RestaurantMasterSerializer(serializers.ModelSerializer):
 
         return restaurant_master
 
+class CuisineSerializer(serializers.Serializer):
+    cuisine_name = serializers.CharField()
 
+class DeliveryTimingSerializer(serializers.Serializer):
+    day = serializers.CharField()
+    open = serializers.BooleanField()
+    start_time = serializers.TimeField()
+    end_time = serializers.TimeField()
 
+class RestaurantStep2Serializer(serializers.Serializer):
+    restaurant_id = serializers.CharField()
+    profile_image = serializers.ImageField(required=False)
+    cuisines = CuisineSerializer(many=True)
+    delivery_timings = DeliveryTimingSerializer(many=True)
 
 

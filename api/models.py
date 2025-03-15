@@ -75,6 +75,7 @@ class RestaurantMaster(models.Model):
     restaurant_id = models.CharField(max_length=20, unique=True, primary_key=True)  # Set as primary key
     restaurant_name = models.CharField(max_length=255)
     restaurant_status = models.PositiveSmallIntegerField(choices=((1, 'Active'), (2, 'Inactive')))
+    profile_image = models.ImageField(upload_to="restaurant_profile_images/", blank=True, null=True)
 
     class Meta:
         db_table = "restaurent_masters"
@@ -110,5 +111,28 @@ class RestaurantLocation(models.Model):
     def __str__(self):
         return f"{self.restaurant.restaurant_name} - {self.city}"
 
+class RestaurantCuisine(models.Model):
+    restaurant = models.ForeignKey(RestaurantMaster, on_delete=models.CASCADE, related_name="cuisines")
+    cuisine_name = models.CharField(max_length=100)
+
+    class Meta:
+        db_table = "restaurant_cuisines"
+
+    def __str__(self):
+        return f"{self.restaurant.restaurant_name} - {self.cuisine_name}"
+
+
+class RestaurantDeliveryTiming(models.Model):
+    restaurant = models.ForeignKey(RestaurantMaster, on_delete=models.CASCADE, related_name="delivery_timings")
+    day = models.CharField(max_length=10)
+    open = models.BooleanField(default=False)
+    start_time = models.TimeField(blank=True, null=True)
+    end_time = models.TimeField(blank=True, null=True)
+
+    class Meta:
+        db_table = "restaurant_delivery_timings"
+
+    def __str__(self):
+        return f"{self.restaurant.restaurant_name} - {self.day} ({self.start_time} to {self.end_time})"
 
 

@@ -78,6 +78,7 @@ const Header = ({ user, setUser }) => {
               </button>
             )}
           </li>
+
         </ul>
       </nav>
 
