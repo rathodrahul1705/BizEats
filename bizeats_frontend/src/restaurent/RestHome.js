@@ -29,10 +29,18 @@ const RestHome = ({ setUser }) => {
           <h1 className="rest-title">Register Your Restaurant & Grow Your Business</h1>
         )}
         <p className="rest-subtitle">Join the largest food network in just 10 minutes</p>
-        <button className="rest-cta" onClick={handleGetStarted}> 
-          Register Your Restaurant
-          <ArrowRight size={20} className="cta-icon" />
-        </button>
+        
+        <div className="button-group">
+          <button className="rest-cta" onClick={handleGetStarted}>
+            Register Restaurant
+            <ArrowRight size={20} className="cta-icon" />
+          </button>
+          <button className="rest-cta secondary" onClick={"handleViewExistingApplication"}>
+            View Application
+            <ArrowRight size={20} className="cta-icon" />
+          </button>
+        </div>
+
       </header>
 
       {/* Steps Section */}

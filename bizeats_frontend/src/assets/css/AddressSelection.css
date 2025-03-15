@@ -20,7 +20,7 @@
   margin: 0;
 }
 
-.address-item {
+.address-list .address-item {
   padding: 15px;
   border-radius: 8px;
   background: #fff;

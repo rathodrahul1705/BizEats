@@ -112,8 +112,12 @@ class RestaurantLocation(models.Model):
         return f"{self.restaurant.restaurant_name} - {self.city}"
 
 class RestaurantCuisine(models.Model):
-    restaurant = models.ForeignKey(RestaurantMaster, on_delete=models.CASCADE, related_name="cuisines")
-    cuisine_name = models.CharField(max_length=100)
+    restaurant = models.ForeignKey(
+        RestaurantMaster, 
+        on_delete=models.CASCADE, 
+        related_name="cuisines"  # One-to-many relationship
+    )
+    cuisine_name = models.CharField(max_length=100)  # Store a single cuisine per record
 
     class Meta:
         db_table = "restaurant_cuisines"
@@ -121,9 +125,12 @@ class RestaurantCuisine(models.Model):
     def __str__(self):
         return f"{self.restaurant.restaurant_name} - {self.cuisine_name}"
 
-
 class RestaurantDeliveryTiming(models.Model):
-    restaurant = models.ForeignKey(RestaurantMaster, on_delete=models.CASCADE, related_name="delivery_timings")
+    restaurant = models.ForeignKey(
+        RestaurantMaster, 
+        on_delete=models.CASCADE, 
+        related_name="delivery_timings"  # One-to-many relationship
+    )
     day = models.CharField(max_length=10)
     open = models.BooleanField(default=False)
     start_time = models.TimeField(blank=True, null=True)
@@ -135,4 +142,29 @@ class RestaurantDeliveryTiming(models.Model):
     def __str__(self):
         return f"{self.restaurant.restaurant_name} - {self.day} ({self.start_time} to {self.end_time})"
 
+class RestaurantDocuments(models.Model):
+    restaurant = models.OneToOneField(
+        RestaurantMaster, 
+        on_delete=models.CASCADE, 
+        related_name="documents"
+    )
+    pan_number = models.CharField(max_length=20)
+    name_as_per_pan = models.CharField(max_length=255)
+    registered_business_address = models.TextField()
+    pan_image = models.ImageField(upload_to="pan_images/", blank=True, null=True)
+    fssai_number = models.CharField(max_length=50)
+    fssai_expiry_date = models.DateField()
+    fssai_licence_image = models.ImageField(upload_to="fssai_images/", blank=True, null=True)
+    bank_account_number = models.CharField(max_length=20)
+    bank_account_ifsc_code = models.CharField(max_length=20)
+    bank_account_type = models.PositiveSmallIntegerField(choices=((1, "Saving"), (2, "Current")))
+    partner_contract_doc = models.FileField(upload_to="partner_contracts/", blank=True, null=True)  # New field
+    is_contract_checked = models.BooleanField(default=False)  # New field
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        db_table = "restaurant_documents"
+
+    def __str__(self):
+        return f"{self.restaurant.restaurant_name} - Documents"

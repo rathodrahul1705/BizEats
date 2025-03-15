@@ -1,273 +1,301 @@
 /* General Styles */
 .rest-home {
-    font-family: "Arial", sans-serif;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
-    color: #333;
-  }
+  font-family: "Arial", sans-serif;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  color: #333;
+}
+
+/* Header Section */
+.rest-header {
+  text-align: center;
+  padding: 50px 20px;
+}
+
+.rest-title {
+  font-size: 2.5rem;
+  font-weight: bold;
+  margin-bottom: 12px;
+  color: #222;
+}
+
+.rest-subtitle {
+  font-size: 1.2rem;
+  margin-bottom: 30px;
+  color: #555;
+}
+
+/* Centered CTA Button */
+.rest-cta {
+  background: #e65c00;
+  color: white;
+  border: none;
+  padding: 14px 32px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin: 0 auto; /* Center button */
+  transition: transform 0.2s ease, background 0.3s ease;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+  width: 280px;
+  margin: 0 10px;
+}
+
+.rest-cta:hover {
   
-  /* Header Section */
-  .rest-header {
-    text-align: center;
-    padding: 50px 20px;
-  }
-  
+  transform: scale(1.05);
+}
+
+.button-group{
+  display: flex;
+  max-width: 600px;
+  margin: auto;
+}
+/* Steps Section */
+.rest-steps {
+  padding: 40px 20px;
+  background: #fff;
+  border-radius: 12px;
+  margin-top: 30px;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+.secondary{
+  background: transparent;
+  color: #e65c00;
+  border: 1px solid #e65c00;
+}
+
+.steps-heading {
+  font-size: 1.8rem;
+  margin-bottom: 20px;
+  color: #222;
+}
+
+.steps-list {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.step-item {
+  display: flex;
+  align-items: center;
+  background: #f9f9f9;
+  padding: 14px 18px;
+  border-radius: 10px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease;
+}
+
+.step-item:hover {
+  transform: scale(1.02);
+}
+
+.step-icon {
+  color: #4caf50;
+  margin-right: 12px;
+}
+
+.step-text {
+  flex: 1;
+  font-size: 1.1rem;
+  color: #333;
+}
+
+.step-link {
+  font-size: 0.9rem;
+  color: #e65c00;
+  text-decoration: none;
+  font-weight: bold;
+  transition: color 0.3s ease;
+}
+
+.step-link:hover {
+  color: #cc4e00;
+  text-decoration: underline;
+}
+
+/* About Section */
+.rest-about {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.about-heading {
+  font-size: 1.8rem;
+  margin-bottom: 10px;
+  color: #222;
+}
+
+.about-text {
+  font-size: 1.1rem;
+  max-width: 750px;
+  margin: 0 auto;
+  line-height: 1.6;
+  color: #555;
+}
+
+/* Contact Section */
+.rest-contact {
+  text-align: center;
+  padding: 40px 20px;
+  background: #fff;
+  border-radius: 12px;
+  margin-top: 30px;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.contact-heading {
+  font-size: 1.8rem;
+  margin-bottom: 10px;
+  color: #222;
+}
+
+.contact-text {
+  font-size: 1.1rem;
+  max-width: 650px;
+  margin: 0 auto 20px;
+  line-height: 1.6;
+  color: #555;
+}
+
+.contact-button {
+  background: linear-gradient(135deg, #e65c00, #ff7e29);
+  color: white;
+  border: none;
+  padding: 12px 26px;
+  font-size: 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.3s ease;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.contact-button:hover {
+  background: linear-gradient(135deg, #cc4e00, #e67322);
+  transform: scale(1.05);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
   .rest-title {
-    font-size: 2.5rem;
-    font-weight: bold;
-    margin-bottom: 12px;
-    color: #222;
+    font-size: 2rem;
   }
-  
-  .rest-subtitle {
-    font-size: 1.2rem;
-    margin-bottom: 30px;
-    color: #555;
-  }
-  
-  /* Centered CTA Button */
+
   .rest-cta {
-    background: linear-gradient(135deg, #e65c00, #ff7e29);
-    color: white;
-    border: none;
-    padding: 14px 32px;
-    font-size: 1.2rem;
-    font-weight: bold;
-    border-radius: 8px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    margin: 0 auto; /* Center button */
-    transition: transform 0.2s ease, background 0.3s ease;
-    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 420px;
   }
-  
-  .rest-cta:hover {
-    background: linear-gradient(135deg, #cc4e00, #e67322);
-    transform: scale(1.05);
-  }
-  
-  /* Steps Section */
-  .rest-steps {
-    padding: 40px 20px;
-    background: #fff;
-    border-radius: 12px;
-    margin-top: 30px;
-    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
-    text-align: center;
-  }
-  
-  .steps-heading {
-    font-size: 1.8rem;
-    margin-bottom: 20px;
-    color: #222;
-  }
-  
+
   .steps-list {
-    list-style: none;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    max-width: 700px;
-    margin: 0 auto;
+    max-width: 100%;
   }
-  
+
   .step-item {
-    display: flex;
-    align-items: center;
-    background: #f9f9f9;
-    padding: 14px 18px;
-    border-radius: 10px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    transition: transform 0.2s ease;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+    padding: 16px;
   }
-  
-  .step-item:hover {
-    transform: scale(1.02);
+
+  .rest-contact,
+  .rest-about,
+  .rest-steps {
+    padding: 30px 15px;
   }
-  
-  .step-icon {
-    color: #4caf50;
-    margin-right: 12px;
-  }
-  
+
   .step-text {
-    flex: 1;
-    font-size: 1.1rem;
-    color: #333;
-  }
-  
-  .step-link {
-    font-size: 0.9rem;
-    color: #e65c00;
-    text-decoration: none;
-    font-weight: bold;
-    transition: color 0.3s ease;
-  }
-  
-  .step-link:hover {
-    color: #cc4e00;
-    text-decoration: underline;
-  }
-  
-  /* About Section */
-  .rest-about {
-    text-align: center;
-    padding: 40px 20px;
-  }
-  
-  .about-heading {
-    font-size: 1.8rem;
-    margin-bottom: 10px;
-    color: #222;
-  }
-  
-  .about-text {
-    font-size: 1.1rem;
-    max-width: 750px;
-    margin: 0 auto;
-    line-height: 1.6;
-    color: #555;
-  }
-  
-  /* Contact Section */
-  .rest-contact {
-    text-align: center;
-    padding: 40px 20px;
-    background: #fff;
-    border-radius: 12px;
-    margin-top: 30px;
-    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
-  }
-  
-  .contact-heading {
-    font-size: 1.8rem;
-    margin-bottom: 10px;
-    color: #222;
-  }
-  
-  .contact-text {
-    font-size: 1.1rem;
-    max-width: 650px;
-    margin: 0 auto 20px;
-    line-height: 1.6;
-    color: #555;
-  }
-  
-  .contact-button {
-    background: linear-gradient(135deg, #e65c00, #ff7e29);
-    color: white;
-    border: none;
-    padding: 12px 26px;
     font-size: 1rem;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: transform 0.2s ease, background 0.3s ease;
-    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
   }
-  
-  .contact-button:hover {
-    background: linear-gradient(135deg, #cc4e00, #e67322);
-    transform: scale(1.05);
+  .rest-header{
+    padding: 40px 0;
   }
-  
-  /* Responsive Design */
-  @media (max-width: 768px) {
-    .rest-title {
-      font-size: 2rem;
-    }
-  
-    .rest-cta {
-      width: 100%;
-      max-width: 320px;
-    }
-  
-    .steps-list {
-      max-width: 100%;
-    }
-  
-    .step-item {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 5px;
-      padding: 16px;
-    }
-  
-    .rest-contact,
-    .rest-about,
-    .rest-steps {
-      padding: 30px 15px;
-    }
-  
-    .step-text {
-      font-size: 1rem;
-    }
+  .rest-cta{
+    font-size: 14px;
+    padding: 10px;
   }
-  
-  /* User Welcome Message */
+}
+@media (max-width: 480px) {
+  .rest-cta{
+    font-size: 12px;
+    padding: 10px;
+    gap: 0;
+  }
+  .rest-cta svg{
+    display: none;
+  }
+}
+
+/* User Welcome Message */
 .user-welcome {
-    font-size: 1.4rem;
-    font-weight: bold;
-    color: #4caf50;
-    text-align: center;
-    margin-bottom: 20px;
-    animation: fadeIn 0.8s ease-in-out;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
+  font-size: 1.4rem;
+  font-weight: bold;
+  color: #4caf50;
+  text-align: center;
+  margin-bottom: 20px;
+  animation: fadeIn 0.8s ease-in-out;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* Emoji Animation */
+.user-welcome::after {
+  content: "👋";
+  display: inline-block;
+  animation: wave 1s infinite;
+}
+
+/* Register Restaurant Title */
+.rest-title {
+  font-size: 2.4rem;
+  font-weight: bold;
+  text-align: center;
+  color: #222;
+  margin-bottom: 12px;
+}
+
+/* Fade In Animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
   }
-  
-  /* Emoji Animation */
-  .user-welcome::after {
-    content: "👋";
-    display: inline-block;
-    animation: wave 1s infinite;
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
-  
-  /* Register Restaurant Title */
+}
+
+/* Hand Wave Animation */
+@keyframes wave {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(15deg);
+  }
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .user-welcome {
+    font-size: 1.2rem;
+  }
+
   .rest-title {
-    font-size: 2.4rem;
-    font-weight: bold;
-    text-align: center;
-    color: #222;
-    margin-bottom: 12px;
+    font-size: 2rem;
   }
-  
-  /* Fade In Animation */
-  @keyframes fadeIn {
-    from {
-      opacity: 0;
-      transform: translateY(-10px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-  
-  /* Hand Wave Animation */
-  @keyframes wave {
-    0%, 100% {
-      transform: rotate(0deg);
-    }
-    50% {
-      transform: rotate(15deg);
-    }
-  }
-  
-  /* Responsive Adjustments */
-  @media (max-width: 768px) {
-    .user-welcome {
-      font-size: 1.2rem;
-    }
-  
-    .rest-title {
-      font-size: 2rem;
-    }
-  }
-  
+}

@@ -1,11 +1,9 @@
 /* Orders Container */
 .orders-container {
-    max-width: 800px;
     margin: 0 auto;
     padding: 20px;
     background: #fff;
-    border-radius: 8px;
-    box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
 /* Orders Title */
@@ -76,6 +74,7 @@
 .order-id-date {
     font-size: 14px;
     color: #555;
+    margin: 10px 0;
 }
 
 /* Order Location */
@@ -86,7 +85,7 @@
 
 /* Order Status */
 .order-status {
-    font-size: 14px;
+    font-size: 12px;
     font-weight: bold;
     text-transform: uppercase;
     padding: 5px 10px;
@@ -115,14 +114,17 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: 10px;
+    margin-top: 15px;
+    border-top: 1px solid #ddd;
+    padding-top: 15px;
 }
 
 /* Order Items */
 .order-items {
     font-size: 14px;
-    color: #555;
+    color: #000;
     flex-grow: 1;
+    font-weight: 500;
 }
 
 /* Order Total */
@@ -139,17 +141,6 @@
     align-items: center;
     width: 100%;
     margin-top: 10px;
-}
-
-/* View More Details */
-.view-details-text {
-    font-size: 14px;
-    color: #e65c00;
-    cursor: pointer;
-}
-
-.view-details-text:hover {
-    text-decoration: underline;
 }
 
 /* Reorder Button */
@@ -178,12 +169,6 @@
     margin-top: 5px;
     transition: color 0.3s ease;
 }
-
-.view-details-text:hover {
-    text-decoration: underline;
-    color: #d35400;
-}
-
 /* Show More Orders Container */
 .show-more-container {
     display: flex;
@@ -209,4 +194,22 @@
 
 .show-more-btn:hover {
     background: #d35400;
+}
+
+@media (max-width: 767px) {
+    .order-header{
+        display: block;
+    }
+    .order-header .order-image{
+        width: 100%;
+    }
+    .order-header .order-details{
+        margin-top: 10px;
+    }
+    .order-footer{
+        display: block;
+    }
+    .order-total{
+        margin-top: 10px;
+    }
 }

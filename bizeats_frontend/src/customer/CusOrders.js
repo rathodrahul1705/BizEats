@@ -102,7 +102,6 @@ const CusOrders = () => {
               {/* Order Footer (Items and Pricing Side-by-Side) */}
               <div className="order-footer">
                 <div className="order-items">
-                  <strong>Items:</strong>{" "}
                   {order.items.map((item, index) => (
                     <span key={index}>
                       {item.name} x {item.quantity}

@@ -139,6 +139,9 @@
     width: 100%;
     cursor: pointer;
 }
+.content{
+    min-height: calc(100vh - 109px);
+}
 
 /* Responsive Design */
 @media (max-width: 768px) {
@@ -158,20 +161,25 @@
     .logo {
         font-size: 24px;
     }
-}
-
-@media (max-width: 400px) {
     .nav-link, .signin-btn, .login-user-info {
-        font-size: 13px;
-        padding: 6px 5px;
+        font-size: 12px;
+        padding: 6px 4px;
+    }
+    .content {
+        min-height: calc(100vh - 94px);
     }
 }
 
-@media (max-width: 370px) {
+@media (max-width: 480px) {
+   
     .nav-link, .signin-btn, .login-user-info {
         font-size: 0px;
         padding: 6px 8px;
     }
+}
+
+@media (max-width: 370px) {
+    
 
     .icon {
         margin: 0;

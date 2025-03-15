@@ -6,11 +6,12 @@ const steps = [
   { id: 1, name: "Restaurant Info", icon: <Utensils size={22} /> },
   { id: 2, name: "Menu and Pricing", icon: <ClipboardList size={22} /> },
   { id: 3, name: "Restaurant documents", icon: <FileCheck size={22} /> },
-  { id: 4, name: "Partner Contract", icon: <FileSignature size={22} /> }
+  { id: 4, name: "Partner Contract", icon: <FileSignature size={22} /> },
 ];
 
 const RestaurantRegistration = ({ user, setUser }) => {
   const [step, setStep] = useState(1);
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [agreementChecked, setAgreementChecked] = useState(false);
   const [selectedCuisines, setSelectedCuisines] = useState([]);
   const [deliveryTimings, setDeliveryTimings] = useState({
@@ -28,6 +29,7 @@ const RestaurantRegistration = ({ user, setUser }) => {
   const [fssaiDetails, setFssaiDetails] = useState({ fssaiNumber: "", expiryDate: "", fssaiFile: null });
   const [bankDetails, setBankDetails] = useState({ accountNumber: "", reAccountNumber: "", ifsc: "", accountType: "" });
   const [contractFile, setContractFile] = useState(null);
+  const [isContractChecked, setIsContractChecked] = useState(false);
   const [restaurantId, setrestaurantId] = useState(null);
 
   const [restaurantName, setRestaurantName] = useState("");
@@ -72,6 +74,10 @@ const RestaurantRegistration = ({ user, setUser }) => {
 
   const handleContractUpload = (e) => {
     setContractFile(e.target.files[0]);
+  };
+
+  const handleContractCheckbox = (e) => {
+    setIsContractChecked(e.target.checked);
   };
 
   const handleNextStep = () => setStep((prev) => (prev < steps.length ? prev + 1 : prev));
@@ -126,29 +132,37 @@ const RestaurantRegistration = ({ user, setUser }) => {
 
   const handleSubmitStep2 = async () => {
     try {
-
-      const prepareStep2Payload = () => {
-        const payload = {
-          restaurant_id: restaurantId,
-          profile_image: panDetails.ProfileFile,
-          cuisines: selectedCuisines,
-          delivery_timings: deliveryTimings,
-        };
-      
-        return payload;
+      // Prepare the payload
+      const payload = {
+        restaurant_id: restaurantId,
+        profile_image: panDetails.ProfileFile,
+        cuisines: selectedCuisines.map((cuisine) => ({ cuisine_name: cuisine })), // Convert to array of objects
+        delivery_timings: Object.keys(deliveryTimings).map((day) => ({
+          day: day,
+          open: deliveryTimings[day].open,
+          start_time: deliveryTimings[day].start,
+          end_time: deliveryTimings[day].end,
+        })).filter((timing) => timing.open), // Include only open timings
       };
-
-      const payload = prepareStep2Payload();
+  
+      // Create FormData object
       const formData = new FormData();
+  
+      // Append restaurant_id
       formData.append("restaurant_id", payload.restaurant_id);
   
+      // Append profile_image (if provided)
       if (payload.profile_image) {
         formData.append("profile_image", payload.profile_image);
       }
-
+  
+      // Append cuisines as JSON
       formData.append("cuisines", JSON.stringify(payload.cuisines));
+  
+      // Append delivery_timings as JSON
       formData.append("delivery_timings", JSON.stringify(payload.delivery_timings));
   
+      // Send the FormData to the backend API
       const response = await fetch("http://127.0.0.1:8000/api/restaurant/store/step-two", {
         method: "POST",
         headers: {
@@ -173,9 +187,134 @@ const RestaurantRegistration = ({ user, setUser }) => {
     }
   };
 
+  const handleSubmitStep3 = async () => {
+    try {
+      // Prepare the payload
+      const payload = {
+        restaurant_id: restaurantId,
+        pan_number: panDetails.panNumber,
+        name_as_per_pan: panDetails.fullName,
+        registered_business_address: panDetails.address,
+        pan_image: panDetails.panFile,
+        fssai_number: fssaiDetails.fssaiNumber,
+        fssai_expiry_date: fssaiDetails.expiryDate,
+        fssai_licence_image: fssaiDetails.fssaiFile,
+        bank_account_number: bankDetails.accountNumber,
+        bank_account_ifsc_code: bankDetails.ifsc,
+        bank_account_type: bankDetails.accountType,
+      };
+  
+      // Create FormData object
+      const formData = new FormData();
+  
+      // Append all fields to FormData
+      for (const key in payload) {
+        if (payload[key] !== null && payload[key] !== undefined) {
+          formData.append(key, payload[key]);
+        }
+      }
+  
+      // Send the FormData to the backend API
+      const response = await fetch("http://127.0.0.1:8000/api/restaurant/store/step-three", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${localStorage.getItem("access") || ""}`
+        },
+        body: formData,
+      });
+  
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to submit Step 3");
+      }
+  
+      if (data.access) {
+        localStorage.setItem("access", data.access);
+      }
+  
+      handleNextStep();
+  
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  };
+
+  const handleSubmitStep4 = async () => {
+    try {
+      console.log("Submitting Step 4...");
+  
+      // Prepare the payload
+      const payload = {
+        restaurant_id: restaurantId,
+        partner_contract_doc: contractFile,  // File upload
+        is_contract_checked: isContractChecked,  // Boolean field
+      };
+  
+      console.log("Payload:", payload);
+  
+      // Create FormData object
+      const formData = new FormData();
+  
+      // Append all fields to FormData
+      for (const key in payload) {
+        if (payload[key] !== null && payload[key] !== undefined) {
+          if (key === "is_contract_checked") {
+            formData.append(key, payload[key].toString());  // Convert boolean to string
+          } else {
+            formData.append(key, payload[key]);
+          }
+        }
+      }
+  
+      const response = await fetch("http://127.0.0.1:8000/api/restaurant/store/step-four", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${localStorage.getItem("access") || ""}`,
+        },
+        body: formData,
+      });
+  
+      const data = await response.json();
+      console.log("Response:", data);
+  
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to submit Step 4");
+      }
+  
+      if (data.access) {
+        localStorage.setItem("access", data.access);
+      }
+  
+      // Show success popup
+      setShowSuccessPopup(true);
+  
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  };
+
+  const SuccessPopup = ({ onClose }) => {
+    return (
+      <div className="success-popup-overlay">
+        <div className="success-popup">
+          <h3>Congratulations!</h3>
+          <p>All steps completed. Wait for BizEats for Approval.</p>
+          <button onClick={onClose}>Close</button>
+        </div>
+      </div>
+    );
+  };
+
+  console.log("step====",step)
+
   return (
     <div className="registration-container">
       {/* Sidebar for Steps */}
+
+      {showSuccessPopup && (
+        <SuccessPopup onClose={() => setShowSuccessPopup(false)} />
+      )}
+    
       <aside className="sidebar">
         <h2 className="sidebar-title">Registration Steps</h2>
         {
@@ -373,7 +512,7 @@ const RestaurantRegistration = ({ user, setUser }) => {
             </div>
 
             {/* GST Details */}
-            <div className="info-card">
+            {/* <div className="info-card">
               <h3>GST Details (if applicable)</h3>
               <p className="note">This should be linked to the PAN provided earlier for tax calculations.</p>
               <div className="gst-selection">
@@ -384,7 +523,7 @@ const RestaurantRegistration = ({ user, setUser }) => {
                   <input type="radio" name="gst" value="no" onChange={() => setGstRegistered(false)} /> No
                 </label>
               </div>
-            </div>
+            </div> */}
 
             {/* FSSAI Details */}
             <div className="info-card">
@@ -411,8 +550,8 @@ const RestaurantRegistration = ({ user, setUser }) => {
                 <input type="text" placeholder="IFSC Code" value={bankDetails.ifsc} onChange={(e) => setBankDetails({ ...bankDetails, ifsc: e.target.value })} />
                 <select value={bankDetails.accountType} onChange={(e) => setBankDetails({ ...bankDetails, accountType: e.target.value })}>
                   <option value="">Select Account Type</option>
-                  <option value="saving">Saving A/C</option>
-                  <option value="current">Current A/C</option>
+                  <option value="1">Saving A/C</option>
+                  <option value="2">Current A/C</option>
                 </select>
               </div>
             </div>
@@ -434,43 +573,44 @@ const RestaurantRegistration = ({ user, setUser }) => {
                 </label>
                 {contractFile && <p className="file-name">{contractFile.name}</p>}
               </div>
-            </div>
-
-            {/* Agreement Checkbox */}
-            <div className="agreement-section">
-              <label>
-                <input
-                  type="checkbox"
-                  checked={agreementChecked}
-                  onChange={() => setAgreementChecked(!agreementChecked)}
-                />
-                I agree to the terms and conditions outlined in the contract.
-              </label>
+              <div className="agreement-section">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={isContractChecked}
+                    onChange={handleContractCheckbox}
+                  />
+                  I agree to the terms and conditions outlined in the contract.
+                </label>
+              </div>
             </div>
           </div>
         )}
 
         {/* Navigation Buttons */}
         <div className="form-navigation">
-          {step > 1 && <button className="prev-btn" onClick={handlePrevStep}>Back</button>}
-          {step < steps.length ? (
-            step === 1 ? (
-              <button className="next-btn" onClick={handleSubmitStep1}>
-                Next Step <ArrowRight size={18} />
-              </button>
-            ) : step === 2 ? (
-              <button className="next-btn" onClick={handleSubmitStep2}>
-                Next Step <ArrowRight size={18} />
-              </button>
-            ) : (
-              <button className="next-btn" onClick={handleNextStep}>
-                Next Step <ArrowRight size={18} />
-              </button>
-            )
-          ) : (
-            <button className="submit-btn" disabled={!agreementChecked}>Submit</button>
-          )}
-        </div>
+  {step > 1 && <button className="prev-btn" onClick={handlePrevStep}>Back</button>}
+  {step === 1 && (
+    <button className="next-btn" onClick={handleSubmitStep1}>
+      Next Step <ArrowRight size={18} />
+    </button>
+  )}
+  {step === 2 && (
+    <button className="next-btn" onClick={handleSubmitStep2}>
+      Next Step <ArrowRight size={18} />
+    </button>
+  )}
+  {step === 3 && (
+    <button className="next-btn" onClick={handleSubmitStep3}>
+      Next Step <ArrowRight size={18} />
+    </button>
+  )}
+  {step === 4 && (
+    <button className="next-btn" hidden={!isContractChecked} onClick={handleSubmitStep4}>
+      Submit <ArrowRight size={18} />
+    </button>
+  )}
+</div>
       </div>
     </div>
   );

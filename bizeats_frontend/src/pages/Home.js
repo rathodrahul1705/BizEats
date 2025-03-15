@@ -201,7 +201,7 @@ const Home = () => {
 
 
       <section className="foodDataSlider">
-        <h2 className="section-heading">Discover best restaurants on Dineout</h2>
+        <h2 className="section-heading">Discover best restaurants for food order</h2>
         <Swiper
           modules={[Navigation, Pagination, Autoplay]}
           spaceBetween={20}  // Adjust space between slides

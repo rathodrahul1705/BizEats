@@ -3,7 +3,7 @@
     display: flex;
     justify-content: space-between;
     margin: 20px 0;
-    background: #fff;
+    background: #f8f9fa;
     border-radius: 8px;
   }
    
@@ -196,4 +196,7 @@
   .cart-item-title{
     font-size: 20px;
   }
+}
+.cart-container .address-item{
+  display: block;
 }

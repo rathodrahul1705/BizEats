@@ -98,9 +98,7 @@ class DeliveryTimingSerializer(serializers.Serializer):
     end_time = serializers.TimeField()
 
 class RestaurantStep2Serializer(serializers.Serializer):
-    restaurant_id = serializers.CharField()
+    restaurant_id = serializers.CharField(required=True)
     profile_image = serializers.ImageField(required=False)
-    cuisines = CuisineSerializer(many=True)
-    delivery_timings = DeliveryTimingSerializer(many=True)
-
-
+    cuisines = CuisineSerializer(many=True, required=True)  # List of cuisines
+    delivery_timings = DeliveryTimingSerializer(many=True, required=True) 
