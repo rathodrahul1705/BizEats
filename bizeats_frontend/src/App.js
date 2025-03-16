@@ -56,7 +56,7 @@ function App() {
 
             {/* Protected Routes */}
             <Route
-              path="/register-restaurant"
+              path="/register-restaurant/:restaurant_id"
               element={
                 <PrivateRoute user={user}>
                   <RestaurantRegistration user={user} setUser={setUser} />

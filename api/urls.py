@@ -13,5 +13,6 @@ urlpatterns = [
     path("api/restaurant/store/step-four/", RestaurantStoreStepFour.as_view(), name="restaurant-store-step-four"),
 
     path("api/restaurants/status/<int:user_id>/", RestaurantByUserAPIView.as_view(), name="restaurants-by-user"),
+    path("api/restaurants/details/<int:restaurant_id>/", RestaurantByUserAPIView.as_view(), name="restaurants-by-restaurant_id"),
 
 ]

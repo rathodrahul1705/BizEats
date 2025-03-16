@@ -104,9 +104,10 @@ class RestaurantStep2Serializer(serializers.Serializer):
     delivery_timings = DeliveryTimingSerializer(many=True, required=True) 
 
 class RestaurantSerializer(serializers.ModelSerializer):
+    location = RestaurantLocationSerializer(source="restaurantlocation", read_only=True) 
     class Meta:
         model = RestaurantMaster
-        fields = ["restaurant_id", "restaurant_name", "restaurant_status"]
+        fields = ["restaurant_id", "restaurant_name", "restaurant_status", "location"]
 
 class RestaurantListSerializer(serializers.Serializer):
     active_restaurants = RestaurantSerializer(many=True)
