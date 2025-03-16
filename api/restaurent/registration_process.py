@@ -8,24 +8,35 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
-from api.serializers import RestaurantMasterSerializer, RestaurantSerializer
-from api.models import RestaurantMaster, RestaurantCuisine, RestaurantDeliveryTiming, RestaurantDocuments
+from api.serializers import RestaurantMasterSerializer, RestaurantSerializerByStatus, RestaurantDetailSerializer, RestaurantMasterNewSerializer
+from api.models import RestaurantMaster, RestaurantCuisine, RestaurantDeliveryTiming, RestaurantDocuments, RestaurantOwnerDetail, RestaurantLocation
 
 class RestaurantStoreStepOne(APIView):
     permission_classes = [IsAuthenticated]
 
-    def post(self, request):
-        serializer = RestaurantMasterSerializer(data=request.data, context={'request': request})
+    def post(self, request, restaurant_id=None):
+        # If restaurant_id is provided, fetch the existing restaurant
+        if restaurant_id:
+            try:
+                restaurant = RestaurantMaster.objects.get(restaurant_id=restaurant_id, user=request.user)
+                serializer = RestaurantMasterSerializer(restaurant, data=request.data, partial=True, context={'request': request})
+            except RestaurantMaster.DoesNotExist:
+                return Response({"error": "Restaurant not found or you do not have permission to edit it."}, status=status.HTTP_404_NOT_FOUND)
+        else:
+            # If no restaurant_id is provided, create a new restaurant
+            serializer = RestaurantMasterSerializer(data=request.data, context={'request': request})
 
+        # Validate and save the serializer
         if serializer.is_valid():
             restaurant = serializer.save()
             return Response({
-                "message": "Restaurant registered successfully!",
+                "message": "Restaurant updated successfully!" if restaurant_id else "Restaurant registered successfully!",
                 "restaurant_id": restaurant.restaurant_id,
                 "restaurant_name": restaurant.restaurant_name
-            }, status=status.HTTP_201_CREATED)
+            }, status=status.HTTP_201_CREATED if not restaurant_id else status.HTTP_200_OK)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
 
 @method_decorator(csrf_exempt, name="dispatch")
 class RestaurantStoreStepTwo(View):
@@ -169,11 +180,20 @@ class RestaurantByUserAPIView(APIView):
             live_restaurants = RestaurantMaster.objects.filter(user=user, restaurant_status=2)
 
             data = {
-                "active_restaurants": RestaurantSerializer(active_restaurants, many=True).data,
-                "live_restaurants": RestaurantSerializer(live_restaurants, many=True).data,
+                "active_restaurants": RestaurantSerializerByStatus(active_restaurants, many=True).data,
+                "live_restaurants": RestaurantSerializerByStatus(live_restaurants, many=True).data,
             }
 
             return Response(data, status=status.HTTP_200_OK)
         
         except User.DoesNotExist:
             return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
+class RestaurantByRestauranrtAPIView(APIView):
+    def get(self, request, restaurant_id):
+        try:
+            restaurant = RestaurantMaster.objects.get(restaurant_id=restaurant_id)
+            serializer = RestaurantMasterNewSerializer(restaurant)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except RestaurantMaster.DoesNotExist:
+            return Response({"error": "Restaurant not found"}, status=status.HTTP_404_NOT_FOUND)

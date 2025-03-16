@@ -17,7 +17,8 @@ const RestHome = ({ setUser }) => {
     ? JSON.parse(localStorage.getItem("user"))
     : null;
 
-  const handleGetStarted = () => {
+
+    const handleGetStarted = () => {
     if (user) {
       navigate("/register-restaurant");
     } else {

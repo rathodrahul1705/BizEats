@@ -86,7 +86,8 @@ class RestaurantMaster(models.Model):
         return self.restaurant_name
 
 class RestaurantOwnerDetail(models.Model):
-    restaurant = models.OneToOneField(RestaurantMaster, on_delete=models.CASCADE)
+    # restaurant = models.OneToOneField(RestaurantMaster, on_delete=models.CASCADE)
+    restaurant = models.OneToOneField(RestaurantMaster, on_delete=models.CASCADE, related_name='owner_details')
     owner_name = models.CharField(max_length=255)
     owner_email_address = models.EmailField(max_length=255)
     owner_contact = models.CharField(max_length=15, blank=True, null=True)
@@ -102,7 +103,7 @@ class RestaurantOwnerDetail(models.Model):
 
 
 class RestaurantLocation(models.Model):
-    restaurant = models.OneToOneField(RestaurantMaster, on_delete=models.CASCADE)
+    restaurant = models.OneToOneField(RestaurantMaster, on_delete=models.CASCADE, related_name='restaurant_location')
     shop_no_building = models.CharField(max_length=255, blank=True, null=True)
     floor_tower = models.CharField(max_length=255, blank=True, null=True)
     area_sector_locality = models.CharField(max_length=255)

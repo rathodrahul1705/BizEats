@@ -8,11 +8,23 @@ const API_ENDPOINTS = {
     USER_PROFILE: `${BASE_URL}/user/`,
   },
   RESTAURANT: {
-    STEP_ONE: `${BASE_URL}/restaurant/store/step-one/`,
-    STEP_TWO: `${BASE_URL}/restaurant/store/step-two/`,
-    STEP_THREE: `${BASE_URL}/restaurant/store/step-three/`,
-    STEP_FOUR: `${BASE_URL}/restaurant/store/step-four/`,
-    BY_USER: (userId) => `${BASE_URL}/restaurants/status/${userId}/`,
+    BY_USER: (userId) => 
+      userId ? `${BASE_URL}/restaurants/status/${userId}/` : `${BASE_URL}/restaurants/status/`,
+
+    BY_RESTAURANT_ID: (restaurantId) => 
+      restaurantId ? `${BASE_URL}/restaurant/${restaurantId}/` : `${BASE_URL}/restaurant/`,
+
+    STEP_ONE: (restaurantId) => 
+      restaurantId ? `${BASE_URL}/restaurant/store/step-one/${restaurantId}/` : `${BASE_URL}/restaurant/store/step-one/`,
+
+    STEP_TWO: (restaurantId) => 
+      restaurantId ? `${BASE_URL}/restaurant/store/step-two/${restaurantId}/` : `${BASE_URL}/restaurant/store/step-two/`,
+
+    STEP_THREE: (restaurantId) => 
+      restaurantId ? `${BASE_URL}/restaurant/store/step-three/${restaurantId}/` : `${BASE_URL}/restaurant/store/step-three/`,
+
+    STEP_FOUR: (restaurantId) => 
+      restaurantId ? `${BASE_URL}/restaurant/store/step-four/${restaurantId}/` : `${BASE_URL}/restaurant/store/step-four/`,
   },
 };
 

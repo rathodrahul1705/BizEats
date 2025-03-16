@@ -44,10 +44,6 @@ const CusPaymentsDetails = () => {
         </ul>
       )}
 
-      <button className="add-card-btn">
-        <PlusCircle size={20} className="icon" /> Add New Card
-      </button>
-
       {/* Delete Confirmation Modal */}
       {showConfirm && (
         <div className="confirm-overlay">

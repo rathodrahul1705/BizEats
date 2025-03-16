@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect} from "react";
 import { ArrowRight, Utensils, ClipboardList, FileCheck, FileSignature, CheckCircle } from "lucide-react";
 import "../assets/css/restaurent/RestaurantRegistration.css";
 import API_ENDPOINTS from "../components/config/apiConfig";
 import fetchData from "../components/services/apiService"
+import { useParams } from "react-router-dom";
 
 const steps = [
   { id: 1, name: "Restaurant Info", icon: <Utensils size={22} /> },
@@ -11,7 +12,8 @@ const steps = [
   { id: 4, name: "Partner Contract", icon: <FileSignature size={22} /> },
 ];
 
-const RestaurantRegistration = ({ user, setUser }) => {
+const RestaurantRegistration = ({user, setUser}) => {
+  const { restaurant_id } = useParams();
   const [step, setStep] = useState(1);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const [agreementChecked, setAgreementChecked] = useState(false);
@@ -33,6 +35,8 @@ const RestaurantRegistration = ({ user, setUser }) => {
   const [contractFile, setContractFile] = useState(null);
   const [isContractChecked, setIsContractChecked] = useState(false);
   const [restaurantId, setrestaurantId] = useState(null);
+
+  // console.log("restaurantId====",restaurantId)
 
   const [restaurantName, setRestaurantName] = useState("");
   const [ownerDetails, setOwnerDetails] = useState({
@@ -82,6 +86,105 @@ const RestaurantRegistration = ({ user, setUser }) => {
     setIsContractChecked(e.target.checked);
   };
 
+  useEffect(() => {
+    if (!restaurant_id) return;
+  
+    const fetchRestaurants = async () => {
+      try {
+        const response = await fetchData(
+          API_ENDPOINTS.RESTAURANT.BY_RESTAURANT_ID(restaurant_id),
+          "GET",
+          null,
+          localStorage.getItem("access")
+        );
+  
+        // Assuming the response contains the restaurant details
+        if (response) {
+          // Update restaurant name
+          setRestaurantName(response.restaurant_name);
+  
+          // Update owner details
+          setOwnerDetails({
+            fullName: response.owner_details.owner_name,
+            email: response.owner_details.owner_email_address,
+            phone: response.owner_details.owner_contact,
+            primaryContactNumber: response.owner_details.owner_primary_contact,
+          });
+  
+          // Update restaurant location
+          setRestaurantLocation({
+            shopNoBuilding: response.restaurant_location.shop_no_building,
+            floorTower: response.restaurant_location.floor_tower,
+            areaSectorLocality: response.restaurant_location.area_sector_locality,
+            city: response.restaurant_location.city,
+            nearbyLocality: response.restaurant_location.nearby_locality,
+          });
+  
+          // Update selected cuisines
+          if (response.cuisines) {
+            setSelectedCuisines(response.cuisines.map((cuisine) => cuisine.cuisine_name));
+          }
+  
+          // Update delivery timings
+          if (response.delivery_timings) {
+            const timings = {};
+            response.delivery_timings.forEach((timing) => {
+              timings[timing.day] = {
+                open: timing.open,
+                start: timing.start_time,
+                end: timing.end_time,
+              };
+            });
+            setDeliveryTimings(timings);
+          }
+  
+          // Update PAN details
+          if (response.documents) {
+            setPanDetails({
+              panNumber: response?.documents?.pan_number,
+              fullName: response?.documents?.name_as_per_pan,
+              address: response?.documents?.registered_business_address,
+              panFile: response?.documents?.pan_image,
+            });
+          }
+  
+          // Update FSSAI details
+          if (response.documents) {
+            setFssaiDetails({
+              fssaiNumber: response?.documents?.fssai_number,
+              expiryDate: response?.documents?.fssai_expiry_date,
+              fssaiFile: response?.documents?.fssai_licence_image,
+            });
+          }
+  
+          // Update bank details
+          if (response.documents) {
+            setBankDetails({
+              accountNumber: response?.documents?.bank_account_number,
+              reAccountNumber: response?.documents?.bank_account_number, // Assuming re-enter is the same
+              ifsc: response?.documents?.bank_account_ifsc_code,
+              accountType: response?.documents?.bank_account_type,
+            });
+          }
+  
+          // Update contract file and checkbox
+          if (response?.documents) {
+            setContractFile(response?.documents.partner_contract_doc);
+            setIsContractChecked(response?.documents.is_contract_checked);
+          }
+  
+          // Set restaurant ID
+          setrestaurantId(response.restaurant_id);
+        }
+      } catch (error) {
+        console.error("Error fetching restaurants:", error);
+      }
+    };
+  
+    fetchRestaurants();
+  }, [restaurant_id]);
+
+
   const handleNextStep = () => setStep((prev) => (prev < steps.length ? prev + 1 : prev));
   const handlePrevStep = () => setStep((prev) => (prev > 1 ? prev - 1 : prev));
 
@@ -103,8 +206,8 @@ const handleSubmitStep1 = async () => {
         nearby_locality: restaurantLocation.nearbyLocality,
       },
     };
-
-    const response = await fetchData(API_ENDPOINTS.RESTAURANT.STEP_ONE, "POST", payload, localStorage.getItem("access"));
+    
+    const response = await fetchData(API_ENDPOINTS.RESTAURANT.STEP_ONE(restaurant_id ? restaurant_id : restaurantId), "POST", payload, localStorage.getItem("access"));
 
     if (response) {
       setrestaurantId(response?.restaurant_id);
@@ -134,7 +237,7 @@ const handleSubmitStep2 = async () => {
               .filter((timing) => timing.open)
       ));
 
-      const response = await fetchData(API_ENDPOINTS.RESTAURANT.STEP_TWO, "POST", formData, localStorage.getItem("access"), true);
+      const response = await fetchData(API_ENDPOINTS.RESTAURANT.STEP_TWO(restaurant_id ? restaurant_id : restaurantId), "POST", formData, localStorage.getItem("access"), true);
 
       if (response) {
           handleNextStep();
@@ -162,7 +265,7 @@ const handleSubmitStep3 = async () => {
     if (bankDetails?.accountType) formData.append("bank_account_type", bankDetails.accountType);
 
     const response = await fetchData(
-      API_ENDPOINTS.RESTAURANT.STEP_THREE,
+      API_ENDPOINTS.RESTAURANT.STEP_THREE(restaurant_id ? restaurant_id : restaurantId),
       "POST",
       formData,
       localStorage.getItem("access"),
@@ -179,11 +282,7 @@ const handleSubmitStep3 = async () => {
 
 const handleSubmitStep4 = async () => {
   try {
-    console.log("Submitting Step 4...");
-
     const formData = new FormData();
-
-    // Append only non-null values
     if (restaurantId) formData.append("restaurant_id", restaurantId);
     if (contractFile) formData.append("partner_contract_doc", contractFile);
     if (isContractChecked !== null && isContractChecked !== undefined) {
@@ -191,7 +290,7 @@ const handleSubmitStep4 = async () => {
     }
 
     const response = await fetchData(
-      API_ENDPOINTS.RESTAURANT.STEP_FOUR,
+      API_ENDPOINTS.RESTAURANT.STEP_FOUR(restaurant_id ? restaurant_id : restaurantId),
       "POST",
       formData,
       localStorage.getItem("access"),
@@ -337,7 +436,7 @@ const handleSubmitStep4 = async () => {
               </div>
             </div>
           </div>
-        )}
+      )}
 
       {step === 2 && (
         <div className="info-section">

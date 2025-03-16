@@ -1,7 +1,7 @@
 import uuid
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from .models import RestaurantMaster, RestaurantOwnerDetail, RestaurantLocation
+from .models import RestaurantMaster, RestaurantOwnerDetail, RestaurantLocation, RestaurantCuisine, RestaurantDeliveryTiming, RestaurantDocuments
 
 User = get_user_model()
 
@@ -23,9 +23,6 @@ class UserLoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
     otp = serializers.CharField(max_length=6)
 
-import uuid
-from rest_framework import serializers
-from .models import RestaurantMaster, RestaurantOwnerDetail, RestaurantLocation
 
 class RestaurantOwnerDetailSerializer(serializers.ModelSerializer):
     class Meta:
@@ -87,6 +84,36 @@ class RestaurantMasterSerializer(serializers.ModelSerializer):
         RestaurantLocation.objects.create(restaurant=restaurant_master, **location_data)
 
         return restaurant_master
+    
+
+    def update(self, instance, validated_data):
+
+        # print("validated_data=====",validated_data)
+
+        # Update the RestaurantMaster instance
+        instance.restaurant_name = validated_data.get('restaurant_name', instance.restaurant_name)
+        instance.save()
+
+        # Update owner details
+        owner_data = validated_data.get('owner_details', {})
+        owner_instance = instance.owner_details
+        owner_instance.owner_name = owner_data.get('owner_name', owner_instance.owner_name)
+        owner_instance.owner_email_address = owner_data.get('owner_email_address', owner_instance.owner_email_address)
+        owner_instance.owner_contact = owner_data.get('owner_contact', owner_instance.owner_contact)
+        owner_instance.owner_primary_contact = owner_data.get('owner_primary_contact', owner_instance.owner_primary_contact)
+        owner_instance.save()
+
+        # Update location details
+        location_data = validated_data.get('restaurant_location', {})
+        location_instance = instance.restaurant_location
+        location_instance.shop_no_building = location_data.get('shop_no_building', location_instance.shop_no_building)
+        location_instance.floor_tower = location_data.get('floor_tower', location_instance.floor_tower)
+        location_instance.area_sector_locality = location_data.get('area_sector_locality', location_instance.area_sector_locality)
+        location_instance.city = location_data.get('city', location_instance.city)
+        location_instance.nearby_locality = location_data.get('nearby_locality', location_instance.nearby_locality)
+        location_instance.save()
+
+        return instance
 
 class CuisineSerializer(serializers.Serializer):
     cuisine_name = serializers.CharField()
@@ -103,12 +130,57 @@ class RestaurantStep2Serializer(serializers.Serializer):
     cuisines = CuisineSerializer(many=True, required=True)  # List of cuisines
     delivery_timings = DeliveryTimingSerializer(many=True, required=True) 
 
-class RestaurantSerializer(serializers.ModelSerializer):
-    location = RestaurantLocationSerializer(source="restaurantlocation", read_only=True) 
+class RestaurantSerializerByStatus(serializers.ModelSerializer):
+    location = RestaurantLocationSerializer(source="restaurant_location", read_only=True) 
+
     class Meta:
         model = RestaurantMaster
-        fields = ["restaurant_id", "restaurant_name", "restaurant_status", "location"]
+        fields = ["restaurant_id", "restaurant_name", "created_at","restaurant_status", "location"]
 
 class RestaurantListSerializer(serializers.Serializer):
-    active_restaurants = RestaurantSerializer(many=True)
-    live_restaurants = RestaurantSerializer(many=True)
+    active_restaurants = RestaurantSerializerByStatus(many=True)
+    live_restaurants = RestaurantSerializerByStatus(many=True)
+
+class RestaurantDetailSerializer(serializers.Serializer):
+    location = RestaurantLocationSerializer(source="restaurant_location", read_only=True) 
+
+    class Meta:
+        model = RestaurantMaster
+        fields = ["restaurant_id", "restaurant_name", "created_at","restaurant_status", "location"]
+
+
+class RestaurantOwnerDetailSerializerByResId(serializers.ModelSerializer):
+    class Meta:
+        model = RestaurantOwnerDetail
+        fields = '__all__'
+
+class RestaurantLocationSerializerByRedId(serializers.ModelSerializer):
+    class Meta:
+        model = RestaurantLocation
+        fields = '__all__'
+
+class RestaurantCuisineSerializerByResId(serializers.ModelSerializer):
+    class Meta:
+        model = RestaurantCuisine
+        fields = '__all__'
+
+class RestaurantDeliveryTimingSerializerByResId(serializers.ModelSerializer):
+    class Meta:
+        model = RestaurantDeliveryTiming
+        fields = '__all__'
+
+class RestaurantDocumentsSerializerByResId(serializers.ModelSerializer):
+    class Meta:
+        model = RestaurantDocuments
+        fields = '__all__'
+
+class RestaurantMasterNewSerializer(serializers.ModelSerializer):
+    owner_details = RestaurantOwnerDetailSerializerByResId(read_only=True)
+    restaurant_location = RestaurantLocationSerializerByRedId(read_only=True)
+    cuisines = RestaurantCuisineSerializerByResId(many=True, read_only=True)
+    delivery_timings = RestaurantDeliveryTimingSerializerByResId( many=True, read_only=True)
+    documents = RestaurantDocumentsSerializerByResId(read_only=True)
+
+    class Meta:
+        model = RestaurantMaster
+        fields = '__all__'
