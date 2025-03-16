@@ -1,13 +1,16 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { Home, ShoppingCart, LogIn, User, LogOut, Store } from "lucide-react";
+import { Home, ShoppingCart, LogIn, User, LogOut, Store, Briefcase} from "lucide-react";
 import SignIn from "./SignIn";
 import "../assets/css/Header.css";
 
 const Header = ({ user, setUser }) => {
   const [showSignIn, setShowSignIn] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
+  const is_restaurant_register = localStorage.getItem("is_restaurant_register");
 
+  console.log("is_restaurant_register======",is_restaurant_register == "true")
+  
   const handleLogout = () => {
     setUser(null);
     setShowDropdown(false);
@@ -65,6 +68,15 @@ const Header = ({ user, setUser }) => {
                     <Link to="/profile" className="dropdown-item">
                       <User size={16} className="icon" /> Profile
                     </Link>
+
+                    {
+                      is_restaurant_register == "true" ? (
+
+                        <Link to="/vendor-dashboard" className="dropdown-item">
+                            <Briefcase size={16} className="icon" /> Business
+                        </Link>
+                      ):""
+                    }
                     <button onClick={handleLogout} className="dropdown-item logout-btn-header">
                       <LogOut size={16} className="icon" /> Logout
                     </button>

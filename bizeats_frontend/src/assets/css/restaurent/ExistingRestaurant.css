@@ -152,7 +152,7 @@
   font-size: 14px;
   font-weight: 500;
   color: #fff;
-  background-color: #007bff;
+  background-color: #e65c00;
   border: none;
   border-radius: 8px;
   cursor: pointer;
@@ -161,7 +161,7 @@
 }
 
 .existing-restaurant-modal .card-button.continue {
-  background-color: #007bff; /* Blue for Continue */
+  background-color: #e65c00; /* Blue for Continue */
 }
 
 .existing-restaurant-modal .card-button.edit {

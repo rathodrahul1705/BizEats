@@ -2,7 +2,7 @@ from django.core.mail import send_mail
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .models import User
+from .models import User, RestaurantMaster
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import IsAuthenticated
 
@@ -48,7 +48,8 @@ class OTPVerificationView(APIView):
         if user.verify_otp(otp):
             # OTP is valid, generate tokens
             refresh = RefreshToken.for_user(user)
-            
+            is_restaurant_register = RestaurantMaster.objects.filter(user=user).exists()
+
             # User details to be returned in the response
             user_data = {
                 "user_id": user.id,
@@ -66,6 +67,7 @@ class OTPVerificationView(APIView):
                 "user": user_data,  # Include user details here
                 "refresh": str(refresh),
                 "access": str(refresh.access_token),
+                "is_restaurant_register": is_restaurant_register
             }, status=status.HTTP_200_OK)
         else:
             return Response({"error": "Invalid OTP or OTP expired."}, status=status.HTTP_400_BAD_REQUEST)

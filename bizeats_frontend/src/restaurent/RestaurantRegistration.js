@@ -211,6 +211,7 @@ const handleSubmitStep1 = async () => {
 
     if (response) {
       setrestaurantId(response?.restaurant_id);
+      localStorage.setItem("is_restaurant_register", JSON.stringify(true))
       handleNextStep();
     }
   } catch (error) {

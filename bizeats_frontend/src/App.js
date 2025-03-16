@@ -11,20 +11,35 @@ import PaymentOption from "./pages/PaymentOption";
 import Profile from "./customer/CusProfile";
 import RestHome from "./restaurent/RestHome";
 import RestaurantRegistration from "./restaurent/RestaurantRegistration";
+import DashboardOverview from "./vendor/DashboardOverview";
 
-// PrivateRoute component to protect routes
 function PrivateRoute({ children, user }) {
   return user ? children : <Navigate to="/" />;
 }
 
+function VendorPrivateRoute({ children, user, is_restaurant_register }) {
+  if (!user) {
+    return <Navigate to="/" />;
+  }
+
+  if (!is_restaurant_register) {
+    return <Navigate to="/register-your-restaurent" />;
+  }
+
+  return children;
+}
+
 function App() {
-  // Initialize user state from localStorage
   const [user, setUser] = useState(() => {
     const storedUser = localStorage.getItem("user");
     return storedUser ? JSON.parse(storedUser) : null;
   });
 
-  // Sync user state with localStorage
+  const [is_restaurant_register, setIsRestaurantRegister] = useState(() => {
+    const storedRegistration = localStorage.getItem("is_restaurant_register");
+    return storedRegistration ? JSON.parse(storedRegistration) : false;
+  });
+
   useEffect(() => {
     if (user) {
       localStorage.setItem("user", JSON.stringify(user));
@@ -32,6 +47,10 @@ function App() {
       localStorage.removeItem("user");
     }
   }, [user]);
+
+  useEffect(() => {
+    localStorage.setItem("is_restaurant_register", JSON.stringify(is_restaurant_register));
+  }, [is_restaurant_register]);
 
   return (
     <Router>
@@ -51,7 +70,7 @@ function App() {
             <Route path="/payments" element={<PaymentOption />} />
             <Route
               path="/register-your-restaurent"
-              element={<RestHome setUser={setUser} />}
+              element={<RestHome setUser={setUser} setIsRestaurantRegister={setIsRestaurantRegister} />}
             />
 
             {/* Protected Routes */}
@@ -59,7 +78,7 @@ function App() {
               path="/register-restaurant"
               element={
                 <PrivateRoute user={user}>
-                  <RestaurantRegistration user={user} setUser={setUser} />
+                  <RestaurantRegistration user={user} setUser={setUser} setIsRestaurantRegister={setIsRestaurantRegister} />
                 </PrivateRoute>
               }
             />
@@ -68,7 +87,7 @@ function App() {
               path="/register-restaurant/:restaurant_id"
               element={
                 <PrivateRoute user={user}>
-                  <RestaurantRegistration user={user} setUser={setUser} />
+                  <RestaurantRegistration user={user} setUser={setUser} setIsRestaurantRegister={setIsRestaurantRegister} />
                 </PrivateRoute>
               }
             />
@@ -79,6 +98,16 @@ function App() {
                 <PrivateRoute user={user}>
                   <Profile user={user} setUser={setUser} />
                 </PrivateRoute>
+              }
+            />
+
+            {/* Vendor Dashboard Route */}
+            <Route
+              path="/vendor-dashboard"
+              element={
+                <VendorPrivateRoute user={user} is_restaurant_register={is_restaurant_register}>
+                  <DashboardOverview user={user} setUser={setUser} />
+                </VendorPrivateRoute>
               }
             />
 
