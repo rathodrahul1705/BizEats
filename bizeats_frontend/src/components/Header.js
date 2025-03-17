@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import { Home, ShoppingCart, LogIn, User, LogOut, Store, Briefcase} from "lucide-react";
+import { Home, ShoppingCart, LogIn, User, LogOut, Store, Briefcase } from "lucide-react";
 import SignIn from "./SignIn";
 import "../assets/css/Header.css";
 
@@ -8,9 +8,8 @@ const Header = ({ user, setUser }) => {
   const [showSignIn, setShowSignIn] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const is_restaurant_register = localStorage.getItem("is_restaurant_register");
+  const dropdownRef = useRef(null);
 
-  console.log("is_restaurant_register======",is_restaurant_register == "true")
-  
   const handleLogout = () => {
     setUser(null);
     setShowDropdown(false);
@@ -18,6 +17,20 @@ const Header = ({ user, setUser }) => {
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
   };
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowDropdown(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   return (
     <header className="header-container">
@@ -53,7 +66,7 @@ const Header = ({ user, setUser }) => {
           {/* User Authentication Section */}
           <li className="auth-section">
             {user ? (
-              <div className="user-menu">
+              <div className="user-menu" ref={dropdownRef}>
                 <div
                   className="login-user-info"
                   onClick={() => setShowDropdown(!showDropdown)}
@@ -69,14 +82,12 @@ const Header = ({ user, setUser }) => {
                       <User size={16} className="icon" /> Profile
                     </Link>
 
-                    {
-                      is_restaurant_register == "true" ? (
+                    {is_restaurant_register === "true" && (
+                      <Link to="/vendor-dashboard" className="dropdown-item">
+                        <Briefcase size={16} className="icon" /> Business
+                      </Link>
+                    )}
 
-                        <Link to="/vendor-dashboard" className="dropdown-item">
-                            <Briefcase size={16} className="icon" /> Business
-                        </Link>
-                      ):""
-                    }
                     <button onClick={handleLogout} className="dropdown-item logout-btn-header">
                       <LogOut size={16} className="icon" /> Logout
                     </button>
@@ -90,7 +101,6 @@ const Header = ({ user, setUser }) => {
               </button>
             )}
           </li>
-
         </ul>
       </nav>
 

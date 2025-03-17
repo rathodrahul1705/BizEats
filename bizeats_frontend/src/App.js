@@ -12,6 +12,7 @@ import Profile from "./customer/CusProfile";
 import RestHome from "./restaurent/RestHome";
 import RestaurantRegistration from "./restaurent/RestaurantRegistration";
 import DashboardOverview from "./vendor/DashboardOverview";
+import MenuManagement from "./vendor/MenuManagement"
 
 function PrivateRoute({ children, user }) {
   return user ? children : <Navigate to="/" />;
@@ -107,6 +108,15 @@ function App() {
               element={
                 <VendorPrivateRoute user={user} is_restaurant_register={is_restaurant_register}>
                   <DashboardOverview user={user} setUser={setUser} />
+                </VendorPrivateRoute>
+              }
+            />
+
+            <Route
+              path="/vendor-dashboard/menu/:restaurant_id"
+              element={
+                <VendorPrivateRoute user={user} is_restaurant_register={is_restaurant_register}>
+                  <MenuManagement user={user} setUser={setUser} />
                 </VendorPrivateRoute>
               }
             />
