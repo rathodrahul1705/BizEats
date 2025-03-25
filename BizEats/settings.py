@@ -60,7 +60,7 @@ MIDDLEWARE = [
 ]
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),  # Access token expiration time
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=8),  # Access token expiration time
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),  # Refresh token expiration time
     'ROTATE_REFRESH_TOKENS': False,  # Whether to rotate refresh tokens on refresh
     'BLACKLIST_AFTER_ROTATION': False,  # Whether to blacklist old refresh tokens
@@ -100,7 +100,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 ROOT_URLCONF = 'BizEats.urls'
 MEDIA_URL = "/media/"
-MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+# MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+MEDIA_ROOT = os.path.join(BASE_DIR, "public")
 
 TEMPLATES = [
     {

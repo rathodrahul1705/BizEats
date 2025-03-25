@@ -8,15 +8,21 @@ const Header = ({ user, setUser }) => {
   const [showSignIn, setShowSignIn] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const is_restaurant_register = localStorage.getItem("is_restaurant_register");
+  const [cartCount, setCartCount] = useState(localStorage.getItem("cart_count") || 0);
+
   const dropdownRef = useRef(null);
 
-  const handleLogout = () => {
-    setUser(null);
-    setShowDropdown(false);
-    localStorage.removeItem("user");
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("refreshToken");
-  };
+  useEffect(() => {
+    const updateCartCount = () => {
+      setCartCount(localStorage.getItem("cart_count") || 0);
+    };
+
+    window.addEventListener("storage", updateCartCount);
+    
+    return () => {
+      window.removeEventListener("storage", updateCartCount);
+    };
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -31,6 +37,21 @@ const Header = ({ user, setUser }) => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  const handleLogout = () => {
+    setUser(null);
+    setShowDropdown(false);
+    setCartCount(0); // Reset cart count state
+    localStorage.removeItem("user");
+    localStorage.removeItem("access");
+    localStorage.removeItem("refresh");
+    localStorage.removeItem("cart_count");
+    localStorage.removeItem("is_restaurant_register");
+    localStorage.removeItem("session_id");
+    localStorage.removeItem("cart_current_step");
+    localStorage.removeItem("selected_address");
+    localStorage.removeItem("user_full_address");
+  };
 
   return (
     <header className="header-container">
@@ -59,7 +80,7 @@ const Header = ({ user, setUser }) => {
           <li>
             <Link to="/cart" className="nav-link">
               <ShoppingCart size={20} className="icon" />
-              Cart
+              Cart <span className="header-cart-count">{cartCount}</span>
             </Link>
           </li>
 

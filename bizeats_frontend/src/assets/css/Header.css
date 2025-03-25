@@ -185,3 +185,19 @@
         margin: 0;
     }
 }
+
+.header-cart-count {
+    background-color: green;
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+    border-radius: 9%;
+    padding: 3px 8px;
+    margin-left: 5px;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    min-width: 20px;
+    height: 20px;
+  }
+  

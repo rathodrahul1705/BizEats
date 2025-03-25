@@ -68,12 +68,12 @@
 
 /* Food Image */
 .food-list .food-image {
-    width: 200px;
+    width: 150px;
     height: 100%;
     object-fit: cover;
     border-radius: 10px;
     margin-right: 15px;
-    height: 180px;
+    height: 130px;
 }
 
 /* Food Details */
@@ -84,7 +84,7 @@
 
 /* Food Title */
 .food-title {
-    font-size: 24px;
+    font-size: 18px;
     font-weight: 600;
     color: #222;
     margin-bottom: 15px;
@@ -239,3 +239,63 @@
     }
 }
 
+/* Overlay to cover background */
+.order-details-modal-class-overlay {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: flex-end; /* Align modal at the bottom */
+    justify-content: center;
+    z-index: 1000;
+  }
+  
+  /* Modal box - Centered above the bottom */
+  .order-details-modal-class {
+    background: white;
+    width: 90%;
+    max-width: 600px;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0px -5px 15px rgba(0, 0, 0, 0.2);
+    position: absolute;
+    bottom: 15%;
+    transform: translateY(100%);
+    animation: slideUp 0.3s forwards ease-out;
+  }
+  
+  /* Modal actions */
+  .modal-actions-cart {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 20px;
+  }
+  
+  .modal-actions-cart button {
+    padding: 10px 15px;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    border-radius: 5px;
+  }
+  
+  .modal-actions-cart button:first-child {
+    background-color: #ccc;
+  }
+  
+  .modal-actions-cart button:last-child {
+    background-color: #e65c00;
+    color: white;
+  }
+  
+  /* Slide-up animation */
+  @keyframes slideUp {
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+  

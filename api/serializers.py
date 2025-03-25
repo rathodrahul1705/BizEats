@@ -1,7 +1,8 @@
 import uuid
 from rest_framework import serializers
+from django.db.models import Avg
 from django.contrib.auth import get_user_model
-from .models import RestaurantMaster, RestaurantOwnerDetail, RestaurantLocation, RestaurantCuisine, RestaurantDeliveryTiming, RestaurantDocuments
+from .models import RestaurantMaster, RestaurantOwnerDetail, RestaurantLocation, RestaurantCuisine, RestaurantDeliveryTiming, RestaurantDocuments, RestaurantMenu, UserDeliveryAddress
 
 User = get_user_model()
 
@@ -34,13 +35,30 @@ class RestaurantLocationSerializer(serializers.ModelSerializer):
         model = RestaurantLocation
         fields = ['restaurant_id', 'shop_no_building', 'floor_tower', 'area_sector_locality', 'city', 'nearby_locality']
 
+class CuisineSerializer(serializers.Serializer):
+    cuisine_name = serializers.CharField()
+
+class RestaurantMenuSerializer(serializers.Serializer):
+    item_price = serializers.CharField()
+    item_name = serializers.CharField()
+    description = serializers.CharField()
+    item_image = serializers.CharField()
+    id = serializers.CharField()
+
+class DeliveryTimingSerializer(serializers.Serializer):
+    day = serializers.CharField()
+    open = serializers.BooleanField()
+    start_time = serializers.TimeField()
+    end_time = serializers.TimeField()
+
 class RestaurantMasterSerializer(serializers.ModelSerializer):
     owner_details = RestaurantOwnerDetailSerializer()
     restaurant_location = RestaurantLocationSerializer()
+    menu_items = RestaurantMenuSerializer(many=True, read_only=True)  # Use the correct related name
 
     class Meta:
         model = RestaurantMaster
-        fields = ['restaurant_name', 'owner_details', 'restaurant_location']
+        fields = ['restaurant_name', 'owner_details', 'restaurant_location', 'menu_items']
 
     def generate_unique_restaurant_id(self, name):
         """Generate a unique restaurant ID."""
@@ -88,8 +106,6 @@ class RestaurantMasterSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
 
-        # print("validated_data=====",validated_data)
-
         # Update the RestaurantMaster instance
         instance.restaurant_name = validated_data.get('restaurant_name', instance.restaurant_name)
         instance.save()
@@ -115,14 +131,6 @@ class RestaurantMasterSerializer(serializers.ModelSerializer):
 
         return instance
 
-class CuisineSerializer(serializers.Serializer):
-    cuisine_name = serializers.CharField()
-
-class DeliveryTimingSerializer(serializers.Serializer):
-    day = serializers.CharField()
-    open = serializers.BooleanField()
-    start_time = serializers.TimeField()
-    end_time = serializers.TimeField()
 
 class RestaurantStep2Serializer(serializers.Serializer):
     restaurant_id = serializers.CharField(required=True)
@@ -131,11 +139,22 @@ class RestaurantStep2Serializer(serializers.Serializer):
     delivery_timings = DeliveryTimingSerializer(many=True, required=True) 
 
 class RestaurantSerializerByStatus(serializers.ModelSerializer):
-    location = RestaurantLocationSerializer(source="restaurant_location", read_only=True) 
+    location = RestaurantLocationSerializer(source="restaurant_location", read_only=True)
+    cuisines = CuisineSerializer(many=True, required=True)
+    menu_items = RestaurantMenuSerializer(many=True, read_only=True)  # Use the correct related name
 
     class Meta:
         model = RestaurantMaster
-        fields = ["restaurant_id", "restaurant_name", "created_at","restaurant_status", "location"]
+        fields = [
+            "restaurant_id",
+            "restaurant_name",
+            "profile_image",
+            "created_at",
+            "restaurant_status",
+            "location",
+            "cuisines",
+            "menu_items",
+        ]
 
 class RestaurantListSerializer(serializers.Serializer):
     active_restaurants = RestaurantSerializerByStatus(many=True)
@@ -184,3 +203,33 @@ class RestaurantMasterNewSerializer(serializers.ModelSerializer):
     class Meta:
         model = RestaurantMaster
         fields = '__all__'
+
+class RestaurantMenuSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RestaurantMenu
+        fields = "__all__"  # Include all fields
+
+class UserDeliveryAddressSerializer(serializers.ModelSerializer):
+    full_address = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = UserDeliveryAddress
+        fields = "__all__"
+        read_only_fields = ["id", "created_at", "updated_at", "user"]
+
+    def create(self, validated_data):
+        """Ensure only one default address is set per user."""
+        user = validated_data["user"]
+        if validated_data.get("is_default", False):
+            UserDeliveryAddress.objects.filter(user=user, is_default=True).update(is_default=False)
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        """Ensure only one address is marked as default at a time."""
+        if validated_data.get("is_default", False):
+            UserDeliveryAddress.objects.filter(user=instance.user, is_default=True).update(is_default=False)
+        return super().update(instance, validated_data)
+    
+    def get_full_address(self, obj):
+        landmark = f"Landmark: {obj.near_by_landmark}" if obj.near_by_landmark else "No Landmark"
+        return f"{obj.street_address}, {obj.city}, {obj.state}, {obj.zip_code}, {obj.country} ({landmark}, Type: {obj.home_type})"

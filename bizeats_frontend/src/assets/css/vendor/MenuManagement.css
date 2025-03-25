@@ -1,4 +1,4 @@
-/* Slide-in Modal */
+/* Modal Overlay */
 .modal-overlay-add-menue {
     position: fixed;
     top: 0;
@@ -18,17 +18,32 @@
     right: 0;
 }
 
+/* Modal Content with Scroller */
 .modal-content {
     display: flex;
     flex-direction: column;
     gap: 15px;
+    max-height: 90vh; /* Set a max height for the modal content */
+    overflow-y: auto; /* Enable vertical scrolling */
+    padding-right: 10px; /* Add padding to avoid scrollbar overlap */
 }
 
+/* Modal Heading */
 .modal-content h3 {
-    margin: 0;
+    margin: 0 0 20px 0; /* Space below the heading */
     font-size: 20px;
+    color: #1f2937;
 }
 
+/* Label Styling */
+.modal-content label {
+    font-weight: bold;
+    color: #374151;
+    margin-bottom: 8px; /* Space below labels */
+    display: block; /* Ensure labels are on their own line */
+}
+
+/* Input, Textarea, and Select Styling */
 .modal-content input,
 .modal-content textarea,
 .modal-content select {
@@ -36,16 +51,31 @@
     padding: 10px;
     border: 1px solid #ccc;
     border-radius: 5px;
+    font-size: 14px;
+    margin-bottom: 15px; /* Space below each input */
 }
 
-.modal-content label {
-    font-weight: bold;
+.modal-content textarea {
+    resize: vertical;
+    min-height: 100px;
 }
 
+/* File Input Styling */
 .modal-content input[type="file"] {
     border: none;
+    padding: 0;
+    margin-bottom: 15px; /* Space below file input */
 }
 
+/* Checkbox Styling */
+.modal-content .checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* Space between checkbox and label text */
+    margin-bottom: 15px; /* Space below checkbox */
+}
+
+/* Submit Button Styling */
 .add-item-button {
     background-color: #e65c00;
     color: white;
@@ -53,12 +83,16 @@
     border: none;
     cursor: pointer;
     border-radius: 5px;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+    margin-top: 10px; /* Space above the button */
 }
 
 .add-item-button:hover {
     background-color: #d35400;
 }
 
+/* Close Button Styling */
 .close-modal {
     background: none;
     border: none;
@@ -67,14 +101,21 @@
     position: absolute;
     top: 10px;
     right: 10px;
+    font-size: 24px;
 }
 
+.close-modal:hover {
+    color: #000;
+}
+
+/* Responsive Design */
 @media (max-width: 768px) {
     .modal-overlay-add-menue {
         width: 100%;
     }
 }
 
+/* Vendor Menu Container */
 .vendor-menu {
     padding: 20px;
     max-width: 1200px;
@@ -84,11 +125,12 @@
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
+/* Header Section */
 .vendor-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 15px;
+    margin-bottom: 20px;
 }
 
 .vendor-header h2 {
@@ -108,12 +150,14 @@
     align-items: center;
     gap: 8px;
     font-size: 16px;
+    transition: background-color 0.3s ease;
 }
 
 .vendor-button.add-item:hover {
     background-color: #d35400;
 }
 
+/* Menu Table */
 .vendor-menu-table {
     width: 100%;
     border-collapse: collapse;
@@ -132,13 +176,20 @@
     font-weight: bold;
 }
 
-.menu-item-img {
-    width: 50px;
-    height: 50px;
-    object-fit: cover;
-    border-radius: 5px;
+.vendor-menu-table td {
+    color: #4b5563;
 }
 
+/* Menu Item Image */
+.menue-images {
+    width: 60px;
+    height: 30px;
+    border-radius: 8px;
+    object-fit: cover;
+    border: 2px solid #ddd;
+}
+
+/* Availability */
 .availability {
     cursor: pointer;
     display: flex;
@@ -155,6 +206,7 @@
     color: #ef4444;
 }
 
+/* Action Buttons */
 .action-buttons {
     display: flex;
     justify-content: flex-end;
@@ -168,6 +220,11 @@
     border-radius: 5px;
     border: none;
     cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.vendor-menu-table .edit:hover {
+    background-color: #0d8f6e;
 }
 
 .vendor-menu-table .delete {
@@ -177,8 +234,14 @@
     border-radius: 5px;
     border: none;
     cursor: pointer;
+    transition: background-color 0.3s ease;
 }
 
+.vendor-menu-table .delete:hover {
+    background-color: #dc2626;
+}
+
+/* Responsive Design */
 @media (max-width: 768px) {
     .vendor-menu-table {
         font-size: 14px;
@@ -189,9 +252,9 @@
         padding: 8px;
     }
 
-    .menu-item-img {
-        width: 40px;
-        height: 40px;
+    .menue-images {
+        width: 50px;
+        height: 25px;
     }
 
     .vendor-header {
@@ -203,5 +266,15 @@
     .action-buttons {
         flex-direction: column;
         align-items: flex-end;
+    }
+
+    .modal-content input,
+    .modal-content textarea,
+    .modal-content select {
+        font-size: 12px;
+    }
+
+    .add-item-button {
+        font-size: 14px;
     }
 }

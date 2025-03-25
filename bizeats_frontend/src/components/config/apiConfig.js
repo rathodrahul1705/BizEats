@@ -25,6 +25,43 @@ const API_ENDPOINTS = {
 
     STEP_FOUR: (restaurantId) => 
       restaurantId ? `${BASE_URL}/restaurant/store/step-four/${restaurantId}/` : `${BASE_URL}/restaurant/store/step-four/`,
+
+    RES_MENUE_STORE: (restaurantId) => 
+      restaurantId ? `${BASE_URL}/restaurant/menue/store/${restaurantId}/` : `${BASE_URL}/api/restaurant/menue/store/`,
+
+    RES_MENUE_LIST: (restaurantId) => 
+      restaurantId ? `${BASE_URL}/restaurant/menue/list/${restaurantId}/` : `${BASE_URL}/api/restaurant/menue/list/`,
+
+    RES_MENUE_DETAILS: (munuId) => 
+      munuId ? `${BASE_URL}/restaurant/menue/details/${munuId}/` : `${BASE_URL}/api/restaurant/menue/details/`,
+
+    RES_MENUE_UPDATE: (munuId,restaurant_id) => 
+      munuId ? `${BASE_URL}/restaurant/menue/update/${munuId}/${restaurant_id}/` : `${BASE_URL}/api/restaurant/menue/update/`,
+
+    RES_MENUE_DELETE: (munuId,restaurant_id) => 
+      munuId ? `${BASE_URL}/restaurant/menue/delete/${munuId}/${restaurant_id}/` : `${BASE_URL}/api/restaurant/menue/delete/`,
+
+  },
+
+  HOME: {
+    LIVE_RES_LIST: `${BASE_URL}/restaurant/live/list/`,
+  },
+
+  ORDER: {
+
+    RES_MENU_LIST_BY_RES_ID: (restaurant_id) => 
+      restaurant_id ? `${BASE_URL}/restaurant/menu/list/${restaurant_id}/` : `${BASE_URL}/restaurant/menu/list/`,
+
+    ADD_TO_CART: `${BASE_URL}/restaurant/cart/add/`,
+    GET_CART_DETAILS: `${BASE_URL}/restaurant/cart/list/`,
+
+    GET_CART_ITEM_LIST: `${BASE_URL}/restaurant/cart/details/`,
+
+    CLEAR_CART: `${BASE_URL}/restaurant/cart/clear/`,
+    USER_ADDRESS_STORE: `${BASE_URL}/user_address/store/`,
+    USER_ADDRESS_LIST: `${BASE_URL}/addresses/list/`,
+    UPDATE_CART_USER: `${BASE_URL}/restaurant/cart/user/update/`
+
   },
 };
 

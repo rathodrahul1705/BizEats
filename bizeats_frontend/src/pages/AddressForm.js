@@ -4,6 +4,8 @@ import { MapContainer, TileLayer, Marker } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import "../assets/css/AddressSelection.css";
+import API_ENDPOINTS from "../components/config/apiConfig";
+import fetchData from "../components/services/apiService";
 
 // Fix default icon issues in react-leaflet
 delete L.Icon.Default.prototype._getIconUrl;
@@ -48,12 +50,35 @@ const AddressForm = ({ onClose, onSave }) => {
       .catch((err) => console.error("Reverse geocoding error:", err));
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const { street, city, state, zip, country, landmark, addressType } = newAddress;
     if (street.trim() && city.trim() && state.trim() && zip.trim() && country.trim()) {
       const fullAddress = `${street}, ${city}, ${state}, ${zip}, ${country} (Landmark: ${landmark}, Type: ${addressType})`;
-      onSave(fullAddress);
-      onClose();
+
+      try {
+        const payload = {
+          street_address: street,
+          user: 1,
+          city: city,
+          state: state,
+          zip_code: zip,
+          country: country,
+          near_by_landmark: landmark,
+          home_type: addressType,
+          latitude: null,
+          longitude: null,
+          is_default: true,
+        };
+        
+        const response = await fetchData(API_ENDPOINTS.ORDER.USER_ADDRESS_STORE, "POST", payload, localStorage.getItem("access"));
+    
+        if (response) {
+          onSave(fullAddress);
+          onClose();
+        }
+      } catch (error) {
+        console.error("Error:", error);
+      }
     }
   };
 

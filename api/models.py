@@ -86,7 +86,6 @@ class RestaurantMaster(models.Model):
         return self.restaurant_name
 
 class RestaurantOwnerDetail(models.Model):
-    # restaurant = models.OneToOneField(RestaurantMaster, on_delete=models.CASCADE)
     restaurant = models.OneToOneField(RestaurantMaster, on_delete=models.CASCADE, related_name='owner_details')
     owner_name = models.CharField(max_length=255)
     owner_email_address = models.EmailField(max_length=255)
@@ -179,3 +178,129 @@ class RestaurantDocuments(models.Model):
 
     def __str__(self):
         return f"{self.restaurant.restaurant_name} - Documents"
+    
+class RestaurantMenu(models.Model):
+    CATEGORY_CHOICES = [
+        ('Appetizer', 'Appetizer'),
+        ('Main Course', 'Main Course'),
+        ('Dessert', 'Dessert'),
+        ('Beverage', 'Beverage'),
+    ]
+    
+    SPICE_LEVEL_CHOICES = [
+        ('Mild', 'Mild'),
+        ('Medium', 'Medium'),
+        ('Spicy', 'Spicy'),
+        ('Extra Spicy', 'Extra Spicy'),
+    ]
+    
+    SERVING_SIZE_CHOICES = [
+        ('Small', 'Small'),
+        ('Medium', 'Medium'),
+        ('Large', 'Large'),
+    ]
+    
+    restaurant = models.ForeignKey('RestaurantMaster', on_delete=models.CASCADE, related_name='menu_items')
+    item_name = models.CharField(max_length=255)
+    item_price = models.DecimalField(max_digits=6, decimal_places=2)
+    description = models.TextField()
+    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES)
+    cuisines = models.ManyToManyField('RestaurantCuisine', related_name='menu_items')
+    item_image = models.ImageField(upload_to='menu_images/', blank=True, null=True)
+    spice_level = models.CharField(max_length=20, choices=SPICE_LEVEL_CHOICES)
+    preparation_time = models.PositiveIntegerField(help_text="Estimated time in minutes")
+    serving_size = models.CharField(max_length=10, choices=SERVING_SIZE_CHOICES)
+    availability = models.BooleanField(default=True)
+    stock_quantity = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(default=now)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        db_table = "restaurant_menu"
+
+    def __str__(self):
+        return f"{self.restaurant.restaurant_name} - {self.item_name}"
+
+class Cart(models.Model):
+    """
+    Represents a shopping cart for a user (logged-in or guest).
+    """
+
+    # Define status choices
+    CART_STATUS_CHOICES = (
+        (1, 'Item Added'),
+        (2, 'Proceeded for Checkout'),
+        (3, 'Address Updated'),
+        (4, 'Proceeded for Payment'),
+        (5, 'Payment Completed'),
+    )
+
+    user = models.ForeignKey(
+        User, 
+        on_delete=models.CASCADE, 
+        null=True, 
+        blank=True, 
+        related_name="carts"
+    )  # Null for guest users
+    restaurant = models.ForeignKey(
+        RestaurantMaster, 
+        on_delete=models.CASCADE, 
+        related_name="carts"
+    )  # Each cart is associated with a specific restaurant
+    session_id = models.CharField(
+        max_length=255, 
+        null=True, 
+        blank=True
+    )  # For guest users
+    item = models.ForeignKey(
+        RestaurantMenu, 
+        on_delete=models.CASCADE, 
+        related_name="carts"
+    )  # The menu item added to the cart
+    quantity = models.PositiveIntegerField(default=1)  # Quantity of the item
+    cart_status = models.PositiveIntegerField(
+        choices=CART_STATUS_CHOICES, 
+        default=1
+    )  # Status of the cart
+    created_at = models.DateTimeField(default=now)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "carts"
+        # unique_together = [("user", "restaurant", "item"), ("session_id", "restaurant", "item")]
+
+    def __str__(self):
+        if self.user:
+            return f"Cart for {self.user.full_name} at {self.restaurant.restaurant_name} - {self.item.item_name}"
+        return f"Cart for Guest (Session: {self.session_id}) at {self.restaurant.restaurant_name} - {self.item.item_name}"
+    
+class UserDeliveryAddress(models.Model):
+    HOME = "Home"
+    OFFICE = "Office"
+    OTHER = "Other"
+    
+    HOME_TYPE_CHOICES = [
+        (HOME, "Home"),
+        (OFFICE, "Office"),
+        (OTHER, "Other"),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="delivery_addresses")
+    street_address = models.CharField(max_length=255)
+    city = models.CharField(max_length=100)
+    state = models.CharField(max_length=100)
+    zip_code = models.CharField(max_length=20)
+    country = models.CharField(max_length=100)
+    near_by_landmark = models.CharField(max_length=255, blank=True, null=True)
+    home_type = models.CharField(max_length=10, choices=HOME_TYPE_CHOICES, default=HOME)
+    latitude = models.DecimalField(max_digits=9, decimal_places=6, blank=True, null=True)
+    longitude = models.DecimalField(max_digits=9, decimal_places=6, blank=True, null=True)
+    is_default = models.BooleanField(default=False)
+    created_at = models.DateTimeField(default=now)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "user_delivery_address"
+
+    def __str__(self):
+        return f"{self.user.full_name} - {self.street_address}, {self.city}"

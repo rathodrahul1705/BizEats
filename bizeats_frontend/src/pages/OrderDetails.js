@@ -1,99 +1,219 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { PlusCircle, MinusCircle, ShoppingCart } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import "../assets/css/OrderDetails.css";
+import API_ENDPOINTS from "../components/config/apiConfig";
+import fetchData from "../components/services/apiService";
+import { getOrCreateSessionId } from "../components/helper/Helper";
 
-const storeDetails = {
-  name: "Gourmet Hub",
-  deliveryTime: "30-40 min",
-  location: "123 Main Street, Downtown",
-  rating: 4.5,
-};
-
-const foodData = [
-  {
-    id: 1,
-    title: "Classic Breakfast",
-    description: "A delicious morning meal with eggs, toast, and coffee.",
-    image: require("../assets/img/breakfast_image.webp"),
-    price: 12.99,
-    deliveryTime: "30 min",
-    location: "Downtown Cafe",
-    type: "veg",
-  },
-  {
-    id: 2,
-    title: "Healthy Lunch",
-    description: "A fresh, healthy mix of greens, grilled chicken, and quinoa.",
-    image: require("../assets/img/lunch_image.jpg"),
-    price: 15.99,
-    deliveryTime: "25 min",
-    location: "Urban Bites",
-    type: "veg",
-  },
-  {
-    id: 3,
-    title: "Delicious Dinner",
-    description: "A gourmet dish with steak, mashed potatoes, and veggies.",
-    image: require("../assets/img/dinner_image.webp"),
-    price: 18.99,
-    deliveryTime: "40 min",
-    location: "Gourmet Hub",
-    type: "non-veg",
-  },
-];
-
-const OrderDetails = () => {
+const OrderDetails = ({ user, setUser }) => {
+  const { restaurant_id } = useParams();
   const [cart, setCart] = useState({});
   const [filter, setFilter] = useState("all");
+  const [storeDetails, setStoreDetails] = useState({
+    name: "",
+    deliveryTime: "",
+    location: "",
+    rating: 0,
+  });
+  const [foodData, setFoodData] = useState([]);
+  const [showResetCartModal, setShowResetCartModal] = useState(false);
+  const [pendingItem, setPendingItem] = useState(null);
   const navigate = useNavigate();
+  const sessionId = getOrCreateSessionId();
 
-  // Add item to cart
-  const addToCart = (id) => {
-    setCart((prevCart) => ({
-      ...prevCart,
-      [id]: (prevCart[id] || 0) + 1,
-    }));
+  const fetchCartDetails = async () => {
+    try {
+      const response = await fetchData(
+        API_ENDPOINTS.ORDER.GET_CART_DETAILS,
+        "POST",
+        {
+          user_id: user?.user_id || null,
+          session_id: sessionId,
+        }
+      );
+
+      if (response.status === "success") {
+        const updatedCart = {};
+        response.cart_details.forEach((item) => {
+          updatedCart[item.item_id] = item.quantity;
+        });
+        setCart(updatedCart);
+      } else {
+        console.error("Error fetching cart details:", response.message);
+      }
+    } catch (error) {
+      console.error("Error fetching cart details:", error);
+    }
   };
 
-  // Remove item from cart
-  const removeFromCart = (id) => {
-    setCart((prevCart) => {
-      if (!prevCart[id]) return prevCart;
-      const updatedCart = { ...prevCart };
-      updatedCart[id] -= 1;
-      if (updatedCart[id] <= 0) delete updatedCart[id];
-      return updatedCart;
-    });
+  const fetchDataOrderList = async () => {
+    try {
+      const response = await fetchData(
+        API_ENDPOINTS.ORDER.RES_MENU_LIST_BY_RES_ID(restaurant_id),
+        "GET",
+        null
+      );
+
+      setStoreDetails({
+        name: response.restaurant_name,
+        deliveryTime: `${response.time_required_to_reach_loc} min`,
+        location: response.Address,
+        rating: response.rating,
+      });
+
+      setFoodData(
+        response.itemlist.map((item) => ({
+          id: item.id,
+          title: item.item_name,
+          description: item.description,
+          image: item.item_image,
+          price: parseFloat(item.item_price),
+          deliveryTime: `${response.time_required_to_reach_loc} min`,
+          location: response.Address,
+          type: "all",
+        }))
+      );
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
   };
 
-  // Calculate total items in cart
+  useEffect(() => {
+    fetchDataOrderList();
+    fetchCartDetails();
+  }, [restaurant_id]);
+
+  // Function to perform the actual add-to-cart operation
+  const addItem = async (id) => {
+    try {
+      const response = await fetchData(
+        API_ENDPOINTS.ORDER.ADD_TO_CART,
+        "POST",
+        {
+          user_id: user?.user_id || null,
+          session_id: sessionId,
+          restaurant_id: restaurant_id,
+          item_id: id,
+          quantity: 1,
+          action: "add",
+        }
+      );
+
+      if (response.status === "success") {
+        localStorage.setItem("current_order_restaurant_id", restaurant_id);
+        await fetchCartDetails();
+      }
+    } catch (error) {
+      console.error("Error adding item to cart:", error);
+    }
+  };
+
+  const addToCart = async (id) => {
+    const currentRestaurantId = localStorage.getItem("current_order_restaurant_id");
+
+    // Log for debugging
+    console.log("restaurant_id ===", restaurant_id);
+    console.log("currentRestaurantId ===", currentRestaurantId);
+
+    if (currentRestaurantId && currentRestaurantId !== restaurant_id) {
+      setShowResetCartModal(true);
+      setPendingItem(id);
+      return;
+    }
+    await addItem(id);
+  };
+
+  // Called when user confirms the modal (Start A Fresh)
+  const handleFreshStart = async () => {
+    try {
+      await fetchData(API_ENDPOINTS.ORDER.CLEAR_CART, "POST", {
+        user_id: user?.user_id || null,
+        session_id: sessionId,
+      });
+      setCart({});
+      // After clearing cart, add the pending item
+      await addItem(pendingItem);
+    } catch (error) {
+      console.error("Error clearing cart:", error);
+    }
+    setShowResetCartModal(false);
+    setPendingItem(null);
+  };
+
+  const removeFromCart = async (id) => {
+    try {
+      const response = await fetchData(
+        API_ENDPOINTS.ORDER.ADD_TO_CART,
+        "POST",
+        {
+          user_id: user?.user_id || null,
+          session_id: sessionId,
+          restaurant_id: restaurant_id,
+          item_id: id,
+          action: "remove",
+        }
+      );
+
+      if (response.status === "success") {
+        await fetchCartDetails();
+      }
+    } catch (error) {
+      console.error("Error removing item from cart:", error);
+    }
+  };
+
   const totalItems = Object.values(cart).reduce((sum, quantity) => sum + quantity, 0);
 
-  // Filtered food list
-  const filteredFood = foodData.filter((food) => filter === "all" || food.type === filter);
+  const updateCartCount = (count) => {
+    localStorage.setItem("cart_count", count);
+    window.dispatchEvent(new Event("storage"));
+  };
 
+  useEffect(() => {
+    if (totalItems) {
+      updateCartCount(totalItems);
+    }else{
+      updateCartCount(totalItems);
+      localStorage.removeItem("cart_count", totalItems);
+    }
+  }, [cart]);
+
+  console.log("cart===",cart)
+
+  const filteredFood = foodData.filter(
+    (food) => filter === "all" || food.type === filter
+  );
+
+  console.log("showResetCartModal===",showResetCartModal)
+  
   return (
     <div className="food-list-container">
-      {/* Store Name */}
       <h1 className="store-title">{storeDetails.name}</h1>
 
-      {/* Store Details Card */}
       <div className="store-details-card">
         <p className="store-info">⏱ {storeDetails.deliveryTime}</p>
         <p className="store-info">📍 {storeDetails.location}</p>
         <p className="store-info">⭐ {storeDetails.rating} / 5</p>
       </div>
 
-      {/* Filter Buttons */}
       <div className="filter-container">
-        <button className={`filter-btn ${filter === "all" ? "active" : ""}`} onClick={() => setFilter("all")}>
+        <button
+          className={`filter-btn ${filter === "all" ? "active" : ""}`}
+          onClick={() => setFilter("all")}
+        >
           🍽 All
         </button>
-        <button className={`filter-btn ${filter === "veg" ? "active" : ""}`} onClick={() => setFilter("veg")}>
+        <button
+          className={`filter-btn ${filter === "veg" ? "active" : ""}`}
+          onClick={() => setFilter("veg")}
+        >
           🥦 Veg
         </button>
-        <button className={`filter-btn ${filter === "non-veg" ? "active" : ""}`} onClick={() => setFilter("non-veg")}>
+        <button
+          className={`filter-btn ${filter === "non-veg" ? "active" : ""}`}
+          onClick={() => setFilter("non-veg")}
+        >
           🍗 Non-Veg
         </button>
       </div>
@@ -105,17 +225,23 @@ const OrderDetails = () => {
             <img src={food.image} alt={food.title} className="food-image" />
             <div className="food-details">
               <h3 className="food-title">
-              {food.title} {food.type === "veg" ? "🥦" : "🍗"} 
+                {food.title} {food.type === "veg" ? "🥦" : "🍗"}
               </h3>
               <p className="food-description">{food.description}</p>
               <p className="food-location">📍 {food.location}</p>
-              <p className="food-price">$ {food.price.toFixed(2)}</p>
+              <p className="food-price">₹ {food.price}</p>
               <div className="cart-actions">
-                <button className="cart-btn" onClick={() => removeFromCart(food.id)}>
+                <button
+                  className="cart-btn"
+                  onClick={() => removeFromCart(food.id)}
+                >
                   <MinusCircle size={20} />
                 </button>
                 <span className="cart-quantity">{cart[food.id] || 0}</span>
-                <button className="cart-btn" onClick={() => addToCart(food.id)}>
+                <button
+                  className="cart-btn"
+                  onClick={() => addToCart(food.id)}
+                >
                   <PlusCircle size={20} />
                 </button>
               </div>
@@ -124,12 +250,27 @@ const OrderDetails = () => {
         ))}
       </ul>
 
-      {/* View Cart Button */}
       {totalItems > 0 && (
-        <button className="view-cart-btn" onClick={() => navigate("/cart")}>
+        <button
+          className="view-cart-btn"
+          onClick={() => navigate("/cart")}
+        >
           <ShoppingCart size={20} />
           View Cart ({totalItems})
         </button>
+      )}
+
+      {showResetCartModal && (
+        <div className="order-details-modal-overlay">
+          <div className="order-details-modal-class">
+            <h2>Items already in cart</h2>
+            <p>Your cart contains items from another restaurant. Would you like to reset your cart?</p>
+            <div className="modal-actions-cart">
+              <button onClick={() => setShowResetCartModal(false)}>No</button>
+              <button onClick={handleFreshStart}>Yes, A Start Fresh</button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
