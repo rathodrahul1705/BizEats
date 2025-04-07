@@ -2,9 +2,12 @@ import React from "react";
 import "../assets/css/PaymentDetails.css";
 
 const PaymentDetails = ({ method }) => {
+
+  console.log("method===",method)
+
   return (
     <div className="payment-details-container">
-      <h2 className="payment-details-title">Enter Payment Details</h2>
+      {/* <h2 className="payment-details-title">Enter Payment Details</h2> */}
 
       {method === "upi" && (
         <div className="payment-input">
@@ -52,7 +55,8 @@ const PaymentDetails = ({ method }) => {
         </div>
       )}
 
-      {method === "cod" && <p className="cod-info">You can pay in cash or via card on delivery.</p>}
+      {method === "cod" && <p className="cod-info">You can pay in cash or UPI on delivery.</p>}
+      {method === "online" && <p className="cod-info">Pay using payment gateway.</p>}
     </div>
   );
 };

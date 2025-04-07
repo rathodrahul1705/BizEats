@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
-import { Home, ShoppingCart, LogIn, User, LogOut, Store, Briefcase } from "lucide-react";
+import { Link,useNavigate } from "react-router-dom";
+import { Home, ShoppingCart, LogIn, User, LogOut, Store, Briefcase, Package } from "lucide-react";
 import SignIn from "./SignIn";
 import "../assets/css/Header.css";
 
@@ -9,7 +9,7 @@ const Header = ({ user, setUser }) => {
   const [showDropdown, setShowDropdown] = useState(false);
   const is_restaurant_register = localStorage.getItem("is_restaurant_register");
   const [cartCount, setCartCount] = useState(localStorage.getItem("cart_count") || 0);
-
+  const navigate = useNavigate();
   const dropdownRef = useRef(null);
 
   useEffect(() => {
@@ -51,6 +51,7 @@ const Header = ({ user, setUser }) => {
     localStorage.removeItem("cart_current_step");
     localStorage.removeItem("selected_address");
     localStorage.removeItem("user_full_address");
+    navigate("/");
   };
 
   return (
@@ -101,6 +102,10 @@ const Header = ({ user, setUser }) => {
                   <div className="dropdown-menu">
                     <Link to="/profile" className="dropdown-item">
                       <User size={16} className="icon" /> Profile
+                    </Link>
+
+                    <Link to="/track-order" className="dropdown-item">
+                      <Package size={16} className="icon" /> Track Order
                     </Link>
 
                     {is_restaurant_register === "true" && (

@@ -1,4 +1,5 @@
 const BASE_URL = "http://127.0.0.1:8000/api";
+// const BASE_URL = "https://e042-123-108-230-122.ngrok-free.app/api";
 
 const API_ENDPOINTS = {
   AUTH: {
@@ -60,9 +61,25 @@ const API_ENDPOINTS = {
     CLEAR_CART: `${BASE_URL}/restaurant/cart/clear/`,
     USER_ADDRESS_STORE: `${BASE_URL}/user_address/store/`,
     USER_ADDRESS_LIST: `${BASE_URL}/addresses/list/`,
-    UPDATE_CART_USER: `${BASE_URL}/restaurant/cart/user/update/`
+    UPDATE_CART_USER: `${BASE_URL}/restaurant/cart/user/update/`,
+
+    GET_ORDER_DETAILS: `${BASE_URL}/restaurant/order/details/`,
+    UPDATE_ORDER_DETAILS: `${BASE_URL}/restaurant/order/details/update/`,
+
+    VENDOR_ORDERS: `${BASE_URL}/restaurant/orders/details`,
+    UPDATE_ORDER_STATUS: `${BASE_URL}/order/update-order-status/`
 
   },
+
+  PAYMENT: {
+    CREATE_ORDER: `${BASE_URL}/restaurant/order/create-order/`,
+    VERIFY_PAYMENT: `${BASE_URL}/restaurant/order/verify-payment/`
+
+  },
+
+  TRACK: {
+    TRACK_ORDER: `${BASE_URL}/order/track-order-details/`,
+  }
 };
 
 export default API_ENDPOINTS;

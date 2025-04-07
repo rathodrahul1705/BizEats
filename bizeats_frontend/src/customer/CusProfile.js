@@ -64,15 +64,15 @@ const Profile = ({ user, setUser }) => {
       {/* Tab Navigation */}
       <Tabs>
         <TabList className="tab-list">
-          <Tab><List size={16} /> Orders</Tab>
-          <Tab><CreditCard size={16} /> Payments</Tab>
-          <Tab><MapPin size={16} /> Addresses</Tab>
+          {/* <Tab><List size={16} /> Orders</Tab> */}
+          {/* <Tab><CreditCard size={16} /> Payments</Tab> */}
+          {/* <Tab><MapPin size={16} /> Addresses</Tab> */}
           {/* <Tab><User size={16} /> Settings</Tab> */}
         </TabList>
 
-        <TabPanel><CusOrders /></TabPanel>
-        <TabPanel><CusPaymentsDetails /></TabPanel>
-        <TabPanel><CusAddresses /></TabPanel>
+        {/* <TabPanel><CusOrders /></TabPanel> */}
+        {/* <TabPanel><CusPaymentsDetails /></TabPanel> */}
+        {/* <TabPanel><CusAddresses /></TabPanel> */}
         {/* <TabPanel><CusSettings /></TabPanel> */}
       </Tabs>
 

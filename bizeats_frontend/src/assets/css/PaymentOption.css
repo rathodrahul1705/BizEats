@@ -1,83 +1,310 @@
-/* General Container */
-.food-list-container {
-    padding: 24px;
-    max-width: 600px;
-    margin: auto;
-    text-align: center;
-    font-family: 'Poppins', sans-serif;
+/* Main Container */
+.payment-page-container {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
-/* Store Name (Heading) */
-.store-title {
-    font-size: 28px;
-    font-weight: 700;
-    color: #333;
-    margin-bottom: 16px;
+/* Header Container */
+.payment-header-container {
+  margin-bottom: 24px;
+  text-align: left;
 }
 
-/* Store Details Card */
-.store-details-card {
-    background: #fff;
-    padding: 24px;
-    border-radius: 16px;
-    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.12);
-    border-left: 6px solid #e65c00;
-    text-align: left;
-    transition: transform 0.2s ease-in-out;
+.page-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #2e2e2e;
+  margin-bottom: 24px;
 }
 
-.store-details-card:hover {
-    transform: translateY(-4px);
+.back-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px 0;
+  color: #e65c00;
+  font-weight: 500;
+  margin-bottom: 8px;
 }
 
-/* Store Details Info */
-.store-info {
-    font-size: 16px;
-    font-weight: 500;
-    color: #444;
-    margin-bottom: 8px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
+.back-button:hover {
+  color: #cc5200;
 }
 
-/* Payment Button */
-.payment-btn {
-    display: block;
-    width: 100%;
-    background: #e65c00;
-    color: white;
-    padding: 14px 0;
-    border: none;
-    border-radius: 8px;
-    font-size: 16px;
-    font-weight: bold;
-    cursor: pointer;
-    margin-top: 16px;
-    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.15);
-    transition: background 0.3s ease;
+.back-button svg {
+  transition: transform 0.2s ease;
 }
 
-.payment-btn:hover {
-    background: #cc5200;
+.back-button:hover svg {
+  transform: translateX(-4px);
+}
+
+/* Delivery Route Section */
+.delivery-route {
+  background: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+}
+
+.address-point {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.point-marker {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.point-marker.start {
+  background: #e65c00;
+  color: white;
+}
+
+.point-marker.end {
+  background: #4CAF50;
+  color: white;
+}
+
+.address-details h3 {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 4px 0;
+  color: #333;
+}
+
+.address-details p {
+  font-size: 14px;
+  color: #555;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.delivery-line {
+  height: 20px;
+  width: 2px;
+  background: #e0e0e0;
+  margin-left: 11px;
+  margin-bottom: 8px;
+}
+
+/* Order Summary Card */
+.order-summary-card {
+  background: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 24px;
+  border-left: 4px solid #e65c00;
+}
+
+.order-summary-card h3 {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: #333;
+}
+
+.order-details {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.order-details p {
+  font-size: 14px;
+  color: #555;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+.order-details span {
+  color: #e65c00;
+  font-size: 16px;
+}
+
+.order-total {
+  font-weight: 600;
+  color: #222 !important;
+  margin-top: 12px !important;
+  padding-top: 12px !important;
+  border-top: 1px dashed #ddd;
+}
+
+/* Payment Methods Section */
+.payment-methods-section {
+  margin-bottom: 32px;
+}
+
+.payment-methods-section h2 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 16px;
+  text-align: left;
+}
+
+.payment-methods-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+.payment-method-card {
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: #fff;
+}
+
+.payment-method-card:hover {
+  border-color: #e65c00;
+  box-shadow: 0 2px 8px rgba(230, 92, 0, 0.1);
+}
+
+.payment-method-card.selected {
+  border: 2px solid #e65c00;
+  background-color: #fff8f5;
+}
+
+.method-icon {
+  font-size: 24px;
+  color: #e65c00;
+  margin-right: 16px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff2eb;
+  border-radius: 8px;
+}
+
+.method-info h4 {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 4px 0;
+  color: #333;
+}
+
+.method-info p {
+  font-size: 13px;
+  color: #666;
+  margin: 0;
+}
+
+/* Payment Actions */
+.payment-actions {
+  margin-top: 24px;
+}
+
+.payment-button {
+  width: 100%;
+  padding: 16px;
+  background-color: #e65c00;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.payment-button:hover {
+  background-color: #cc5200;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(230, 92, 0, 0.2);
+}
+
+.payment-button:active {
+  transform: translateY(0);
+}
+
+.payment-button:disabled {
+  background-color: #e0e0e0;
+  color: #a0a0a0;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.payment-button.processing {
+  background-color: #e65c00;
+}
+
+/* Loading Spinner */
+.spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Loading State */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #e65c00;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
 }
 
 /* Responsive Design */
-@media (max-width: 768px) {
-    .store-title {
-        font-size: 24px;
-    }
-
-    .store-details-card {
-        padding: 18px;
-    }
-
-    .store-info {
-        font-size: 14px;
-    }
-
-    .payment-btn {
-        font-size: 14px;
-        padding: 12px 0;
-    }
+@media (max-width: 480px) {
+  .payment-page-container {
+    padding: 16px;
+  }
+  
+  .page-title {
+    font-size: 20px;
+  }
+  
+  .order-summary-card {
+    padding: 16px;
+  }
+  
+  .payment-button {
+    padding: 14px;
+    font-size: 15px;
+  }
 }

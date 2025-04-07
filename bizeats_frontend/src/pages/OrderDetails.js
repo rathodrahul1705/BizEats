@@ -179,13 +179,9 @@ const OrderDetails = ({ user, setUser }) => {
     }
   }, [cart]);
 
-  console.log("cart===",cart)
-
   const filteredFood = foodData.filter(
     (food) => filter === "all" || food.type === filter
   );
-
-  console.log("showResetCartModal===",showResetCartModal)
   
   return (
     <div className="food-list-container">

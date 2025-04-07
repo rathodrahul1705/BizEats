@@ -1,11 +1,19 @@
-from django.urls import path
+from django.urls import path, re_path, include
+
+from api.payment.payment import create_order, verify_payment
 from .views import UserProfileView, UserRegistrationView, OTPVerificationView, UserLoginView
 from .restaurent.registration_process import RestaurantStoreStepOne, RestaurantStoreStepTwo, RestaurantStoreStepThree, RestaurantStoreStepFour, RestaurantByUserAPIView, RestaurantByRestauranrtAPIView, RestaurantMenueStore, RestaurantMenueList,RestaurantMenueDetails,RestaurantMenueUpdate,RestaurantMenueDelete, RestaurantListAPI, RestaurantDetailMenuView
 from django.conf import settings
 from django.conf.urls.static import static
-from .restaurent.restaurant_order import RestaurantCartAddOrRemove, RestaurantCartList, CartWithRestaurantDetails,CartWithRestaurantDetailsClear, UserDeliveryAddressCreateView, UserDeliveryAddressUpdateView, UserDeliveryAddressListCreateView, CartWithRestaurantUserUpdate
+from .restaurent.restaurant_order import PlaceOrderAPI, RestaurantCartAddOrRemove, RestaurantCartList, CartWithRestaurantDetails,CartWithRestaurantDetailsClear, UserDeliveryAddressCreateView, UserDeliveryAddressUpdateView, UserDeliveryAddressListCreateView, CartWithRestaurantUserUpdate, RestaurantOrderDetailsAPI
+from .order.track_order import TrackOrder, RestaurantOrders, OrderStatusUpdate
+from django.http import JsonResponse
+from .views import ReactAppView
 
 urlpatterns = [
+
+    # path('api/', include('your_api_urls')),
+
     path("api/register/", UserRegistrationView.as_view(), name="user-register"),
     path("api/verify-otp/", OTPVerificationView.as_view(), name="verify-otp"),
     path("api/login/", UserLoginView.as_view(), name="user-login"),
@@ -44,6 +52,18 @@ urlpatterns = [
     path("api/user_address/store/", UserDeliveryAddressCreateView.as_view(), name="create_address"),
     path("api/user_address/update/<int:pk>/", UserDeliveryAddressUpdateView.as_view(), name="update_address"),
     path("api/addresses/list/", UserDeliveryAddressListCreateView.as_view(), name="address-list-create"),
+    path("api/restaurant/order/details/", RestaurantOrderDetailsAPI.as_view(), name="restaurant-order-details"),
+    path("api/restaurant/order/details/update/", PlaceOrderAPI.as_view(), name="restaurant-order-details-update"),
+    
+    path('api/restaurant/order/create-order/', create_order, name='create_order'),
+    path('api/restaurant/order/verify-payment/', verify_payment, name='verify_payment'),
+
+    path('api/order/track-order-details/', TrackOrder.as_view(), name='track_order_details'),
+    path('api/restaurant/orders/details', RestaurantOrders.as_view(), name='restaurant_orders_details'),
+    path('api/order/update-order-status/', OrderStatusUpdate.as_view(), name='order_status_update'),
+
+    re_path(r'^.*$', ReactAppView.as_view(), name='react-app'),
+
 ]
 
 if settings.DEBUG:

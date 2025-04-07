@@ -73,7 +73,9 @@ const AddressForm = ({ onClose, onSave }) => {
         const response = await fetchData(API_ENDPOINTS.ORDER.USER_ADDRESS_STORE, "POST", payload, localStorage.getItem("access"));
     
         if (response) {
-          onSave(fullAddress);
+          localStorage.setItem("selected_address", response?.id);
+          localStorage.setItem("user_full_address", response.full_address);
+          onSave(response.full_address);
           onClose();
         }
       } catch (error) {
@@ -110,7 +112,7 @@ const AddressForm = ({ onClose, onSave }) => {
         <option value="Other">Other</option>
       </select>
 
-      <button className="submit-btn" onClick={handleSave}>Submit Address</button>
+      <button className="submit-btn" onClick={handleSave}>Submit</button>
     </div>
   );
 };

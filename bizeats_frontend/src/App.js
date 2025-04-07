@@ -13,6 +13,11 @@ import RestHome from "./restaurent/RestHome";
 import RestaurantRegistration from "./restaurent/RestaurantRegistration";
 import DashboardOverview from "./vendor/DashboardOverview";
 import MenuManagement from "./vendor/MenuManagement"
+import OrderManagement from "./vendor/OrderManagement"
+import PaymentSuccess from "./payment/PaymentSuccess"
+import PaymentFailed from "./payment/PaymentFailed";
+import OrderConfirmation from "./payment/OrderConfirmation";
+import TrackOrder from "./order/TrackOrder"
 
 function PrivateRoute({ children, user }) {
   return user ? children : <Navigate to="/" />;
@@ -69,11 +74,14 @@ function App() {
             <Route path="/cart" element={<Cart user={user} setUser={setUser} />} />
             <Route path="/order-details" element={<OrderDetails />} />
             <Route path="/order-details/:restaurant_id" element={<OrderDetails user={user} setUser={setUser} />} />
-            <Route path="/payments" element={<PaymentOption />} />
+            <Route path="/payments/:restaurant_id" element={<PaymentOption user={user} setUser={setUser} />} />
             <Route
               path="/register-your-restaurent"
               element={<RestHome setUser={setUser} setIsRestaurantRegister={setIsRestaurantRegister} />}
             />
+            <Route path="/payment/success" element={<PaymentSuccess />} />
+            <Route path="/payment/failed" element={<PaymentFailed />} />
+            <Route path="/order-confirmation" element={<OrderConfirmation />} />
 
             {/* Protected Routes */}
             <Route
@@ -119,6 +127,24 @@ function App() {
                 <VendorPrivateRoute user={user} is_restaurant_register={is_restaurant_register}>
                   <MenuManagement user={user} setUser={setUser} />
                 </VendorPrivateRoute>
+              }
+            />
+
+            <Route
+              path="/vendor-dashboard/order/management/:restaurant_id"
+              element={
+                <VendorPrivateRoute user={user} is_restaurant_register={is_restaurant_register}>
+                  <OrderManagement user={user} setUser={setUser} />
+                </VendorPrivateRoute>
+              }
+            />
+
+            <Route
+              path="/track-order"
+              element={
+                <PrivateRoute user={user}>
+                  <TrackOrder user={user} setUser={setUser} />
+                </PrivateRoute>
               }
             />
 

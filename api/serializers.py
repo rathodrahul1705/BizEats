@@ -2,7 +2,7 @@ import uuid
 from rest_framework import serializers
 from django.db.models import Avg
 from django.contrib.auth import get_user_model
-from .models import RestaurantMaster, RestaurantOwnerDetail, RestaurantLocation, RestaurantCuisine, RestaurantDeliveryTiming, RestaurantDocuments, RestaurantMenu, UserDeliveryAddress
+from .models import Order, RestaurantMaster, RestaurantOwnerDetail, RestaurantLocation, RestaurantCuisine, RestaurantDeliveryTiming, RestaurantDocuments, RestaurantMenu, UserDeliveryAddress
 
 User = get_user_model()
 
@@ -233,3 +233,14 @@ class UserDeliveryAddressSerializer(serializers.ModelSerializer):
     def get_full_address(self, obj):
         landmark = f"Landmark: {obj.near_by_landmark}" if obj.near_by_landmark else "No Landmark"
         return f"{obj.street_address}, {obj.city}, {obj.state}, {obj.zip_code}, {obj.country} ({landmark}, Type: {obj.home_type})"
+
+class OrderPlacementSerializer(serializers.Serializer):
+    user_id = serializers.IntegerField(required=True)
+    restaurant_id = serializers.CharField(required=True, max_length=20)
+    payment_method = serializers.ChoiceField(
+        choices=Order.PAYMENT_METHOD_CHOICES,
+        required=True
+    )
+    is_takeaway = serializers.BooleanField(default=False)
+    delivery_address_id = serializers.CharField(required=True)
+    special_instructions = serializers.CharField(required=False, allow_blank=True)

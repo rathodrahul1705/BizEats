@@ -1,0 +1,118 @@
+.vendor-orders {
+    padding: 2rem;
+    background: #f9fafb;
+    font-family: 'Inter', sans-serif;
+  }
+  
+  .vendor-order-title {
+    font-size: 1.75rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    color: #111827;
+  }
+  
+  .vendor-order-list {
+    display: grid;
+    gap: 1.5rem;
+  }
+  
+  .vendor-card {
+    background: #fff;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    transition: transform 0.2s ease;
+  }
+  
+  .vendor-card:hover {
+    transform: translateY(-2px);
+  }
+  
+  .vendor-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+  }
+  
+  .vendor-card-info h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0;
+    color: #1f2937;
+  }
+  
+  .status-box {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .status-select {
+    margin-top: 0.25rem;
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    border: 1px solid #d1d5db;
+    background-color: #f3f4f6;
+    color: #111827;
+    font-size: 0.95rem;
+  }
+  
+  .vendor-card-body p {
+    margin: 0.25rem 0;
+    color: #374151;
+  }
+  
+  .item-list {
+    margin-top: 1rem;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    background: #f3f4f6;
+  }
+  
+  .item {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.25rem 0;
+    font-size: 0.95rem;
+  }
+  
+  .pricing {
+    margin-top: 1rem;
+    display: flex;
+    justify-content: space-between;
+    font-weight: 600;
+    color: #1f2937;
+  }
+
+  .filter-bar {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+  }
+  
+  .filter-bar input,
+  .filter-bar select {
+    padding: 0.6rem 1rem;
+    border-radius: 0.5rem;
+    border: 1px solid #d1d5db;
+    font-size: 0.95rem;
+    background-color: #f3f4f6;
+    color: #111827;
+    min-width: 200px;
+  }
+
+  .order-divider {
+    border: none;
+    border-top: 1px solid #e0e0e0;
+    margin: 12px 0;
+  }
+  
+  .status-update-success {
+    margin-top: 8px;
+    color: #28a745;
+    font-size: 0.85rem;
+    font-weight: 500;
+  }
+  

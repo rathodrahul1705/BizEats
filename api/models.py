@@ -234,7 +234,6 @@ class Cart(models.Model):
         (4, 'Proceeded for Payment'),
         (5, 'Payment Completed'),
     )
-
     user = models.ForeignKey(
         User, 
         on_delete=models.CASCADE, 
@@ -252,6 +251,7 @@ class Cart(models.Model):
         null=True, 
         blank=True
     )  # For guest users
+    order_number = models.CharField(max_length=20, unique=True)
     item = models.ForeignKey(
         RestaurantMenu, 
         on_delete=models.CASCADE, 
@@ -267,8 +267,7 @@ class Cart(models.Model):
 
     class Meta:
         db_table = "carts"
-        # unique_together = [("user", "restaurant", "item"), ("session_id", "restaurant", "item")]
-
+        
     def __str__(self):
         if self.user:
             return f"Cart for {self.user.full_name} at {self.restaurant.restaurant_name} - {self.item.item_name}"
@@ -304,3 +303,170 @@ class UserDeliveryAddress(models.Model):
 
     def __str__(self):
         return f"{self.user.full_name} - {self.street_address}, {self.city}"
+
+class Order(models.Model):
+
+    ORDER_STATUS_CHOICES = (
+        (1, 'Pending'),
+        (2, 'Confirmed'),
+        (3, 'Preparing'),
+        (4, 'Ready for Delivery/Pickup'),
+        (5, 'On the Way'),
+        (6, 'Delivered'),
+        (7, 'Cancelled'),
+        (8, 'Refunded')
+    )
+
+    PAYMENT_STATUS_CHOICES = (
+        (1, 'in progress'),
+        (2, 'Pending'),
+        (3, 'Refunded'),
+        (4, 'Failed'),
+        (5, 'Completed')
+    )
+
+    PAYMENT_METHOD_CHOICES = (
+        (1, 'Credit Card'),
+        (2, 'Debit Card'),
+        (3, 'UPI'),
+        (4, 'Net Banking'),
+        (5, 'Cash on Delivery')
+    )
+
+    user = models.ForeignKey(User, on_delete=models.PROTECT, related_name='orders')
+    restaurant = models.ForeignKey(RestaurantMaster, on_delete=models.PROTECT)
+    order_number = models.CharField(max_length=20, null=True)
+    order_date = models.DateTimeField(auto_now_add=True)
+    delivery_date = models.DateTimeField(null=True, blank=True)
+    status = models.PositiveSmallIntegerField(choices=ORDER_STATUS_CHOICES, default=1)
+    payment_status = models.PositiveSmallIntegerField(choices=PAYMENT_STATUS_CHOICES, default=1)
+    payment_method = models.PositiveSmallIntegerField(choices=PAYMENT_METHOD_CHOICES)
+    subtotal = models.DecimalField(max_digits=10, decimal_places=2)
+    tax = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    delivery_fee = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    quantity = models.PositiveIntegerField()
+    delivery_address = models.ForeignKey(UserDeliveryAddress, on_delete=models.PROTECT)
+    special_instructions = models.TextField(blank=True, null=True)
+    is_takeaway = models.BooleanField(default=False, null=True)
+    preparation_time = models.PositiveSmallIntegerField(help_text="Estimated minutes for preparation", null=True)
+    special_requests = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(default=now)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "order_details"
+        ordering = ['-order_date']
+
+    def __str__(self):
+        return f"Order #{self.order_number} - {self.get_status_display()}"
+
+class OrderStatusLog(models.Model):
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='status_logs')
+    status = models.PositiveSmallIntegerField(choices=Order.ORDER_STATUS_CHOICES)
+    notes = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(default=now)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "order_status_logs"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.order} - {self.get_status_display()}"
+
+
+class Payment(models.Model):
+    PAYMENT_STATUS_CHOICES = (
+        (1, 'Created'),
+        (2, 'Attempted'),
+        (3, 'Pending'),
+        (4, 'Authorized'),
+        (5, 'Captured'),
+        (6, 'Failed'),
+        (7, 'Refunded'),
+        (8, 'Partially Refunded'),
+    )
+
+    PAYMENT_GATEWAY_CHOICES = (
+        (1, 'Razorpay'),
+        (2, 'Stripe'),
+        (3, 'PayPal'),
+        (4, 'Cash on Delivery'),
+    )
+
+    order = models.ForeignKey('Order', on_delete=models.PROTECT, related_name='payments')
+    payment_gateway = models.PositiveSmallIntegerField(choices=PAYMENT_GATEWAY_CHOICES)
+    payment_method = models.PositiveSmallIntegerField(choices=Order.PAYMENT_METHOD_CHOICES)
+    status = models.PositiveSmallIntegerField(choices=PAYMENT_STATUS_CHOICES, default=1)
+    
+    # Razorpay specific fields
+    razorpay_payment_id = models.CharField(max_length=100, null=True, blank=True)
+    razorpay_order_id = models.CharField(max_length=100, null=True, blank=True)
+    razorpay_signature = models.CharField(max_length=255, null=True, blank=True)
+    
+    # Payment amounts
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    currency = models.CharField(max_length=3, default='INR')
+    gateway_fee = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    tax_on_fee = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    
+    # Timestamps
+    created_at = models.DateTimeField(default=now)
+    updated_at = models.DateTimeField(auto_now=True)
+    captured_at = models.DateTimeField(null=True, blank=True)
+    
+    # Additional info
+    invoice_number = models.CharField(max_length=50, null=True, blank=True)
+    notes = models.TextField(null=True, blank=True)
+    raw_response = models.JSONField(null=True, blank=True)  # Store complete gateway response
+
+    class Meta:
+        db_table = "payment_details"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Payment #{self.id} for Order #{self.order.order_number}"
+
+class Refund(models.Model):
+    REFUND_STATUS_CHOICES = (
+        (1, 'Requested'),
+        (2, 'Processing'),
+        (3, 'Processed'),
+        (4, 'Failed'),
+    )
+
+    REFUND_REASON_CHOICES = (
+        (1, 'Order Cancelled'),
+        (2, 'Customer Request'),
+        (3, 'Duplicate Payment'),
+        (4, 'Fraudulent Transaction'),
+        (5, 'Product Not Available'),
+        (6, 'Other'),
+    )
+
+    order = models.ForeignKey('Order', on_delete=models.PROTECT, related_name='refunds')
+    payment = models.ForeignKey('Payment', on_delete=models.PROTECT, related_name='refunds')
+    status = models.PositiveSmallIntegerField(choices=REFUND_STATUS_CHOICES, default=1)
+    reason = models.PositiveSmallIntegerField(choices=REFUND_REASON_CHOICES)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    
+    # Razorpay specific fields
+    razorpay_refund_id = models.CharField(max_length=100, null=True, blank=True)
+    
+    # Timestamps
+    created_at = models.DateTimeField(default=now)
+    updated_at = models.DateTimeField(auto_now=True)
+    processed_at = models.DateTimeField(null=True, blank=True)
+    
+    # Additional info
+    notes = models.TextField(null=True, blank=True)
+    initiated_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    raw_response = models.JSONField(null=True, blank=True)  # Store complete gateway response
+
+    class Meta:
+        db_table = "refund_details"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Refund #{self.id} for Order #{self.order.order_number}"

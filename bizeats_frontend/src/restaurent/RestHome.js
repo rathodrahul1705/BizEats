@@ -65,7 +65,7 @@ const RestHome = ({ setUser }) => {
             <ArrowRight size={20} className="cta-icon" />
           </button>
           {
-            user && restaurantsList?.active_restaurants?.length > 0 ? (
+            user && (restaurantsList?.active_restaurants?.length > 0 || restaurantsList?.live_restaurants?.length > 0) ? (
 
               <button
               className="rest-cta secondary"

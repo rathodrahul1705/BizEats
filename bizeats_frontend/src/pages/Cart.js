@@ -46,7 +46,8 @@ const Cart = ({ user, setUser }) => {
           {
             user_id: user.user_id,
             session_id: sessionId,
-            cart_status: 2
+            cart_status: 2,
+            restaurant_id: restaurantId
           }
         );
       }
@@ -171,12 +172,12 @@ const Cart = ({ user, setUser }) => {
   const handleBack = () => step > 1 && setStep(step - 1);
 
   const handleAddressSelection = (address_id, selectedFullAddress) => {
-    localStorage.setItem("user_full_address", selectedFullAddress);
-    setUserSelectedAddress(selectedFullAddress);
+    let user_full_address = localStorage.getItem("user_full_address") 
+    setUserSelectedAddress(user_full_address);
     setStep(3);
   };
 
-  const handlePayment = () => navigate("/payments");
+  const handlePayment = () => navigate(`/payments/${restaurantId}`);
 
   // Render loading state
   if (loading && cartItems.length === 0) {
@@ -200,12 +201,12 @@ const Cart = ({ user, setUser }) => {
       {/* Step Indicator */}
       <div className="step-indicator">
         <div className={`step ${step >= 1 ? "active" : ""}`}>
-          {step > 1 ? <CheckCircle size={18} /> : "1"} Login
+          {step > 1 ? <CheckCircle size={18} /> : ""} Login
         </div>
         <div className={`step ${step >= 2 ? "active" : ""}`}>
-          {step > 2 ? <CheckCircle size={18} /> : "2"} Address
+          {step > 2 ? <CheckCircle size={18} /> : ""} Address
         </div>
-        <div className={`step ${step >= 3 ? "active" : ""}`}>3 Payment</div>
+        <div className={`step ${step >= 3 ? "active" : ""}`}>Review</div>
       </div>
 
       {/* Back Button */}
@@ -238,10 +239,10 @@ const Cart = ({ user, setUser }) => {
       {/* Step 3: Payment */}
       {step === 3 && userSelectedAddress && (
         <div className="orderSummaryHolder">
-          <h3>Order Summary</h3>
+          {/* <h3>Order Summary</h3>
           <p className="subTitleText">
             <strong>Deliver to:</strong> {userSelectedAddress}
-          </p>
+          </p> */}
           <ul className="cart-list">
             {cartItems.map((item) => (
               <li key={item.id} className="cart-item">
@@ -260,7 +261,7 @@ const Cart = ({ user, setUser }) => {
               <span>₹ {totalPrice}</span>
             </div>
             <button className="proceed-btn" onClick={handlePayment}>
-              Proceed to Payment
+              Review Order & Confirm
             </button>
           </div>
         </div>
@@ -276,7 +277,7 @@ const Cart = ({ user, setUser }) => {
             className="add-items-btn"
             onClick={() => navigate("/food-list")}
           >
-            Add Items
+            Add Food to Cart
           </button>
         </div>
       )}
@@ -324,9 +325,9 @@ const Cart = ({ user, setUser }) => {
               disabled={loading}
             >
               {step === 1
-                ? "Proceed to Checkout"
+                ? "Review Cart & Checkout"
                 : step === 2
-                ? "Select Address"
+                ? "Select or Add Address"
                 : "Proceed to Payment"}
             </button>
           </div>

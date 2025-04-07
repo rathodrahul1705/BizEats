@@ -28,7 +28,9 @@ SECRET_KEY = 'django-insecure-@*bouewov#wqdoxwz(i9od_wyv-^xd0_=x-oixfc@*a1f2q4z=
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
+# ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
+
+ALLOWED_HOSTS = ['*']
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
@@ -89,6 +91,9 @@ DATABASES = {
     }
 }
 
+RAZORPAY_API_KEY = 'rzp_test_Ler2HqmO4lVND1'
+RAZORPAY_API_SECRET = 'Plsy13HG698LqDmP2LAzEt9O'
+
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
@@ -100,13 +105,13 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 ROOT_URLCONF = 'BizEats.urls'
 MEDIA_URL = "/media/"
-# MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 MEDIA_ROOT = os.path.join(BASE_DIR, "public")
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        # 'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'bizeats_frontend', 'build')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -117,6 +122,10 @@ TEMPLATES = [
             ],
         },
     },
+]
+
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'bizeats_frontend', 'build', 'static'),
 ]
 
 WSGI_APPLICATION = 'BizEats.wsgi.application'

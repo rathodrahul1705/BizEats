@@ -2,36 +2,36 @@ import React, { useState, useEffect, useRef } from "react";
 import { X } from "lucide-react";
 import "../assets/css/SignIn.css";
 import API_ENDPOINTS from "../components/config/apiConfig";
-import fetchData from "../components/services/apiService"
+import fetchData from "../components/services/apiService";
 
 const SignIn = ({ onClose, setUser = () => {} }) => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [formData, setFormData] = useState({
     full_name: "",
     email: "",
-    otp: Array(6).fill(""), // OTP array for 6 digits
+    otp: Array(6).fill(""),
   });
+  const [fieldErrors, setFieldErrors] = useState({});
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState("");
-  const [otpSent, setOtpSent] = useState(false); // Track if OTP was sent
-  const [otpExpired, setOtpExpired] = useState(false); // Track OTP expiration
-  const [timer, setTimer] = useState(300); // 5 minutes in seconds
-  const [isRegistered, setIsRegistered] = useState(false); // Track if registration is successful
-  const [isLoggedIn, setIsLoggedIn] = useState(false); // Track if the user has logged in
-  const [loading, setLoading] = useState(false); // Track loading state
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpExpired, setOtpExpired] = useState(false);
+  const [timer, setTimer] = useState(300);
+  const [isRegistered, setIsRegistered] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  // Create an array of refs for OTP input fields
   const otpRefs = useRef([]);
 
-   useEffect(() => {
-    document.body.classList.add("modal-open"); // Prevent scrolling & blur background
+  useEffect(() => {
+    document.body.classList.add("modal-open");
     let countdown;
     if (otpSent && timer > 0) {
       countdown = setInterval(() => {
         setTimer((prev) => {
           if (prev <= 1) {
             clearInterval(countdown);
-            setOtpExpired(true); // Set OTP expired when timer runs out
+            setOtpExpired(true);
           }
           return prev - 1;
         });
@@ -39,19 +39,22 @@ const SignIn = ({ onClose, setUser = () => {} }) => {
     }
     return () => {
       clearInterval(countdown);
-      document.body.classList.remove("modal-open"); // Cleanup on close
+      document.body.classList.remove("modal-open");
     };
   }, [otpSent, timer]);
 
-  const handleChange = (e, index) => {
+  const handleChange = (e, index = null) => {
     const { name, value } = e.target;
-    if (name === "otp") {
-      const updatedOtp = [...formData.otp];
-      updatedOtp[index] = value.slice(0, 1); // Limit to 1 character per OTP input
-      setFormData((prevState) => ({ ...prevState, otp: updatedOtp }));
+    setFieldErrors({});
+    setMessage("");
 
-      // If value is entered, focus on the next OTP input
-      if (value && otpRefs.current[index + 1]) {
+    if (name === "otp") {
+      const val = value.replace(/[^0-9]/g, "");
+      const updatedOtp = [...formData.otp];
+      updatedOtp[index] = val;
+      setFormData((prev) => ({ ...prev, otp: updatedOtp }));
+
+      if (val && otpRefs.current[index + 1]) {
         otpRefs.current[index + 1].focus();
       }
     } else {
@@ -59,55 +62,89 @@ const SignIn = ({ onClose, setUser = () => {} }) => {
     }
   };
 
+  const handleOtpKeyDown = (e, index) => {
+    if (e.key === "Backspace") {
+      if (formData.otp[index]) {
+        const updatedOtp = [...formData.otp];
+        updatedOtp[index] = "";
+        setFormData((prev) => ({ ...prev, otp: updatedOtp }));
+      } else if (otpRefs.current[index - 1]) {
+        otpRefs.current[index - 1].focus();
+      }
+    }
+  };
+
+  const handleOtpPaste = (e) => {
+    const pastedData = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+    const updatedOtp = [...formData.otp];
+    pastedData.split("").forEach((char, i) => {
+      if (i < 6) updatedOtp[i] = char;
+    });
+    setFormData((prev) => ({ ...prev, otp: updatedOtp }));
+
+    setTimeout(() => {
+      const nextIndex = pastedData.length < 6 ? pastedData.length : 5;
+      if (otpRefs.current[nextIndex]) otpRefs.current[nextIndex].focus();
+    }, 10);
+  };
 
   const handleRegister = async () => {
-  if (!formData.full_name) return setMessage("Full Name is required");
-  if (!formData.email) return setMessage("Email is required");
+    const { full_name, email } = formData;
+    if (!full_name || !email) {
+      setFieldErrors({
+        full_name: !full_name ? "Full name is required" : "",
+        email: !email ? "Email is required" : "",
+      });
+      return;
+    }
 
-  setLoading(true);
+    setLoading(true);
+    try {
+      const response = await fetchData(API_ENDPOINTS.AUTH.REGISTER, "POST", { full_name, email });
 
-  try {
-    const userData = {
-      full_name: formData.full_name,
-      email: formData.email,
-    };
+      if (response?.error) {
+        setMessage(response.error);
+        setMessageType("error");
+        return;
+      }
 
-    const response = await fetchData(API_ENDPOINTS.AUTH.REGISTER, "POST", userData);
-
-    if (response) {
       setOtpSent(true);
+      setMessage("OTP sent to your email.");
       setMessageType("success");
       setIsRegistered(true);
-    } else {
+      setOtpExpired(false);
+      setTimer(300);
+    } catch (err) {
       setMessage("Registration failed.");
       setMessageType("error");
+    } finally {
+      setLoading(false);
     }
-  } catch (error) {
-    setMessage("Error occurred while registering.");
-    setMessageType("error");
-  } finally {
-    setLoading(false);
-  }
   };
 
   const handleLogin = async () => {
-    if (!formData.email) return setMessage("Email is required");
+    if (!formData.email) {
+      setFieldErrors({ email: "Email is required" });
+      return;
+    }
 
-    setLoading(true); // Set loading state to true
-
+    setLoading(true);
     try {
-      const loginData = { email: formData.email };
-      const response = await fetchData(API_ENDPOINTS.AUTH.LOGIN, "POST", loginData);
+      const response = await fetchData(API_ENDPOINTS.AUTH.LOGIN, "POST", { email: formData.email });
 
-      if (response) {
-        setOtpSent(true);
-        setMessageType("success");
-      } else {
-        setMessage("Login failed.");
+      if (response?.error) {
+        setMessage(response.error);
         setMessageType("error");
+        return;
       }
-    } catch (error) {
-      setMessage("Error occurred while logging in.");
+
+      setOtpSent(true);
+      setMessage("OTP sent to your email.");
+      setMessageType("success");
+      setOtpExpired(false);
+      setTimer(300);
+    } catch (err) {
+      setMessage("Login failed.");
       setMessageType("error");
     } finally {
       setLoading(false);
@@ -115,68 +152,54 @@ const SignIn = ({ onClose, setUser = () => {} }) => {
   };
 
   const handleVerifyOtp = async () => {
-  const otp = formData.otp.join("");
-  if (!otp) return setMessage("OTP is required");
+    const otp = formData.otp.join("");
+    if (!otp || otp.length < 6) {
+      setFieldErrors({ otp: "Please enter a 6-digit OTP" });
+      return;
+    }
 
-  setLoading(true);
+    setLoading(true);
+    try {
+      const response = await fetchData(API_ENDPOINTS.AUTH.VERIFY_OTP, "POST", {
+        email: formData.email,
+        otp,
+      });
 
-  try {
-    const otpData = {
-      email: formData.email,
-      otp: otp,
-    };
-
-    const response = await fetchData(API_ENDPOINTS.AUTH.VERIFY_OTP, "POST", otpData);
-
-    if (response) {
-      if (isSignUp) {
-        setMessageType("success");
-        setIsSignUp(false);
-        setIsRegistered(true);
-      } else {
-        localStorage.setItem("user", JSON.stringify(response.user));
-        localStorage.setItem("refresh", response.refresh);
-        localStorage.setItem("access", response.access);
-        localStorage.setItem("is_restaurant_register", JSON.stringify(response.is_restaurant_register))
-        setMessage("Login successful!");
-        setMessageType("success");
-        setIsLoggedIn(true);
-        setUser(response.user);
-        onClose();
+      if (response?.error) {
+        setMessage(response.error);
+        setMessageType("error");
+        return;
       }
-    } else {
+
+      localStorage.setItem("user", JSON.stringify(response.user));
+      localStorage.setItem("refresh", response.refresh);
+      localStorage.setItem("access", response.access);
+      localStorage.setItem("is_restaurant_register", JSON.stringify(response.is_restaurant_register));
+
+      setMessage("Login successful!");
+      setMessageType("success");
+      setIsLoggedIn(true);
+      setUser(response.user);
+      onClose();
+
+      // Reset only on success
+      setFormData({ full_name: "", email: "", otp: Array(6).fill("") });
+      setOtpSent(false);
+      setOtpExpired(false);
+      setTimer(300);
+    } catch (err) {
       setMessage("OTP verification failed.");
       setMessageType("error");
+    } finally {
+      setLoading(false);
     }
-  } catch (error) {
-    setMessage("Error occurred while verifying OTP.");
-    setMessageType("error");
-  } finally {
-    setLoading(false);
-  }
-
-  setFormData({
-    full_name: "",
-    email: "",
-    otp: Array(6).fill(""),
-  });
-
-  setOtpSent(false);
-  setOtpExpired(false);
-  setTimer(300);
   };
-
 
   return (
     <div className="signin-container">
       <div className="signin-overlay active" onClick={onClose}></div>
-
       <div className="signin-modal active">
-        <button className="close-button" onClick={onClose}>
-          <X size={24} />
-        </button>
-
-        {message && <p className={`message ${messageType}`}>{message}</p>}
+        <button className="close-button" onClick={onClose}><X size={24} /></button>
 
         <h2 className="signin-title">{isSignUp ? "Create Account 🎉" : "Welcome Back! 👋"}</h2>
         <p className="signin-subtext">
@@ -188,22 +211,22 @@ const SignIn = ({ onClose, setUser = () => {} }) => {
         </p>
 
         <form className="signin-form">
-          {/* Show loader when loading */}
-          {loading && <div className="loader">Loading...</div>}
+          {loading && <div className="loading-bar"></div>}
 
-          {/* Show registration fields only if OTP hasn't been sent */}
           {!otpSent && !otpExpired && (
             <>
               {isSignUp && (
-                <input
-                  type="text"
-                  name="full_name"
-                  placeholder="Full Name"
-                  className="signin-input"
-                  value={formData.full_name}
-                  onChange={(e) => handleChange(e)}
-                  required
-                />
+                <>
+                  <input
+                    type="text"
+                    name="full_name"
+                    placeholder="Full Name"
+                    className="signin-input"
+                    value={formData.full_name}
+                    onChange={handleChange}
+                  />
+                  {fieldErrors.full_name && <p className="input-error">{fieldErrors.full_name}</p>}
+                </>
               )}
               <input
                 type="email"
@@ -211,68 +234,60 @@ const SignIn = ({ onClose, setUser = () => {} }) => {
                 placeholder="Email"
                 className="signin-input"
                 value={formData.email}
-                onChange={(e) => handleChange(e)}
-                required
+                onChange={handleChange}
               />
+              {fieldErrors.email && <p className="input-error">{fieldErrors.email}</p>}
             </>
           )}
 
-          {otpSent && !otpExpired && (
+          {otpSent && (
             <>
-              <div className="otp-inputs">
-                {formData.otp.map((otpValue, index) => (
+              <div className="otp-inputs" onPaste={handleOtpPaste}>
+                {formData.otp.map((val, idx) => (
                   <input
-                    key={index}
-                    ref={(el) => (otpRefs.current[index] = el)} // Set ref for each OTP input
-                    type="text"
+                    key={idx}
+                    ref={(el) => (otpRefs.current[idx] = el)}
+                    type="tel"
                     name="otp"
-                    placeholder="-"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                     className="signin-input otp-input"
-                    value={otpValue}
-                    onChange={(e) => handleChange(e, index)}
+                    value={val}
+                    onChange={(e) => handleChange(e, idx)}
+                    onKeyDown={(e) => handleOtpKeyDown(e, idx)}
                     maxLength={1}
-                    required
                   />
                 ))}
               </div>
+              {fieldErrors.otp && <p className="input-error">{fieldErrors.otp}</p>}
               <p className="timer">
-                OTP expires in {Math.floor(timer / 60)}:{timer % 60}
+                OTP expires in {Math.floor(timer / 60)}:{(timer % 60).toString().padStart(2, "0")}
               </p>
+              {otpExpired && (
+                <button
+                  className="resend-otp-button"
+                  type="button"
+                  onClick={isSignUp ? handleRegister : handleLogin}
+                >
+                  Resend OTP
+                </button>
+              )}
             </>
           )}
 
-          {/* Show Sign-in button after registration */}
-          {!otpSent && !otpExpired && !isLoggedIn && !isSignUp && (
-            <div className="button-group">
-              <button
-                type="button"
-                className="signin-button"
-                onClick={handleLogin}
-              >
-                Sign In
-              </button>
-            </div>
-          )}
+          {message && <p className={`message ${messageType}`}>{message}</p>}
 
-          {/* Display buttons based on state */}
           <div className="button-group">
-            {!otpSent && !otpExpired && isSignUp && (
-              <button
-                type="button"
-                className="signin-button"
-                onClick={handleRegister}
-              >
-                Sign Up
-              </button>
+            {!otpSent && !otpExpired && !isLoggedIn && !isSignUp && (
+              <button type="button" className="signin-button" onClick={handleLogin}>Sign In</button>
             )}
+
+            {!otpSent && !otpExpired && isSignUp && (
+              <button type="button" className="signin-button" onClick={handleRegister}>Sign Up</button>
+            )}
+
             {otpSent && !otpExpired && (
-              <button
-                type="button"
-                className="signin-button"
-                onClick={handleVerifyOtp}
-              >
-                Verify OTP
-              </button>
+              <button type="button" className="signin-button" onClick={handleVerifyOtp}>Verify OTP</button>
             )}
           </div>
         </form>

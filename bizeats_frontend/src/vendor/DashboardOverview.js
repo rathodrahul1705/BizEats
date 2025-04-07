@@ -82,7 +82,7 @@ const DashboardOverview = ({ user, setUser }) => {
                 <h4>Menu Management</h4>
                 <p>Manage your restaurant menu</p>
               </Link>
-              <Link to={`/vendor-dashboard/orders/${selectedRestaurant.restaurant_id}`} className="vendor-link-card">
+              <Link to={`/vendor-dashboard/order/management/${selectedRestaurant.restaurant_id}`} className="vendor-link-card">
                 <h4>Order Management</h4>
                 <p>View and manage orders</p>
               </Link>

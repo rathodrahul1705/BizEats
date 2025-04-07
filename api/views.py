@@ -5,6 +5,13 @@ from rest_framework.views import APIView
 from .models import User, RestaurantMaster
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import IsAuthenticated
+from django.views.generic import TemplateView
+from django.views.generic import View
+from django.shortcuts import render
+
+class ReactAppView(View):
+    def get(self, request):
+        return render(request, "index.html")
 
 class UserRegistrationView(APIView):
     def post(self, request, *args, **kwargs):

@@ -11,70 +11,66 @@ const AddressSelection = ({ onAddressSelect }) => {
   const [selectedAddress, setSelectedAddress] = useState(
     localStorage.getItem("selected_address") || null
   );
-
   const [selectedFullAddress, setselectedFullAddress] = useState(
     localStorage.getItem("user_full_address") || null
   );
   const [showAddressForm, setShowAddressForm] = useState(false);
 
-  
+  // Move fetchAddresses outside useEffect so it's reusable
+  const fetchAddresses = async () => {
+    try {
+      const response = await fetchData(
+        API_ENDPOINTS.ORDER.USER_ADDRESS_LIST,
+        "GET",
+        null,
+        localStorage.getItem("access")
+      );
+
+      if (response) {
+        const updatedAddresses = response.map((item) => ({
+          address: item.full_address,
+          address_id: item.id,
+          is_default: item.is_default,
+        }));
+        setAddresses(updatedAddresses);
+
+        const storedAddress = localStorage.getItem("selected_address");
+        const defaultAddress = updatedAddresses.find((addr) => addr.is_default);
+
+        console.log("defaultAddress==",defaultAddress)
+
+        if (storedAddress) {
+          setSelectedAddress(parseInt(storedAddress));
+        } else if (defaultAddress) {
+          setSelectedAddress(defaultAddress.address_id);
+          localStorage.setItem("selected_address", defaultAddress.address_id);
+          localStorage.setItem("user_full_address", defaultAddress.address);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching addresses:", error);
+    }
+  };
+
   useEffect(() => {
     if (!onAddressSelect) return;
-
-    const fetchAddresses = async () => {
-      try {
-        const response = await fetchData(
-          API_ENDPOINTS.ORDER.USER_ADDRESS_LIST,
-          "GET",
-          null,
-          localStorage.getItem("access")
-        );
-
-        if (response) {
-          const updatedAddresses = response.map((item) => ({
-            address: item.full_address,
-            address_id: item.id,
-            is_default: item.is_default, // Ensure default address is considered
-          }));
-          setAddresses(updatedAddresses);
-
-          const storedAddress = localStorage.getItem("selected_address");
-          const defaultAddress = updatedAddresses.find((addr) => addr.is_default);
-
-          if (storedAddress) {
-            setSelectedAddress( parseInt(storedAddress));
-          } else if (defaultAddress) {
-            setSelectedAddress(defaultAddress.address_id);
-            localStorage.setItem("selected_address", defaultAddress.address_id);
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching addresses:", error);
-      }
-    };
-
     fetchAddresses();
   }, [onAddressSelect]);
 
-  const handleSelectAddress = (addressId,full_address) => {
+  const handleSelectAddress = (addressId, full_address) => {
     setSelectedAddress(addressId);
-    setselectedFullAddress(full_address)
+    setselectedFullAddress(full_address);
     localStorage.setItem("selected_address", addressId);
     localStorage.setItem("user_full_address", full_address);
   };
 
-  const handleAddAddress = (newAddress) => {
-    setAddresses([...addresses, newAddress]);
+  const handleAddAddress = async (newAddress) => {
     setShowAddressForm(false);
+    await fetchAddresses(); // Fetch updated list after new address is added
   };
-
-  // console.log("selectedFullAddress====",selectedFullAddress)
 
   return (
     <div className="address-container">
-      <h3 className="address-title">Select a Delivery Address</h3>
-
-      {/* Address List */}
       <ul className="address-list">
         {addresses.map((address) => (
           <li
@@ -91,20 +87,20 @@ const AddressSelection = ({ onAddressSelect }) => {
         ))}
       </ul>
 
-      {/* Open Address Form */}
       <button className="add-btn" onClick={() => setShowAddressForm(true)}>
         <Plus size={18} /> Add New Address
       </button>
 
-      {/* Address Form Slide Panel */}
       {showAddressForm && (
         <AddressForm onClose={() => setShowAddressForm(false)} onSave={handleAddAddress} />
       )}
 
-      {/* Proceed Button */}
       {selectedAddress && (
-        <button className="proceed-btn" onClick={() => onAddressSelect(selectedAddress,selectedFullAddress)}>
-          Proceed to Selected Address
+        <button
+          className="proceed-btn"
+          onClick={() => onAddressSelect(selectedAddress, selectedFullAddress)}
+        >
+          Select or Add Address
         </button>
       )}
     </div>
