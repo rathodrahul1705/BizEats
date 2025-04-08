@@ -1,5 +1,5 @@
-// const BASE_URL = "http://127.0.0.1:8000/api";
-const BASE_URL = "https://34a3-123-108-230-122.ngrok-free.app/api";
+const BASE_URL = "ec2-13-60-179-8.eu-north-1.compute.amazonaws.com/api";
+// const BASE_URL = "https://34a3-123-108-230-122.ngrok-free.app/api";
 
 const API_ENDPOINTS = {
   AUTH: {
