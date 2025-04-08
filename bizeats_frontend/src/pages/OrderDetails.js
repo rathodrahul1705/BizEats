@@ -61,6 +61,8 @@ const OrderDetails = ({ user, setUser }) => {
         location: response.Address,
         rating: response.rating,
       });
+      
+      // console.log("response===",response)
 
       setFoodData(
         response.itemlist.map((item) => ({
@@ -71,7 +73,7 @@ const OrderDetails = ({ user, setUser }) => {
           price: parseFloat(item.item_price),
           deliveryTime: `${response.time_required_to_reach_loc} min`,
           location: response.Address,
-          type: "all",
+          type: item?.food_type,
         }))
       );
     } catch (error) {
@@ -201,14 +203,14 @@ const OrderDetails = ({ user, setUser }) => {
           🍽 All
         </button>
         <button
-          className={`filter-btn ${filter === "veg" ? "active" : ""}`}
-          onClick={() => setFilter("veg")}
+          className={`filter-btn ${filter === "Veg" ? "active" : ""}`}
+          onClick={() => setFilter("Veg")}
         >
           🥦 Veg
         </button>
         <button
-          className={`filter-btn ${filter === "non-veg" ? "active" : ""}`}
-          onClick={() => setFilter("non-veg")}
+          className={`filter-btn ${filter === "Non-Veg" ? "active" : ""}`}
+          onClick={() => setFilter("Non-Veg")}
         >
           🍗 Non-Veg
         </button>

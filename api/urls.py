@@ -10,6 +10,7 @@ from .order.track_order import TrackOrder, RestaurantOrders, OrderStatusUpdate
 from django.http import JsonResponse
 from .views import ReactAppView
 
+
 urlpatterns = [
 
     # path('api/', include('your_api_urls')),
@@ -62,7 +63,7 @@ urlpatterns = [
     path('api/restaurant/orders/details', RestaurantOrders.as_view(), name='restaurant_orders_details'),
     path('api/order/update-order-status/', OrderStatusUpdate.as_view(), name='order_status_update'),
 
-    re_path(r'^.*$', ReactAppView.as_view(), name='react-app'),
+    re_path(r'^(?!media/).*$', ReactAppView.as_view(), name='react-app'),
 
 ]
 

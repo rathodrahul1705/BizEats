@@ -58,19 +58,19 @@ const DashboardOverview = ({ user, setUser }) => {
         <div className="vendor-summary">
           <div className="vendor-card">
             <h3>Total Orders Today</h3>
-            <p>87</p>
+            <p>0</p>
           </div>
           <div className="vendor-card">
             <h3>Revenue Today</h3>
-            <p>878</p>
+            <p>0</p>
           </div>
           <div className="vendor-card">
             <h3>Pending Orders</h3>
-            <p>878</p>
+            <p>0</p>
           </div>
           <div className="vendor-card">
             <h3>Customer Reviews</h3>
-            <p>878</p>
+            <p>0</p>
           </div>
         </div>
 
@@ -86,7 +86,7 @@ const DashboardOverview = ({ user, setUser }) => {
                 <h4>Order Management</h4>
                 <p>View and manage orders</p>
               </Link>
-              <Link to={`/vendor-dashboard/analytics/${selectedRestaurant.restaurant_id}`} className="vendor-link-card">
+              {/* <Link to={`/vendor-dashboard/analytics/${selectedRestaurant.restaurant_id}`} className="vendor-link-card">
                 <h4>Analytics</h4>
                 <p>View sales and insights</p>
               </Link>
@@ -97,6 +97,10 @@ const DashboardOverview = ({ user, setUser }) => {
               <Link to={`/vendor-dashboard/settings/${selectedRestaurant.restaurant_id}`} className="vendor-link-card">
                 <h4>Settings</h4>
                 <p>Update restaurant details</p>
+              </Link> */}
+              <Link to={`/register-your-restaurent`} className="vendor-link-card">
+                <h4>Register Your Restaurant</h4>
+                <p>Manage your restaurant</p>
               </Link>
             </div>
           </div>

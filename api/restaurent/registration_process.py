@@ -220,6 +220,7 @@ class RestaurantMenueStore(APIView):
         serving_size = request.data.get('serving_size')
         availability = request.data.get('availability') == 'true'  # Convert to boolean
         stock_quantity = request.data.get('stock_quantity')
+        food_type = request.data.get('food_type')
         cuisines = request.data.get('cuisines', '').split(',')  # Split cuisines by comma
 
         # Handle image upload
@@ -246,6 +247,7 @@ class RestaurantMenueStore(APIView):
             serving_size=serving_size,
             availability=availability,
             stock_quantity=stock_quantity,
+            food_type=food_type,
             item_image=image_path  # Save the relative image path
         )
 
@@ -284,6 +286,7 @@ class RestaurantMenueList(APIView):
                 "preparation_time": item.preparation_time,
                 "serving_size": item.serving_size,
                 "availability": item.availability,
+                "food_type": item.food_type,
                 "stock_quantity": item.stock_quantity,
                 "cuisines": [cuisine.cuisine_name for cuisine in item.cuisines.all()],
                 "item_image": request.build_absolute_uri(item.item_image.url) if item.item_image else None,
@@ -345,6 +348,7 @@ class RestaurantMenueUpdate(APIView):
         serving_size = request.data.get('serving_size', menu_item.serving_size)
         availability = request.data.get('availability', str(menu_item.availability)).lower() == 'true'
         stock_quantity = request.data.get('stock_quantity', menu_item.stock_quantity)
+        food_type = request.data.get('food_type', menu_item.food_type)
         cuisines = request.data.get('cuisines', '').split(',')  # Split cuisines by comma
 
         # Handle image update
@@ -375,6 +379,7 @@ class RestaurantMenueUpdate(APIView):
         menu_item.serving_size = serving_size
         menu_item.availability = availability
         menu_item.stock_quantity = stock_quantity
+        menu_item.food_type = food_type
 
         # Update cuisines
         if cuisines:

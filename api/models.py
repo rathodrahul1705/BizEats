@@ -200,6 +200,11 @@ class RestaurantMenu(models.Model):
         ('Large', 'Large'),
     ]
     
+    FOOD_TYPE_CHOICES = [
+        ('Veg', 'Veg'),
+        ('Non-Veg', 'Non-Veg'),
+    ]
+
     restaurant = models.ForeignKey('RestaurantMaster', on_delete=models.CASCADE, related_name='menu_items')
     item_name = models.CharField(max_length=255)
     item_price = models.DecimalField(max_digits=6, decimal_places=2)
@@ -212,14 +217,16 @@ class RestaurantMenu(models.Model):
     serving_size = models.CharField(max_length=10, choices=SERVING_SIZE_CHOICES)
     availability = models.BooleanField(default=True)
     stock_quantity = models.PositiveIntegerField(default=0)
+    food_type = models.CharField(max_length=10, choices=FOOD_TYPE_CHOICES, default='Veg')
     created_at = models.DateTimeField(default=now)
     updated_at = models.DateTimeField(auto_now=True)
-    
+
     class Meta:
         db_table = "restaurant_menu"
 
     def __str__(self):
         return f"{self.restaurant.restaurant_name} - {self.item_name}"
+
 
 class Cart(models.Model):
     """
