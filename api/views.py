@@ -2,6 +2,8 @@ from django.core.mail import send_mail
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
+from api.emailer.email_notifications import send_otp_email
 from .models import User, RestaurantMaster
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import IsAuthenticated
@@ -27,16 +29,9 @@ class UserRegistrationView(APIView):
 
         # Generate OTP and send email
         user.generate_otp()
-        self.send_otp_email(user.email, user.otp)
-
+        send_otp_email(user,'BizEats Registration Verification Code', otp_type="registration")
         return Response({"message": "User registered successfully. OTP sent to email."}, status=status.HTTP_201_CREATED)
-
-    def send_otp_email(self, to_email, otp):
-        """Send OTP to user's email."""
-        subject = "Your OTP for Registration"
-        message = f"Your OTP for registration is: {otp}. It will expire in 5 minutes."
-        send_mail(subject, message, 'your_email@example.com', [to_email])
-
+    
 class OTPVerificationView(APIView):
     def post(self, request, *args, **kwargs):
         email = request.data.get("email")
@@ -92,15 +87,8 @@ class UserLoginView(APIView):
             return Response({"error": "User not found."}, status=status.HTTP_400_BAD_REQUEST)
 
         if user.user_verified:
-            # Generate OTP and send email
             user.generate_otp()
-            send_mail(
-                'Your OTP Code',
-                f'Your OTP code is {user.otp}. It is valid for 5 minutes.',
-                'no-reply@yourdomain.com',
-                [user.email],
-                fail_silently=False,
-            )
+            send_otp_email(user,'BizEats Login Verification Code', otp_type="login")
             return Response({
                 "message": "OTP sent to email. Please verify.",
             }, status=status.HTTP_200_OK)
