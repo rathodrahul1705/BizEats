@@ -6,6 +6,7 @@ from django.utils.decorators import method_decorator
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, generics, permissions
+from api.emailer.email_notifications import send_order_status_email
 from api.models import Cart, Order, OrderStatusLog, RestaurantMenu, User
 import json
 from django.db import transaction
@@ -629,6 +630,9 @@ class PlaceOrderAPI(APIView):
                     cart_status=5,
                     order_number=order.order_number
                 )
+
+                # Send email via common function
+                send_order_status_email(order)
 
                 # Prepare response
                 response_data = {

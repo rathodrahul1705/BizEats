@@ -1,13 +1,26 @@
 from django.core.mail import send_mail, EmailMessage
 from django.conf import settings
-from api.models import Cart, Order, RestaurantMenu, User
+from api.models import Cart, Order, RestaurantMenu, User, UserDeliveryAddress
 from decimal import Decimal
 
 def send_order_status_email(order):
     user = User.objects.filter(id=order.user_id).first()
     cart_items = Cart.objects.filter(order_number=order.order_number)
-    subtotal = Decimal(0)
+    delivery_address = UserDeliveryAddress.objects.filter(id=order.delivery_address_id).first()
+
+    address_string = ""
+    if delivery_address:
+        address_parts = [
+            delivery_address.street_address,
+            delivery_address.city,
+            delivery_address.state,
+            delivery_address.zip_code,
+            delivery_address.country
+        ]
+        address_string = ", ".join([part for part in address_parts if part])
+
     item_rows = ""
+    subtotal = Decimal(0)
 
     for item in cart_items:
         menu_item = RestaurantMenu.objects.filter(id=item.item_id).first()
@@ -17,134 +30,141 @@ def send_order_status_email(order):
 
         item_rows += f"""
             <tr>
-                <td>{menu_item.item_name if menu_item else "Unknown"}</td>
-                <td>{item.quantity}</td>
-                <td>₹{price}</td>
-                <td>₹{item_total}</td>
+                <td style="padding: 10px 0;">{item.quantity} x {menu_item.item_name if menu_item else "Unknown"}</td>
+                <td style="padding: 10px 0; text-align: right;">₹{item_total:.2f}</td>
             </tr>
         """
 
-    customer_email = user.email
-    customer_name = user.full_name
-    restaurant_name = order.restaurant.restaurant_name
-    order_number = order.order_number
-    status_display = order.get_status_display()
-    estimated_delivery = order.delivery_date.strftime("%Y-%m-%d %H:%M:%S") if order.delivery_date else "Not available"
+    handling_fee = Decimal("0.00")
+    delivery_fee = Decimal("0.00")
+    grand_total = subtotal + handling_fee + delivery_fee
 
-    subject = f"Your order #{order_number} is now {status_display}"
+    subject = f"Order #{order.order_number} has been {order.get_status_display()}"
+    restaurant_name = order.restaurant.restaurant_name
+    order_status = order.get_status_display().lower()
+    order_number = order.order_number
 
     html_message = f"""
     <html>
     <head>
         <style>
             body {{
-                font-family: Arial, sans-serif;
-                background-color: #f9f9f9;
+                font-family: 'Segoe UI', sans-serif;
+                background-color: #f4f4f4;
                 margin: 0;
                 padding: 0;
-                color: #333;
             }}
-            .email-container {{
-                background-color: #ffffff;
-                border-radius: 8px;
-                max-width: 600px;
-                margin: 20px auto;
-                padding: 20px;
-                box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-                border-top: 6px solid #e65c00;
+            .container {{
+                background-color: #fff;
+                max-width: 650px;
+                margin: 30px auto;
+                padding: 30px;
+                border-radius: 12px;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.07);
+                border-top: 6px solid #ff6600;
             }}
             .header {{
-                background-color: #e65c00;
-                color: white;
-                padding: 16px 20px;
-                border-radius: 6px 6px 0 0;
                 text-align: center;
-            }}
-            .logo {{
-                font-size: 28px;
+                font-size: 24px;
                 font-weight: bold;
-                color: #ffffff;
+                color: #ff6600;
+                margin-bottom: 10px;
             }}
-            .logo-highlight {{
-                color: #fff;
-                background-color: #e65c00;
+            .sub-header {{
+                text-align: center;
+                font-size: 15px;
+                color: #666;
+                margin-bottom: 20px;
             }}
-            h2, h3 {{
-                color: #e65c00;
+            .section-title {{
+                font-size: 16px;
+                font-weight: bold;
+                margin: 25px 0 10px;
+                color: #444;
             }}
             table {{
                 width: 100%;
                 border-collapse: collapse;
-                margin-top: 20px;
             }}
-            th, td {{
-                border-bottom: 1px solid #ddd;
-                padding: 10px;
-                text-align: left;
+            td {{
+                font-size: 14px;
+                border-bottom: 1px solid #eee;
             }}
-            th {{
-                background-color: #f2f2f2;
+            .summary-table td {{
+                padding: 10px 0;
             }}
-            .total {{
+            .summary-table tr:last-child td {{
                 font-weight: bold;
                 font-size: 16px;
-                text-align: right;
-                color: #e65c00;
-                margin-top: 10px;
+                border-top: 1px solid #ccc;
+                padding-top: 12px;
+                color: #333;
             }}
             .footer {{
-                margin-top: 30px;
-                font-size: 14px;
-                color: #999;
                 text-align: center;
+                font-size: 13px;
+                color: #aaa;
+                margin-top: 40px;
             }}
         </style>
     </head>
     <body>
-        <div class="email-container">
-            <div class="header">
-                <div class="logo">
-                    <span class="logo-highlight">Biz</span><span style="color: #fff;">Eats</span>
-                </div>
-            </div>
+        <div class="container">
+            <div class="header">BizEats</div>
+            <div class="sub-header">Order Update Notification</div>
 
-            <p>Hello {customer_name},</p>
-            <p>Your food order <strong>#{order_number}</strong> has been updated to the status: <strong>{status_display}</strong>.</p>
-            <p><strong>Estimated Delivery:</strong> {estimated_delivery}</p>
+            <p>Greetings from BizEats👋</p>
+            <p>Your Order id: <strong>#{order_number}</strong> has been <strong>{order_status}</strong>.</p>
 
-            <h3>Order Summary</h3>
-            <table>
-                <tr>
-                    <th>Item</th>
-                    <th>Qty</th>
-                    <th>Unit Price</th>
-                    <th>Total</th>
-                </tr>
+            <div class="section-title">Delivery Address:</div>
+            <p>{address_string}</p>
+
+            <div class="section-title">Order Items:</div>
+            <table class="summary-table">
                 {item_rows}
             </table>
 
-            <p class="total">Subtotal: ₹{subtotal}</p>
-            <p class="total">Total: ₹{subtotal}</p>
+            <div class="section-title">Order Summary:</div>
+            <table class="summary-table">
+                <tr>
+                    <td>Item Bill</td>
+                    <td style="text-align: right;">₹{subtotal:.2f}</td>
+                </tr>
+                <tr>
+                    <td>Handling Fee</td>
+                    <td style="text-align: right;">₹{handling_fee:.2f}</td>
+                </tr>
+                <tr>
+                    <td>Delivery Fee</td>
+                    <td style="text-align: right;">₹{delivery_fee:.2f}</td>
+                </tr>
+                <tr>
+                    <td>Grand Total</td>
+                    <td style="text-align: right;">₹{grand_total:.2f}</td>
+                </tr>
+            </table>
 
-            <p>Thank you for ordering with us!</p>
-            <p>— The {restaurant_name} Team</p>
+            <p style="margin-top: 25px;">Thank you for using <strong>{restaurant_name}</strong> via BizEats!</p>
 
-            <div class="footer">
-                <p>This is an automated message. Please do not reply.</p>
-            </div>
+            <div class="footer">This is an automated email. Please do not reply.</div>
         </div>
     </body>
     </html>
     """
 
+    # Send to both customer and restaurant owner
+    recipient_list = [user.email, order.restaurant.owner_details.owner_email_address]
+
     send_mail(
-        subject,
+        subject=subject,
         message="This is an HTML-only email.",
         from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=[customer_email],
+        recipient_list=recipient_list,
         html_message=html_message,
         fail_silently=False,
     )
+
+
 
 def send_otp_email(user, subject, otp_type):
 
