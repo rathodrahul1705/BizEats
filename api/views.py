@@ -91,7 +91,7 @@ class UserLoginView(APIView):
         except User.DoesNotExist:
             return Response({"error": "User not found."}, status=status.HTTP_400_BAD_REQUEST)
 
-        if user.user_verified:
+        if user:
             user.generate_otp()
             send_otp_email(user,'BizEats Login Verification Code', otp_type="login")
             return Response({
