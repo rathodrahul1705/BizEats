@@ -4,6 +4,8 @@ import os
 from pathlib import Path
 from datetime import timedelta
 from decouple import config
+import logging
+from logging.handlers import TimedRotatingFileHandler
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -130,3 +132,44 @@ USE_TZ = True
 
 CORS_ALLOW_ALL_ORIGINS = True
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+LOG_DIR = os.path.join(BASE_DIR, 'logs')
+if not os.path.exists(LOG_DIR):
+    os.makedirs(LOG_DIR)
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+
+    'formatters': {
+        'verbose': {
+            'format': '[{asctime}] {levelname} [{name}] {message}',
+            'style': '{',
+        },
+    },
+
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.handlers.TimedRotatingFileHandler',
+            'filename': os.path.join(LOG_DIR, 'django.log'),
+            'when': 'midnight',  # Rotate logs daily at midnight
+            'interval': 1,
+            'backupCount': 7,  # Keep logs for the last 7 days
+            'formatter': 'verbose',
+            'encoding': 'utf8',
+        },
+    },
+
+    'loggers': {
+        'django': {
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG',
+            'propagate': True,
+        }
+    }
+}

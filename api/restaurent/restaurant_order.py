@@ -81,6 +81,7 @@ class RestaurantCartAddOrRemove(APIView):
                 user_id=user_id,
                 restaurant_id=restaurant_id,
                 item_id=item_id,
+                session_id=session_id,
             ).exclude(cart_status=5).first()
 
             if cart:

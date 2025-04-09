@@ -10,6 +10,9 @@ from rest_framework.permissions import IsAuthenticated
 from django.views.generic import TemplateView
 from django.views.generic import View
 from django.shortcuts import render
+import logging
+
+logger = logging.getLogger(__name__)
 
 class ReactAppView(View):
     def get(self, request):
@@ -77,6 +80,8 @@ class OTPVerificationView(APIView):
 class UserLoginView(APIView):
     def post(self, request, *args, **kwargs):
         email = request.data.get("email")
+
+        logger.info(f"User email {email}")
 
         if not email:
             return Response({"error": "Email is required."}, status=status.HTTP_400_BAD_REQUEST)
