@@ -2,6 +2,7 @@ from django.core.mail import send_mail, EmailMessage
 from django.conf import settings
 from api.models import Cart, Order, RestaurantMenu, User, UserDeliveryAddress
 from decimal import Decimal
+from decouple import config
 
 def send_order_status_email(order):
     user = User.objects.filter(id=order.user_id).first()
@@ -106,6 +107,20 @@ def send_order_status_email(order):
                 color: #aaa;
                 margin-top: 40px;
             }}
+            .track-button {{
+                text-align: center;
+                margin: 20px 0;
+            }}
+            .track-button a {{
+                display: inline-block;
+                background-color: #ff6600;
+                color: #fff;
+                padding: 12px 25px;
+                font-size: 15px;
+                font-weight: bold;
+                border-radius: 6px;
+                text-decoration: none;
+            }}
         </style>
     </head>
     <body>
@@ -115,6 +130,10 @@ def send_order_status_email(order):
 
             <p>Greetings from BizEats👋</p>
             <p>Your Order id: <strong>#{order_number}</strong> has been <strong>{order_status}</strong>.</p>
+
+            <div class="track-button">
+                <a href="{config("REACT_APP_BASE_URL")}/track-order">Track Your Order</a>
+            </div>
 
             <div class="section-title">Delivery Address:</div>
             <p>{address_string}</p>
@@ -163,6 +182,7 @@ def send_order_status_email(order):
         html_message=html_message,
         fail_silently=False,
     )
+
 
 
 
