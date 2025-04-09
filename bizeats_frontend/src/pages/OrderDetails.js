@@ -223,7 +223,7 @@ const OrderDetails = ({ user, setUser }) => {
             <img src={food.image} alt={food.title} className="food-image" />
             <div className="food-details">
               <h3 className="food-title">
-                {food.title} {food.type === "veg" ? "🥦" : "🍗"}
+                {food.title} {food.type === "Veg" ? "🥦" : "🍗"}
               </h3>
               <p className="food-description">{food.description}</p>
               <p className="food-location">📍 {food.location}</p>
