@@ -135,6 +135,7 @@
 .empty-cart {
   text-align: center;
   padding: 40px;
+  max-height: 500px;
   color: #6c757d;
   display: flex;
   flex-direction: column;

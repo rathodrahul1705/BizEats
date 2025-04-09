@@ -270,14 +270,14 @@ const Cart = ({ user, setUser }) => {
       {/* Empty Cart Section */}
       {cartItems.length === 0 && !loading && (
         <div className="empty-cart">
-          <img src={require("../assets/img/empty_cart.webp")} alt="Empty Cart" />
-          <h3>Your cart is empty!</h3>
-          <p>Looks like you haven't added anything yet. Let's fix that!</p>
+          <img src={require("../assets/img/empty_cart.png")} alt="Empty Cart" />
+          <h3>Your cart’s waiting to be filled!</h3>
+          <p>Check out the homepage for more restaurant options!</p>
           <button
             className="add-items-btn"
-            onClick={() => navigate("/food-list")}
+            onClick={() => navigate("/")}
           >
-            Add Food to Cart
+           Explore restaurants near you
           </button>
         </div>
       )}
