@@ -1,4 +1,4 @@
-const BASE_URL = "ec2-16-171-159-120.eu-north-1.compute.amazonaws.com/api";
+const BASE_URL = "http://16.171.159.120:8000/api";
 
 const API_ENDPOINTS = {
   AUTH: {

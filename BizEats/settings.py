@@ -111,7 +111,7 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         # 'DIRS': [],
-        'DIRS': [os.path.join(BASE_DIR, 'bizeats_frontend', 'build')],
+        'DIRS': [os.path.join(BASE_DIR, 'bizeats_frontend/build')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -124,12 +124,9 @@ TEMPLATES = [
     },
 ]
 
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'bizeats_frontend', 'build', 'static'),
-]
-
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'bizeats_frontend/build/static')]
 WSGI_APPLICATION = 'BizEats.wsgi.application'
 
 
