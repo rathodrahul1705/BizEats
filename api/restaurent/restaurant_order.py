@@ -68,6 +68,7 @@ class RestaurantCartAddOrRemove(APIView):
         """
         Adds an item to the cart or updates its quantity if it already exists.
         """
+
         try:
             # Validate quantity
             if quantity <= 0:
@@ -75,29 +76,59 @@ class RestaurantCartAddOrRemove(APIView):
                     {"status": "error", "message": "Quantity must be greater than 0"},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
+            
+            if user_id is None and session_id:
 
-            # Check if the item already exists in the cart
-            cart = Cart.objects.filter(
-                user_id=user_id,
-                restaurant_id=restaurant_id,
-                item_id=item_id,
-                session_id=session_id,
-            ).exclude(cart_status=5).first()
-
-            if cart:
-                # If the item exists, update the quantity
-                cart.quantity += quantity
-                cart.save()
-                message = "Item quantity updated in cart"
-            else:
-                # If the item does not exist, create a new entry
-                Cart.objects.create(
-                    user_id=user_id,
-                    session_id=session_id,
+                cart = Cart.objects.filter(
                     restaurant_id=restaurant_id,
                     item_id=item_id,
-                    quantity=quantity,
-                )
+                    session_id=session_id,
+                ).exclude(cart_status=5).first()
+
+                if cart is not None:
+
+                    cart.quantity += quantity
+                    cart.user_id = user_id
+                    cart.save()
+                    message = "Item quantity updated in cart"
+
+                else:
+
+                    Cart.objects.create(
+                        user_id=user_id,
+                        session_id=session_id,
+                        restaurant_id=restaurant_id,
+                        item_id=item_id,
+                        quantity=quantity,
+                    )
+                    message = "Item added to cart"
+
+            else:
+                
+                cart = Cart.objects.filter(
+                    user_id=user_id,
+                    restaurant_id=restaurant_id,
+                    item_id=item_id,
+                ).exclude(cart_status=5).first()
+
+                if cart is not None:
+
+                    cart.quantity += quantity
+                    cart.user_id = user_id
+                    cart.save()
+                    message = "Item quantity updated in cart"
+                    
+                else:
+
+                    Cart.objects.create(
+                        user_id=user_id,
+                        session_id=session_id,
+                        restaurant_id=restaurant_id,
+                        item_id=item_id,
+                        quantity=quantity,
+                    )
+                    message = "Item added to cart"
+
                 message = "Item added to cart"
 
             return Response(
@@ -116,14 +147,22 @@ class RestaurantCartAddOrRemove(APIView):
         Removes an item from the cart or reduces its quantity.
         """
         try:
-            # Get the cart item
-            cart = Cart.objects.exclude(cart_status=5).get(
-                user_id=user_id,
-                restaurant_id=restaurant_id,
-                item_id=item_id,
-            )
 
-            # Reduce quantity or delete the item
+            if user_id is None and session_id:
+
+                cart = Cart.objects.exclude(cart_status=5).get(
+                    restaurant_id=restaurant_id,
+                    session_id=session_id,
+                    item_id=item_id,
+                )
+            else:
+
+                cart = Cart.objects.exclude(cart_status=5).get(
+                    user_id=user_id,
+                    restaurant_id=restaurant_id,
+                    item_id=item_id,
+                )
+                
             if cart.quantity > 1:
                 cart.quantity -= 1
                 cart.save()
