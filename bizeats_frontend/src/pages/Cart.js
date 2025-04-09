@@ -16,9 +16,8 @@ const Cart = ({ user, setUser }) => {
   const [error, setError] = useState(null);
 
   const sessionId = getOrCreateSessionId();
-  // Get initial values from localStorage
   const restaurantId = localStorage.getItem("current_order_restaurant_id");
-  
+
   const [step, setStep] = useState(() => {
     return parseInt(localStorage.getItem("cart_current_step")) || 1;
   });
@@ -27,40 +26,28 @@ const Cart = ({ user, setUser }) => {
     localStorage.getItem("user_full_address") || null
   );
 
-  // Save step to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem("cart_current_step", step.toString());
   }, [step]);
 
-  // Fetch cart items and update user cart status
   const fetchCartData = useCallback(async () => {
     setLoading(true);
     setError(null);
-    
+
     try {
-      // First update cart user status if user is logged in
       if (user?.user_id) {
-        await fetchData(
-          API_ENDPOINTS.ORDER.UPDATE_CART_USER,
-          "POST",
-          {
-            user_id: user.user_id,
-            session_id: sessionId,
-            cart_status: 2,
-            restaurant_id: restaurantId
-          }
-        );
+        await fetchData(API_ENDPOINTS.ORDER.UPDATE_CART_USER, "POST", {
+          user_id: user.user_id,
+          session_id: sessionId,
+          cart_status: 2,
+          restaurant_id: restaurantId,
+        });
       }
 
-      // Then fetch cart items
-      const response = await fetchData(
-        API_ENDPOINTS.ORDER.GET_CART_ITEM_LIST,
-        "POST",
-        {
-          user_id: user?.user_id || null,
-          session_id: sessionId,
-        }
-      );
+      const response = await fetchData(API_ENDPOINTS.ORDER.GET_CART_ITEM_LIST, "POST", {
+        user_id: user?.user_id || null,
+        session_id: sessionId,
+      });
 
       if (response?.cart_details) {
         const items = response.cart_details.map((item) => ({
@@ -76,7 +63,7 @@ const Cart = ({ user, setUser }) => {
           restaurant_id: response.restaurant_id,
           type: "all",
         }));
-        
+
         setCartItems(items);
         updateCartCount(items.reduce((sum, item) => sum + item.quantity, 0));
       } else {
@@ -93,44 +80,40 @@ const Cart = ({ user, setUser }) => {
     }
   }, [user?.user_id, sessionId]);
 
-  // Update cart count in localStorage and dispatch event
-  const updateCartCount = useCallback((count) => {
-    if (count > 0) {
-      localStorage.setItem("cart_count", count);
-      localStorage.setItem("current_order_restaurant_id", restaurantId);
-    } else {
-      localStorage.removeItem("cart_count");
-      localStorage.removeItem("current_order_restaurant_id");
-    }
-    window.dispatchEvent(new Event("storage"));
-  }, [restaurantId]);
+  const updateCartCount = useCallback(
+    (count) => {
+      if (count > 0) {
+        localStorage.setItem("cart_count", count);
+        localStorage.setItem("current_order_restaurant_id", restaurantId);
+      } else {
+        localStorage.removeItem("cart_count");
+        localStorage.removeItem("current_order_restaurant_id");
+      }
+      window.dispatchEvent(new Event("storage"));
+    },
+    [restaurantId]
+  );
 
-  // Initial data fetch
   useEffect(() => {
     fetchCartData();
   }, [fetchCartData]);
 
-  // Handle cart item operations (add/remove)
   const handleCartOperation = async (item_id, id, action) => {
     try {
       setLoading(true);
       
-      const response = await fetchData(
-        API_ENDPOINTS.ORDER.ADD_TO_CART,
-        "POST",
-        {
-          user_id: user?.user_id || null,
-          session_id: sessionId,
-          restaurant_id: restaurantId,
-          item_id: item_id,
-          id: id,
-          quantity: action === "add" ? 1 : undefined,
-          action: action,
-        }
-      );
+      const response = await fetchData(API_ENDPOINTS.ORDER.ADD_TO_CART, "POST", {
+        user_id: user?.user_id || null,
+        session_id: sessionId,
+        restaurant_id: restaurantId,
+        item_id: item_id,
+        id: id,
+        quantity: action === "add" ? 1 : undefined,
+        action: action,
+      });
 
       if (response.status === "success") {
-        await fetchCartData(); // Refresh cart data
+        await fetchCartData();
       }
     } catch (error) {
       console.error(`Error ${action}ing item from cart:`, error);
@@ -143,17 +126,18 @@ const Cart = ({ user, setUser }) => {
   const increaseQuantity = (id, item_id) => handleCartOperation(item_id, id, "add");
   const decreaseQuantity = (id, item_id) => handleCartOperation(item_id, id, "remove");
 
-  // Calculate totals
-  const totalPrice = cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
-  const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+  const deleteItem = (id, item_id) => {
+    handleCartOperation(item_id, id, "delete");
+  };
 
-  // Navigation handlers
+  const totalPrice = cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
+
   const handleProceed = () => {
     if (cartItems.length === 0) {
       alert("Your cart is empty. Please add items before proceeding.");
       return;
     }
-    
+
     if (step === 1) {
       if (!user) {
         setShowSignIn(true);
@@ -172,19 +156,17 @@ const Cart = ({ user, setUser }) => {
   const handleBack = () => step > 1 && setStep(step - 1);
 
   const handleAddressSelection = (address_id, selectedFullAddress) => {
-    let user_full_address = localStorage.getItem("user_full_address") 
+    let user_full_address = localStorage.getItem("user_full_address");
     setUserSelectedAddress(user_full_address);
     setStep(3);
   };
 
   const handlePayment = () => navigate(`/payments/${restaurantId}`);
 
-  // Render loading state
   if (loading && cartItems.length === 0) {
     return <div className="cart-container loading">Loading your cart...</div>;
   }
 
-  // Render error state
   if (error && cartItems.length === 0) {
     return (
       <div className="cart-container error">
@@ -198,7 +180,6 @@ const Cart = ({ user, setUser }) => {
     <div className="cart-container">
       <h2 className="cart-title">Secure Checkout</h2>
 
-      {/* Step Indicator */}
       <div className="step-indicator">
         <div className={`step ${step >= 1 ? "active" : ""}`}>
           {step > 1 ? <CheckCircle size={18} /> : ""} Login
@@ -209,14 +190,12 @@ const Cart = ({ user, setUser }) => {
         <div className={`step ${step >= 3 ? "active" : ""}`}>Review</div>
       </div>
 
-      {/* Back Button */}
       {step > 1 && (
         <button className="cart-back-btn" onClick={handleBack}>
           <ArrowLeft size={20} /> Back
         </button>
       )}
 
-      {/* Step 1: User Login */}
       {step === 1 && !user && showSignIn && (
         <SignIn
           onClose={() => setShowSignIn(false)}
@@ -231,18 +210,10 @@ const Cart = ({ user, setUser }) => {
         />
       )}
 
-      {/* Step 2: Address Selection */}
-      {step === 2 && user && (
-        <AddressSelection onAddressSelect={handleAddressSelection} />
-      )}
+      {step === 2 && user && <AddressSelection onAddressSelect={handleAddressSelection} />}
 
-      {/* Step 3: Payment */}
       {step === 3 && userSelectedAddress && (
         <div className="orderSummaryHolder">
-          {/* <h3>Order Summary</h3>
-          <p className="subTitleText">
-            <strong>Deliver to:</strong> {userSelectedAddress}
-          </p> */}
           <ul className="cart-list">
             {cartItems.map((item) => (
               <li key={item.id} className="cart-item">
@@ -267,22 +238,17 @@ const Cart = ({ user, setUser }) => {
         </div>
       )}
 
-      {/* Empty Cart Section */}
       {cartItems.length === 0 && !loading && (
         <div className="empty-cart">
           <img src={require("../assets/img/empty_cart.webp")} alt="Empty Cart" />
           <h3>Your cart’s waiting to be filled!</h3>
           <p>Check out the homepage for more restaurant options!</p>
-          <button
-            className="add-items-btn"
-            onClick={() => navigate("/")}
-          >
-           Explore restaurants near you
+          <button className="add-items-btn" onClick={() => navigate("/")}>
+            Explore restaurants near you
           </button>
         </div>
       )}
 
-      {/* Cart Details Section */}
       {cartItems.length > 0 && step !== 3 && step !== 2 && (
         <>
           <ul className="cart-list">
@@ -309,6 +275,13 @@ const Cart = ({ user, setUser }) => {
                     >
                       <PlusCircle size={20} />
                     </button>
+                    <button
+                      className="cart-btn delete-btn"
+                      onClick={() => deleteItem(item.id, item.item_id)}
+                      disabled={loading}
+                    >
+                      <Trash2 size={20} />
+                    </button>
                   </div>
                 </div>
               </li>
@@ -319,11 +292,7 @@ const Cart = ({ user, setUser }) => {
               <span>Total:</span>
               <span>₹ {totalPrice}</span>
             </div>
-            <button 
-              className="proceed-btn" 
-              onClick={handleProceed}
-              disabled={loading}
-            >
+            <button className="proceed-btn" onClick={handleProceed} disabled={loading}>
               {step === 1
                 ? "Review Cart & Checkout"
                 : step === 2

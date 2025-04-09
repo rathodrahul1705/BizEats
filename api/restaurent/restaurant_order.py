@@ -34,6 +34,7 @@ class RestaurantCartAddOrRemove(APIView):
             restaurant_id = data.get("restaurant_id")
             item_id = data.get("item_id")
             quantity = data.get("quantity", 1)  # Default quantity is 1
+            id = data.get("id")  # Default quantity is 1
 
             # Validate required fields
             if not all([action, restaurant_id, item_id]):
@@ -47,6 +48,8 @@ class RestaurantCartAddOrRemove(APIView):
                 return self._add_to_cart(user_id, session_id, restaurant_id, item_id, quantity)
             elif action == "remove":
                 return self._remove_from_cart(user_id, session_id, restaurant_id, item_id)
+            elif action == "delete":
+                return self._delete_from_cart(user_id, session_id, restaurant_id, item_id, id)
             else:
                 return Response(
                     {"status": "error", "message": "Invalid action"},
@@ -186,6 +189,38 @@ class RestaurantCartAddOrRemove(APIView):
                 {"status": "error", "message": str(e)},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+        
+
+    def _delete_from_cart(self, user_id, session_id, restaurant_id, item_id, id):
+        """
+        Removes an item from the cart or reduces its quantity.
+        """
+        try:
+
+            if id:
+
+                cart = Cart.objects.exclude(cart_status=5).get(
+                    id=id,
+                )
+
+                cart.delete()
+                message = "Item delete from cart"
+
+            return Response(
+                {"status": "success", "message": message},
+                status=status.HTTP_200_OK,
+            )
+
+        except Cart.DoesNotExist:
+            return Response(
+                {"status": "error", "message": "Item not found in cart"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        except Exception as e:
+            return Response(
+                {"status": "error", "message": str(e)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
 @method_decorator(csrf_exempt, name='dispatch')
 class RestaurantCartList(APIView):
@@ -251,6 +286,7 @@ class CartWithRestaurantDetails(APIView):
 
                 cart_details.append({
                     "item_id": item.item_id,
+                    "id": item.id,
                     "restaurant_id": item.restaurant_id,
                     "item_name": item.item.item_name,
                     "item_description": item.item.description,

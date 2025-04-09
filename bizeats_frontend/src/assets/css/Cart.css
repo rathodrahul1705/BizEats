@@ -235,3 +235,15 @@
   height: 20px;
   stroke: #fff; /* Match the icon color with the text */
 }
+
+.cart-btn.delete-btn {
+  color: #e53935;
+  margin-left: 10px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.cart-btn.delete-btn:hover {
+  color: #c62828;
+}
