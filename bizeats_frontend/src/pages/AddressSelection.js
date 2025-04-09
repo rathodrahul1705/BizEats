@@ -37,8 +37,6 @@ const AddressSelection = ({ onAddressSelect }) => {
         const storedAddress = localStorage.getItem("selected_address");
         const defaultAddress = updatedAddresses.find((addr) => addr.is_default);
 
-        console.log("defaultAddress==",defaultAddress)
-
         if (storedAddress) {
           setSelectedAddress(parseInt(storedAddress));
         } else if (defaultAddress) {

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { MapContainer, TileLayer, Marker } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
@@ -52,8 +52,7 @@ const AddressForm = ({ onClose, onSave }) => {
 
   const handleSave = async () => {
     const { street, city, state, zip, country, landmark, addressType } = newAddress;
-    if (street.trim() && city.trim() && state.trim() && zip.trim() && country.trim()) {
-      const fullAddress = `${street}, ${city}, ${state}, ${zip}, ${country} (Landmark: ${landmark}, Type: ${addressType})`;
+    if (street.trim() && city.trim() && zip.trim()) {
 
       try {
         const payload = {
@@ -84,6 +83,21 @@ const AddressForm = ({ onClose, onSave }) => {
     }
   };
 
+  useEffect(() => {
+    fetch('https://ipapi.co/json/')
+      .then(res => res.json())
+      .then(data => {
+
+        setNewAddress({
+          country: data.country_name,
+          state: data.state,
+          city: data.city,
+          state: data.region,
+        });
+      })
+      .catch(err => console.error('Failed to get location:', err));
+  }, []);
+
   return (
     <div className="slide-panel open">
       <div className="slide-panel-header">
@@ -108,7 +122,7 @@ const AddressForm = ({ onClose, onSave }) => {
       <input type="text" placeholder="Landmark" value={newAddress.landmark} onChange={(e) => setNewAddress({ ...newAddress, landmark: e.target.value })} className="address-input" />
       <select value={newAddress.addressType} onChange={(e) => setNewAddress({ ...newAddress, addressType: e.target.value })} className="address-input">
         <option value="Home">Home</option>
-        <option value="Work">Work</option>
+        <option value="Office">Office</option>
         <option value="Other">Other</option>
       </select>
 
