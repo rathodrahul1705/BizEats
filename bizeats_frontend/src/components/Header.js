@@ -72,12 +72,12 @@ const Header = ({ user, setUser }) => {
               Home
             </Link>
           </li>
-          {/* <li>
+          <li>
             <Link to="/register-your-restaurent" className="nav-link">
               <Store size={20} className="icon" />
               Register Restaurent
             </Link>
-          </li> */}
+          </li>
           <li>
             <Link to="/cart" className="nav-link">
               <ShoppingCart size={20} className="icon" />
