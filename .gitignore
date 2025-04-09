@@ -1,0 +1,90 @@
+# === PYTHON / DJANGO ===
+*.py[cod]
+__pycache__/
+db.sqlite3
+*.sqlite3
+*.log
+*.pot
+*.pyc
+*.pyo
+*.pyd
+*.env
+*.env.*
+.env/
+env/
+venv/
+ENV/
+venv.bak/
+env.bak/
+instance/
+.settings/
+.idea/
+.vscode/
+.DS_Store
+
+# Django migrations
+**/migrations/
+!**/migrations/__init__.py
+
+# Static and media files (optional, if collected/generated)
+staticfiles/
+static/
+media/
+
+# Local Django settings (if separated)
+local_settings.py
+
+# === REACT ===
+node_modules/
+build/
+dist/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# === IDEs, OS & Misc ===
+*.swp
+*.swo
+*.bak
+*.tmp
+*.orig
+*.old
+Thumbs.db
+ehthumbs.db
+*.iml
+*.sublime-workspace
+*.sublime-project
+.vscode/
+.idea/
+.DS_Store
+
+# === TEST COVERAGE ===
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+
+# === PYTEST ===
+.pytest_cache/
+
+# === CELERY ===
+celerybeat-schedule
+celerybeat.pid
+
+# === DOCKER (if using) ===
+*.pid
+*.seed
+*.pid.lock
+*.tar
+docker-compose.override.yml
