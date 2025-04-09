@@ -20,7 +20,7 @@ const categories = [
   {
     id: 2,
     name: "Lunch",
-    image: require("../assets/img/lunch_image.jpg")
+    image: require("../assets/img/lunch_image.webp")
   },
   {
     id: 3,
