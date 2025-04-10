@@ -11,7 +11,7 @@
 .header-container {
     background: white;
     box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-    padding: 16px 24px;
+    padding: 10px 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -63,7 +63,7 @@
 
 /* Icons */
 .icon {
-    margin-right: 8px;
+    margin-right: 10px;
 }
 
 /* Hover Effects */
@@ -146,7 +146,7 @@
 /* Responsive Design */
 @media (max-width: 768px) {
     .header-container {
-        padding: 12px 15px;
+        padding: 1px 1px;
     }
 
     .nav-menu ul {
@@ -171,7 +171,6 @@
 }
 
 @media (max-width: 480px) {
-   
     .nav-link, .signin-btn, .login-user-info {
         font-size: 0px;
         padding: 6px 8px;
@@ -179,8 +178,6 @@
 }
 
 @media (max-width: 370px) {
-    
-
     .icon {
         margin: 0;
     }
@@ -199,5 +196,24 @@
     align-items: center;
     min-width: 20px;
     height: 20px;
-  }
-  
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+}
+
+.logo-image {
+    width: 150px; /* Adjust the width as needed */
+    height: auto; /* Maintains aspect ratio */
+    object-fit: contain; /* Ensures the image scales nicely */
+}
+
+/* Mobile view */
+@media (max-width: 768px) {
+    .logo-image {
+        width: 80px; /* Adjust the width as needed */
+        height: auto; /* Maintains aspect ratio */
+        object-fit: contain; /* Ensures the image scales nicely */
+    }
+}

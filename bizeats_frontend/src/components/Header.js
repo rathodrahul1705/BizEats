@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Link,useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Home, ShoppingCart, LogIn, User, LogOut, Store, Briefcase, Package } from "lucide-react";
 import SignIn from "./SignIn";
 import "../assets/css/Header.css";
@@ -9,6 +9,7 @@ const Header = ({ user, setUser }) => {
   const [showDropdown, setShowDropdown] = useState(false);
   const is_restaurant_register = localStorage.getItem("is_restaurant_register");
   const [cartCount, setCartCount] = useState(localStorage.getItem("cart_count") || 0);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768); // Check if it's mobile view
   const navigate = useNavigate();
   const dropdownRef = useRef(null);
 
@@ -18,9 +19,16 @@ const Header = ({ user, setUser }) => {
     };
 
     window.addEventListener("storage", updateCartCount);
-    
+
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768); // Update mobile state on window resize
+    };
+
+    window.addEventListener("resize", handleResize);
+
     return () => {
       window.removeEventListener("storage", updateCartCount);
+      window.removeEventListener("resize", handleResize);
     };
   }, []);
 
@@ -59,7 +67,11 @@ const Header = ({ user, setUser }) => {
       {/* Logo */}
       <Link to="/" className="product-logo">
         <div className="logo">
-        🅴🅰🆃<span className="logo-highlight">🅾🅾🆁</span>
+          <img
+            src={isMobile ? "/eatoormob.png" : "/eatoorweb.png"}
+            alt="EATOOR Logo"
+            className="logo-image"
+          />
         </div>
       </Link>
 
@@ -72,12 +84,6 @@ const Header = ({ user, setUser }) => {
               Home
             </Link>
           </li>
-          {/* <li>
-            <Link to="/register-your-restaurent" className="nav-link">
-              <Store size={20} className="icon" />
-              Register Restaurent
-            </Link>
-          </li> */}
           <li>
             <Link to="/cart" className="nav-link">
               <ShoppingCart size={20} className="icon" />
