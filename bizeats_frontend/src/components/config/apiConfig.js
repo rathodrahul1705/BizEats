@@ -1,4 +1,4 @@
-const BASE_URL = "http://16.171.159.120/api";
+const BASE_URL = "http://16.170.201.60/api";
 
 const API_ENDPOINTS = {
   AUTH: {

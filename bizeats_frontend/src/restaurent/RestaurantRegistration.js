@@ -311,7 +311,7 @@ const handleSubmitStep4 = async () => {
       <div className="success-popup-overlay">
         <div className="success-popup">
           <h3>Congratulations!</h3>
-          <p>All steps completed. Wait for BizEats for Approval.</p>
+          <p>All steps completed. Wait for Eatoor for Approval.</p>
           <button onClick={onClose}>Close</button>
         </div>
       </div>
@@ -361,7 +361,7 @@ const handleSubmitStep4 = async () => {
               <div className="input-group">
                 <input
                   type="text"
-                  placeholder="Restaurant Name (Customers will see this name on BizEats)"
+                  placeholder="Restaurant Name (Customers will see this name on Eatoor)"
                   value={restaurantName}
                   onChange={(e) => setRestaurantName(e.target.value)}
                 />

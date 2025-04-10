@@ -125,10 +125,10 @@ def send_order_status_email(order):
     </head>
     <body>
         <div class="container">
-            <div class="header">BizEats</div>
+            <div class="header">Eatoor</div>
             <div class="sub-header">Order Update Notification</div>
 
-            <p>Greetings from BizEats👋</p>
+            <p>Greetings from Eatoor</p>
             <p>Your Order id: <strong>#{order_number}</strong> has been <strong>{order_status}</strong>.</p>
 
             <div class="track-button">
@@ -163,7 +163,7 @@ def send_order_status_email(order):
                 </tr>
             </table>
 
-            <p style="margin-top: 25px;">Thank you for using <strong>{restaurant_name}</strong> via BizEats!</p>
+            <p style="margin-top: 25px;">Thank you for using <strong>{restaurant_name}</strong> via Eatoor!</p>
 
             <div class="footer">This is an automated email. Please do not reply.</div>
         </div>
@@ -192,7 +192,7 @@ def send_otp_email(user, subject, otp_type):
         heading = "🔐 Verify Your Login"
         intro = "We noticed you’re trying to log in. Use the code below to continue."
     elif otp_type == "registration":
-        heading = "🎉 Welcome to BizEats!"
+        heading = "🎉 Welcome to Eatoor!"
         intro = "We're excited to have you! Use the code below to verify your account."
     else:
         heading = "🔐 Verify Your Account"
@@ -204,7 +204,7 @@ def send_otp_email(user, subject, otp_type):
             <div style="max-width: 600px; margin: 40px auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
                 <div style="background-color: #e65c00; padding: 24px; text-align: center;">
                     <div style="font-size: 32px; font-weight: bold; font-family: Arial, sans-serif;">
-                        <span style="color: black;">Biz</span><span style="color: white;">Eats</span>
+                        <span style="color: black;">Eat</span><span style="color: white;">oor</span>
                     </div>
                     <h1 style="color: white; margin: 12px 0 0; font-size: 26px;">{heading}</h1>
                     <p style="color: white; font-size: 16px; margin-top: 6px;">{intro}</p>
@@ -221,9 +221,9 @@ def send_otp_email(user, subject, otp_type):
                         This OTP is valid for <strong>5 minutes</strong>. Please do not share it with anyone.
                     </p>
                     <p style="font-size: 14px; color: #555; margin-top: 16px;">
-                        Thank you for choosing <strong>BizEats</strong> – where great food meets great service! 🍽️
+                        Thank you for choosing <strong>Eatoor</strong> – where great food meets great service! 🍽️
                     </p>
-                    <p style="font-size: 14px; color: #999; margin-top: 24px;">– The BizEats Team</p>
+                    <p style="font-size: 14px; color: #999; margin-top: 24px;">– The Eatoor Team</p>
                 </div>
             </div>
         </body>

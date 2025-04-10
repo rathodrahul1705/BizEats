@@ -32,7 +32,7 @@ class UserRegistrationView(APIView):
 
         # Generate OTP and send email
         user.generate_otp()
-        send_otp_email(user,'BizEats Registration Verification Code', otp_type="registration")
+        send_otp_email(user,'Eatoor Registration Verification Code', otp_type="registration")
         return Response({"message": "User registered successfully. OTP sent to email."}, status=status.HTTP_201_CREATED)
     
 class OTPVerificationView(APIView):
@@ -93,7 +93,7 @@ class UserLoginView(APIView):
 
         if user:
             user.generate_otp()
-            send_otp_email(user,'BizEats Login Verification Code', otp_type="login")
+            send_otp_email(user,'Eatoor Login Verification Code', otp_type="login")
             return Response({
                 "message": "OTP sent to email. Please verify.",
             }, status=status.HTTP_200_OK)

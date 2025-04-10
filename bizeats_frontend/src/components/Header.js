@@ -59,7 +59,7 @@ const Header = ({ user, setUser }) => {
       {/* Logo */}
       <Link to="/" className="product-logo">
         <div className="logo">
-          Biz<span className="logo-highlight">Eats</span>
+        🅴🅰🆃<span className="logo-highlight">🅾🅾🆁</span>
         </div>
       </Link>
 

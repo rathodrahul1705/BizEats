@@ -211,7 +211,7 @@ const PaymentOption = ({ user }) => {
         key: process.env.REACT_APP_RAZORPAY_KEY_ID || 'rzp_test_Ler2HqmO4lVND1',
         amount: orderData.amount.toString(),
         currency: orderData.currency,
-        name: 'BizEats',
+        name: 'Eatoor',
         description: `Order from ${restaurantOrderDetails.restaurant_name}`,
         order_id: orderData.id,
         handler: handlePaymentSuccess,
