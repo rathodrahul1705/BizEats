@@ -68,7 +68,7 @@ const Header = ({ user, setUser }) => {
       <Link to="/" className="product-logo">
         <div className="logo">
           <img
-            src={isMobile ? "/eatoormob.png" : "/eatoorweb.png"}
+            src={isMobile ? "/eatoormob.svg" : "/eatoorweb.svg"}
             alt="EATOOR Logo"
             className="logo-image"
           />
