@@ -5,8 +5,10 @@ import "../assets/css/OrderDetails.css";
 import API_ENDPOINTS from "../components/config/apiConfig";
 import fetchData from "../components/services/apiService";
 import { getOrCreateSessionId } from "../components/helper/Helper";
+import StripeLoader from "../loader/StripeLoader";
 
 const OrderDetails = ({ user, setUser }) => {
+  const [loading, setLoading] = useState(true);
   const { restaurant_id } = useParams();
   const [cart, setCart] = useState({});
   const [filter, setFilter] = useState("all");
@@ -24,6 +26,7 @@ const OrderDetails = ({ user, setUser }) => {
 
   const fetchCartDetails = async () => {
     try {
+      setLoading(true)
       const response = await fetchData(
         API_ENDPOINTS.ORDER.GET_CART_DETAILS,
         "POST",
@@ -44,6 +47,9 @@ const OrderDetails = ({ user, setUser }) => {
       }
     } catch (error) {
       console.error("Error fetching cart details:", error);
+    }
+    finally {
+      setLoading(false);
     }
   };
 
@@ -184,6 +190,10 @@ const OrderDetails = ({ user, setUser }) => {
   const filteredFood = foodData.filter(
     (food) => filter === "all" || food.type === filter
   );
+
+  if (loading && filteredFood.length === 0) {
+    return <StripeLoader />;
+  }
   
   return (
     <div className="food-list-container">

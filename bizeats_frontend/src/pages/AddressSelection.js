@@ -5,8 +5,10 @@ import loactionIcon from "../assets/img/loactionIcon.svg";
 import AddressForm from "./AddressForm";
 import API_ENDPOINTS from "../components/config/apiConfig";
 import fetchData from "../components/services/apiService";
+import StripeLoader from "../loader/StripeLoader";
 
 const AddressSelection = ({ onAddressSelect }) => {
+  const [loading, setLoading] = useState(true);
   const [addresses, setAddresses] = useState([]);
   const [selectedAddress, setSelectedAddress] = useState(
     localStorage.getItem("selected_address") || null
@@ -19,6 +21,7 @@ const AddressSelection = ({ onAddressSelect }) => {
   // Move fetchAddresses outside useEffect so it's reusable
   const fetchAddresses = async () => {
     try {
+      setLoading(true)
       const response = await fetchData(
         API_ENDPOINTS.ORDER.USER_ADDRESS_LIST,
         "GET",
@@ -48,6 +51,9 @@ const AddressSelection = ({ onAddressSelect }) => {
     } catch (error) {
       console.error("Error fetching addresses:", error);
     }
+    finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -66,6 +72,10 @@ const AddressSelection = ({ onAddressSelect }) => {
     setShowAddressForm(false);
     await fetchAddresses(); // Fetch updated list after new address is added
   };
+
+  if (loading && addresses.length === 0) {
+    return <StripeLoader />;
+  }
 
   return (
     <div className="address-container">

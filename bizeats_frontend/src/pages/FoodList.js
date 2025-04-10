@@ -5,12 +5,14 @@ import { Link } from "react-router-dom";
 import { Navigation, Pagination, Autoplay } from "swiper/modules";
 import API_ENDPOINTS from "../components/config/apiConfig";
 import fetchData from "../components/services/apiService"
+import StripeLoader from "../loader/StripeLoader";
 
 const FoodGrid = () => {
-
+  const [loading, setLoading] = useState(true);
   const [restaurants, setRestaurants] = useState([]);
 
   useEffect(() => {
+    setLoading(true)
     // Fetch data from the API
     const fetchRestaurants = async () => {
       try {
@@ -19,11 +21,17 @@ const FoodGrid = () => {
       } catch (error) {
         console.error("Error fetching restaurants:", error);
       }
+      finally {
+        setLoading(false);
+      }
     };
 
     fetchRestaurants();
   }, []);
 
+  if (loading && restaurants.length === 0) {
+    return <StripeLoader />;
+  }
 
   return (
     <div className="food-grid-container">

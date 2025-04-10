@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import API_ENDPOINTS from "../components/config/apiConfig";
 import fetchData from "../components/services/apiService";
 import { getOrCreateSessionId } from "../components/helper/Helper";
+import StripeLoader from "../loader/StripeLoader";
 
 const Cart = ({ user, setUser }) => {
   const navigate = useNavigate();
@@ -164,8 +165,9 @@ const Cart = ({ user, setUser }) => {
   const handlePayment = () => navigate(`/payments/${restaurantId}`);
 
   if (loading && cartItems.length === 0) {
-    return <div className="cart-container loading">Loading your cart...</div>;
+    return <StripeLoader />;
   }
+
 
   if (error && cartItems.length === 0) {
     return (

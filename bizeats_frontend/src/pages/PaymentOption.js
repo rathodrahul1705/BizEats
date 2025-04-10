@@ -5,6 +5,7 @@ import { ArrowLeft } from "lucide-react";
 import "../assets/css/PaymentOption.css";
 import API_ENDPOINTS from "../components/config/apiConfig";
 import fetchData from "../components/services/apiService";
+import StripeLoader from "../loader/StripeLoader";
 
 const PaymentOption = ({ user }) => {
   const { restaurant_id } = useParams();
@@ -243,12 +244,7 @@ const PaymentOption = ({ user }) => {
   const handleBack = () => navigate(-1);
 
   if (!restaurantOrderDetails) {
-    return (
-      <div className="loading-container">
-        <div className="loading-spinner"></div>
-        <p>Loading order details...</p>
-      </div>
-    );
+    return <StripeLoader />;
   }
 
   return (

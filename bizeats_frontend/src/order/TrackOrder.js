@@ -3,11 +3,13 @@ import { Bike } from 'lucide-react';
 import "../assets/css/order/TrackOrder.css";
 import API_ENDPOINTS from "../components/config/apiConfig";
 import fetchData from "../components/services/apiService";
+import StripeLoader from "../loader/StripeLoader";
 
 const TrackOrder = ({ user }) => {
   const [orders, setOrders] = useState([]);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [noOrders, setNoOrders] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const statusMap = {
     "Pending": 0,
@@ -22,6 +24,7 @@ const TrackOrder = ({ user }) => {
 
   const getOrderTrackingDetails = async () => {
     try {
+      setLoading(true)
       const response = await fetchData(
         API_ENDPOINTS.TRACK.TRACK_ORDER,
         "POST",
@@ -37,6 +40,9 @@ const TrackOrder = ({ user }) => {
     } catch (error) {
       console.error("Error fetching orders:", error);
       setNoOrders(true);
+    }
+    finally {
+      setLoading(false);
     }
   };
 
@@ -64,7 +70,11 @@ const TrackOrder = ({ user }) => {
     );
   }
 
-  if (!selectedOrder) return <p>Loading order...</p>;
+  // if (!selectedOrder) return <p>Loading order...</p>;
+
+  if (!selectedOrder) {
+    return <StripeLoader />;
+  }
 
   const progress = statusMap[selectedOrder.status] || 0;
 

@@ -9,6 +9,7 @@ import "swiper/css/pagination";
 import { Navigation, Pagination, Autoplay } from "swiper/modules";
 import API_ENDPOINTS from "../components/config/apiConfig";
 import fetchData from "../components/services/apiService"
+import StripeLoader from "../loader/StripeLoader";
 
 // Category Data
 const categories = [
@@ -30,9 +31,11 @@ const categories = [
 ];
 
 const Home = () => {
+  const [loading, setLoading] = useState(true);
   const [restaurants, setRestaurants] = useState([]);
 
   useEffect(() => {
+    setLoading(true)
     // Fetch data from the API
     const fetchRestaurants = async () => {
       try {
@@ -41,10 +44,17 @@ const Home = () => {
       } catch (error) {
         console.error("Error fetching restaurants:", error);
       }
+      finally {
+        setLoading(false);
+      }
     };
 
     fetchRestaurants();
   }, []);
+
+  if (loading && restaurants.length === 0) {
+    return <StripeLoader />;
+  }
 
   return (
     <div className="home-container">
