@@ -1,4 +1,4 @@
-const BASE_URL = "http://16.170.201.60/api";
+const BASE_URL = "http://www.eatoor.com/api";
 
 const API_ENDPOINTS = {
   AUTH: {
