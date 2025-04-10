@@ -88,3 +88,4 @@ celerybeat.pid
 *.pid.lock
 *.tar
 docker-compose.override.yml
+public
