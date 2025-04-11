@@ -18,6 +18,9 @@ import PaymentSuccess from "./payment/PaymentSuccess";
 import PaymentFailed from "./payment/PaymentFailed";
 import OrderConfirmation from "./payment/OrderConfirmation";
 import TrackOrder from "./order/TrackOrder";
+import LocationChecker from "./components/LocationChecker";
+import NotAvailable from "./pages/NotAvailable";
+
 
 function PrivateRoute({ children, user }) {
   return user ? children : <Navigate to="/" />;
@@ -140,6 +143,17 @@ function App() {
                 </PrivateRoute>
               }
             />
+
+            {/* <Route
+              path="/"
+              element={
+                <LocationChecker>
+                  <Home />
+                </LocationChecker>
+              }
+            />
+
+            <Route path="/not-available" element={<NotAvailable />} /> */}
 
             {/* Fallback Route for 404 Not Found */}
             <Route path="*" element={<Navigate to="/" />} />
