@@ -22,13 +22,14 @@ class UserRegistrationView(APIView):
     def post(self, request, *args, **kwargs):
         email = request.data.get("email")
         full_name = request.data.get("full_name")
+        contact_number = request.data.get("contact_number")
         
         # Validate inputs
         if not email or not full_name:
             return Response({"error": "Email and full_name are required."}, status=status.HTTP_400_BAD_REQUEST)
 
         # Create the user with provided email and full_name (contact_number is optional)
-        user = User.objects.create_user(email=email, full_name=full_name)
+        user = User.objects.create_user(email=email, full_name=full_name, contact_number=contact_number)
 
         # Generate OTP and send email
         user.generate_otp()

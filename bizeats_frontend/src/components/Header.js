@@ -9,9 +9,10 @@ const Header = ({ user, setUser }) => {
   const [showDropdown, setShowDropdown] = useState(false);
   const is_restaurant_register = localStorage.getItem("is_restaurant_register");
   const [cartCount, setCartCount] = useState(localStorage.getItem("cart_count") || 0);
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768); // Check if it's mobile view
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const navigate = useNavigate();
   const dropdownRef = useRef(null);
+  const headerRef = useRef(null);
 
   useEffect(() => {
     const updateCartCount = () => {
@@ -21,7 +22,7 @@ const Header = ({ user, setUser }) => {
     window.addEventListener("storage", updateCartCount);
 
     const handleResize = () => {
-      setIsMobile(window.innerWidth <= 768); // Update mobile state on window resize
+      setIsMobile(window.innerWidth <= 768);
     };
 
     window.addEventListener("resize", handleResize);
@@ -49,7 +50,7 @@ const Header = ({ user, setUser }) => {
   const handleLogout = () => {
     setUser(null);
     setShowDropdown(false);
-    setCartCount(0); // Reset cart count state
+    setCartCount(0);
     localStorage.removeItem("user");
     localStorage.removeItem("access");
     localStorage.removeItem("refresh");
@@ -63,91 +64,105 @@ const Header = ({ user, setUser }) => {
   };
 
   return (
-    <header className="header-container">
-      {/* Logo */}
-      <Link to="/" className="product-logo">
-        <div className="logo">
-          <img
-            src={isMobile ? "/eatoormob.svg" : "/eatoorweb.svg"}
-            alt="EATOOR Logo"
-            className="logo-image"
-          />
-        </div>
-      </Link>
+    <>
+      <header className="header" ref={headerRef}>
+        <div className="header__container">
+          {/* Logo */}
+          <Link to="/" className="header__logo">
+            <img
+              src={isMobile ? "/eatoormob.svg" : "/eatoorweb.svg"}
+              alt="EATOOR Logo"
+              className="header__logo-image"
+            />
+          </Link>
 
-      {/* Navigation */}
-      <nav className="nav-menu">
-        <ul>
-          <li>
-            <Link to="/" className="nav-link">
-              <Home size={20} className="icon" />
-              Home
-            </Link>
-          </li>
-          <li>
-            <Link to="/cart" className="nav-link">
-              <ShoppingCart size={20} className="icon" />
-              Cart <span className="header-cart-count">{cartCount}</span>
-            </Link>
-          </li>
+          {/* Navigation */}
+          <nav className="header__nav">
+            <ul className="header__nav-list">
+              <li className="header__nav-item">
+                <Link to="/" className="header__nav-link">
+                  <Home size={20} className="header__icon" />
+                  <span className="header__nav-text">Home</span>
+                </Link>
+              </li>
+              <li className="header__nav-item">
+                <Link to="/cart" className="header__nav-link">
+                  <ShoppingCart size={20} className="header__icon" />
+                  <span className="header__nav-text">Cart</span>
+                  <span className="header__cart-count">{cartCount}</span>
+                </Link>
+              </li>
 
-          {/* User Authentication Section */}
-          <li className="auth-section">
-            {user ? (
-              <div className="user-menu" ref={dropdownRef}>
-                <div
-                  className="login-user-info"
-                  onClick={() => setShowDropdown(!showDropdown)}
-                >
-                  <User size={20} className="icon" />
-                  <span className="username">{user.full_name}</span>
-                </div>
+              {/* User Authentication Section */}
+              <li className="header__auth-item">
+                {user ? (
+                  <div className="header__user-menu" ref={dropdownRef}>
+                    <div
+                      className="header__user-info"
+                      onClick={() => setShowDropdown(!showDropdown)}
+                    >
+                      <User size={20} className="header__icon" />
+                      <span className="header__username">{user.full_name}</span>
+                    </div>
 
-                {/* Dropdown Menu */}
-                {showDropdown && (
-                  <div className="dropdown-menu">
-                    <Link to="/profile" className="dropdown-item">
-                      <User size={16} className="icon" /> Profile
-                    </Link>
+                    {/* Dropdown Menu */}
+                    {showDropdown && (
+                      <div className="header__dropdown">
+                        <Link to="/profile" className="header__dropdown-item">
+                          <User size={16} className="header__dropdown-icon" /> 
+                          <span>Profile</span>
+                        </Link>
 
-                    <Link to="/track-order" className="dropdown-item">
-                      <Package size={16} className="icon" /> Track Order
-                    </Link>
+                        <Link to="/track-order" className="header__dropdown-item">
+                          <Package size={16} className="header__dropdown-icon" /> 
+                          <span>Track Order</span>
+                        </Link>
 
-                    {is_restaurant_register === "true" && (
-                      <Link to="/vendor-dashboard" className="dropdown-item">
-                        <Briefcase size={16} className="icon" /> Business
-                      </Link>
+                        {is_restaurant_register === "true" && (
+                          <Link to="/vendor-dashboard" className="header__dropdown-item">
+                            <Briefcase size={16} className="header__dropdown-icon" /> 
+                            <span>Business</span>
+                          </Link>
+                        )}
+
+                        <button 
+                          onClick={handleLogout} 
+                          className="header__dropdown-item header__dropdown-item--logout"
+                        >
+                          <LogOut size={16} className="header__dropdown-icon" /> 
+                          <span>Logout</span>
+                        </button>
+                      </div>
                     )}
-
-                    <button onClick={handleLogout} className="dropdown-item logout-btn-header">
-                      <LogOut size={16} className="icon" /> Logout
-                    </button>
                   </div>
+                ) : (
+                  <button 
+                    onClick={() => setShowSignIn(true)} 
+                    className="header__signin-btn"
+                  >
+                    <LogIn size={20} className="header__icon" />
+                    <span className="header__signin-text">Sign In</span>
+                  </button>
                 )}
-              </div>
-            ) : (
-              <button onClick={() => setShowSignIn(true)} className="signin-btn">
-                <LogIn size={20} className="icon" />
-                Sign In
-              </button>
-            )}
-          </li>
-        </ul>
-      </nav>
+              </li>
+            </ul>
+          </nav>
+        </div>
 
-      {/* Sign In Modal */}
-      {showSignIn && (
-        <SignIn
-          onClose={() => setShowSignIn(false)}
-          setUser={(userData) => {
-            setUser(userData); // Update user state
-            setShowSignIn(false); // Close modal
-            setShowDropdown(false); // Open Profile & Logout section
-          }}
-        />
-      )}
-    </header>
+        {/* Sign In Modal */}
+        {showSignIn && (
+          <SignIn
+            onClose={() => setShowSignIn(false)}
+            setUser={(userData) => {
+              setUser(userData);
+              setShowSignIn(false);
+              setShowDropdown(false);
+            }}
+          />
+        )}
+      </header>
+      <div className="header__spacer"></div>
+    </>
   );
 };
 

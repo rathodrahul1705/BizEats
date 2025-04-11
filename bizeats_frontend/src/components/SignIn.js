@@ -9,6 +9,7 @@ const SignIn = ({ onClose, setUser = () => {} }) => {
   const [formData, setFormData] = useState({
     full_name: "",
     email: "",
+    contact_number: "",
     otp: Array(6).fill(""),
   });
   const [fieldErrors, setFieldErrors] = useState({});
@@ -18,7 +19,6 @@ const SignIn = ({ onClose, setUser = () => {} }) => {
   const [otpExpired, setOtpExpired] = useState(false);
   const [timer, setTimer] = useState(300);
   const [isRegistered, setIsRegistered] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const otpRefs = useRef([]);
@@ -57,6 +57,9 @@ const SignIn = ({ onClose, setUser = () => {} }) => {
       if (val && otpRefs.current[index + 1]) {
         otpRefs.current[index + 1].focus();
       }
+    } else if (name === "contact_number") {
+      const val = value.replace(/\D/g, "").slice(0, 10);
+      setFormData((prevState) => ({ ...prevState, [name]: val }));
     } else {
       setFormData((prevState) => ({ ...prevState, [name]: value }));
     }
@@ -88,19 +91,34 @@ const SignIn = ({ onClose, setUser = () => {} }) => {
     }, 10);
   };
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (otpSent) {
+      await handleVerifyOtp();
+    } else {
+      isSignUp ? await handleRegister() : await handleLogin();
+    }
+  };
+
   const handleRegister = async () => {
-    const { full_name, email } = formData;
-    if (!full_name || !email) {
+    const { full_name, email, contact_number } = formData;
+    if (!full_name || !email || !contact_number) {
       setFieldErrors({
         full_name: !full_name ? "Full name is required" : "",
         email: !email ? "Email is required" : "",
+        contact_number: !contact_number ? "Contact number is required" : 
+                         contact_number.length < 10 ? "Contact number must be 10 digits" : "",
       });
       return;
     }
 
     setLoading(true);
     try {
-      const response = await fetchData(API_ENDPOINTS.AUTH.REGISTER, "POST", { full_name, email });
+      const response = await fetchData(API_ENDPOINTS.AUTH.REGISTER, "POST", { 
+        full_name, 
+        email,
+        contact_number 
+      });
 
       if (response?.error) {
         setMessage(response.error);
@@ -109,7 +127,7 @@ const SignIn = ({ onClose, setUser = () => {} }) => {
       }
 
       setOtpSent(true);
-      setMessage("OTP sent to your email.");
+      setMessage("OTP sent to your email and mobile.");
       setMessageType("success");
       setIsRegistered(true);
       setOtpExpired(false);
@@ -178,12 +196,10 @@ const SignIn = ({ onClose, setUser = () => {} }) => {
 
       setMessage("Login successful!");
       setMessageType("success");
-      setIsLoggedIn(true);
       setUser(response.user);
       onClose();
 
-      // Reset only on success
-      setFormData({ full_name: "", email: "", otp: Array(6).fill("") });
+      setFormData({ full_name: "", email: "", contact_number: "", otp: Array(6).fill("") });
       setOtpSent(false);
       setOtpExpired(false);
       setTimer(300);
@@ -199,105 +215,141 @@ const SignIn = ({ onClose, setUser = () => {} }) => {
     <div className="signin-container">
       <div className="signin-overlay active" onClick={onClose}></div>
       <div className="signin-modal active">
-        <button className="close-button" onClick={onClose}><X size={24} /></button>
+        <button className="close-button" onClick={onClose}>
+          <X size={24} />
+        </button>
 
-        <h2 className="signin-title">{isSignUp ? "Create Account 🎉" : "Welcome Back! 👋"}</h2>
-        <p className="signin-subtext">
-          {isSignUp
-            ? "Join us today!"
-            : isRegistered
-            ? "Registration successful! Please sign in to continue."
-            : "Sign in to continue"}
-        </p>
+        <div className="signin-header">
+          <h2 className="signin-title">{isSignUp ? "Create Account" : "Welcome Back"}</h2>
+          <p className="signin-subtext">
+            {isSignUp
+              ? "Join us today and get started"
+              : "Sign in to access your account"}
+          </p>
+        </div>
 
-        <form className="signin-form">
+        <div className="signin-footer">
+          <p>
+            {isSignUp ? "Already have an account?" : "Don't have an account?"}
+            <button
+              className="toggle-link"
+              onClick={() => {
+                setIsSignUp(!isSignUp);
+                setMessage("");
+                setFieldErrors({});
+                setOtpSent(false);
+              }}
+            >
+              {isSignUp ? " Sign in" : " Sign up"}
+            </button>
+          </p>
+        </div>
+        
+
+        <form className="signin-form" onSubmit={handleSubmit}>
           {loading && <div className="loading-bar"></div>}
 
-          {!otpSent && !otpExpired && (
+          {!otpSent ? (
             <>
               {isSignUp && (
-                <>
+                <div className="input-group">
+                  <label htmlFor="full_name">Full Name</label>
                   <input
                     type="text"
+                    id="full_name"
                     name="full_name"
-                    placeholder="Full Name"
-                    className="signin-input"
+                    placeholder="Enter your full name"
+                    className={`signin-input ${fieldErrors.full_name ? "error" : ""}`}
                     value={formData.full_name}
                     onChange={handleChange}
                   />
-                  {fieldErrors.full_name && <p className="input-error">{fieldErrors.full_name}</p>}
-                </>
+                  {fieldErrors.full_name && <span className="input-error">{fieldErrors.full_name}</span>}
+                </div>
               )}
-              <input
-                type="email"
-                name="email"
-                placeholder="Email"
-                className="signin-input"
-                value={formData.email}
-                onChange={handleChange}
-              />
-              {fieldErrors.email && <p className="input-error">{fieldErrors.email}</p>}
-            </>
-          )}
 
-          {otpSent && (
-            <>
-              <div className="otp-inputs" onPaste={handleOtpPaste}>
-                {formData.otp.map((val, idx) => (
-                  <input
-                    key={idx}
-                    ref={(el) => (otpRefs.current[idx] = el)}
-                    type="tel"
-                    name="otp"
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                    className="signin-input otp-input"
-                    value={val}
-                    onChange={(e) => handleChange(e, idx)}
-                    onKeyDown={(e) => handleOtpKeyDown(e, idx)}
-                    maxLength={1}
-                  />
-                ))}
+              <div className="input-group">
+                <label htmlFor="email">Email Address</label>
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  placeholder="Enter your email"
+                  className={`signin-input ${fieldErrors.email ? "error" : ""}`}
+                  value={formData.email}
+                  onChange={handleChange}
+                />
+                {fieldErrors.email && <span className="input-error">{fieldErrors.email}</span>}
               </div>
-              {fieldErrors.otp && <p className="input-error">{fieldErrors.otp}</p>}
-              <p className="timer">
-                OTP expires in {Math.floor(timer / 60)}:{(timer % 60).toString().padStart(2, "0")}
-              </p>
-              {otpExpired && (
-                <button
-                  className="resend-otp-button"
-                  type="button"
-                  onClick={isSignUp ? handleRegister : handleLogin}
-                >
-                  Resend OTP
-                </button>
+              
+              {isSignUp && (
+                <div className="input-group">
+                  <label htmlFor="contact_number">Phone Number</label>
+                  <input
+                    type="tel"
+                    id="contact_number"
+                    name="contact_number"
+                    placeholder="Enter your phone number"
+                    className={`signin-input ${fieldErrors.contact_number ? "error" : ""}`}
+                    value={formData.contact_number}
+                    onChange={handleChange}
+                    maxLength={10}
+                  />
+                  {fieldErrors.contact_number && (
+                    <span className="input-error">{fieldErrors.contact_number}</span>
+                  )}
+                </div>
               )}
+            </>
+          ) : (
+            <>
+              <div className="otp-container">
+                <p className="otp-instruction">Enter the 6-digit OTP sent to your email</p>
+                <div className="otp-inputs" onPaste={handleOtpPaste}>
+                  {formData.otp.map((val, idx) => (
+                    <input
+                      key={idx}
+                      ref={(el) => (otpRefs.current[idx] = el)}
+                      type="tel"
+                      name="otp"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      className={`signin-input otp-input ${fieldErrors.otp ? "error" : ""}`}
+                      value={val}
+                      onChange={(e) => handleChange(e, idx)}
+                      onKeyDown={(e) => handleOtpKeyDown(e, idx)}
+                      maxLength={1}
+                    />
+                  ))}
+                </div>
+                {fieldErrors.otp && <span className="input-error">{fieldErrors.otp}</span>}
+                <div className="otp-footer">
+                  <span className="timer">
+                    OTP expires in {Math.floor(timer / 60)}:{(timer % 60).toString().padStart(2, "0")}
+                  </span>
+                  {otpExpired && (
+                    <button
+                      type="button"
+                      className="resend-link"
+                      onClick={isSignUp ? handleRegister : handleLogin}
+                    >
+                      Resend OTP
+                    </button>
+                  )}
+                </div>
+              </div>
             </>
           )}
 
-          {message && <p className={`message ${messageType}`}>{message}</p>}
+          {message && (
+            <div className={`message ${messageType}`}>
+              {message}
+            </div>
+          )}
 
-          <div className="button-group">
-            {!otpSent && !otpExpired && !isLoggedIn && !isSignUp && (
-              <button type="button" className="signin-button" onClick={handleLogin}>Sign In</button>
-            )}
-
-            {!otpSent && !otpExpired && isSignUp && (
-              <button type="button" className="signin-button" onClick={handleRegister}>Sign Up</button>
-            )}
-
-            {otpSent && !otpExpired && (
-              <button type="button" className="signin-button" onClick={handleVerifyOtp}>Verify OTP</button>
-            )}
-          </div>
-        </form>
-
-        <p className="signin-footer">
-          {isSignUp ? "Already have an account?" : "Don't have an account?"}
-          <button className="signup-link" onClick={() => setIsSignUp(!isSignUp)}>
-            {isSignUp ? " Sign in" : " Sign up"}
+          <button type="submit" className="signin-button">
+            {otpSent ? "Verify OTP" : isSignUp ? "Sign Up" : "Sign In"}
           </button>
-        </p>
+        </form>
       </div>
     </div>
   );

@@ -244,7 +244,7 @@ const Cart = ({ user, setUser }) => {
         <div className="empty-cart">
           <img src={require("../assets/img/empty_cart.webp")} alt="Empty Cart" />
           <h3>Your cart’s waiting to be filled!</h3>
-          <p>Check out the homepage for more restaurant options!</p>
+          <p>Check out the homepage for more delicious homemade meals options!</p>
           <button className="add-items-btn" onClick={() => navigate("/")}>
             Explore restaurants near you
           </button>

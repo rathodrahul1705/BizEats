@@ -13,7 +13,7 @@ const Profile = ({ user, setUser }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [updatedUser, setUpdatedUser] = useState({
     email: user?.email || "",
-    contact: user?.contact || "",
+    contact: user?.contact_number || "",
   });
 
   useEffect(() => {
@@ -64,13 +64,13 @@ const Profile = ({ user, setUser }) => {
       {/* Tab Navigation */}
       <Tabs>
         <TabList className="tab-list">
-          {/* <Tab><List size={16} /> Orders</Tab> */}
+          <Tab><List size={16} /> Orders</Tab>
           {/* <Tab><CreditCard size={16} /> Payments</Tab> */}
           {/* <Tab><MapPin size={16} /> Addresses</Tab> */}
           {/* <Tab><User size={16} /> Settings</Tab> */}
         </TabList>
 
-        {/* <TabPanel><CusOrders /></TabPanel> */}
+        <TabPanel><CusOrders /></TabPanel>
         {/* <TabPanel><CusPaymentsDetails /></TabPanel> */}
         {/* <TabPanel><CusAddresses /></TabPanel> */}
         {/* <TabPanel><CusSettings /></TabPanel> */}
@@ -86,16 +86,17 @@ const Profile = ({ user, setUser }) => {
             <button className="close-btn" onClick={() => setIsEditing(false)}>&times;</button>
           </div>
           <div className="modal-content">
-            <label>Email:</label>
+            <label>Email Address:</label>
             <input
               type="email"
               value={updatedUser.email}
               onChange={(e) => setUpdatedUser({ ...updatedUser, email: e.target.value })}
             />
-            <label>Contact:</label>
+            <label>Phone Number:</label>
             <input
               type="text"
               value={updatedUser.contact}
+              maxLength={10}
               onChange={(e) => setUpdatedUser({ ...updatedUser, contact: e.target.value })}
             />
             <div className="modal-buttons">

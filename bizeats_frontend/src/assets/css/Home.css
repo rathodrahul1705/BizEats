@@ -1,92 +1,95 @@
-/* Home Container */
+/* ========== Global Layout ========== */
 .home-container {
   width: 100%;
   margin: 0 auto;
   font-family: 'Poppins', sans-serif;
-  background: #f8f9fa;  /* Unified background color for entire homepage */
+  background: #f8f9fa;
+  overflow-x: hidden;
 }
 
-/* Hero Section */
+/* ========== HERO SECTION ========== */
 .hero-section {
-  position: relative;
-  padding: 80px 20px;
-  background-color:#e65c00;
-  text-align: center;
-}
-.leftSideImg{
-  height: 450px;
-  width: 250px;
-  position: absolute;
-  left: 0;
-  top: 0;
-  object-fit: cover;
-}
-.rightSideImg{
-  height: 450px;
-  width: 250px;
-  position: absolute;
-  right: 0;
-  object-fit: cover;
-  top: 0;
+  width: 100%;
+  min-height: 100vh;
+  padding: 40px 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-sizing: border-box;
+  background-color: #fff;
 }
 
 .hero-content {
-  position: relative;
-  z-index: 2;
-  max-width: 800px;
-  margin: 0 auto;
-  color: #fff;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 1200px;
+  width: 100%;
+  gap: 40px;
+  flex-wrap: wrap;
 }
 
-.hero-content h1 {
-  font-size: 48px;
+.hero-text {
+  flex: 1;
+  max-width: 500px;
+}
+
+.hero-text h1 {
+  font-size: 42px;
+  font-weight: bold;
   margin-bottom: 20px;
+  color: #000;
 }
 
-.hero-content p {
-  font-size: 20px;
-  line-height: 26px;
-  max-width: 650px;
-  margin: 0 auto 30px;
+.hero-text p {
+  font-size: 18px;
+  color: #444;
+  margin-bottom: 30px;
 }
 
 .order-now-btn {
-  background: #000;
-  border: none;
-  padding: 15px 40px;
-  font-size: 18px;
+  background-color: #e65c00;
   color: #fff;
-  text-transform: uppercase;
-  font-weight: 600;
-  border-radius: 30px;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 10px;
+  font-size: 16px;
   cursor: pointer;
-  transition: background 0.3s ease;
+  transition: 0.3s ease;
 }
 
 .order-now-btn:hover {
-  background: #fff;
-  color: #000;
-  box-shadow: 0 0 10px 5px #7171717d;
+  background-color: #cf5300;
 }
 
-/* Section Headings */
+.hero-image-wrapper {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.hero-thali-image {
+  max-width: 100%;
+  height: auto;
+}
+.homemade_key{
+  color: #e65c00;
+}
+
+/* ========== SECTION HEADINGS ========== */
 .section-heading {
   font-size: 32px;
   font-weight: bold;
   color: #000;
   margin-bottom: 30px;
-  /* For Section 2 & 3, center the headings */
   text-align: center;
   padding: 0 20px;
 }
 
-/* Restaurants Section */
+/* ========== RESTAURANTS SECTION ========== */
 .restaurants-section {
-  padding: 50px 20px 0; /* Using unified background color */
-}
-.restaurants-section .section-heading{
-  color: #fff;
+  padding: 60px 20px 40px;
 }
 
 .restaurant-list {
@@ -102,37 +105,37 @@
 }
 
 .restaurant-card {
-  background: #f8f9fa;
-  border-radius: 20px;
+  background: #fff;
+  border-radius: 16px;
   width: 250px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transition: 0.3s ease;
+  overflow: hidden;
   text-align: center;
 }
 
 .restaurant-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
 }
 
 .category-image {
   width: 100%;
   height: 150px;
   object-fit: cover;
-  border-radius: 16px;
 }
 
 .category-name {
   font-size: 20px;
-  font-weight: bold;
+  font-weight: 600;
   color: #333;
   padding: 20px;
 }
 
-/* How It Works Section */
+/* ========== HOW IT WORKS SECTION ========== */
 .how-it-works {
-  padding: 60px 20px 80px;
-  background: #f8f9fa;  /* Using unified background color */
+  padding: 60px 20px;
+  background: #fff;
 }
 
 .steps-container {
@@ -141,50 +144,52 @@
   gap: 20px;
   flex-wrap: wrap;
 }
-.stepNumber{
-  height: 50px;
-    width: 50px;
-    border-radius: 50%;
-    margin-bottom: 20px;
-    background: #e65c00;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #fff;
-    font-size: 30px;
-    font-weight: 600;
-}
+
 .step-card {
-  background: #fff;
+  background: #f8f9fa;
   padding: 20px;
   border-radius: 12px;
   width: 260px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  transition: 0.3s ease;
   text-align: left;
 }
 
 .step-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+}
+
+.stepNumber {
+  height: 50px;
+  width: 50px;
+  border-radius: 50%;
+  margin-bottom: 20px;
+  background: #e65c00;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 22px;
+  font-weight: 600;
 }
 
 .step-card h3 {
   font-size: 20px;
   margin-bottom: 10px;
-  color: #333;
+  color: #000;
 }
 
 .step-card p {
   font-size: 16px;
-  line-height: 20px;
+  line-height: 22px;
   color: #555;
 }
 
-/* Testimonials Section */
+/* ========== TESTIMONIALS SECTION ========== */
 .testimonials-section {
   padding: 40px 20px;
-  background: #f8f9fa;  /* Unified background color */
+  background: #f8f9fa;
   text-align: center;
 }
 
@@ -196,122 +201,138 @@
 }
 
 .testimonial-card {
-  background: #f8f9fa;
+  background: #fff;
   padding: 20px;
   border-radius: 12px;
   width: 300px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  transition: 0.3s ease;
 }
 
 .testimonial-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12);
 }
 
 .testimonial-card p {
   font-size: 16px;
-  color: #555;
+  color: #444;
   margin-bottom: 10px;
 }
 
 .testimonial-card span {
   font-size: 14px;
-  color: #888;
+  color: #777;
 }
 
-/* Responsive Design */
+/* ========== RESPONSIVE ========== */
 @media (max-width: 768px) {
-  .hero-content h1 {
-    font-size: 36px;
+  .hero-content {
+    flex-direction: column;
+    text-align: center;
   }
-  
-  .hero-content p {
-    font-size: 18px;
-    line-height: 24px;
+
+  .hero-text h1 {
+    font-size: 32px;
   }
-  
-  .order-now-btn {
+
+  .hero-text p {
     font-size: 16px;
-    padding: 12px 25px;
   }
-  
-  .restaurant-list {
-    flex-direction: column;
-    align-items: center;
+
+  .hero-thali-image {
+    max-width: 90%;
+    margin-top: 20px;
   }
-  
-  .steps-container {
-    flex-direction: column;
-    align-items: center;
-  }
-  
+
+  .restaurant-list,
+  .steps-container,
   .testimonial-list {
     flex-direction: column;
     align-items: center;
   }
-  .rightSideImg,.leftSideImg{
-    height: 200px;
-    width: 80px;
-  }
-  .section-heading{
+
+  .section-heading {
     font-size: 26px;
   }
-  .restaurants-section{
-    padding: 40px 0 0;
-  }
-}
-@media (max-width: 500px) {
-  .restaurant-link{
+
+  .restaurant-card,
+  .step-card,
+  .testimonial-card {
     width: 100%;
-  }
-  .restaurant-card,.step-card{
-    width: 100%;
+    max-width: 90%;
   }
 }
 
-.foodDataSlider{
+@media (max-width: 500px) {
+  .hero-text h1 {
+    font-size: 28px;
+  }
+
+  .order-now-btn {
+    font-size: 14px;
+    padding: 10px 20px;
+  }
+}
+
+/* ========== Food Data Slider ========== */
+.foodDataSlider {
   overflow: hidden;
   max-width: 1200px;
-  margin: auto;
-  padding: 0px 0 100px;
+  margin: 40px auto;
+  padding: 0 20px 100px;
 }
-.foodDataBox{
+
+.foodDataBox {
   position: relative;
   border: 1px solid #ddd;
   border-radius: 16px;
+  background: #fff;
+  overflow: hidden;
 }
-.foodDataBox .food-details{
+
+.foodDataBox .food-details {
   padding: 15px;
 }
-.foodDataSlider .swiper-button-next,.foodDataSlider .swiper-button-prev{
-    height: 40px;
-    background: #fff;
-    width: 40px;
-    border-radius: 50%;
-    box-shadow: 0 0 5px 0 #4b4b4bab;
-    transition: all 0.3s;
+
+.foodDataSlider .swiper-button-next,
+.foodDataSlider .swiper-button-prev {
+  height: 40px;
+  width: 40px;
+  background: #fff;
+  border-radius: 50%;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s;
 }
-.foodDataSlider .swiper-button-next:hover,.foodDataSlider .swiper-button-prev:hover{
-box-shadow: 0 0 10px 0 #4b4b4bfc;
+
+.foodDataSlider .swiper-button-next:hover,
+.foodDataSlider .swiper-button-prev:hover {
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
 }
-.foodDataSlider .swiper-button-prev:after,.foodDataSlider .swiper-button-next:after{
+
+.foodDataSlider .swiper-button-next:after,
+.foodDataSlider .swiper-button-prev:after {
   font-size: 18px;
   color: #000;
 }
-.foodDataSlider .swiper-button-prev.swiper-button-disabled,.foodDataSlider .swiper-button-next.swiper-button-disabled{
+
+.foodDataSlider .swiper-button-prev.swiper-button-disabled,
+.foodDataSlider .swiper-button-next.swiper-button-disabled {
   opacity: 0;
 }
-.foodDataBoxInner{
+
+.foodDataBoxInner {
   position: relative;
 }
+
 .foodDataSlider .food-image {
-    width: 100%;
-    display: block;
-    height: 150px;
-    object-fit: cover;
-    border-radius: 8px;
+  width: 100%;
+  display: block;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 8px;
 }
+
 .foodDataSlider .foodDataBoxInner::before {
   content: '';
   position: absolute;
@@ -321,6 +342,7 @@ box-shadow: 0 0 10px 0 #4b4b4bfc;
   left: 0;
   bottom: 0;
 }
+
 .foodDataSlider .food-price {
   font-size: 17px;
   font-weight: 600;
@@ -331,10 +353,59 @@ box-shadow: 0 0 10px 0 #4b4b4bfc;
   padding: 5px 15px;
   text-align: left;
 }
+
 .foodDataSlider .food-name {
   font-size: 18px;
   font-weight: bold;
   color: #333;
   margin-bottom: 5px;
   text-transform: capitalize;
+}
+
+/* ========== Responsive Design for Slider ========== */
+@media (max-width: 768px) {
+  .foodDataSlider {
+    max-width: 100%;
+    padding: 0 10px;
+  }
+
+  .foodDataBox {
+    width: 100%;
+  }
+
+  .foodDataSlider .food-image {
+    height: 120px;
+  }
+
+  .foodDataSlider .food-price {
+    font-size: 15px;
+    padding: 5px 10px;
+  }
+
+  .foodDataSlider .food-name {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 500px) {
+  .foodDataSlider .food-name {
+    font-size: 14px;
+  }
+
+  .foodDataSlider .food-price {
+    font-size: 14px;
+    padding: 4px 8px;
+  }
+}
+
+/* Remove underline from all Link components */
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* Optional: specifically target links inside Swiper slides or food cards */
+.food-card-wrapper-link {
+  text-decoration: none;
+  color: inherit;
 }

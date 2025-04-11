@@ -6,7 +6,7 @@ from .restaurent.registration_process import RestaurantStoreStepOne, RestaurantS
 from django.conf import settings
 from django.conf.urls.static import static
 from .restaurent.restaurant_order import PlaceOrderAPI, RestaurantCartAddOrRemove, RestaurantCartList, CartWithRestaurantDetails,CartWithRestaurantDetailsClear, UserDeliveryAddressCreateView, UserDeliveryAddressUpdateView, UserDeliveryAddressListCreateView, CartWithRestaurantUserUpdate, RestaurantOrderDetailsAPI
-from .order.track_order import TrackOrder, RestaurantOrders, OrderStatusUpdate
+from .order.track_order import OrderDetails, TrackOrder, RestaurantOrders, OrderStatusUpdate
 from django.http import JsonResponse
 from .views import ReactAppView
 
@@ -62,6 +62,8 @@ urlpatterns = [
     path('api/order/track-order-details/', TrackOrder.as_view(), name='track_order_details'),
     path('api/restaurant/orders/details', RestaurantOrders.as_view(), name='restaurant_orders_details'),
     path('api/order/update-order-status/', OrderStatusUpdate.as_view(), name='order_status_update'),
+
+    path('api/order/order-details/', OrderDetails.as_view(), name='order_details'),
 
     re_path(r'^(?!media/).*$', ReactAppView.as_view(), name='react-app'),
 

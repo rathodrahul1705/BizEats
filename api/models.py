@@ -4,12 +4,12 @@ from django.utils.timezone import now, timedelta
 import random
 
 class UserManager(BaseUserManager):
-    def create_user(self, email, full_name, role=1):  # Default to Customer
+    def create_user(self, email, full_name, contact_number, role=1):  # Default to Customer
         if not email:
             raise ValueError("Users must have an email address")
         
         email = self.normalize_email(email)
-        user = self.model(email=email, full_name=full_name, role=role)
+        user = self.model(email=email, full_name=full_name, role=role, contact_number=contact_number)
         user.save(using=self._db)
         return user
 
