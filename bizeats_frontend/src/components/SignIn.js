@@ -190,9 +190,9 @@ const SignIn = ({ onClose, setUser = () => {} }) => {
       }
 
       localStorage.setItem("user", JSON.stringify(response.user));
-      localStorage.setItem("refresh", response.refresh);
-      localStorage.setItem("access", response.access);
-      localStorage.setItem("is_restaurant_register", JSON.stringify(response.is_restaurant_register));
+      localStorage.setItem("refresh", response?.refresh);
+      localStorage.setItem("access", response?.access);
+      localStorage.setItem("is_restaurant_register", response?.is_restaurant_register);
 
       setMessage("Login successful!");
       setMessageType("success");

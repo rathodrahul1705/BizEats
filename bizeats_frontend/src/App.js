@@ -51,8 +51,9 @@ function App() {
       localStorage.removeItem("user");
     }
 
-    localStorage.setItem("is_restaurant_register", JSON.stringify(is_restaurant_register));
   }, [user, is_restaurant_register]);
+
+  console.log("is_restaurant_register==",is_restaurant_register)
 
   return (
     <Router>
