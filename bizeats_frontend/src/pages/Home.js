@@ -61,10 +61,9 @@ const Home = () => {
       {/* Hero Section */}
       <section className="hero-section">
         <div className="hero-content">
-          <h1>Delicious Food, Delivered To You</h1>
+          <h1>Delicious Homemade Meals, Just Around the Corner</h1>
           <p>
-            Experience top-quality meals from your favorite local restaurants,
-            delivered right to your door.
+              Enjoy soulful, healthy, and flavorful dishes made with love by home chefs in your neighborhood. Real food, real taste — straight from home to you.
           </p>
           <Link to="/food-list">
             <button className="order-now-btn">Order Now</button>
@@ -115,7 +114,7 @@ const Home = () => {
       </section>
 
       <section className="foodDataSlider">
-        <h2 className="section-heading">Discover best restaurants for food order</h2>
+        <h2 className="section-heading">Discover the Best Home Kitchens Around You</h2>
         <Swiper
           modules={[Navigation, Pagination, Autoplay]}
           spaceBetween={20}  // Adjust space between slides
