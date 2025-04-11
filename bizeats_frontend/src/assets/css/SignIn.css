@@ -146,7 +146,7 @@
   }
   
   .otp-input {
-    width: 40px;
+    width: 45px;
     height: 40px;
     text-align: center;
     font-size: 18px;
@@ -288,7 +288,7 @@
     }
     
     .otp-input {
-      width: 35px;
+      width: 45px;
       height: 35px;
       font-size: 16px;
     }
