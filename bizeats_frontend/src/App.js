@@ -53,8 +53,6 @@ function App() {
 
   }, [user, is_restaurant_register]);
 
-  console.log("is_restaurant_register==",is_restaurant_register)
-
   return (
     <Router>
       <div className="app-container">
