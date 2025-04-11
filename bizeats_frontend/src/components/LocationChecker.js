@@ -1,39 +1,54 @@
-// components/LocationChecker.js
+// components/LocationChecker.jsx
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-const allowedCities = ["Mumbai", "Delhi", "Bangalore", "Thāne"]; // Example allowed cities
-
 const LocationChecker = ({ children }) => {
-  const [locationAllowed, setLocationAllowed] = useState(null);
+  const [checkingLocation, setCheckingLocation] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchLocation = async () => {
-      try {
-        const res = await fetch("https://ipapi.co/json/"); // IP-based location
-        const data = await res.json();
-        const city = data.city;
+    if (!navigator.geolocation) {
+      navigate("/not-available");
+      return;
+    }
 
-        console.log("city==",city)
-        
-        if (allowedCities.includes(city)) {
-          setLocationAllowed(true);
-        } else {
-          setLocationAllowed(false);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+
+        try {
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`,
+            {
+              headers: {
+                'User-Agent': 'eatoor/1.0 (support@eatoor.com)', // recommended for Nominatim
+              },
+            }
+          );
+
+          const data = await response.json();
+          const city =
+            data.address.city ||
+            data.address.town ||
+            data.address.village ||
+            data.address.county;
+
+          if (city && city.toLowerCase().includes("thanes")) {
+            setCheckingLocation(false); // allowed
+          } else {
+            navigate("/not-available");
+          }
+        } catch (error) {
+          console.error("Geolocation error:", error);
           navigate("/not-available");
         }
-      } catch (err) {
-        console.error("Location fetch error", err);
-        setLocationAllowed(false);
+      },
+      (error) => {
+        console.error("Geolocation permission denied:", error);
         navigate("/not-available");
       }
-    };
-
-    fetchLocation();
+    );
   }, [navigate]);
-
-  if (locationAllowed === null) return <div>Checking location...</div>;
 
   return <>{children}</>;
 };

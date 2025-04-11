@@ -1,11 +1,19 @@
-// pages/NotAvailable.js
 import React from "react";
+import { Link } from "react-router-dom";
+import "../assets/css/NotAvailable.css";
 
 const NotAvailable = () => {
   return (
-    <div style={{ padding: "50px", textAlign: "center" }}>
-      <h2>We're not serving food at your location yet.</h2>
-      <p>Please check back later!</p>
+    <div className="not-available-container">
+      <div className="not-available-card">
+        <h2 className="not-available-title">We’re Not in Your Area Yet!</h2>
+        <p className="not-available-message">
+          Our food riders are loading up deliciousness and heading your way soon.
+        </p>
+        <p className="not-available-message-sub">
+          EATOOR is expanding fast — stay tuned for fresh bites near you!
+        </p>
+      </div>
     </div>
   );
 };

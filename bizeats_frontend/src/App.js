@@ -63,7 +63,18 @@ function App() {
         <main className="content">
           <Routes>
             {/* Public Routes */}
-            <Route path="/" element={<Home />} />
+            {/* <Route path="/" element={<Home />} /> */}
+
+
+            <Route
+              path="/"
+              element={
+                <LocationChecker>
+                  <Home />
+                </LocationChecker>
+              }
+            />
+            
             <Route path="/offers" element={<Offers />} />
             <Route path="/food-list" element={<FoodList />} />
             <Route path="/cart" element={<Cart user={user} setUser={setUser} />} />
@@ -143,16 +154,7 @@ function App() {
               }
             />
 
-            {/* <Route
-              path="/"
-              element={
-                <LocationChecker>
-                  <Home />
-                </LocationChecker>
-              }
-            />
-
-            <Route path="/not-available" element={<NotAvailable />} /> */}
+            <Route path="/not-available" element={<NotAvailable />} /> 
 
             {/* Fallback Route for 404 Not Found */}
             <Route path="*" element={<Navigate to="/" />} />
