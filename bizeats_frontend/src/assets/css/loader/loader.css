@@ -13,6 +13,7 @@
   background-size: 200% 100%;
   animation: stripeMove 1.5s linear infinite;
   z-index: 9999;
+  margin-top: -12px;
 }
 
 @keyframes stripeMove {

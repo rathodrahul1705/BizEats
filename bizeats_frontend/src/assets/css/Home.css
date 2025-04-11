@@ -73,7 +73,8 @@
   max-width: 100%;
   height: auto;
 }
-.homemade_key{
+
+.homemade_key {
   color: #e65c00;
 }
 
@@ -85,51 +86,6 @@
   margin-bottom: 30px;
   text-align: center;
   padding: 0 20px;
-}
-
-/* ========== RESTAURANTS SECTION ========== */
-.restaurants-section {
-  padding: 60px 20px 40px;
-}
-
-.restaurant-list {
-  display: flex;
-  justify-content: center;
-  gap: 20px;
-  flex-wrap: wrap;
-}
-
-.restaurant-link {
-  text-decoration: none;
-  color: inherit;
-}
-
-.restaurant-card {
-  background: #fff;
-  border-radius: 16px;
-  width: 250px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  transition: 0.3s ease;
-  overflow: hidden;
-  text-align: center;
-}
-
-.restaurant-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
-}
-
-.category-image {
-  width: 100%;
-  height: 150px;
-  object-fit: cover;
-}
-
-.category-name {
-  font-size: 20px;
-  font-weight: 600;
-  color: #333;
-  padding: 20px;
 }
 
 /* ========== HOW IT WORKS SECTION ========== */
@@ -184,95 +140,6 @@
   font-size: 16px;
   line-height: 22px;
   color: #555;
-}
-
-/* ========== TESTIMONIALS SECTION ========== */
-.testimonials-section {
-  padding: 40px 20px;
-  background: #f8f9fa;
-  text-align: center;
-}
-
-.testimonial-list {
-  display: flex;
-  justify-content: center;
-  gap: 20px;
-  flex-wrap: wrap;
-}
-
-.testimonial-card {
-  background: #fff;
-  padding: 20px;
-  border-radius: 12px;
-  width: 300px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
-  transition: 0.3s ease;
-}
-
-.testimonial-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12);
-}
-
-.testimonial-card p {
-  font-size: 16px;
-  color: #444;
-  margin-bottom: 10px;
-}
-
-.testimonial-card span {
-  font-size: 14px;
-  color: #777;
-}
-
-/* ========== RESPONSIVE ========== */
-@media (max-width: 768px) {
-  .hero-content {
-    flex-direction: column;
-    text-align: center;
-  }
-
-  .hero-text h1 {
-    font-size: 32px;
-  }
-
-  .hero-text p {
-    font-size: 16px;
-  }
-
-  .hero-thali-image {
-    max-width: 90%;
-    margin-top: 20px;
-  }
-
-  .restaurant-list,
-  .steps-container,
-  .testimonial-list {
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .section-heading {
-    font-size: 26px;
-  }
-
-  .restaurant-card,
-  .step-card,
-  .testimonial-card {
-    width: 100%;
-    max-width: 90%;
-  }
-}
-
-@media (max-width: 500px) {
-  .hero-text h1 {
-    font-size: 28px;
-  }
-
-  .order-now-btn {
-    font-size: 14px;
-    padding: 10px 20px;
-  }
 }
 
 /* ========== Food Data Slider ========== */
@@ -362,8 +229,68 @@
   text-transform: capitalize;
 }
 
-/* ========== Responsive Design for Slider ========== */
+.foodDataSlider .food-location,
+.foodDataSlider .food-delivery {
+  font-size: 14px;
+  color: #666;
+  margin: 3px 0;
+}
+
+.proceed-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: #fff;
+  border: none;
+  border-radius: 50%;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+  padding: 5px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.proceed-button:hover {
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+}
+
+/* ========== Responsive ========== */
 @media (max-width: 768px) {
+  .hero-content {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .hero-text h1 {
+    font-size: 32px;
+  }
+
+  .hero-text p {
+    font-size: 16px;
+  }
+
+  .hero-thali-image {
+    max-width: 90%;
+    margin-top: 20px;
+  }
+
+  .restaurant-list,
+  .steps-container,
+  .testimonial-list {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .section-heading {
+    font-size: 26px;
+  }
+
+  .restaurant-card,
+  .step-card,
+  .testimonial-card {
+    width: 100%;
+    max-width: 90%;
+  }
+
   .foodDataSlider {
     max-width: 100%;
     padding: 0 10px;
@@ -388,6 +315,15 @@
 }
 
 @media (max-width: 500px) {
+  .hero-text h1 {
+    font-size: 28px;
+  }
+
+  .order-now-btn {
+    font-size: 14px;
+    padding: 10px 20px;
+  }
+
   .foodDataSlider .food-name {
     font-size: 14px;
   }
@@ -398,13 +334,12 @@
   }
 }
 
-/* Remove underline from all Link components */
+/* ========== Link Reset ========== */
 a {
   text-decoration: none;
   color: inherit;
 }
 
-/* Optional: specifically target links inside Swiper slides or food cards */
 .food-card-wrapper-link {
   text-decoration: none;
   color: inherit;
