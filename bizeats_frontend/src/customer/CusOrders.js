@@ -64,7 +64,6 @@ const CusOrders = () => {
                   alt="Food"
                   className="order-image"
                 />
-
                 <div className="order-details">
                   <h4 className="restaurant-name">
                     {order.delivery_address?.restaurant_name || "Restaurant"}
@@ -96,22 +95,10 @@ const CusOrders = () => {
                   <strong>Total Paid:</strong> ₹ {Number(order.total).toFixed(2)}
                 </p>
               </div>
-
-              {/* <div className="order-actions">
-                <button className="view-details-btn" onClick={() => handleViewDetails(order)}>
-                  View More Details
-                </button>
-              </div> */}
             </li>
           ))}
         </ul>
       )}
-
-      {/* {orders.length > 0 && (
-        <div className="show-more-container">
-          <button className="show-more-btn">Show More Orders</button>
-        </div>
-      )} */}
 
       <OrderDetailsModal
         isOpen={isModalOpen}
