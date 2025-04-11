@@ -21,7 +21,7 @@ const LocationChecker = ({ children }) => {
             `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`,
             {
               headers: {
-                'User-Agent': 'eatoor/1.0 (support@eatoor.com)', // recommended for Nominatim
+                'User-Agent': 'eatoor/1.0 (support@eatoor.com)',
               },
             }
           );
@@ -33,7 +33,7 @@ const LocationChecker = ({ children }) => {
             data.address.village ||
             data.address.county;
 
-          if (city && city.toLowerCase().includes("thane")) {
+            if (city && city.toLowerCase().includes("thane")) {
             setCheckingLocation(false); // allowed
           } else {
             navigate("/not-available");
