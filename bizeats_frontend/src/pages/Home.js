@@ -10,7 +10,7 @@ import { Navigation, Pagination, Autoplay } from "swiper/modules";
 import API_ENDPOINTS from "../components/config/apiConfig";
 import fetchData from "../components/services/apiService";
 import StripeLoader from "../loader/StripeLoader";
-import HomePageThali from "../assets/img/homepage.png";
+import HomePageThali from "../assets/img/homepage.webp";
 
 const Home = () => {
   const [loading, setLoading] = useState(true);
