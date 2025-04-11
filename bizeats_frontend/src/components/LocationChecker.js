@@ -25,7 +25,7 @@ const LocationChecker = ({ children }) => {
               },
             }
           );
-
+            
           const data = await response.json();
           const city =
             data.address.city ||
@@ -33,7 +33,7 @@ const LocationChecker = ({ children }) => {
             data.address.village ||
             data.address.county;
 
-          if (city && city.toLowerCase().includes("thanes")) {
+          if (city && city.toLowerCase().includes("thane")) {
             setCheckingLocation(false); // allowed
           } else {
             navigate("/not-available");
