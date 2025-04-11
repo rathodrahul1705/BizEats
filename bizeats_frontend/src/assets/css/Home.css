@@ -10,7 +10,7 @@
 /* ========== HERO SECTION ========== */
 .hero-section {
   width: 100%;
-  min-height: 100vh;
+  min-height: 50vh;
   padding: 40px 20px;
   display: flex;
   justify-content: center;
@@ -136,6 +136,7 @@
 .how-it-works {
   padding: 60px 20px;
   background: #fff;
+  margin-top: 70px;
 }
 
 .steps-container {
