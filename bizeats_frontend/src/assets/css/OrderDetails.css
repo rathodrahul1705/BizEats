@@ -292,7 +292,7 @@
 }
 
 .food-modal-title {
-    font-size: 22px;
+    font-size: 18px;
     font-weight: 700;
     color: #222;
     margin-bottom: 15px;
@@ -470,7 +470,7 @@
     }
     
     .food-title {
-        font-size: 20px;
+        font-size: 15px;
     }
     
     .food-modal-image {
@@ -478,7 +478,7 @@
     }
     
     .food-modal-title {
-        font-size: 20px;
+        font-size: 15px;
     }
     
     .food-modal-overlay.mobile .food-modal {
@@ -496,7 +496,7 @@
     }
     
     .food-modal-title {
-        font-size: 18px;
+        font-size: 15px;
     }
     
     .food-modal-description {

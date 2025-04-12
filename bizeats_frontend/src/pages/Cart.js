@@ -222,7 +222,7 @@ const Cart = ({ user, setUser }) => {
                 <img src={item.image} alt={item.title} className="cart-image" />
                 <div className="cart-details">
                   <h3 className="cart-item-title">{item.title}</h3>
-                  <p className="cart-item-description">{item.description}</p>
+                  {/* <p className="cart-item-description">{item.description}</p> */}
                   <p className="cart-item-price">₹ {item.price}</p>
                 </div>
               </li>
@@ -259,7 +259,7 @@ const Cart = ({ user, setUser }) => {
                 <img src={item.image} alt={item.title} className="cart-image" />
                 <div className="cart-details">
                   <h3 className="cart-item-title">{item.title}</h3>
-                  <p className="cart-item-description">{item.description}</p>
+                  {/* <p className="cart-item-description">{item.description}</p> */}
                   <p className="cart-item-price">₹ {item.price}</p>
                   <div className="cart-actions">
                     <button
