@@ -86,3 +86,49 @@
     }
   }
   
+  .error-message {
+    color: #ff4444;
+    margin: 10px 0;
+    font-size: 14px;
+  }
+  
+  .order-now-btn {
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  
+  .order-now-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+  
+  .browser-instructions {
+    margin-top: 15px;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 5px;
+    font-size: 14px;
+  }
+  
+  .browser-instructions ul {
+    padding-left: 20px;
+    margin: 5px 0;
+  }
+  
+  .browser-instructions li {
+    margin-bottom: 5px;
+  }
+
+  
+  .instruction-message {
+    color: #ff6b6b;
+    margin: 10px 0;
+    font-size: 14px;
+    font-weight: 500;
+    animation: fadeIn 0.5s ease-in-out;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
