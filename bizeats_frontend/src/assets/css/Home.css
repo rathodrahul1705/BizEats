@@ -51,15 +51,26 @@
   background-color: #e65c00;
   color: #fff;
   border: none;
-  padding: 12px 24px;
-  border-radius: 10px;
+  padding: 12px 28px;
+  border-radius: 12px;
   font-size: 16px;
+  font-weight: 600;
   cursor: pointer;
-  transition: 0.3s ease;
+  transition: all 0.3s ease;
+  box-shadow: 0 6px 14px rgba(230, 92, 0, 0.3);
+  transform: translateY(0);
 }
 
+
 .order-now-btn:hover {
-  background-color: #cf5300;
+  background-color: #ff6d1a;
+  box-shadow: 0 10px 20px rgba(230, 92, 0, 0.4);
+  transform: translateY(-3px);
+}
+
+.order-now-btn:active {
+  transform: scale(0.97);
+  box-shadow: 0 4px 10px rgba(230, 92, 0, 0.2);
 }
 
 .hero-image-wrapper {
@@ -261,7 +272,7 @@
   }
 
   .hero-text h1 {
-    font-size: 32px;
+    font-size: 18px;
   }
 
   .hero-text p {
@@ -316,7 +327,7 @@
 
 @media (max-width: 500px) {
   .hero-text h1 {
-    font-size: 28px;
+    font-size: 18px;
   }
 
   .order-now-btn {
