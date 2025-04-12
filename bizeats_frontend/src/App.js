@@ -106,7 +106,41 @@ const App = () => {
               </PrivateRoute>
             } />
 
-            {/* Other routes... */}
+            <Route path="/vendor-dashboard" element={
+              <VendorPrivateRoute user={user} is_restaurant_register={is_restaurant_register}>
+                <LocationCheckRoute isAllowed={isAllowed}>
+                  <DashboardOverview 
+                    user={user} 
+                    setUser={setUser} 
+                    currentCity={city} 
+                  />
+                </LocationCheckRoute>
+              </VendorPrivateRoute>
+            } />
+
+            <Route path="/vendor-dashboard/menu/:restaurant_id" element={
+              <VendorPrivateRoute user={user} is_restaurant_register={is_restaurant_register}>
+                <LocationCheckRoute isAllowed={isAllowed}>
+                  <MenuManagement 
+                    user={user} 
+                    setUser={setUser} 
+                    currentCity={city} 
+                  />
+                </LocationCheckRoute>
+              </VendorPrivateRoute>
+            } />
+
+            <Route path="/vendor-dashboard/order/management/:restaurant_id" element={
+              <VendorPrivateRoute user={user} is_restaurant_register={is_restaurant_register}>
+                <LocationCheckRoute isAllowed={isAllowed}>
+                  <OrderManagement 
+                    user={user} 
+                    setUser={setUser} 
+                    currentCity={city} 
+                  />
+                </LocationCheckRoute>
+              </VendorPrivateRoute>
+            } />
 
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
