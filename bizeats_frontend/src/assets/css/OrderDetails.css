@@ -4,7 +4,6 @@
     max-width: 800px;
     margin: auto;
     text-align: left;
-    /* min-height: calc(100vh - 100px); */
 }
 
 /* Store Name (Outside the Card) */
@@ -69,11 +68,11 @@
 /* Food Image */
 .food-list .food-image {
     width: 150px;
-    height: 100%;
+    height: 130px;
     object-fit: cover;
     border-radius: 10px;
     margin-right: 15px;
-    height: 130px;
+    cursor: pointer;
 }
 
 /* Food Details */
@@ -88,6 +87,7 @@
     font-weight: 600;
     color: #222;
     margin-bottom: 15px;
+    cursor: pointer;
 }
 
 /* Food Description */
@@ -96,12 +96,13 @@
     color: #555;
     line-height: 20px;
     margin-bottom: 6px;
+    cursor: pointer;
 }
 
-/* Food Location */
-.food-location {
-    font-size: 13px;
-    color: #777
+.read-more {
+    color: #e65c00;
+    font-weight: 500;
+    margin-left: 5px;
 }
 
 /* Food Price */
@@ -201,6 +202,241 @@
 .filter-btn:hover {
     background: #ddd;
 }
+
+/* Food Modal Styles */
+.food-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    z-index: 1000;
+    overflow-y: auto;
+}
+
+.food-modal-overlay.desktop {
+    align-items: center;
+    animation: fadeIn 0.3s ease-out;
+}
+
+.food-modal-overlay.mobile {
+    align-items: flex-end;
+    animation: none;
+}
+
+.food-modal {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    width: 100%;
+    max-width: 600px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+.food-modal-overlay.mobile .food-modal {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    max-width: 100%;
+    animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    transform-origin: bottom center;
+}
+
+.close-modal-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: rgba(255, 255, 255, 0.9);
+    border: none;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    z-index: 10;
+    transition: all 0.2s ease;
+}
+
+.close-modal-btn:hover {
+    background: white;
+    transform: scale(1.1);
+}
+
+.close-modal-btn svg {
+    stroke: #333;
+}
+
+.food-modal-content {
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}
+
+.food-modal-image {
+    width: 100%;
+    height: 250px;
+    object-fit: cover;
+}
+
+.food-modal-details {
+    padding: 20px;
+}
+
+.food-modal-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: #222;
+    margin-bottom: 15px;
+}
+
+.food-modal-description {
+    font-size: 16px;
+    color: #555;
+    line-height: 1.5;
+    margin-bottom: 20px;
+}
+
+.food-modal-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    font-size: 16px;
+    color: #666;
+}
+
+.food-modal-price {
+    font-size: 22px;
+    font-weight: 700;
+    color: #e65c00;
+}
+
+.food-modal-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.food-modal-actions .cart-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.food-modal-actions .cart-btn svg {
+    stroke: #e65c00;
+}
+
+.food-modal-actions .cart-btn:hover {
+    transform: scale(1.1);
+}
+
+.food-modal-actions .cart-quantity {
+    font-size: 20px;
+    font-weight: bold;
+    color: #e65c00;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideUp {
+    0% {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+    100% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Reset Cart Modal Styles */
+.order-details-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    animation: fadeIn 0.3s ease-out;
+}
+
+.order-details-modal-class {
+    background: white;
+    width: 90%;
+    max-width: 500px;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+}
+
+.order-details-modal-class h2 {
+    font-size: 20px;
+    margin-bottom: 15px;
+    color: #333;
+}
+
+.order-details-modal-class p {
+    font-size: 16px;
+    color: #555;
+    margin-bottom: 20px;
+}
+
+.modal-actions-cart {
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+}
+
+.modal-actions-cart button {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.modal-actions-cart button:first-child {
+    background-color: #f0f0f0;
+    color: #333;
+}
+
+.modal-actions-cart button:first-child:hover {
+    background-color: #e0e0e0;
+}
+
+.modal-actions-cart button:last-child {
+    background-color: #e65c00;
+    color: white;
+}
+
+.modal-actions-cart button:last-child:hover {
+    background-color: #cc5200;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .food-item {
@@ -212,9 +448,11 @@
         height: 150px;
         margin-right: 0;
     }
-    .food-details{
+    
+    .food-details {
         margin-top: 10px;
     }
+    
     .store-title {
         font-size: 22px;
     }
@@ -226,76 +464,52 @@
     .store-info {
         font-size: 14px;
     }
+    
     .filter-btn:hover {
         background: #e65c00;
     }
-    .food-title{
+    
+    .food-title {
         font-size: 20px;
     }
-}
-@media (max-width: 480px) {
-    .filter-btn{
-        padding: 10px 15px 10px 10px;
+    
+    .food-modal-image {
+        height: 200px;
+    }
+    
+    .food-modal-title {
+        font-size: 20px;
+    }
+    
+    .food-modal-overlay.mobile .food-modal {
+        max-height: 90vh;
     }
 }
 
-/* Overlay to cover background */
-.order-details-modal-class-overlay {
-    position: fixed;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    align-items: flex-end; /* Align modal at the bottom */
-    justify-content: center;
-    z-index: 1000;
-  }
-  
-  /* Modal box - Centered above the bottom */
-  .order-details-modal-class {
-    background: white;
-    width: 90%;
-    max-width: 600px;
-    padding: 20px;
-    border-radius: 12px;
-    box-shadow: 0px -5px 15px rgba(0, 0, 0, 0.2);
-    position: absolute;
-    bottom: 15%;
-    transform: translateY(100%);
-    animation: slideUp 0.3s forwards ease-out;
-  }
-  
-  /* Modal actions */
-  .modal-actions-cart {
-    display: flex;
-    justify-content: space-around;
-    margin-top: 20px;
-  }
-  
-  .modal-actions-cart button {
-    padding: 10px 15px;
-    border: none;
-    cursor: pointer;
-    font-size: 16px;
-    border-radius: 5px;
-  }
-  
-  .modal-actions-cart button:first-child {
-    background-color: #ccc;
-  }
-  
-  .modal-actions-cart button:last-child {
-    background-color: #e65c00;
-    color: white;
-  }
-  
-  /* Slide-up animation */
-  @keyframes slideUp {
-    from {
-      transform: translateY(100%);
+@media (max-width: 480px) {
+    .filter-btn {
+        padding: 10px 15px 10px 10px;
     }
-    to {
-      transform: translateY(0);
+    
+    .food-modal-details {
+        padding: 15px;
     }
-  }
-  
+    
+    .food-modal-title {
+        font-size: 18px;
+    }
+    
+    .food-modal-description {
+        font-size: 15px;
+    }
+    
+    .food-modal-info {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    
+    .food-modal-price {
+        font-size: 20px;
+    }
+}

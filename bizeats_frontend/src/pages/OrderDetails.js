@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { PlusCircle, MinusCircle, ShoppingCart } from "lucide-react";
+import { PlusCircle, MinusCircle, ShoppingCart, X } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import "../assets/css/OrderDetails.css";
 import API_ENDPOINTS from "../components/config/apiConfig";
@@ -21,12 +21,36 @@ const OrderDetails = ({ user, setUser }) => {
   const [foodData, setFoodData] = useState([]);
   const [showResetCartModal, setShowResetCartModal] = useState(false);
   const [pendingItem, setPendingItem] = useState(null);
+  const [selectedFood, setSelectedFood] = useState(null);
+  const [showFoodModal, setShowFoodModal] = useState(false);
   const navigate = useNavigate();
   const sessionId = getOrCreateSessionId();
 
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && showFoodModal) {
+        setShowFoodModal(false);
+      }
+    };
+
+    const handleClickOutside = (e) => {
+      if (showFoodModal && e.target.classList.contains('food-modal-overlay')) {
+        setShowFoodModal(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('mousedown', handleClickOutside);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showFoodModal]);
+
   const fetchCartDetails = async () => {
     try {
-      setLoading(true)
+      setLoading(true);
       const response = await fetchData(
         API_ENDPOINTS.ORDER.GET_CART_DETAILS,
         "POST",
@@ -47,8 +71,7 @@ const OrderDetails = ({ user, setUser }) => {
       }
     } catch (error) {
       console.error("Error fetching cart details:", error);
-    }
-    finally {
+    } finally {
       setLoading(false);
     }
   };
@@ -67,8 +90,6 @@ const OrderDetails = ({ user, setUser }) => {
         location: response.Address,
         rating: response.rating,
       });
-      
-      // console.log("response===",response)
 
       setFoodData(
         response.itemlist.map((item) => ({
@@ -92,7 +113,6 @@ const OrderDetails = ({ user, setUser }) => {
     fetchCartDetails();
   }, [restaurant_id]);
 
-  // Function to perform the actual add-to-cart operation
   const addItem = async (id) => {
     try {
       const response = await fetchData(
@@ -120,10 +140,6 @@ const OrderDetails = ({ user, setUser }) => {
   const addToCart = async (id) => {
     const currentRestaurantId = localStorage.getItem("current_order_restaurant_id");
 
-    // Log for debugging
-    console.log("restaurant_id ===", restaurant_id);
-    console.log("currentRestaurantId ===", currentRestaurantId);
-
     if (currentRestaurantId && currentRestaurantId !== restaurant_id) {
       setShowResetCartModal(true);
       setPendingItem(id);
@@ -132,7 +148,6 @@ const OrderDetails = ({ user, setUser }) => {
     await addItem(id);
   };
 
-  // Called when user confirms the modal (Start A Fresh)
   const handleFreshStart = async () => {
     try {
       await fetchData(API_ENDPOINTS.ORDER.CLEAR_CART, "POST", {
@@ -140,7 +155,6 @@ const OrderDetails = ({ user, setUser }) => {
         session_id: sessionId,
       });
       setCart({});
-      // After clearing cart, add the pending item
       await addItem(pendingItem);
     } catch (error) {
       console.error("Error clearing cart:", error);
@@ -181,7 +195,7 @@ const OrderDetails = ({ user, setUser }) => {
   useEffect(() => {
     if (totalItems) {
       updateCartCount(totalItems);
-    }else{
+    } else {
       updateCartCount(totalItems);
       localStorage.removeItem("cart_count", totalItems);
     }
@@ -191,10 +205,15 @@ const OrderDetails = ({ user, setUser }) => {
     (food) => filter === "all" || food.type === filter
   );
 
+  const openFoodModal = (food) => {
+    setSelectedFood(food);
+    setShowFoodModal(true);
+  };
+
   if (loading && filteredFood.length === 0) {
     return <StripeLoader />;
   }
-  
+
   return (
     <div className="food-list-container">
       <h1 className="store-title">{storeDetails.name}</h1>
@@ -210,7 +229,7 @@ const OrderDetails = ({ user, setUser }) => {
           className={`filter-btn ${filter === "all" ? "active" : ""}`}
           onClick={() => setFilter("all")}
         >
-          🍽 All
+         All
         </button>
         <button
           className={`filter-btn ${filter === "Veg" ? "active" : ""}`}
@@ -230,25 +249,48 @@ const OrderDetails = ({ user, setUser }) => {
       <ul className="food-list">
         {filteredFood.map((food) => (
           <li key={food.id} className="food-item">
-            <img src={food.image} alt={food.title} className="food-image" />
+            <img 
+              src={food.image} 
+              alt={food.title} 
+              className="food-image" 
+              onClick={() => openFoodModal(food)}
+            />
             <div className="food-details">
-              <h3 className="food-title">
+              <h3 
+                className="food-title"
+                onClick={() => openFoodModal(food)}
+              >
                 {food.title} {food.type === "Veg" ? "🥦" : "🍗"}
               </h3>
-              <p className="food-description">{food.description}</p>
-              <p className="food-location">📍 {food.location}</p>
+              <p 
+                className="food-description"
+                onClick={() => openFoodModal(food)}
+              >
+                {food.description.length > 100 
+                  ? `${food.description.substring(0, 100)}...` 
+                  : food.description}
+                {food.description.length > 100 && (
+                  <span className="read-more">Read more</span>
+                )}
+              </p>
               <p className="food-price">₹ {food.price}</p>
               <div className="cart-actions">
                 <button
                   className="cart-btn"
-                  onClick={() => removeFromCart(food.id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    removeFromCart(food.id);
+                  }}
                 >
                   <MinusCircle size={20} />
                 </button>
                 <span className="cart-quantity">{cart[food.id] || 0}</span>
                 <button
                   className="cart-btn"
-                  onClick={() => addToCart(food.id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    addToCart(food.id);
+                  }}
                 >
                   <PlusCircle size={20} />
                 </button>
@@ -275,7 +317,55 @@ const OrderDetails = ({ user, setUser }) => {
             <p>Your cart contains items from another restaurant. Would you like to reset your cart?</p>
             <div className="modal-actions-cart">
               <button onClick={() => setShowResetCartModal(false)}>No</button>
-              <button onClick={handleFreshStart}>Yes, A Start Fresh</button>
+              <button onClick={handleFreshStart}>Yes, Start Fresh</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showFoodModal && selectedFood && (
+        <div className={`food-modal-overlay ${window.innerWidth <= 768 ? 'mobile' : 'desktop'}`}>
+          <div className="food-modal">
+            <button className="close-modal-btn" onClick={() => setShowFoodModal(false)}>
+              <X size={24} />
+            </button>
+            <div className="food-modal-content">
+              <img 
+                src={selectedFood.image} 
+                alt={selectedFood.title} 
+                className="food-modal-image" 
+              />
+              <div className="food-modal-details">
+                <h2 className="food-modal-title">
+                  {selectedFood.title} {selectedFood.type === "Veg" ? "🥦" : "🍗"}
+                </h2>
+                <p className="food-modal-description">{selectedFood.description}</p>
+                <div className="food-modal-info">
+                  <span>⏱ {selectedFood.deliveryTime}</span>
+                  <span className="food-modal-price">₹ {selectedFood.price}</span>
+                </div>
+                <div className="food-modal-actions">
+                  <button
+                    className="cart-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeFromCart(selectedFood.id);
+                    }}
+                  >
+                    <MinusCircle size={24} />
+                  </button>
+                  <span className="cart-quantity">{cart[selectedFood.id] || 0}</span>
+                  <button
+                    className="cart-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      addToCart(selectedFood.id);
+                    }}
+                  >
+                    <PlusCircle size={24} />
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
