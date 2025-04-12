@@ -63,17 +63,17 @@ function App() {
         <main className="content">
           <Routes>
             {/* Public Routes */}
-            {/* <Route path="/" element={<Home />} /> */}
+            <Route path="/" element={<Home />} />
 
 
-            <Route
+            {/* <Route
               path="/"
               element={
                 <LocationChecker>
                   <Home />
                 </LocationChecker>
               }
-            />
+            /> */}
             
             <Route path="/offers" element={<Offers />} />
             <Route path="/food-list" element={<FoodList />} />

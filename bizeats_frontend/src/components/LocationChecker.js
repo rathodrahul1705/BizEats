@@ -35,8 +35,6 @@ const LocationChecker = ({ children }) => {
 
           const allowedCities = ["thane", "mumbai", "pune"];
           
-          console.log("city==",city)
-
           if (
             city &&
             allowedCities.some((allowed) =>
