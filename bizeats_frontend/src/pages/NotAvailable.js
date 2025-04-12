@@ -13,6 +13,10 @@ const NotAvailable = () => {
         <p className="not-available-message-sub">
           EATOOR is expanding fast — stay tuned for fresh bites near you!
         </p>
+
+        <Link to="/">
+              <button className="order-now-btn">Allow Location</button>
+        </Link>
       </div>
     </div>
   );
