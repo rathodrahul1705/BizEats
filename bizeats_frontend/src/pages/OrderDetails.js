@@ -34,7 +34,7 @@ const OrderDetails = ({ user, setUser }) => {
     };
 
     const handleClickOutside = (e) => {
-      if (showFoodModal && e.target.classList.contains('food-modal-overlay')) {
+      if (showFoodModal && e.target.classList.contains('order-food-modal-overlay')) {
         setShowFoodModal(false);
       }
     };
@@ -215,68 +215,68 @@ const OrderDetails = ({ user, setUser }) => {
   }
 
   return (
-    <div className="food-list-container">
-      <h1 className="store-title">{storeDetails.name}</h1>
+    <div className="order-page-container">
+      <h1 className="order-store-title">{storeDetails.name}</h1>
 
-      <div className="store-details-card">
-        <p className="store-info">⏱ {storeDetails.deliveryTime}</p>
-        <p className="store-info">📍 {storeDetails.location}</p>
-        <p className="store-info">⭐ {storeDetails.rating} / 5</p>
+      <div className="order-store-details-card">
+        <p className="order-store-info">⏱ {storeDetails.deliveryTime}</p>
+        <p className="order-store-info">📍 {storeDetails.location}</p>
+        <p className="order-store-info">⭐ {storeDetails.rating} / 5</p>
       </div>
 
-      <div className="filter-container">
+      <div className="order-filter-container">
         <button
-          className={`filter-btn ${filter === "all" ? "active" : ""}`}
+          className={`order-filter-btn ${filter === "all" ? "active" : ""}`}
           onClick={() => setFilter("all")}
         >
-         All
+          All
         </button>
         <button
-          className={`filter-btn ${filter === "Veg" ? "active" : ""}`}
+          className={`order-filter-btn ${filter === "Veg" ? "active" : ""}`}
           onClick={() => setFilter("Veg")}
         >
           🥦 Veg
         </button>
         <button
-          className={`filter-btn ${filter === "Non-Veg" ? "active" : ""}`}
+          className={`order-filter-btn ${filter === "Non-Veg" ? "active" : ""}`}
           onClick={() => setFilter("Non-Veg")}
         >
           🍗 Non-Veg
         </button>
       </div>
 
-      <h2 className="food-list-title">Recommended ({filteredFood.length})</h2>
-      <ul className="food-list">
+      <h2 className="order-food-list-title">Recommended ({filteredFood.length})</h2>
+      <ul className="order-food-list">
         {filteredFood.map((food) => (
-          <li key={food.id} className="food-item">
+          <li key={food.id} className="order-food-item">
             <img 
               src={food.image} 
               alt={food.title} 
-              className="food-image" 
+              className="order-food-image" 
               onClick={() => openFoodModal(food)}
             />
-            <div className="food-details">
+            <div className="order-food-details">
               <h3 
-                className="food-title"
+                className="order-food-title"
                 onClick={() => openFoodModal(food)}
               >
                 {food.title} {food.type === "Veg" ? "🥦" : "🍗"}
               </h3>
               <p 
-                className="food-description"
+                className="order-food-description"
                 onClick={() => openFoodModal(food)}
               >
                 {food.description.length > 100 
                   ? `${food.description.substring(0, 100)}...` 
                   : food.description}
                 {food.description.length > 100 && (
-                  <span className="read-more">Read more</span>
+                  <span className="order-read-more">Read more</span>
                 )}
               </p>
-              <p className="food-price">₹ {food.price}</p>
-              <div className="cart-actions">
+              <p className="order-food-price">₹{food.price}</p>
+              <div className="order-cart-actions">
                 <button
-                  className="cart-btn"
+                  className="order-cart-btn"
                   onClick={(e) => {
                     e.stopPropagation();
                     removeFromCart(food.id);
@@ -284,9 +284,9 @@ const OrderDetails = ({ user, setUser }) => {
                 >
                   <MinusCircle size={20} />
                 </button>
-                <span className="cart-quantity">{cart[food.id] || 0}</span>
+                <span className="order-cart-quantity">{cart[food.id] || 0}</span>
                 <button
-                  className="cart-btn"
+                  className="order-cart-btn"
                   onClick={(e) => {
                     e.stopPropagation();
                     addToCart(food.id);
@@ -302,7 +302,7 @@ const OrderDetails = ({ user, setUser }) => {
 
       {totalItems > 0 && (
         <button
-          className="view-cart-btn"
+          className="order-view-cart-btn"
           onClick={() => navigate("/cart")}
         >
           <ShoppingCart size={20} />
@@ -311,11 +311,11 @@ const OrderDetails = ({ user, setUser }) => {
       )}
 
       {showResetCartModal && (
-        <div className="order-details-modal-overlay">
-          <div className="order-details-modal-class">
+        <div className="order-reset-cart-modal-overlay">
+          <div className="order-reset-cart-modal">
             <h2>Items already in cart</h2>
             <p>Your cart contains items from another restaurant. Would you like to reset your cart?</p>
-            <div className="modal-actions-cart">
+            <div className="order-modal-actions">
               <button onClick={() => setShowResetCartModal(false)}>No</button>
               <button onClick={handleFreshStart}>Yes, Start Fresh</button>
             </div>
@@ -324,29 +324,29 @@ const OrderDetails = ({ user, setUser }) => {
       )}
 
       {showFoodModal && selectedFood && (
-        <div className={`food-modal-overlay ${window.innerWidth <= 768 ? 'mobile' : 'desktop'}`}>
-          <div className="food-modal">
-            <button className="close-modal-btn" onClick={() => setShowFoodModal(false)}>
+        <div className={`order-food-modal-overlay ${window.innerWidth <= 768 ? 'mobile' : 'desktop'}`}>
+          <div className="order-food-modal">
+            <button className="order-close-modal-btn" onClick={() => setShowFoodModal(false)}>
               <X size={24} />
             </button>
-            <div className="food-modal-content">
+            <div className="order-food-modal-content">
               <img 
                 src={selectedFood.image} 
                 alt={selectedFood.title} 
-                className="food-modal-image" 
+                className="order-food-modal-image" 
               />
-              <div className="food-modal-details">
-                <h2 className="food-modal-title">
+              <div className="order-food-modal-details">
+                <h2 className="order-food-modal-title">
                   {selectedFood.title} {selectedFood.type === "Veg" ? "🥦" : "🍗"}
                 </h2>
-                <p className="food-modal-description">{selectedFood.description}</p>
-                <div className="food-modal-info">
+                <p className="order-food-modal-description">{selectedFood.description}</p>
+                <div className="order-food-modal-info">
                   <span>⏱ {selectedFood.deliveryTime}</span>
-                  <span className="food-modal-price">₹ {selectedFood.price}</span>
+                  <span className="order-food-modal-price">₹{selectedFood.price}</span>
                 </div>
-                <div className="food-modal-actions">
+                <div className="order-food-modal-actions">
                   <button
-                    className="cart-btn"
+                    className="order-food-modal-cart-btn"
                     onClick={(e) => {
                       e.stopPropagation();
                       removeFromCart(selectedFood.id);
@@ -354,9 +354,9 @@ const OrderDetails = ({ user, setUser }) => {
                   >
                     <MinusCircle size={24} />
                   </button>
-                  <span className="cart-quantity">{cart[selectedFood.id] || 0}</span>
+                  <span className="order-food-modal-quantity">{cart[selectedFood.id] || 0}</span>
                   <button
-                    className="cart-btn"
+                    className="order-food-modal-cart-btn"
                     onClick={(e) => {
                       e.stopPropagation();
                       addToCart(selectedFood.id);

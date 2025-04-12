@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { PlusCircle, MinusCircle, Trash2, CheckCircle, ArrowLeft } from "lucide-react";
+import { PlusCircle, MinusCircle, Trash2, CheckCircle, ArrowLeft, User, MapPin, ClipboardCheck } from "lucide-react";
 import "../assets/css/Cart.css";
 import SignIn from "../components/SignIn";
 import AddressSelection from "./AddressSelection";
@@ -168,32 +168,50 @@ const Cart = ({ user, setUser }) => {
     return <StripeLoader />;
   }
 
-
   if (error && cartItems.length === 0) {
     return (
-      <div className="cart-container error">
-        <p>{error}</p>
-        <button onClick={fetchCartData}>Retry</button>
+      <div className="cart-error-container">
+        <p className="cart-error-message">{error}</p>
+        <button className="cart-retry-btn" onClick={fetchCartData}>
+          Retry
+        </button>
       </div>
     );
   }
 
   return (
-    <div className="cart-container">
-      <h2 className="cart-title">Secure Checkout</h2>
+    <div className="cart-page-container">
+      <h2 className="cart-page-title">Secure Checkout</h2>
 
-      <div className="step-indicator">
-        <div className={`step ${step >= 1 ? "active" : ""}`}>
-          {step > 1 ? <CheckCircle size={18} /> : ""} Login
+      <div className="cart-step-indicator">
+        <div className={`cart-step ${step >= 1 ? "active" : ""}`}>
+          <div className="step-content">
+            <span className="step-icon">
+              {step > 1 ? <CheckCircle size={18} /> : <User size={18} />}
+            </span>
+            <span className="step-text">Login</span>
+          </div>
         </div>
-        <div className={`step ${step >= 2 ? "active" : ""}`}>
-          {step > 2 ? <CheckCircle size={18} /> : ""} Address
+        <div className={`cart-step ${step >= 2 ? "active" : ""}`}>
+          <div className="step-content">
+            <span className="step-icon">
+              {step > 2 ? <CheckCircle size={18} /> : <MapPin size={18} />}
+            </span>
+            <span className="step-text">Address</span>
+          </div>
         </div>
-        <div className={`step ${step >= 3 ? "active" : ""}`}>Review</div>
+        <div className={`cart-step ${step >= 3 ? "active" : ""}`}>
+          <div className="step-content">
+            <span className="step-icon">
+              <ClipboardCheck size={18} />
+            </span>
+            <span className="step-text">Review</span>
+          </div>
+        </div>
       </div>
 
       {step > 1 && (
-        <button className="cart-back-btn" onClick={handleBack}>
+        <button className="cart-navigation-btn back" onClick={handleBack}>
           <ArrowLeft size={20} /> Back
         </button>
       )}
@@ -215,25 +233,24 @@ const Cart = ({ user, setUser }) => {
       {step === 2 && user && <AddressSelection onAddressSelect={handleAddressSelection} />}
 
       {step === 3 && userSelectedAddress && (
-        <div className="orderSummaryHolder">
-          <ul className="cart-list">
+        <div className="cart-review-container">
+          <ul className="cart-items-list">
             {cartItems.map((item) => (
-              <li key={item.id} className="cart-item">
-                <img src={item.image} alt={item.title} className="cart-image" />
-                <div className="cart-details">
-                  <h3 className="cart-item-title">{item.title}</h3>
-                  {/* <p className="cart-item-description">{item.description}</p> */}
-                  <p className="cart-item-price">₹ {item.price}</p>
+              <li key={item.id} className="cart-review-item">
+                <img src={item.image} alt={item.title} className="cart-review-image" />
+                <div className="cart-review-details">
+                  <h3 className="cart-review-title">{item.title}</h3>
+                  <p className="cart-review-price">₹{item.price}</p>
                 </div>
               </li>
             ))}
           </ul>
-          <div className="cart-summary">
-            <div className="total-section">
+          <div className="cart-summary-section">
+            <div className="cart-total-section">
               <span>Total:</span>
-              <span>₹ {totalPrice}</span>
+              <span>₹{totalPrice}</span>
             </div>
-            <button className="proceed-btn" onClick={handlePayment}>
+            <button className="cart-proceed-btn" onClick={handlePayment}>
               Review Order & Confirm
             </button>
           </div>
@@ -241,11 +258,17 @@ const Cart = ({ user, setUser }) => {
       )}
 
       {cartItems.length === 0 && !loading && (
-        <div className="empty-cart">
-          <img src={require("../assets/img/empty_cart.webp")} alt="Empty Cart" />
-          <h3>Your cart’s waiting to be filled!</h3>
-          <p>Check out the homepage for more delicious homemade meals options!</p>
-          <button className="add-items-btn" onClick={() => navigate("/")}>
+        <div className="cart-empty-state">
+          <img 
+            src={require("../assets/img/empty_cart.webp")} 
+            alt="Empty Cart" 
+            className="cart-empty-image" 
+          />
+          <h3 className="cart-empty-title">Your cart's waiting to be filled!</h3>
+          <p className="cart-empty-message">
+            Check out the homepage for more delicious homemade meals options!
+          </p>
+          <button className="cart-explore-btn" onClick={() => navigate("/")}>
             Explore restaurants near you
           </button>
         </div>
@@ -253,32 +276,31 @@ const Cart = ({ user, setUser }) => {
 
       {cartItems.length > 0 && step !== 3 && step !== 2 && (
         <>
-          <ul className="cart-list">
+          <ul className="cart-items-list">
             {cartItems.map((item) => (
-              <li key={item.id} className="cart-item">
-                <img src={item.image} alt={item.title} className="cart-image" />
-                <div className="cart-details">
+              <li key={item.id} className="cart-item-card">
+                <img src={item.image} alt={item.title} className="cart-item-image" />
+                <div className="cart-item-details">
                   <h3 className="cart-item-title">{item.title}</h3>
-                  {/* <p className="cart-item-description">{item.description}</p> */}
-                  <p className="cart-item-price">₹ {item.price}</p>
-                  <div className="cart-actions">
+                  <p className="cart-item-price">₹{item.price}</p>
+                  <div className="cart-item-actions">
                     <button
-                      className="cart-btn"
+                      className="cart-action-btn decrease"
                       onClick={() => decreaseQuantity(item.id, item.item_id)}
                       disabled={loading}
                     >
                       <MinusCircle size={20} />
                     </button>
-                    <span className="cart-quantity">{item.quantity}</span>
+                    <span className="cart-item-quantity">{item.quantity}</span>
                     <button
-                      className="cart-btn"
+                      className="cart-action-btn increase"
                       onClick={() => increaseQuantity(item.id, item.item_id)}
                       disabled={loading}
                     >
                       <PlusCircle size={20} />
                     </button>
                     <button
-                      className="cart-btn delete-btn"
+                      className="cart-action-btn delete"
                       onClick={() => deleteItem(item.id, item.item_id)}
                       disabled={loading}
                     >
@@ -289,12 +311,16 @@ const Cart = ({ user, setUser }) => {
               </li>
             ))}
           </ul>
-          <div className="cart-summary">
-            <div className="total-section">
+          <div className="cart-summary-section">
+            <div className="cart-total-section">
               <span>Total:</span>
-              <span>₹ {totalPrice}</span>
+              <span>₹{totalPrice}</span>
             </div>
-            <button className="proceed-btn" onClick={handleProceed} disabled={loading}>
+            <button 
+              className="cart-proceed-btn" 
+              onClick={handleProceed} 
+              disabled={loading}
+            >
               {step === 1
                 ? "Review Cart & Checkout"
                 : step === 2
