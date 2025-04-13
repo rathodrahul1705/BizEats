@@ -33,16 +33,21 @@
   border-radius: 3px;
 }
 
-/* Step Indicator */
 .cart-step-indicator {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   margin: 25px 0 30px;
-  background: #f8f9fa;
-  border-radius: 12px;
-  padding: 5px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  padding: 8px 12px;
+
+  /* background-color: #f8f9fa; */
+  /* border-radius: 12px; */
+  /* box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); */
+  
+  /* Optional: smooth transition if interactive */
+  transition: all 0.3s ease;
 }
+
 
 .cart-step {
   flex: 1;
@@ -77,12 +82,12 @@
 
 .cart-step.active {
   color: #fff;
-  background: #ccc;
+  /* background: #f0f0f0; */
   box-shadow: 0 4px 12px rgba(230, 92, 0, 0.2);
 }
 
 .cart-step.active .step-icon svg {
-  stroke: white;
+  stroke: #e65c00;
 }
 
 /* Navigation Buttons */
