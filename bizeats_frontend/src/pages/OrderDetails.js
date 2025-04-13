@@ -262,6 +262,7 @@ const OrderDetails = ({ user, setUser }) => {
               >
                 {food.title} {food.type === "Veg" ? "🥦" : "🍗"}
               </h3>
+              
               <p 
                 className="order-food-description"
                 onClick={() => openFoodModal(food)}
@@ -276,6 +277,7 @@ const OrderDetails = ({ user, setUser }) => {
                   </span>
                 )}
               </p>
+
               <p className="order-food-price">₹{food.price}</p>
               <div className="order-cart-actions">
                 <button
