@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { PlusCircle, MinusCircle, ShoppingCart, X } from "lucide-react";
+import { PlusCircle, MinusCircle, ShoppingCart, X, ArrowRight } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import "../assets/css/OrderDetails.css";
 import API_ENDPOINTS from "../components/config/apiConfig";
@@ -270,7 +270,10 @@ const OrderDetails = ({ user, setUser }) => {
                   ? `${food.description.substring(0, 100)}...` 
                   : food.description}
                 {food.description.length > 100 && (
-                  <span className="order-read-more">Read more</span>
+                  <span className="order-read-more">
+                    <span>Read more</span>
+                    <ArrowRight size={16} />
+                  </span>
                 )}
               </p>
               <p className="order-food-price">₹{food.price}</p>

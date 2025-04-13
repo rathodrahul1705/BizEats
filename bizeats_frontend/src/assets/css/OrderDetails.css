@@ -110,11 +110,71 @@
     cursor: pointer;
 }
 
-.order-read-more {
+/* .order-read-more {
     color: #e65c00;
     font-weight: 500;
     margin-left: 5px;
-}
+} */
+
+.order-read-more {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 4px 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #e65c00;
+    background-color: white;
+    border: 1.5px solid #e65c00;
+    border-radius: 9999px;
+    cursor: pointer;
+    box-shadow: 0 1px 4px rgba(230, 92, 0, 0.08);
+    transition: all 0.25s ease-in-out;
+    position: relative;
+    overflow: hidden;
+    line-height: 1;
+  }
+  
+  .order-read-more::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: rgba(230, 92, 0, 0.08);
+    transition: all 0.35s ease;
+    z-index: 0;
+  }
+  
+  .order-read-more:hover::before {
+    left: 0;
+  }
+  
+  .order-read-more:hover {
+    background-color: white;
+    color: #e65c00;
+    box-shadow: 0 2px 6px rgba(230, 92, 0, 0.15);
+  }
+  
+  .order-read-more:active {
+    transform: scale(0.97);
+  }
+  
+  .order-read-more span {
+    position: relative;
+    z-index: 1;
+  }
+  
+  @media (max-width: 480px) {
+    .order-read-more {
+      padding: 3px 10px;
+      font-size: 0.75rem;
+      gap: 5px;
+    }
+  }
+  
 
 /* Order Page Food Price */
 .order-food-price {
