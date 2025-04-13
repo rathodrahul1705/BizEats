@@ -36,7 +36,7 @@ const FoodGrid = () => {
   return (
     <div className="food-grid-container">
       <section className="food-section">
-        <h2 className="food-title">Order from your favorite kitchens nearby</h2>
+        <h2 className="food-title">Order from nearby kitchens</h2>
         <div className="food-card-wrapper">
           {restaurants.map((food) => (
             <Link to={`/order-details/${food.restaurant_id}`} className="food-card-wrapper-link" key={food.id}>
