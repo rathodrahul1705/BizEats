@@ -1,7 +1,7 @@
 /* Food Grid Container */
 .food-grid-container {
     /* background: #f8f9fa; */
-    text-align: center;
+    /* text-align: center; */
     display: flex;
     flex-direction: column;
     /* min-height: 100vh; */

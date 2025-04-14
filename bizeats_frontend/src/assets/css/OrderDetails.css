@@ -149,7 +149,7 @@
 /* Order Page Food Item */
 .order-food-item {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     background: #fff;
     padding: 15px;
     border-radius: 12px;
@@ -164,8 +164,8 @@
 
 /* Order Page Food Image */
 .order-food-image {
-    width: 100px;
-    height: 100px;
+    width: 200px;
+    height: 150px;
     object-fit: cover;
     border-radius: 10px;
     margin-right: 15px;
@@ -650,7 +650,7 @@
     }
 
     .order-food-image {
-        width: 80px;
-        height: 80px;
+        width: 280px;
+        height: 150px;
     }
 }

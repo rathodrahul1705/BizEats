@@ -51,7 +51,7 @@ const FoodGrid = () => {
                 </button>
                 <div className="food-details">
                   <p className="food-location">📍 {food.restaurant_location}</p>
-                  <p className="food-delivery">⏳ {"23"}</p>
+                  <p className="food-delivery">⏳ {"45"}</p>
                   <p className="food-name">{food.item_cuisines}</p>
                   <p className="food-brand">{food.restaurant_name}</p> {/* Display brand name */}
                 </div>

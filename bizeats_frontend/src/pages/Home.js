@@ -184,9 +184,12 @@ const Home = () => {
                       <ArrowRightCircle size={20} />
                     </button>
                     <div className="food-details">
-                      <p className="food-name">{restaurant.restaurant_name}</p>
                       <p className="food-location">📍 {restaurant.restaurant_location}</p>
-                      <p className="food-delivery">⏳ {restaurant.item_cuisines}</p>
+                      <p className="food-delivery">⏳ 45</p>
+                      <p className="food-delivery">{restaurant.item_cuisines}</p>
+
+                      <p className="food-brand">{restaurant.restaurant_name}</p>
+
                     </div>
                   </div>
                 </Link>
