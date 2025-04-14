@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { PlusCircle, MinusCircle, ShoppingCart, X, ArrowRight } from "lucide-react";
+import { PlusCircle, MinusCircle, ShoppingCart, X, ArrowRight, ChevronDown, ChevronUp } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import "../assets/css/OrderDetails.css";
 import API_ENDPOINTS from "../components/config/apiConfig";
@@ -23,8 +23,21 @@ const OrderDetails = ({ user, setUser }) => {
   const [pendingItem, setPendingItem] = useState(null);
   const [selectedFood, setSelectedFood] = useState(null);
   const [showFoodModal, setShowFoodModal] = useState(false);
+  const [categoryVisibility, setCategoryVisibility] = useState({});
   const navigate = useNavigate();
   const sessionId = getOrCreateSessionId();
+
+  // Initialize all categories as visible by default
+  useEffect(() => {
+    if (foodData.length > 0) {
+      const initialVisibility = {};
+      const categories = [...new Set(foodData.map(item => item.category))];
+      categories.forEach(category => {
+        initialVisibility[category] = true;
+      });
+      setCategoryVisibility(initialVisibility);
+    }
+  }, [foodData]);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -101,6 +114,7 @@ const OrderDetails = ({ user, setUser }) => {
           deliveryTime: `${response.time_required_to_reach_loc} min`,
           location: response.Address,
           type: item?.food_type,
+          category: item.category,
         }))
       );
     } catch (error) {
@@ -210,6 +224,20 @@ const OrderDetails = ({ user, setUser }) => {
     setShowFoodModal(true);
   };
 
+  // Group food items by category and apply filter
+  const groupedByCategory = filteredFood.reduce((acc, food) => {
+    if (!acc[food.category]) acc[food.category] = [];
+    acc[food.category].push(food);
+    return acc;
+  }, {});
+
+  const toggleCategoryVisibility = (category) => {
+    setCategoryVisibility((prev) => ({
+      ...prev,
+      [category]: !prev[category],
+    }));
+  };
+
   if (loading && filteredFood.length === 0) {
     return <StripeLoader />;
   }
@@ -245,65 +273,83 @@ const OrderDetails = ({ user, setUser }) => {
         </button>
       </div>
 
-      <h2 className="order-food-list-title">Recommended ({filteredFood.length})</h2>
-      <ul className="order-food-list">
-        {filteredFood.map((food) => (
-          <li key={food.id} className="order-food-item">
-            <img 
-              src={food.image} 
-              alt={food.title} 
-              className="order-food-image" 
-              onClick={() => openFoodModal(food)}
-            />
-            <div className="order-food-details">
-              <h3 
-                className="order-food-title"
-                onClick={() => openFoodModal(food)}
-              >
-                {food.title} {food.type === "Veg" ? "🥦" : "🍗"}
-              </h3>
-              
-              <p 
-                className="order-food-description"
-                onClick={() => openFoodModal(food)}
-              >
-                {food.description.length > 100 
-                  ? `${food.description.substring(0, 100)}...` 
-                  : food.description}
-                {food.description.length > 100 && (
-                  <span className="order-read-more">
-                    <span>Read more</span>
-                    <ArrowRight size={16} />
-                  </span>
-                )}
-              </p>
-
-              <p className="order-food-price">₹{food.price}</p>
-              <div className="order-cart-actions">
-                <button
-                  className="order-cart-btn"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    removeFromCart(food.id);
-                  }}
-                >
-                  <MinusCircle size={20} />
-                </button>
-                <span className="order-cart-quantity">{cart[food.id] || 0}</span>
-                <button
-                  className="order-cart-btn"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    addToCart(food.id);
-                  }}
-                >
-                  <PlusCircle size={20} />
-                </button>
-              </div>
+      <div className="order-categories-container">
+        {Object.keys(groupedByCategory).map((category) => (
+          <div key={category} className="order-category-section">
+            <div
+              className="order-category-header"
+              onClick={() => toggleCategoryVisibility(category)}
+            >
+              <h3>{category} ({groupedByCategory[category].length})</h3>
+              {categoryVisibility[category] ? (
+                <ChevronUp size={20} />
+              ) : (
+                <ChevronDown size={20} />
+              )}
             </div>
-          </li>
+            {categoryVisibility[category] && (
+              <ul className="order-food-list">
+                {groupedByCategory[category].map((food) => (
+                  <li key={food.id} className="order-food-item">
+                    <img 
+                      src={food.image} 
+                      alt={food.title} 
+                      className="order-food-image" 
+                      onClick={() => openFoodModal(food)}
+                    />
+                    <div className="order-food-details">
+                      <h3 
+                        className="order-food-title"
+                        onClick={() => openFoodModal(food)}
+                      >
+                        {food.title} {food.type === "Veg" ? "🥦" : "🍗"}
+                      </h3>
+
+                      <p 
+                        className="order-food-description"
+                        onClick={() => openFoodModal(food)}
+                      >
+                        {food.description.length > 100 
+                          ? `${food.description.substring(0, 100)}...` 
+                          : food.description}
+                        {food.description.length > 100 && (
+                          <span className="order-read-more">
+                            <span>Read more</span>
+                            <ArrowRight size={16} />
+                          </span>
+                        )}
+                      </p>
+
+                      <p className="order-food-price">₹{food.price}</p>
+                      <div className="order-cart-actions">
+                        <button
+                          className="order-cart-btn"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeFromCart(food.id);
+                          }}
+                        >
+                          <MinusCircle size={20} />
+                        </button>
+                        <span className="order-cart-quantity">{cart[food.id] || 0}</span>
+                        <button
+                          className="order-cart-btn"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            addToCart(food.id);
+                          }}
+                        >
+                          <PlusCircle size={20} />
+                        </button>
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         ))}
-      </ul>
+      </div>
 
       {totalItems > 0 && (
         <button

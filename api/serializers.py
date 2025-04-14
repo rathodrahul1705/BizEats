@@ -45,6 +45,8 @@ class RestaurantMenuSerializer(serializers.Serializer):
     item_image = serializers.CharField()
     id = serializers.CharField()
     food_type = serializers.CharField()
+    category = serializers.CharField()
+    
 
 class DeliveryTimingSerializer(serializers.Serializer):
     day = serializers.CharField()
