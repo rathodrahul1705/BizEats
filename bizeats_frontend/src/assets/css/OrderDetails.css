@@ -110,12 +110,6 @@
     cursor: pointer;
 }
 
-/* .order-read-more {
-    color: #e65c00;
-    font-weight: 500;
-    margin-left: 5px;
-} */
-
 .order-read-more {
     display: inline-flex;
     align-items: center;

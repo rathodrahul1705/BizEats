@@ -30,11 +30,14 @@ const AddressSelection = ({ onAddressSelect }) => {
       );
 
       if (response) {
+
         const updatedAddresses = response.map((item) => ({
           address: item.full_address,
+          home_type: item.home_type,
           address_id: item.id,
           is_default: item.is_default,
         }));
+        
         setAddresses(updatedAddresses);
 
         const storedAddress = localStorage.getItem("selected_address");
@@ -88,7 +91,7 @@ const AddressSelection = ({ onAddressSelect }) => {
           >
             {selectedAddress === address.address_id && <CheckCircle size={20} className="selected-icon" />}
             <span className="loactionName">
-              <img src={loactionIcon} alt="Location Icon" /> Home
+              <img src={loactionIcon} alt="Location Icon" /> {address?.home_type}
             </span>
             <p className="addressData">{address.address}</p>
           </li>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { FaBoxOpen, FaClock } from 'react-icons/fa';
+import { FaCheckCircle, FaCartPlus, FaClock } from 'react-icons/fa';
 import '../assets/css/payment/PaymentStatus.css';
 
 const OrderConfirmation = () => {
@@ -10,7 +10,7 @@ const OrderConfirmation = () => {
   return (
     <div className="payment-status-container confirmation">
       <div className="status-icon">
-        <FaBoxOpen />
+        <FaCheckCircle />
       </div>
       <h1>Order Confirmed!</h1>
       
@@ -30,7 +30,7 @@ const OrderConfirmation = () => {
           className="primary-btn"
           onClick={() => navigate('/track-order')}
         >
-          Track Your Order
+          <FaCartPlus /> Track Your Order
         </button>
         <button 
           className="secondary-btn"

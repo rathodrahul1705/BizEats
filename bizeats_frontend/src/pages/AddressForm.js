@@ -27,6 +27,10 @@ const AddressForm = ({ onClose, onSave }) => {
   });
 
   const [markerPosition, setMarkerPosition] = useState({ lat: 28.6139, lng: 77.2090 });
+  const [errors, setErrors] = useState({
+    street: "",
+    zip: "",
+  });
 
   // Handle map click or drag event
   const handleMapChange = (e) => {
@@ -50,17 +54,38 @@ const AddressForm = ({ onClose, onSave }) => {
       .catch((err) => console.error("Reverse geocoding error:", err));
   };
 
+  // Handle save
   const handleSave = async () => {
     const { street, city, state, zip, country, landmark, addressType } = newAddress;
-    if (street.trim() && city.trim() && zip.trim()) {
-
+    let isValid = true;
+    let validationErrors = { street: "", zip: "" };
+  
+    // Ensure the fields are not undefined or null before calling .trim()
+    const streetValue = street ? street.trim() : "";
+    const zipValue = zip ? zip.trim() : "";
+  
+    // Validate Street and Zip
+    if (!streetValue) {
+      validationErrors.street = "Street address is required";
+      isValid = false;
+    }
+  
+    // Updated regex to validate 6-digit zip code
+    if (!zipValue || !/^\d{6}$/.test(zipValue)) {
+      validationErrors.zip = "Valid Zip Code (6 digits) is required";
+      isValid = false;
+    }
+  
+    setErrors(validationErrors);
+  
+    if (isValid) {
       try {
         const payload = {
-          street_address: street,
+          street_address: streetValue,
           user: 1,
           city: city,
           state: state,
-          zip_code: zip,
+          zip_code: zipValue,
           country: country,
           near_by_landmark: landmark,
           home_type: addressType,
@@ -68,7 +93,7 @@ const AddressForm = ({ onClose, onSave }) => {
           longitude: null,
           is_default: true,
         };
-        
+  
         const response = await fetchData(API_ENDPOINTS.ORDER.USER_ADDRESS_STORE, "POST", payload, localStorage.getItem("access"));
     
         if (response) {
@@ -82,12 +107,13 @@ const AddressForm = ({ onClose, onSave }) => {
       }
     }
   };
+  
+  
 
   useEffect(() => {
     fetch('https://ipapi.co/json/')
       .then(res => res.json())
       .then(data => {
-
         setNewAddress({
           country: data.country_name,
           state: data.state,
@@ -114,13 +140,61 @@ const AddressForm = ({ onClose, onSave }) => {
       </div>
 
       {/* Address Inputs */}
-      <input type="text" placeholder="Street Address" value={newAddress.street} onChange={(e) => setNewAddress({ ...newAddress, street: e.target.value })} className="address-input" />
-      <input type="text" placeholder="City" value={newAddress.city} onChange={(e) => setNewAddress({ ...newAddress, city: e.target.value })} className="address-input" />
-      <input type="text" placeholder="State" value={newAddress.state} onChange={(e) => setNewAddress({ ...newAddress, state: e.target.value })} className="address-input" />
-      <input type="text" placeholder="Zip Code" value={newAddress.zip} onChange={(e) => setNewAddress({ ...newAddress, zip: e.target.value })} className="address-input" />
-      <input type="text" placeholder="Country" value={newAddress.country} onChange={(e) => setNewAddress({ ...newAddress, country: e.target.value })} className="address-input" />
-      <input type="text" placeholder="Landmark" value={newAddress.landmark} onChange={(e) => setNewAddress({ ...newAddress, landmark: e.target.value })} className="address-input" />
-      <select value={newAddress.addressType} onChange={(e) => setNewAddress({ ...newAddress, addressType: e.target.value })} className="address-input">
+      <input 
+        type="text" 
+        placeholder="Street Address" 
+        value={newAddress.street} 
+        onChange={(e) => setNewAddress({ ...newAddress, street: e.target.value })} 
+        className={`address-input ${errors.street ? "error" : ""}`} 
+      />
+      {errors.street && <span className="error-message">{errors.street}</span>}
+      
+      <input 
+        type="text" 
+        placeholder="City" 
+        value={newAddress.city} 
+        onChange={(e) => setNewAddress({ ...newAddress, city: e.target.value })} 
+        className="address-input" 
+      />
+      
+      <input 
+        type="text" 
+        placeholder="State" 
+        value={newAddress.state} 
+        onChange={(e) => setNewAddress({ ...newAddress, state: e.target.value })} 
+        className="address-input" 
+      />
+      
+      <input 
+        type="text" 
+        placeholder="Zip Code" 
+        value={newAddress.zip} 
+        onChange={(e) => setNewAddress({ ...newAddress, zip: e.target.value })} 
+        className={`address-input ${errors.zip ? "error" : ""}`} 
+      />
+      {errors.zip && <span className="error-message">{errors.zip}</span>}
+      
+      <input 
+        type="text" 
+        placeholder="Country" 
+        value={newAddress.country} 
+        onChange={(e) => setNewAddress({ ...newAddress, country: e.target.value })} 
+        className="address-input" 
+      />
+      
+      <input 
+        type="text" 
+        placeholder="Landmark" 
+        value={newAddress.landmark} 
+        onChange={(e) => setNewAddress({ ...newAddress, landmark: e.target.value })} 
+        className="address-input" 
+      />
+      
+      <select 
+        value={newAddress.addressType} 
+        onChange={(e) => setNewAddress({ ...newAddress, addressType: e.target.value })} 
+        className="address-input"
+      >
         <option value="Home">Home</option>
         <option value="Office">Office</option>
         <option value="Other">Other</option>

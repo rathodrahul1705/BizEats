@@ -323,3 +323,63 @@
     font-size: 15px;
   }
 }
+
+.apply-coupon-section {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+  width: 100%;
+}
+
+.apply-coupon-section input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 14px;
+  min-width: 0;
+}
+
+.apply-coupon-section button {
+  padding: 8px 16px;
+  background-color: #e65c00;
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-size: 14px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.apply-coupon-section button:hover {
+  background-color: #cc4a00;
+}
+
+/* Ensure the layout remains inline on smaller screens */
+@media (max-width: 480px) {
+  .apply-coupon-section {
+    flex-direction: row;
+    flex-wrap: nowrap;
+  }
+}
+
+
+.view-cart-link {
+  background: none;
+  border: none;
+  color: #e65c00;
+  text-decoration: none;
+  margin-left: 8px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.view-cart-link:hover {
+  color: #cc4a00;
+}
+

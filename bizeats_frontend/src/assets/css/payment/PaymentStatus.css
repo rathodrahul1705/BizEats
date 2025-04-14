@@ -1,118 +1,169 @@
 .payment-status-container {
-  max-width: 600px;
+  max-width: 700px;
   margin: 2rem auto;
-  padding: 2rem;
+  padding: 2.5rem;
   text-align: center;
-  border-radius: 16px;
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
+  border-radius: 20px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
   font-family: 'Segoe UI', sans-serif;
-  background-color: #ffffff;
+  background-color: #fff;  /* White background */
+  color: #333;
+  transition: transform 0.3s ease;
+  overflow: hidden; /* Ensure no content overflows the container */
 }
 
-.success {
-  background-color: #f0fdf4;
-  border: 1px solid #bbf7d0;
-}
-
-.failed {
-  background-color: #fef2f2;
-  border: 1px solid #fecaca;
+.payment-status-container:hover {
+  transform: translateY(-8px);
 }
 
 .confirmation {
-  background-color: #fff7f2;
-  border: 1px solid #fcd7c2;
+  background-color: #fff7f2; /* Light shade for confirmation */
+  border: 1px solid #fcd7c2; /* Lighter orange border */
 }
 
 .status-icon {
-  font-size: 4rem;
+  font-size: 4.5rem;
   margin-bottom: 1.5rem;
-}
-
-.success .status-icon {
-  color: #22c55e;
-}
-
-.failed .status-icon {
-  color: #ef4444;
-}
-
-.confirmation .status-icon {
-  color: #e65c00;
+  color: #e65c00; /* Orange color for icon */
 }
 
 .payment-details,
 .order-details {
-  background: #ffffff;
-  padding: 1.5rem;
+  background: #fff;  /* White background for details */
+  padding: 2rem;
   border-radius: 12px;
   margin: 1.5rem 0;
   text-align: left;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  word-wrap: break-word; /* Breaks long words to prevent overflow */
+  overflow-wrap: break-word; /* Ensures long words wrap correctly */
 }
 
 .payment-details p,
 .order-details p {
-  margin: 0.5rem 0;
-  padding: 0.5rem 0;
-  border-bottom: 1px solid #f2f2f2;
-  font-size: 15px;
+  margin: 1rem 0;
+  font-size: 16px;
   color: #333;
+  word-wrap: break-word; /* Ensure text wraps correctly */
+  overflow-wrap: break-word; /* Ensure text wraps correctly */
 }
 
 .delivery-info {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  color: #e65c00;
+  gap: 0.7rem;
+  color: #e65c00; /* Orange color for delivery info */
   font-weight: bold;
-  font-size: 16px;
+  font-size: 18px;
+  white-space: nowrap; /* Prevent text from wrapping, but it will break if necessary */
+  overflow: hidden;
+  text-overflow: ellipsis; /* If text overflows, show ellipsis */
 }
 
 .action-buttons {
   display: flex;
-  gap: 1rem;
+  gap: 1.5rem;
   justify-content: center;
   margin-top: 2rem;
+  flex-wrap: wrap;
 }
 
 .primary-btn {
-  background-color: #e65c00;
+  background-color: #e65c00; /* Orange color for the button */
   color: white;
-  padding: 0.75rem 1.5rem;
+  padding: 1rem 2rem;
   border: none;
-  border-radius: 30px;
+  border-radius: 50px;
   cursor: pointer;
   font-weight: 600;
-  transition: background-color 0.3s ease;
+  font-size: 16px;
+  transition: background-color 0.3s ease, transform 0.3s ease;
 }
 
 .primary-btn:hover {
-  background-color: #cc5200;
+  background-color: #cc5200; /* Darker orange on hover */
+  transform: scale(1.08);
+}
+
+.primary-btn svg {
+  margin-right: 8px;
 }
 
 .secondary-btn {
-  background-color: white;
-  color: #e65c00;
-  padding: 0.75rem 1.5rem;
-  border: 2px solid #e65c00;
-  border-radius: 30px;
+  background-color: #fff;
+  color: #e65c00; /* Orange color for the button */
+  padding: 1rem 2rem;
+  border: 2px solid #e65c00; /* Orange border */
+  border-radius: 50px;
   cursor: pointer;
   font-weight: 600;
-  transition: background-color 0.3s ease;
+  font-size: 16px;
+  transition: background-color 0.3s ease, transform 0.3s ease;
 }
 
 .secondary-btn:hover {
-  background-color: #fff0e6;
+  background-color: #fff0e6; /* Light orange on hover */
+  transform: scale(1.08);
 }
 
-@media (max-width: 640px) {
+/* Mobile-specific styles */
+@media (max-width: 768px) {
   .payment-status-container {
-    margin: 1rem;
-    padding: 1.5rem;
+    margin: 1.5rem;
+    padding: 2rem;
+  }
+
+  .status-icon {
+    font-size: 4rem;
+  }
+
+  .delivery-info {
+    font-size: 16px;
+    white-space: normal; /* Allow text to wrap on smaller screens */
+    word-wrap: break-word; /* Ensure wrapping of long words */
+    overflow: hidden; /* Hide overflow */
   }
 
   .action-buttons {
     flex-direction: column;
+    gap: 1rem;
+  }
+
+  .primary-btn {
+    font-size: 14px; /* Reduce font size */
+    padding: 0.75rem 1.5rem; /* Reduce padding */
+  }
+
+  .secondary-btn {
+    font-size: 14px; /* Reduce font size */
+    padding: 0.75rem 1.5rem; /* Reduce padding */
+  }
+}
+
+@media (max-width: 480px) {
+  .payment-status-container {
+    padding: 1.5rem;
+  }
+
+  .status-icon {
+    font-size: 3.5rem; /* Slightly smaller icon */
+  }
+
+  .order-details p {
+    font-size: 14px; /* Smaller text for details */
+  }
+
+  .delivery-info {
+    font-size: 14px; /* Smaller text for delivery info */
+    white-space: normal; /* Allow text to wrap on mobile screens */
+    word-wrap: break-word; /* Ensure wrapping of long words */
+    overflow: hidden; /* Hide overflow */
+  }
+
+  .primary-btn,
+  .secondary-btn {
+    width: 100%;
+    padding: 0.75rem 1.2rem; /* Reduced padding */
+    font-size: 14px; /* Reduced font size */
   }
 }
