@@ -77,6 +77,7 @@ const PaymentOption = ({ user }) => {
 
   const handlePaymentSuccess = async (paymentData, razorpay_order_id) => {
     try {
+
       setPostPaymentProcessing(true);
       const storedOrder = await storeOrderDetails("online", razorpay_order_id, paymentData.razorpay_payment_id);
       if (storedOrder) {
@@ -84,7 +85,10 @@ const PaymentOption = ({ user }) => {
         navigate("/payment/success", {
           state: {
             paymentId: paymentData.razorpay_payment_id,
+            eatoor_order_id: storedOrder.order_id,
+            eatoor_order_number: storedOrder.order_number,
             orderId: razorpay_order_id,
+            razorpay_signature: paymentData.razorpay_signature,
             amount: restaurantOrderDetails.total_amount,
             restaurantName: restaurantOrderDetails.restaurant_name,
             restaurant_id,
@@ -129,7 +133,7 @@ const PaymentOption = ({ user }) => {
       const response = await fetchData(API_ENDPOINTS.ORDER.UPDATE_ORDER_DETAILS, "POST", orderData);
 
       if (response.status === "success") {
-        return true;
+        return response;
       } else {
         throw new Error(response.message || "Failed to update order details");
       }
@@ -206,7 +210,7 @@ const PaymentOption = ({ user }) => {
       const orderData = await orderRes.json();
 
       const options = {
-        key: "rzp_live_mUk0ZYQjZGCxK1",
+        key: "rzp_test_Ler2HqmO4lVND1",
         amount: orderData.amount,
         currency: orderData.currency,
         name: "Eatoor",
