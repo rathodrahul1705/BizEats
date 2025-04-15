@@ -37,13 +37,13 @@ const Footer = () => {
         <div className="footer__section">
           <h3 className="footer__heading">Connect with Us</h3>
           <div className="footer__social">
-            <a href="https://www.instagram.com" className="footer__social-link" target="_blank" rel="noopener noreferrer">
+            <a href="https://www.instagram.com/eatoor.official/" className="footer__social-link" target="_blank" rel="noopener noreferrer">
               <FaInstagram />
             </a>
-            <a href="https://www.facebook.com" className="footer__social-link" target="_blank" rel="noopener noreferrer">
+            <a href="https://www.facebook.com/profile.php?id=61575132847349" className="footer__social-link" target="_blank" rel="noopener noreferrer">
               <FaFacebook />
             </a>
-            <a href="https://www.twitter.com" className="footer__social-link" target="_blank" rel="noopener noreferrer">
+            <a href="https://x.com/eatoor_official" className="footer__social-link" target="_blank" rel="noopener noreferrer">
               <FaTwitter />
             </a>
           </div>
