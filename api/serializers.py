@@ -247,3 +247,8 @@ class OrderPlacementSerializer(serializers.Serializer):
     is_takeaway = serializers.BooleanField(default=False)
     delivery_address_id = serializers.CharField(required=True)
     special_instructions = serializers.CharField(required=False, allow_blank=True)
+
+class ContactUsSerializer(serializers.Serializer):
+    name = serializers.CharField(max_length=100)
+    email = serializers.EmailField()
+    message = serializers.CharField()

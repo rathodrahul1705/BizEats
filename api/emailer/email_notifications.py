@@ -239,4 +239,7 @@ def send_otp_email(user, subject, otp_type):
         fail_silently=False,
     )
 
-
+def send_contact_email(name, email, message):
+    subject = f"New Contact Us Message from {name}"
+    body = f"Name: {name}\nEmail: {email}\n\nMessage:\n{message}"
+    send_mail(subject, body, settings.DEFAULT_FROM_EMAIL, [settings.DEFAULT_FROM_EMAIL])

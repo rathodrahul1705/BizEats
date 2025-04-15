@@ -2,6 +2,8 @@ from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.utils.timezone import now, timedelta
 import random
+from django import forms
+
 
 class UserManager(BaseUserManager):
     def create_user(self, email, full_name, contact_number, role=1):  # Default to Customer
@@ -477,3 +479,12 @@ class Refund(models.Model):
 
     def __str__(self):
         return f"Refund #{self.id} for Order #{self.order.order_number}"
+    
+class ContactMessage(models.Model):
+    name = models.CharField(max_length=100)
+    email = models.EmailField()
+    message = models.TextField()
+    submitted_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.name} ({self.email})"

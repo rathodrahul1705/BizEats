@@ -2,14 +2,17 @@ from django.core.mail import send_mail
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-
-from api.emailer.email_notifications import send_otp_email
-from .models import User, RestaurantMaster
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
+from api.emailer.email_notifications import send_otp_email, send_contact_email
+from api.serializers import ContactUsSerializer
+from .models import ContactMessage, User, RestaurantMaster
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import IsAuthenticated
 from django.views.generic import TemplateView
 from django.views.generic import View
 from django.shortcuts import render
+
 import logging
 
 logger = logging.getLogger(__name__)
@@ -120,3 +123,27 @@ class UserProfileView(APIView):
         }
         
         return Response(user_data, status=status.HTTP_200_OK)
+
+class ContactUsView(APIView):
+    def post(self, request, *args, **kwargs):
+        serializer = ContactUsSerializer(data=request.data)
+
+        if not serializer.is_valid():
+            return Response({"errors": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+        data = serializer.validated_data
+        name = data['name']
+        email = data['email']
+        message = data['message']
+
+        logger.info(f"New Contact Message: {email} - {name}")
+
+        # Optional: Save to database
+        ContactMessage.objects.create(name=name, email=email, message=message)
+
+        # Send Email
+        send_contact_email(name, email, message)
+
+        return Response({
+            "message": "Thank you for contacting us. We’ll get back to you soon!"
+        }, status=status.HTTP_200_OK)

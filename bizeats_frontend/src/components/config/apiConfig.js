@@ -79,6 +79,10 @@ const API_ENDPOINTS = {
   TRACK: {
     TRACK_ORDER: `${BASE_URL}/order/track-order-details/`,
     ORDER_DETAILS: `${BASE_URL}/order/order-details/`,
+  },
+  
+  CONTACT: {
+    CONTACT_US: `${BASE_URL}/contact-us/`,
   }
 };
 
