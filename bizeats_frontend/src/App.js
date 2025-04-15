@@ -22,6 +22,13 @@ import OrderConfirmation from './payment/OrderConfirmation';
 import TrackOrder from './order/TrackOrder';
 import LocationRestriction from './location/LocationRestriction';
 import LoadingScreen from './location/LoadingScreen';
+import AboutUs from "./components/links/AboutUs"
+import ContactUs from "./components/links/ContactUs"
+import PrivacyPolicy from "./components/links/PrivacyPolicy"
+import TermsAndConditions from "./components/links/TermsAndConditions"
+import CancellationPolicy from "./components/links/CancellationPolicy"
+import Pricing from "./components/links/Pricing"
+
 
 const PrivateRoute = ({ children, user }) => user ? children : <Navigate to="/" />;
 
@@ -75,6 +82,14 @@ const App = () => {
         <main className="content">
           <Routes>
             <Route path="/" element={<Home currentCity={city} />} />
+            
+            <Route path="/about-us" element={<AboutUs currentCity={city} />} />
+            <Route path="/contact-us" element={<ContactUs currentCity={city} />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy currentCity={city} />} />
+            <Route path="/terms-and-conditions" element={<TermsAndConditions currentCity={city} />} />
+            <Route path="/cancellation-refund-policy" element={<CancellationPolicy currentCity={city} />} />
+            <Route path="/pricing" element={<Pricing currentCity={city} />} />
+
             <Route path="/location-restricted" element={
               <LocationRestriction error={error} onRetry={checkLocation} />
             } />

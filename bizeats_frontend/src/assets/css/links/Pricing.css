@@ -1,0 +1,82 @@
+.pricing-page {
+    font-family: 'Segoe UI', sans-serif;
+    background-color: #fff;
+    color: #333;
+    line-height: 1.7;
+  }
+  
+  .pricing-hero {
+    background-color: #000;
+    color: #fff;
+    text-align: center;
+    padding: 80px 20px 50px;
+  }
+  
+  .pricing-hero h1 {
+    color: #e65c00;
+    font-size: 36px;
+    margin-bottom: 10px;
+  }
+  
+  .pricing-hero p {
+    font-size: 15px;
+    color: #ccc;
+  }
+  
+  .pricing-content {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 50px 20px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 30px;
+  }
+  
+  .pricing-card {
+    background-color: #f9f9f9;
+    border-radius: 16px;
+    padding: 30px 25px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+    flex: 1 1 280px;
+    max-width: 300px;
+    text-align: center;
+  }
+  
+  .pricing-card h2 {
+    color: #e65c00;
+    font-size: 20px;
+    margin-bottom: 10px;
+  }
+  
+  .pricing-card .price {
+    font-size: 24px;
+    font-weight: bold;
+    margin: 15px 0;
+  }
+  
+  .pricing-card ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .pricing-card ul li {
+    margin: 10px 0;
+    font-size: 14px;
+  }
+  
+  @media (max-width: 768px) {
+    .pricing-hero h1 {
+      font-size: 28px;
+    }
+  
+    .pricing-content {
+      padding: 40px 15px;
+    }
+  
+    .pricing-card {
+      max-width: 100%;
+    }
+  }
+  

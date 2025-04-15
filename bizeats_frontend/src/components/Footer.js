@@ -22,6 +22,19 @@ const Footer = () => {
         </div>
 
         <div className="footer__section">
+          <h3 className="footer__heading">Quick Links</h3>
+          <ul className="footer__links">
+            <li><Link to="/about-us" className="footer__link">About Us</Link></li>
+            <li><Link to="/contact-us" className="footer__link">Contact Us</Link></li>
+            {/* <li><Link to="/pricing" className="footer__link">Pricing</Link></li> */}
+            <li><Link to="/privacy-policy" className="footer__link">Privacy Policy</Link></li>
+            
+            <li><Link to="/terms-and-conditions" className="footer__link">Terms & Conditions</Link></li>
+            <li><Link to="/cancellation-refund-policy" className="footer__link">Cancellation / Refund Policy</Link></li>
+          </ul>
+        </div>
+
+        <div className="footer__section">
           <h3 className="footer__heading">Connect with Us</h3>
           <div className="footer__social">
             <a href="https://www.instagram.com" className="footer__social-link" target="_blank" rel="noopener noreferrer">

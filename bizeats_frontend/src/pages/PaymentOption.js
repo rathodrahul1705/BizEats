@@ -17,12 +17,12 @@ const PaymentOption = ({ user }) => {
   let delivery_address_id = localStorage.getItem("selected_address");
 
   const paymentMethods = [
-    // { 
-    //   id: "online", 
-    //   name: "Online Payment", 
-    //   icon: <FaCreditCard />, 
-    //   description: "Pay securely with cards, UPI or wallets" 
-    // },
+    { 
+      id: "online", 
+      name: "Online Payment", 
+      icon: <FaCreditCard />, 
+      description: "Pay securely with cards, UPI or netbanking" 
+    },
     { 
       id: "cod", 
       name: "Cash on Delivery", 

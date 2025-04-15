@@ -1,0 +1,61 @@
+.cancel-policy {
+    font-family: 'Segoe UI', sans-serif;
+    background-color: #fff;
+    color: #333;
+    line-height: 1.7;
+    padding-bottom: 40px;
+  }
+  
+  .cancel-policy__hero {
+    background-color: #000;
+    color: #fff;
+    text-align: center;
+    padding: 70px 20px 50px;
+  }
+  
+  .cancel-policy__hero h1 {
+    font-size: 36px;
+    color: #e65c00;
+    margin-bottom: 10px;
+  }
+  
+  .cancel-policy__hero p {
+    font-size: 15px;
+    color: #ccc;
+  }
+  
+  .cancel-policy__container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px 20px;
+  }
+  
+  .cancel-policy__container h2 {
+    color: #e65c00;
+    margin-top: 30px;
+    font-size: 20px;
+  }
+  
+  .cancel-policy__container ul {
+    padding-left: 20px;
+  }
+  
+  .cancel-policy__container li {
+    margin-bottom: 8px;
+  }
+  
+  .cancel-policy__container a {
+    color: #e65c00;
+    text-decoration: underline;
+  }
+  
+  @media (max-width: 768px) {
+    .cancel-policy__hero h1 {
+      font-size: 28px;
+    }
+  
+    .cancel-policy__container {
+      padding: 30px 15px;
+    }
+  }
+  
