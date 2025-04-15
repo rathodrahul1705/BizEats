@@ -39,7 +39,7 @@ const TermsAndConditions = () => {
         <section>
           <h2>5. Cancellation & Refunds</h2>
           <p>
-            Please refer to our <a href="/cancellation-policy">Cancellation & Refund Policy</a> for details on cancellations and refunds.
+            Please refer to our <a href="/cancellation-refund-policy">Cancellation & Refund Policy</a> for details on cancellations and refunds.
           </p>
         </section>
 
