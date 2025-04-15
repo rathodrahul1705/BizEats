@@ -10,7 +10,7 @@ client = razorpay.Client(auth=(settings.RAZORPAY_API_KEY, settings.RAZORPAY_API_
 def create_order(request):
     try:
         data = request.data
-        amount = int(float(data['amount']) * 100)  # Convert to paise
+        amount = int(float(data['amount']))  # Convert to paise
         currency = data.get('currency', 'INR')
         
         order = client.order.create({

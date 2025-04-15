@@ -191,7 +191,7 @@ const PaymentOption = ({ user }) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          amount: restaurantOrderDetails.total_amount * 100, // Convert to paise
+          amount: restaurantOrderDetails.total_amount,
           currency: 'INR',
           receipt: `order_${Date.now()}`,
           notes: {
@@ -209,8 +209,8 @@ const PaymentOption = ({ user }) => {
       const orderData = await orderResponse.json();
       
       const options = {
-        key: process.env.REACT_APP_RAZORPAY_KEY_ID || 'rzp_test_Ler2HqmO4lVND1',
-        amount: orderData.amount.toString(),
+        key: "rzp_live_mUk0ZYQjZGCxK1",
+        amount: orderData.amount,
         currency: orderData.currency,
         name: 'Eatoor',
         description: `Order from ${restaurantOrderDetails.restaurant_name}`,
