@@ -210,7 +210,7 @@ const PaymentOption = ({ user }) => {
       const orderData = await orderRes.json();
 
       const options = {
-        key: "rzp_test_Ler2HqmO4lVND1",
+        key: "rzp_live_mUk0ZYQjZGCxK1",
         amount: orderData.amount,
         currency: orderData.currency,
         name: "Eatoor",
