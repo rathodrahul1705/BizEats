@@ -8,15 +8,15 @@ def get_order_email_content(order):
     status_messages = {
         1: {
             "subject": f"Order #{order.order_number} is pending confirmation",
-            "message": "Your order has been placed and is currently pending confirmation from the restaurant."
+            "message": f"Your order has been placed and is currently pending confirmation from the <strong>{order.restaurant.restaurant_name}</strong>."
         },
         2: {
             "subject": f"Order #{order.order_number} has been confirmed",
-            "message": "Great news! Your order has been confirmed by the restaurant and will be prepared shortly."
+            "message": f"Great news! Your order has been confirmed by the <strong>{order.restaurant.restaurant_name}</strong> and will be prepared shortly."
         },
         3: {
             "subject": f"Order #{order.order_number} is being prepared",
-            "message": "Your order is now being freshly prepared by the restaurant chef."
+            "message": f"Your order is now being freshly prepared by the <strong>{order.restaurant.restaurant_name}</strong> chef."
         },
         4: {
             "subject": f"Order #{order.order_number} is ready for delivery/pickup",
@@ -207,7 +207,7 @@ def send_order_status_email(order):
                 </tr>
             </table>
 
-            <p style="margin-top: 25px;">Thank you for using <strong>{restaurant_name}</strong> via Eatoor!</p>
+            <p style="margin-top: 25px;">Thank you for choosing <strong>{restaurant_name}</strong> via Eatoor!</p>
 
             <div class="footer">This is an automated email. Please do not reply.</div>
         </div>
