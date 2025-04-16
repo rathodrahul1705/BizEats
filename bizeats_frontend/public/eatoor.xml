@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset 
+  xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+  xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+
+  <!-- Homepage -->
+
+  <url>
+    <loc>https://www.eatoor.com/</loc>
+    <lastmod>2025-04-11</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+    <image:image>
+      <image:loc>https://www.eatoor.com/eatoorweb.svg</image:loc>
+      <image:caption>EATOOR Mobie Logo</image:caption>
+      <image:title>EATOOR</image:title>
+    </image:image>
+  </url>
+
+  <!-- Order Details Page -->
+  <url>
+    <loc>https://www.eatoor.com/order-details/EAT33233428</loc>
+    <lastmod>2025-04-10</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+    <image:image>
+      <image:loc>https://www.eatoor.com/eatoorweb.svg</image:loc>
+      <image:caption>EATOOR Website Logo</image:caption>
+      <image:title>Order RAT96933884</image:title>
+    </image:image>
+  </url>
+
+</urlset>
