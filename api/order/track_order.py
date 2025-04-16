@@ -273,3 +273,25 @@ class OrderDetails(APIView):
                 {"status": "error", "message": str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
+        
+@method_decorator(csrf_exempt, name='dispatch')
+class LiveLocationDetails(APIView):
+    """
+    Handles tracking orders for a user.
+    """
+
+    def post(self, request, *args, **kwargs):
+        try:
+            return Response({
+                "status": "success",
+                "location": {
+                    "lat": 19.196061448334195,
+                    "lng": 72.95428775304241
+                }
+            }, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response(
+                {"status": "error", "message": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
