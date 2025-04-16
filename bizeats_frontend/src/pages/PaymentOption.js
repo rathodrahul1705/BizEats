@@ -77,7 +77,6 @@ const PaymentOption = ({ user }) => {
 
   const handlePaymentSuccess = async (paymentData, razorpay_order_id) => {
     try {
-
       setPostPaymentProcessing(true);
       const storedOrder = await storeOrderDetails("online", razorpay_order_id, paymentData.razorpay_payment_id);
       if (storedOrder) {
@@ -240,10 +239,19 @@ const PaymentOption = ({ user }) => {
 
   const handleBack = () => navigate(-1);
 
-  if (!restaurantOrderDetails || postPaymentProcessing) return <StripeLoader />;
+  if (!restaurantOrderDetails) return <StripeLoader />;
 
   return (
     <div className="payment-page-container">
+      {postPaymentProcessing && (
+        <div className="overlay-loader">
+          <div className="verifying-box">
+            <div className="verify_spinner" />
+            <p>Payment Verifying...</p>
+          </div>
+        </div>
+      )}
+
       <div className="payment-header-container">
         <h1 className="page-title">Payment Details</h1>
         <button className="back-button" onClick={handleBack}>
