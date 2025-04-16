@@ -100,7 +100,7 @@ const AddressSelection = ({ onAddressSelect }) => {
 
       <button className="add-btn" onClick={() => setShowAddressForm(true)}>
         {/* <Plus size={18} /> Add Address */}
-        Add Address
+        Add Delivery Address
       </button>
 
       {showAddressForm && (
@@ -112,7 +112,7 @@ const AddressSelection = ({ onAddressSelect }) => {
           className="proceed-btn"
           onClick={() => onAddressSelect(selectedAddress, selectedFullAddress)}
         >
-          Select or Add
+          Confirm Address & Proceed
         </button>
       )}
     </div>
