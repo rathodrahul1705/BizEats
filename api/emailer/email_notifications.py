@@ -4,6 +4,48 @@ from api.models import Cart, Order, RestaurantMenu, User, UserDeliveryAddress
 from decimal import Decimal
 from decouple import config
 
+def get_order_email_content(order):
+    status_messages = {
+        1: {
+            "subject": f"Order #{order.order_number} is pending confirmation",
+            "message": "Your order has been placed and is currently pending confirmation from the restaurant."
+        },
+        2: {
+            "subject": f"Order #{order.order_number} has been confirmed",
+            "message": "Great news! Your order has been confirmed by the restaurant and will be prepared shortly."
+        },
+        3: {
+            "subject": f"Order #{order.order_number} is being prepared",
+            "message": "Your order is now being freshly prepared by the restaurant chef."
+        },
+        4: {
+            "subject": f"Order #{order.order_number} is ready for delivery/pickup",
+            "message": "Your food is ready! It will soon be picked up or delivered."
+        },
+        5: {
+            "subject": f"Order #{order.order_number} is on the way",
+            "message": "Hang tight! Your order is on its way to your doorstep."
+        },
+        6: {
+            "subject": f"Order #{order.order_number} has been delivered",
+            "message": "Enjoy your meal! Your order has been successfully delivered."
+        },
+        7: {
+            "subject": f"Order #{order.order_number} has been cancelled",
+            "message": "Unfortunately, your order has been cancelled. Please contact support if you have any questions."
+        },
+        8: {
+            "subject": f"Order #{order.order_number} has been refunded",
+            "message": "Your order has been refunded. The amount will reflect in your account soon."
+        },
+    }
+
+    return status_messages.get(order.status, {
+        "subject": f"Order #{order.order_number} status update",
+        "message": "There is an update regarding your order. Please check your order details."
+    })
+
+
 def send_order_status_email(order):
     user = User.objects.filter(id=order.user_id).first()
     cart_items = Cart.objects.filter(order_number=order.order_number)
@@ -40,10 +82,10 @@ def send_order_status_email(order):
     delivery_fee = Decimal("0.00")
     grand_total = subtotal + handling_fee + delivery_fee
 
-    subject = f"Order #{order.order_number} has been {order.get_status_display()}"
+    email_content = get_order_email_content(order)
+    subject = email_content["subject"]
+    message_text = email_content["message"]
     restaurant_name = order.restaurant.restaurant_name
-    order_status = order.get_status_display().lower()
-    order_number = order.order_number
 
     html_message = f"""
     <html>
@@ -66,10 +108,10 @@ def send_order_status_email(order):
             }}
             .header {{
                 text-align: center;
-                font-size: 24px;
-                font-weight: bold;
-                color: #ff6600;
                 margin-bottom: 10px;
+            }}
+            .header img {{
+                max-height: 60px;
             }}
             .sub-header {{
                 text-align: center;
@@ -125,11 +167,13 @@ def send_order_status_email(order):
     </head>
     <body>
         <div class="container">
-            <div class="header">Eatoor</div>
+            <div class="header">
+                <img src="https://eatoor.com/eatoorweb.png" alt="Eatoor Logo">
+            </div>
             <div class="sub-header">Order Update Notification</div>
 
             <p>Greetings from Eatoor</p>
-            <p>Your Order id: <strong>#{order_number}</strong> has been <strong>{order_status}</strong>.</p>
+            <p>{message_text}</p>
 
             <div class="track-button">
                 <a href="{config("REACT_APP_BASE_URL")}/track-order">Track Your Order</a>
@@ -171,7 +215,6 @@ def send_order_status_email(order):
     </html>
     """
 
-    # Send to both customer and restaurant owner
     recipient_list = [user.email, order.restaurant.owner_details.owner_email_address]
 
     send_mail(
@@ -182,6 +225,7 @@ def send_order_status_email(order):
         html_message=html_message,
         fail_silently=False,
     )
+
 
 
 

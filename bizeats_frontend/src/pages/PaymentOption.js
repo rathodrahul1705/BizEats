@@ -209,7 +209,7 @@ const PaymentOption = ({ user }) => {
       const orderData = await orderRes.json();
 
       const options = {
-        key: "rzp_live_mUk0ZYQjZGCxK1",
+        key: "rzp_test_Ler2HqmO4lVND1",
         amount: orderData.amount,
         currency: orderData.currency,
         name: "Eatoor",
@@ -281,7 +281,7 @@ const PaymentOption = ({ user }) => {
           </div>
         </div>
 
-        <div className="order-summary-card">
+        <div className="order-summary-card_payment">
           <h3>Order Summary</h3>
           <div className="order-details">
             <p><span>⏱</span> Estimated delivery: 30-45 mins</p>

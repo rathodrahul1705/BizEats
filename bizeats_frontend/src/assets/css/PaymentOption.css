@@ -117,7 +117,7 @@
 }
 
 /* Order Summary Card */
-.order-summary-card {
+.order-summary-card_payment {
   background: #fff;
   padding: 20px;
   border-radius: 12px;
@@ -126,7 +126,7 @@
   border-left: 4px solid #e65c00;
 }
 
-.order-summary-card h3 {
+.order-summary-card_payment h3 {
   font-size: 18px;
   font-weight: 600;
   margin-bottom: 12px;
@@ -222,7 +222,7 @@
 }
 
 .method-info p {
-  font-size: 13px;
+  font-size: 12px;
   color: #666;
   margin: 0;
 }
@@ -314,7 +314,7 @@
     font-size: 20px;
   }
   
-  .order-summary-card {
+  .order-summary-card_payment {
     padding: 16px;
   }
   
