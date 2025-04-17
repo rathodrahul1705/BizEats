@@ -3,7 +3,7 @@ import { X } from "lucide-react";
 import { MapContainer, TileLayer, Marker } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
-import "../assets/css/AddressSelection.css";
+import "../assets/css/AddressForm.css";
 import API_ENDPOINTS from "../components/config/apiConfig";
 import fetchData from "../components/services/apiService";
 
@@ -28,6 +28,7 @@ const AddressForm = ({ onClose, onSave }) => {
 
   const [markerPosition, setMarkerPosition] = useState(null);
   const [errors, setErrors] = useState({ street: "", zip: "" });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleMapChange = (e) => {
     const latlng = e.target ? e.target.getLatLng() : e.latlng;
@@ -61,7 +62,6 @@ const AddressForm = ({ onClose, onSave }) => {
     query = query.replace(/[^\x20-\x7E]/g, "");
 
     const apiKey = "cVMkjEbmY4Qu0FfAbUOa7CWfzUOyR00wMNS6F7hT";
-
     if (!query.trim()) return null;
 
     try {
@@ -73,7 +73,6 @@ const AddressForm = ({ onClose, onSave }) => {
       });
 
       const data = await response.json();
-
       if (data?.geocodingResults?.length > 0) {
         const location = data.geocodingResults[0].geometry.location;
         return {
@@ -110,12 +109,14 @@ const AddressForm = ({ onClose, onSave }) => {
     }
 
     setErrors(validationErrors);
-
     if (!isValid) return;
 
+    setIsSubmitting(true);
     const geoCodeResponse = await handleOlaGeocode();
-
-    if (!geoCodeResponse) return;
+    if (!geoCodeResponse) {
+      setIsSubmitting(false);
+      return;
+    }
 
     try {
       const payload = {
@@ -147,6 +148,8 @@ const AddressForm = ({ onClose, onSave }) => {
       }
     } catch (error) {
       console.error("Error saving address:", error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -204,71 +207,73 @@ const AddressForm = ({ onClose, onSave }) => {
         </MapContainer>
       </div>
 
-      <input
-        type="text"
-        placeholder="Street Address"
-        value={newAddress.street}
-        onChange={(e) => handleInputChange("street", e.target.value)}
-        className={`address-input ${errors.street ? "error" : ""}`}
-      />
-      {errors.street && <span className="error-message">{errors.street}</span>}
+      <div className="address-form-scroll">
+        <input
+          type="text"
+          placeholder="Street Address"
+          value={newAddress.street}
+          onChange={(e) => handleInputChange("street", e.target.value)}
+          className={`address-input ${errors.street ? "error" : ""}`}
+        />
+        {errors.street && <span className="error-message">{errors.street}</span>}
 
-      <input
-        type="text"
-        placeholder="City"
-        value={newAddress.city}
-        onChange={(e) => handleInputChange("city", e.target.value)}
-        className="address-input"
-      />
+        <input
+          type="text"
+          placeholder="City"
+          value={newAddress.city}
+          onChange={(e) => handleInputChange("city", e.target.value)}
+          className="address-input"
+        />
 
-      <input
-        type="text"
-        placeholder="State"
-        value={newAddress.state}
-        onChange={(e) => handleInputChange("state", e.target.value)}
-        className="address-input"
-      />
+        <input
+          type="text"
+          placeholder="State"
+          value={newAddress.state}
+          onChange={(e) => handleInputChange("state", e.target.value)}
+          className="address-input"
+        />
 
-      <input
-        type="text"
-        placeholder="Zip Code"
-        value={newAddress.zip}
-        onChange={(e) => handleInputChange("zip", e.target.value)}
-        maxLength={6}
-        className={`address-input ${errors.zip ? "error" : ""}`}
-        onInput={(e) => (e.target.value = e.target.value.replace(/\D/g, ""))}
-      />
-      {errors.zip && <span className="error-message">{errors.zip}</span>}
+        <input
+          type="text"
+          placeholder="Zip Code"
+          value={newAddress.zip}
+          onChange={(e) => handleInputChange("zip", e.target.value)}
+          maxLength={6}
+          className={`address-input ${errors.zip ? "error" : ""}`}
+          onInput={(e) => (e.target.value = e.target.value.replace(/\D/g, ""))}
+        />
+        {errors.zip && <span className="error-message">{errors.zip}</span>}
 
-      <input
-        type="text"
-        placeholder="Country"
-        value={newAddress.country}
-        onChange={(e) => handleInputChange("country", e.target.value)}
-        className="address-input"
-      />
+        <input
+          type="text"
+          placeholder="Country"
+          value={newAddress.country}
+          onChange={(e) => handleInputChange("country", e.target.value)}
+          className="address-input"
+        />
 
-      <input
-        type="text"
-        placeholder="Landmark"
-        value={newAddress.landmark}
-        onChange={(e) => handleInputChange("landmark", e.target.value)}
-        className="address-input"
-      />
+        <input
+          type="text"
+          placeholder="Landmark"
+          value={newAddress.landmark}
+          onChange={(e) => handleInputChange("landmark", e.target.value)}
+          className="address-input"
+        />
 
-      <select
-        value={newAddress.addressType}
-        onChange={(e) => handleInputChange("addressType", e.target.value)}
-        className="address-input"
-      >
-        <option value="Home">Home</option>
-        <option value="Office">Office</option>
-        <option value="Other">Other</option>
-      </select>
+        <select
+          value={newAddress.addressType}
+          onChange={(e) => handleInputChange("addressType", e.target.value)}
+          className="address-input"
+        >
+          <option value="Home">Home</option>
+          <option value="Office">Office</option>
+          <option value="Other">Other</option>
+        </select>
 
-      <button className="submit-btn" onClick={handleSave}>
-        Submit
-      </button>
+        <button className="submit-btn" onClick={handleSave} disabled={isSubmitting}>
+          {isSubmitting ? "Saving..." : "Submit"}
+        </button>
+      </div>
     </div>
   );
 };
