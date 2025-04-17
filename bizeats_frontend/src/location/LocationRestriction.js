@@ -4,29 +4,27 @@ import "../assets/css/LocationRestriction.css";
 const LocationRestriction = ({ error, onRetry }) => {
   return (
     <div className="location-restriction-container">
-      <div className="error-icon">!</div>
-      
-      <h2 className="restriction-title">Service Not Available</h2>
-      
+      <div className="error-icon">😕</div>
+
+      <h2 className="restriction-title">Oopsie Daisy! 🐣</h2>
+
       <p className="restriction-message">
-        {error || "Currently, our services are only available in Thane."}
+        {error || "Looks like you’ve ventured outside our delicious delivery zone."}
       </p>
-      
-      <div className="location-icon">📍</div>
-      
+
       <p className="restriction-instruction">
-        Please enable location services or check if you're within our service area.
+        Our services currently only operate in <strong>Thane Maharashtra</strong>. Hop back in the tasty zone!
       </p>
-      
+
       <button
         className="retry-button"
         onClick={onRetry}
       >
-        Check Location Again
+        Try My Luck Again 🔄
       </button>
-      
+
       <p className="contact-support">
-        If you believe this is an error, please contact our support team.
+        Think this is a mistake? Our friendly support unicorns are on standby 🦄✨
       </p>
     </div>
   );
