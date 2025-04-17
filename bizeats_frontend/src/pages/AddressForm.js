@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { X } from "lucide-react";
+import { X, ChevronDown, ChevronUp } from "lucide-react";
 import { MapContainer, TileLayer, Marker } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
@@ -29,6 +29,7 @@ const AddressForm = ({ onClose, onSave }) => {
   const [markerPosition, setMarkerPosition] = useState(null);
   const [errors, setErrors] = useState({ street: "", zip: "" });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showMap, setShowMap] = useState(false);
 
   const handleMapChange = (e) => {
     const latlng = e.target ? e.target.getLatLng() : e.latlng;
@@ -165,6 +166,10 @@ const AddressForm = ({ onClose, onSave }) => {
     }
   };
 
+  const toggleMap = () => {
+    setShowMap(!showMap);
+  };
+
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
@@ -182,6 +187,11 @@ const AddressForm = ({ onClose, onSave }) => {
     );
   }, []);
 
+  useEffect(() => {
+    document.body.classList.add("modal-open");
+    return () => document.body.classList.remove("modal-open");
+  }, []);
+
   if (!markerPosition) return <p>Loading map...</p>;
 
   return (
@@ -191,12 +201,21 @@ const AddressForm = ({ onClose, onSave }) => {
         <X size={22} className="close-icon" onClick={onClose} />
       </div>
 
-      <div className="map-container">
+      <div className="map-toggle" onClick={toggleMap}>
+        {showMap ? (
+          <ChevronUp size={20} className="toggle-icon" />
+        ) : (
+          <ChevronDown size={20} className="toggle-icon" />
+        )}
+        <span>{showMap ? "Hide Map" : "View Map"}</span>
+      </div>
+
+      <div className={`map-container ${showMap ? "visible" : ""}`}>
         <MapContainer
           center={markerPosition}
           zoom={15}
           scrollWheelZoom={true}
-          style={{ width: "100%", height: "150px" }}
+          style={{ width: "100%", height: "100%" }}
         >
           <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
           <Marker
@@ -207,7 +226,7 @@ const AddressForm = ({ onClose, onSave }) => {
         </MapContainer>
       </div>
 
-      <div className="address-form-scroll">
+      <div className={`address-form-scroll ${showMap ? "with-map" : ""}`}>
         <input
           type="text"
           placeholder="Street Address"
