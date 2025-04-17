@@ -190,8 +190,8 @@ const RestaurantRegistration = ({user, setUser}) => {
 
 
   const handleOlaGeocode = async () => {
-    const { shopNoBuilding, areaSectorLocality, city, state, zip, country } = restaurantLocation;
-    let query = [shopNoBuilding, areaSectorLocality, city, state, zip, country].filter(Boolean).join(", ");
+    const { shopNoBuilding, floorTower, areaSectorLocality, city, state, zip, country } = restaurantLocation;
+    let query = [shopNoBuilding, floorTower, areaSectorLocality, city, state, zip, country].filter(Boolean).join(", ");
   
     // Remove non-English characters to prevent API errors
     query = query.replace(/[^\x20-\x7E]/g, "");
