@@ -26,51 +26,84 @@ const AddressForm = ({ onClose, onSave }) => {
     addressType: "Home",
   });
 
-  const [markerPosition, setMarkerPosition] = useState({ lat: 28.6139, lng: 77.2090 });
-  const [errors, setErrors] = useState({
-    street: "",
-    zip: "",
-  });
+  const [markerPosition, setMarkerPosition] = useState(null);
+  const [errors, setErrors] = useState({ street: "", zip: "" });
 
-  // Handle map click or drag event
   const handleMapChange = (e) => {
     const latlng = e.target ? e.target.getLatLng() : e.latlng;
     setMarkerPosition(latlng);
-
-    fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latlng.lat}&lon=${latlng.lng}`)
-      .then((res) => res.json())
-      .then((data) => {
-        const addr = data.address || {};
-        setNewAddress((prev) => ({
-          ...prev,
-          street: addr.road || "",
-          city: addr.city || addr.town || addr.village || "",
-          state: addr.state || "",
-          zip: addr.postcode || "",
-          country: addr.country || "",
-          landmark: addr.neighbourhood || "",
-        }));
-      })
-      .catch((err) => console.error("Reverse geocoding error:", err));
+    reverseGeocode(latlng.lat, latlng.lng);
   };
 
-  // Handle save
+  const reverseGeocode = async (lat, lng) => {
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`);
+      const data = await res.json();
+      const addr = data.address || {};
+
+      setNewAddress((prev) => ({
+        ...prev,
+        street: addr.road || "",
+        city: addr.city || addr.town || addr.village || "",
+        state: addr.state || "",
+        zip: addr.postcode || "",
+        country: addr.country || "",
+        landmark: addr.neighbourhood || "",
+      }));
+    } catch (err) {
+      console.error("Reverse geocoding error:", err);
+    }
+  };
+
+  const handleOlaGeocode = async () => {
+    const { street, city, state, zip, country } = newAddress;
+    let query = [street, city, state, zip, country].filter(Boolean).join(", ");
+    query = query.replace(/[^\x20-\x7E]/g, "");
+
+    const apiKey = "cVMkjEbmY4Qu0FfAbUOa7CWfzUOyR00wMNS6F7hT";
+
+    if (!query.trim()) return null;
+
+    try {
+      const url = `https://api.olamaps.io/places/v1/geocode?address=${encodeURIComponent(query)}&language=en&api_key=${apiKey}`;
+      const response = await fetch(url, {
+        headers: {
+          "X-Request-Id": Date.now().toString(),
+        },
+      });
+
+      const data = await response.json();
+
+      if (data?.geocodingResults?.length > 0) {
+        const location = data.geocodingResults[0].geometry.location;
+        return {
+          lat: parseFloat(location.lat),
+          lng: parseFloat(location.lng),
+        };
+      } else {
+        alert("No location found for the entered address.");
+        return null;
+      }
+    } catch (err) {
+      console.error("Ola Maps geocoding error:", err);
+      alert("Something went wrong while fetching the location.");
+      return null;
+    }
+  };
+
   const handleSave = async () => {
     const { street, city, state, zip, country, landmark, addressType } = newAddress;
     let isValid = true;
     let validationErrors = { street: "", zip: "" };
 
-    // Ensure the fields are not undefined or null before calling .trim()
-    const streetValue = street ? street.trim() : "";
-    const zipValue = zip ? zip.trim() : "";
+    const streetValue = street?.trim();
+    const zipValue = zip?.trim();
 
-    // Validate Street and Zip
     if (!streetValue) {
       validationErrors.street = "Street address is required";
       isValid = false;
     }
 
-    // Updated regex to validate 6-digit zip code
     if (!zipValue || !/^\d{6}$/.test(zipValue)) {
       validationErrors.zip = "Valid Zip Code (6 digits) is required";
       isValid = false;
@@ -78,37 +111,45 @@ const AddressForm = ({ onClose, onSave }) => {
 
     setErrors(validationErrors);
 
-    if (isValid) {
-      try {
-        const payload = {
-          street_address: streetValue,
-          user: 1,
-          city: city,
-          state: state,
-          zip_code: zipValue,
-          country: country,
-          near_by_landmark: landmark,
-          home_type: addressType,
-          latitude: null,
-          longitude: null,
-          is_default: true,
-        };
+    if (!isValid) return;
 
-        const response = await fetchData(API_ENDPOINTS.ORDER.USER_ADDRESS_STORE, "POST", payload, localStorage.getItem("access"));
+    const geoCodeResponse = await handleOlaGeocode();
 
-        if (response) {
-          localStorage.setItem("selected_address", response?.id);
-          localStorage.setItem("user_full_address", response.full_address);
-          onSave(response.full_address);
-          onClose();
-        }
-      } catch (error) {
-        console.error("Error:", error);
+    if (!geoCodeResponse) return;
+
+    try {
+      const payload = {
+        street_address: streetValue,
+        user: 1,
+        city,
+        state,
+        zip_code: zipValue,
+        country,
+        near_by_landmark: landmark,
+        home_type: addressType,
+        latitude: geoCodeResponse.lat,
+        longitude: geoCodeResponse.lng,
+        is_default: true,
+      };
+
+      const response = await fetchData(
+        API_ENDPOINTS.ORDER.USER_ADDRESS_STORE,
+        "POST",
+        payload,
+        localStorage.getItem("access")
+      );
+
+      if (response) {
+        localStorage.setItem("selected_address", response?.id);
+        localStorage.setItem("user_full_address", response.full_address);
+        onSave(response.full_address);
+        onClose();
       }
+    } catch (error) {
+      console.error("Error saving address:", error);
     }
   };
 
-  // Handle user input to hide errors on valid input
   const handleInputChange = (field, value) => {
     setNewAddress((prev) => ({ ...prev, [field]: value }));
 
@@ -122,18 +163,23 @@ const AddressForm = ({ onClose, onSave }) => {
   };
 
   useEffect(() => {
-    fetch('https://ipapi.co/json/')
-      .then(res => res.json())
-      .then(data => {
-        setNewAddress({
-          country: data.country_name,
-          state: data.state,
-          city: data.city,
-          state: data.region,
-        });
-      })
-      .catch(err => console.error('Failed to get location:', err));
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const coords = {
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+        };
+        setMarkerPosition(coords);
+        reverseGeocode(coords.lat, coords.lng);
+      },
+      (err) => {
+        console.error("Geolocation error:", err);
+        setMarkerPosition({ lat: 28.6139, lng: 77.2090 }); // Default: Delhi
+      }
+    );
   }, []);
+
+  if (!markerPosition) return <p>Loading map...</p>;
 
   return (
     <div className="slide-panel open">
@@ -142,15 +188,22 @@ const AddressForm = ({ onClose, onSave }) => {
         <X size={22} className="close-icon" onClick={onClose} />
       </div>
 
-      {/* Map */}
       <div className="map-container">
-        <MapContainer center={markerPosition} zoom={15} scrollWheelZoom={true} style={{ width: "100%", height: "300px" }}>
+        <MapContainer
+          center={markerPosition}
+          zoom={15}
+          scrollWheelZoom={true}
+          style={{ width: "100%", height: "300px" }}
+        >
           <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-          <Marker position={markerPosition} draggable={true} eventHandlers={{ dragend: handleMapChange }} />
+          <Marker
+            position={markerPosition}
+            draggable={true}
+            eventHandlers={{ dragend: handleMapChange }}
+          />
         </MapContainer>
       </div>
 
-      {/* Address Inputs */}
       <input
         type="text"
         placeholder="Street Address"
@@ -183,7 +236,7 @@ const AddressForm = ({ onClose, onSave }) => {
         onChange={(e) => handleInputChange("zip", e.target.value)}
         maxLength={6}
         className={`address-input ${errors.zip ? "error" : ""}`}
-        onInput={(e) => e.target.value = e.target.value.replace(/\D/g, '')}  // Only allows digits
+        onInput={(e) => (e.target.value = e.target.value.replace(/\D/g, ""))}
       />
       {errors.zip && <span className="error-message">{errors.zip}</span>}
 
@@ -213,7 +266,9 @@ const AddressForm = ({ onClose, onSave }) => {
         <option value="Other">Other</option>
       </select>
 
-      <button className="submit-btn" onClick={handleSave}>Submit</button>
+      <button className="submit-btn" onClick={handleSave}>
+        Submit
+      </button>
     </div>
   );
 };

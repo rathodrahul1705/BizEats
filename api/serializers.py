@@ -2,7 +2,7 @@ import uuid
 from rest_framework import serializers
 from django.db.models import Avg
 from django.contrib.auth import get_user_model
-from .models import Order, RestaurantMaster, RestaurantOwnerDetail, RestaurantLocation, RestaurantCuisine, RestaurantDeliveryTiming, RestaurantDocuments, RestaurantMenu, UserDeliveryAddress
+from .models import Order, RestaurantMaster, RestaurantOwnerDetail, RestaurantLocation, RestaurantCuisine, RestaurantDeliveryTiming, RestaurantDocuments, RestaurantMenu, UserDeliveryAddress, OrderLiveLocation
 
 User = get_user_model()
 
@@ -33,7 +33,7 @@ class RestaurantOwnerDetailSerializer(serializers.ModelSerializer):
 class RestaurantLocationSerializer(serializers.ModelSerializer):
     class Meta:
         model = RestaurantLocation
-        fields = ['restaurant_id', 'shop_no_building', 'floor_tower', 'area_sector_locality', 'city', 'nearby_locality']
+        fields = ['restaurant_id', 'shop_no_building', 'floor_tower', 'area_sector_locality', 'city', 'nearby_locality','latitude','longitude']
 
 class CuisineSerializer(serializers.Serializer):
     cuisine_name = serializers.CharField()
@@ -130,6 +130,8 @@ class RestaurantMasterSerializer(serializers.ModelSerializer):
         location_instance.area_sector_locality = location_data.get('area_sector_locality', location_instance.area_sector_locality)
         location_instance.city = location_data.get('city', location_instance.city)
         location_instance.nearby_locality = location_data.get('nearby_locality', location_instance.nearby_locality)
+        location_instance.latitude = location_data.get('latitude', location_instance.latitude)
+        location_instance.longitude = location_data.get('longitude', location_instance.longitude)
         location_instance.save()
 
         return instance
@@ -252,3 +254,8 @@ class ContactUsSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=100)
     email = serializers.EmailField()
     message = serializers.CharField()
+
+class OrderLiveLocationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OrderLiveLocation
+        fields = ['order', 'latitude', 'longitude']

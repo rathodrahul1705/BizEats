@@ -188,36 +188,89 @@ const RestaurantRegistration = ({user, setUser}) => {
   const handleNextStep = () => setStep((prev) => (prev < steps.length ? prev + 1 : prev));
   const handlePrevStep = () => setStep((prev) => (prev > 1 ? prev - 1 : prev));
 
-const handleSubmitStep1 = async () => {
-  try {
-    const payload = {
-      restaurant_name: restaurantName,
-      owner_details: {
-        owner_name: ownerDetails.fullName,
-        owner_email_address: ownerDetails.email,
-        owner_contact: ownerDetails.phone,
-        owner_primary_contact: ownerDetails.primaryContactNumber,
-      },
-      restaurant_location: {
-        shop_no_building: restaurantLocation.shopNoBuilding,
-        floor_tower: restaurantLocation.floorTower,
-        area_sector_locality: restaurantLocation.areaSectorLocality,
-        city: restaurantLocation.city,
-        nearby_locality: restaurantLocation.nearbyLocality,
-      },
-    };
-    
-    const response = await fetchData(API_ENDPOINTS.RESTAURANT.STEP_ONE(restaurant_id ? restaurant_id : restaurantId), "POST", payload, localStorage.getItem("access"));
 
-    if (response) {
-      setrestaurantId(response?.restaurant_id);
-      localStorage.setItem("is_restaurant_register", JSON.stringify(true))
-      handleNextStep();
+  const handleOlaGeocode = async () => {
+    const { shopNoBuilding, areaSectorLocality, city, state, zip, country } = restaurantLocation;
+    let query = [shopNoBuilding, areaSectorLocality, city, state, zip, country].filter(Boolean).join(", ");
+  
+    // Remove non-English characters to prevent API errors
+    query = query.replace(/[^\x20-\x7E]/g, "");
+  
+    const apiKey = "cVMkjEbmY4Qu0FfAbUOa7CWfzUOyR00wMNS6F7hT";
+  
+    if (!query.trim()) return null;
+  
+    try {
+      const url = `https://api.olamaps.io/places/v1/geocode?address=${encodeURIComponent(query)}&language=en&api_key=${apiKey}`;
+      const response = await fetch(url, {
+        headers: {
+          "X-Request-Id": Date.now().toString(),
+        },
+      });
+  
+      const data = await response.json();
+  
+      if (data?.geocodingResults?.length > 0) {
+        const location = data.geocodingResults[0].geometry.location;
+  
+        const latlng = {
+          latitude: parseFloat(location.lat),
+          longitude: parseFloat(location.lng),
+        };
+  
+        return latlng;
+      } else {
+        alert("No location found for the entered address.");
+        return null;
+      }
+    } catch (err) {
+      console.error("Ola Maps geocoding error:", err);
+      alert("Something went wrong while fetching the location.");
+      return null;
     }
-  } catch (error) {
-    console.error("Error:", error);
-  }
-};
+  };
+  
+  const handleSubmitStep1 = async () => {
+    try {
+      const geocodedLocation = await handleOlaGeocode();
+
+      if (!geocodedLocation) return; // Don't proceed if geocoding failed
+  
+      const payload = {
+        restaurant_name: restaurantName,
+        owner_details: {
+          owner_name: ownerDetails.fullName,
+          owner_email_address: ownerDetails.email,
+          owner_contact: ownerDetails.phone,
+          owner_primary_contact: ownerDetails.primaryContactNumber,
+        },
+        restaurant_location: {
+          shop_no_building: restaurantLocation.shopNoBuilding,
+          floor_tower: restaurantLocation.floorTower,
+          area_sector_locality: restaurantLocation.areaSectorLocality,
+          city: restaurantLocation.city,
+          nearby_locality: restaurantLocation.nearbyLocality,
+          latitude: geocodedLocation.latitude,
+          longitude: geocodedLocation.longitude, // Include the lat/lng if needed
+        },
+      };
+      
+      const response = await fetchData(
+        API_ENDPOINTS.RESTAURANT.STEP_ONE(restaurant_id || restaurantId),
+        "POST",
+        payload,
+        localStorage.getItem("access")
+      );
+  
+      if (response) {
+        setrestaurantId(response?.restaurant_id);
+        localStorage.setItem("is_restaurant_register", JSON.stringify(true));
+        handleNextStep();
+      }
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  };  
 
 const handleSubmitStep2 = async () => {
   try {

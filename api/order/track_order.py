@@ -6,15 +6,16 @@ from django.utils.decorators import method_decorator
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, generics, permissions
-from api.models import Cart, Order, OrderStatusLog, RestaurantMenu, User, UserDeliveryAddress
+from api.models import Cart, Order, OrderStatusLog, RestaurantLocation, RestaurantMenu, User, UserDeliveryAddress, OrderLiveLocation
 import json
 from django.db import transaction
 from django.db.models import Q 
 from django.db.models import Sum, Count
 from django.db.models.functions import Coalesce
-from api.serializers import OrderPlacementSerializer
+from api.serializers import OrderPlacementSerializer, OrderLiveLocationSerializer
 from api.emailer.email_notifications import send_order_status_email
 from decouple import config
+from django.utils import timezone
 
 @method_decorator(csrf_exempt, name='dispatch')
 class TrackOrder(APIView):
@@ -273,7 +274,7 @@ class OrderDetails(APIView):
                 {"status": "error", "message": str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
-        
+
 @method_decorator(csrf_exempt, name='dispatch')
 class LiveLocationDetails(APIView):
     """
@@ -282,16 +283,114 @@ class LiveLocationDetails(APIView):
 
     def post(self, request, *args, **kwargs):
         try:
+            order_id = request.data.get("order_id")
+            if not order_id:
+                return Response(
+                    {"status": "error", "message": "order_id is required."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Get the order
+            order = Order.objects.select_related("delivery_address", "restaurant").get(order_number=order_id)
+            live_location = OrderLiveLocation.objects.filter(order_number=order_id).order_by("-timestamp").first()
+            delivery_address = order.delivery_address
+            restaurant = order.restaurant
+
+            # Get restaurant location from related RestaurantLocation model
+            try:
+                restaurant_location = restaurant.restaurant_location
+            except RestaurantLocation.DoesNotExist:
+                return Response(
+                    {"status": "error", "message": "Restaurant location not found."},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+            # Validate delivery address location
+            if not delivery_address or not delivery_address.latitude or not delivery_address.longitude:
+                return Response(
+                    {"status": "error", "message": "Delivery address location not found."},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+            # Cycle through dummy coordinates to simulate movement
+            if live_location:
+                live_location_latitude = live_location.latitude
+                live_location_longitude = live_location.longitude
+            else:
+                live_location_latitude = None
+                live_location_longitude = None
+                
             return Response({
                 "status": "success",
-                "location": {
-                    "lat": 19.196061448334195,
-                    "lng": 72.95428775304241
+                "user_destination": {
+                    "lat": delivery_address.latitude,
+                    "lng": delivery_address.longitude,
+                },
+                "restaurant_location": {
+                    "lat": restaurant_location.latitude,
+                    "lng": restaurant_location.longitude,
+                },
+                "deliver_agent_location": {
+                    "lat": live_location_latitude,
+                    "lng": live_location_longitude,
                 }
             }, status=status.HTTP_200_OK)
 
+        except Order.DoesNotExist:
+            return Response(
+                {"status": "error", "message": "Order not found."},
+                status=status.HTTP_404_NOT_FOUND
+            )
         except Exception as e:
             return Response(
                 {"status": "error", "message": str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
+
+@method_decorator(csrf_exempt, name='dispatch')
+class UpdateOrderLiveLocationView(APIView):
+    """
+    API endpoint to receive and store/update live location updates from restaurant during delivery.
+    """
+
+    def post(self, request, *args, **kwargs):
+        try:
+            order_number = request.data.get("order_number")
+            latitude = request.data.get("latitude")
+            longitude = request.data.get("longitude")
+
+            if not order_number or latitude is None or longitude is None:
+                return Response({
+                    "status": "error",
+                    "message": "order_number, latitude, and longitude are required."
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            # Check if a live location entry exists
+            live_location = OrderLiveLocation.objects.filter(order_number=order_number).order_by("-timestamp").first()
+
+            if live_location:
+                # Update the latest location
+                live_location.latitude = latitude
+                live_location.longitude = longitude
+                live_location.timestamp = timezone.now()
+                live_location.save()
+                message = "Live location updated successfully."
+            else:
+                # Create a new one
+                OrderLiveLocation.objects.create(
+                    order_number=order_number,
+                    latitude=latitude,
+                    longitude=longitude,
+                )
+                message = "Live location created successfully."
+
+            return Response({
+                "status": "success",
+                "message": message
+            }, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response({
+                "status": "error",
+                "message": str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

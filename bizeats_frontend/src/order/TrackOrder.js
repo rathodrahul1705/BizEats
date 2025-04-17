@@ -1,4 +1,3 @@
-// TrackOrder.js
 import React, { useEffect, useState, useRef } from "react";
 import {
   MapContainer,
@@ -38,7 +37,7 @@ const kitchenIcon = L.divIcon({
   iconAnchor: [16, 32],
 });
 
-function RoutingWithLiveBike({ from, to, orderId }) {
+function RoutingWithLiveBike({ from, to, orderId, setDuration }) {
   const map = useMap();
   const bikeMarkerRef = useRef(null);
   const routeRef = useRef(null);
@@ -56,11 +55,17 @@ function RoutingWithLiveBike({ from, to, orderId }) {
     const fetchLiveLocation = async () => {
       try {
         const res = await fetchData(API_ENDPOINTS.TRACK.ORDER_LIVE_LOCATION, "POST", { order_id: orderId });
-        if (res.status === "success" && res.location) {
-          const latLng = L.latLng(res.location.lat, res.location.lng);
+        if (res.status === "success" && res.deliver_agent_location) {
+          const { lat, lng } = res.deliver_agent_location;
+
+          if (!lat || !lng || isNaN(parseFloat(lat)) || isNaN(parseFloat(lng))) return;
+
+          const latLng = L.latLng(parseFloat(lat), parseFloat(lng));
+
           if (!bikeMarkerRef.current) {
             const marker = L.marker(latLng, { icon: bikeIcon }).addTo(map);
             bikeMarkerRef.current = marker;
+
             if (!routeRef.current) {
               routeRef.current = L.Routing.control({
                 waypoints: [L.latLng(from), L.latLng(to)],
@@ -70,7 +75,13 @@ function RoutingWithLiveBike({ from, to, orderId }) {
                 draggableWaypoints: false,
                 fitSelectedRoutes: true,
                 show: false,
-              }).addTo(map);
+              })
+                .on("routesfound", (e) => {
+                  const durationInSeconds = e.routes[0].summary.totalTime;
+                  const adjustedDurationInMinutes = Math.round((durationInSeconds / 60) * 3);
+                  setDuration(adjustedDurationInMinutes);
+                })
+                .addTo(map);
             }
           } else {
             bikeMarkerRef.current.setLatLng(latLng);
@@ -86,10 +97,16 @@ function RoutingWithLiveBike({ from, to, orderId }) {
 
     return () => {
       clearInterval(interval);
-      if (bikeMarkerRef.current) map.removeLayer(bikeMarkerRef.current);
-      if (routeRef.current) map.removeControl(routeRef.current);
+      if (bikeMarkerRef.current && map?.removeLayer) {
+        map.removeLayer(bikeMarkerRef.current);
+      }
+      if (routeRef.current && map?.removeControl) {
+        map.removeControl(routeRef.current);
+      }
+      bikeMarkerRef.current = null;
+      routeRef.current = null;
     };
-  }, [map, from, to, orderId]);
+  }, [map, from, to, orderId, setDuration]);
 
   return null;
 }
@@ -99,6 +116,10 @@ const TrackOrder = ({ user }) => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [noOrders, setNoOrders] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [duration, setDuration] = useState(null);
+  const [agentLocation, setAgentLocation] = useState(null);
+  const [userLocation, setUserLocation] = useState(null);
+  const [restaurantLocation, setRestaurantLocation] = useState(null);
 
   const statusMap = {
     Pending: 0,
@@ -135,6 +156,42 @@ const TrackOrder = ({ user }) => {
     if (user?.user_id) getOrderTrackingDetails();
   }, [user?.user_id]);
 
+  useEffect(() => {
+    const fetchInitialLocationData = async () => {
+      if (!selectedOrder) return;
+      try {
+        const res = await fetchData(API_ENDPOINTS.TRACK.ORDER_LIVE_LOCATION, "POST", {
+          order_id: selectedOrder.order_number,
+        });
+
+        if (res.status === "success") {
+          if (res.deliver_agent_location) {
+            const { lat, lng } = res.deliver_agent_location;
+            if (lat && lng && !isNaN(parseFloat(lat)) && !isNaN(parseFloat(lng))) {
+              setAgentLocation({ lat: parseFloat(lat), lng: parseFloat(lng) });
+            }
+          }
+          if (res.user_destination) {
+            setUserLocation({
+              lat: parseFloat(res.user_destination.lat),
+              lng: parseFloat(res.user_destination.lng),
+            });
+          }
+          if (res.restaurant_location) {
+            setRestaurantLocation({
+              lat: parseFloat(res.restaurant_location?.lat),
+              lng: parseFloat(res.restaurant_location?.lng),
+            });
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching live location:", error);
+      }
+    };
+
+    fetchInitialLocationData();
+  }, [selectedOrder]);
+
   const handleOrderChange = (e) => {
     const order = orders.find((o) => o.order_number === e.target.value);
     setSelectedOrder(order);
@@ -154,9 +211,6 @@ const TrackOrder = ({ user }) => {
 
   if (!selectedOrder || loading) return <StripeLoader />;
 
-  const deliveryAgentStart = [19.196061448334195, 72.95428775304241];
-  const userDeliveryPoints = [19.20705360826353, 73.0111160893804];
-  
   const progress = statusMap[selectedOrder.status] || 0;
 
   return (
@@ -177,22 +231,34 @@ const TrackOrder = ({ user }) => {
 
       <div className="order-summary-card">
         <div className="track-map-container">
-          <MapContainer
-            center={[19.201, 72.98]}
-            zoom={13}
-            scrollWheelZoom={false}
-            className="delivery-map"
-          >
-            <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-            <Marker position={deliveryAgentStart} icon={kitchenIcon} />
-            <Marker position={userDeliveryPoints} icon={customerIcon} />
-            <RoutingWithLiveBike
-              from={deliveryAgentStart}
-              to={userDeliveryPoints}
-              orderId={selectedOrder.order_id}
-            />
-          </MapContainer>
+          {userLocation && restaurantLocation && (
+            <MapContainer
+              center={agentLocation || restaurantLocation}
+              zoom={13}
+              scrollWheelZoom={false}
+              className="delivery-map"
+            >
+              <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+              <Marker position={[restaurantLocation.lat, restaurantLocation.lng]} icon={kitchenIcon} />
+              <Marker position={[userLocation.lat, userLocation.lng]} icon={customerIcon} />
+              {selectedOrder.status === "On the Way" && (
+                <RoutingWithLiveBike
+                  from={[restaurantLocation.lat, restaurantLocation.lng]}
+                  to={[userLocation.lat, userLocation.lng]}
+                  orderId={selectedOrder.order_number}
+                  setDuration={setDuration}
+                />
+              )}
+            </MapContainer>
+          )}
         </div>
+
+        {duration !== null && (
+          <div className="eta">
+            <strong>Estimated Delivery Time:</strong> {duration} min
+            <p className="eta-note">Note: Time shown is an estimate once your order is out for delivery.</p>
+          </div>
+        )}
 
         <div className="progress-section">
           <div className="progress-bar-wrapper">

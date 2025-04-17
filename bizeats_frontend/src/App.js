@@ -121,6 +121,16 @@ const App = () => {
               </PrivateRoute>
             } />
 
+            <Route path="/register-restaurant/:restaurant_id" element={
+              <PrivateRoute user={user}>
+                <RestaurantRegistration 
+                  user={user} 
+                  setUser={setUser} 
+                  setIsRestaurantRegister={setIsRestaurantRegister} 
+                />
+              </PrivateRoute>
+            } />
+
             <Route path="/vendor-dashboard" element={
               <VendorPrivateRoute user={user} is_restaurant_register={is_restaurant_register}>
                 <LocationCheckRoute isAllowed={isAllowed}>

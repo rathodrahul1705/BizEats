@@ -63,6 +63,10 @@ const OrderManagement = ({ user }) => {
         setOrders(updated);
         setRecentlyUpdatedOrder(orderNumber);
         setTimeout(() => setRecentlyUpdatedOrder(null), 3000);
+
+        if (newStatusObj.label === "On the Way") {
+          updateLiveLocation(orderNumber);
+        }
       } else {
         console.error("Failed to update status:", response.message);
       }
@@ -71,11 +75,57 @@ const OrderManagement = ({ user }) => {
     }
   };
 
+  const updateLiveLocation = async (orderNumber) => {
+    if (!navigator.geolocation) {
+      console.error("Geolocation is not supported.");
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(async (position) => {
+      const latitude = position.coords.latitude;
+      const longitude = position.coords.longitude;
+
+      try {
+        const response = await fetch(API_ENDPOINTS.TRACK.UPDATE_LIVE_LOCATION, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            order_number: orderNumber,
+            latitude,
+            longitude,
+          }),
+        });
+
+        const data = await response.json();
+        if (data.status === "success") {
+          console.log(`Live location updated for order ${orderNumber}`);
+        } else {
+          console.error("Live location update failed:", data.message);
+        }
+      } catch (error) {
+        console.error("Error updating live location:", error);
+      }
+    });
+  };
+
+  // ⏱ Live location auto update for "On the Way" orders every 5 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const onTheWayOrders = orders.filter(order => order.status.label === "On the Way");
+      onTheWayOrders.forEach(order => {
+        updateLiveLocation(order.order_number);
+      });
+    }, 5000);
+
+    return () => clearInterval(interval); // Cleanup on unmount
+  }, [orders]);
+
   const filteredOrders = orders.filter((order) => {
     const matchesId = order.order_number.toLowerCase().includes(searchId.toLowerCase());
     const matchesName = order.full_name.toLowerCase().includes(searchName.toLowerCase());
-    const matchesStatus =
-      filterStatus === "All" || order.status.label === filterStatus;
+    const matchesStatus = filterStatus === "All" || order.status.label === filterStatus;
 
     return matchesId && matchesName && matchesStatus;
   });
@@ -84,7 +134,6 @@ const OrderManagement = ({ user }) => {
     <div className="vendor-orders">
       <h2 className="vendor-order-title">Order Management</h2>
 
-      {/* Filter Section */}
       <div className="filter-bar">
         <input
           type="text"
@@ -135,7 +184,6 @@ const OrderManagement = ({ user }) => {
               </div>
             </div>
 
-            {/* Horizontal Line */}
             <hr className="order-divider" />
 
             <div className="vendor-card-body">
@@ -155,6 +203,15 @@ const OrderManagement = ({ user }) => {
                 <p><strong>Subtotal:</strong> ₹{order.subtotal}</p>
                 <p><strong>Total:</strong> ₹{order.total}</p>
               </div>
+
+              {order.status.label === "On the Way" && (
+                <button
+                  className="update-location-btn"
+                  onClick={() => updateLiveLocation(order.order_number)}
+                >
+                  Update Live Location 📍
+                </button>
+              )}
             </div>
           </div>
         ))}
