@@ -335,7 +335,7 @@ const OrderDetails = ({ user, setUser }) => {
                         )}
                       </p>
 
-                      <p className="order-food-price">₹{food.price}</p>
+                      <p className="order-food-price">{food.price}</p>
                       <div className="order-cart-actions">
                         {cart[food.id] > 0 ? (
                           <>
@@ -403,7 +403,7 @@ const OrderDetails = ({ user, setUser }) => {
                           ? `${food.description.substring(0, 100)}...` 
                           : food.description}
                       </p>
-                      <p className="order-food-price">₹{food.price}</p>
+                      <p className="order-food-price">{food.price}</p>
                       <div className="order-out-of-stock-badge">Out of Stock</div>
                     </div>
                   </li>
