@@ -381,32 +381,37 @@ const OrderDetails = ({ user, setUser }) => {
       </div>
 
       {/* Show out of stock items at the bottom */}
-      <div className="order-out-of-stock-section">
-        <h3 className="order-out-of-stock-header">Currently Unavailable</h3>
-        <ul className="order-food-list">
-          {foodData.filter(food => !food.availability).map((food) => (
-            <li key={food.id} className="order-food-item order-food-item-out-of-stock">
-              <img 
-                src={food.image} 
-                alt={food.title} 
-                className="order-food-image order-food-image-out-of-stock" 
-              />
-              <div className="order-food-details">
-                <h3 className="order-food-title">
-                  {food.title} {food.type === "Veg" ? "🥦" : "🍗"}
-                </h3>
-                <p className="order-food-description">
-                  {food.description.length > 100 
-                    ? `${food.description.substring(0, 100)}...` 
-                    : food.description}
-                </p>
-                <p className="order-food-price">₹{food.price}</p>
-                <div className="order-out-of-stock-badge">Out of Stock</div>
-              </div>
-            </li>
-          ))}
-        </ul>
-      </div>
+      {foodData.filter(food => !food.availability).length > 0 ? (
+          <div className="order-out-of-stock-section">
+            <h3 className="order-out-of-stock-header">Currently Unavailable</h3>
+            <ul className="order-food-list">
+              {foodData
+                .filter(food => !food.availability)
+                .map((food) => (
+                  <li key={food.id} className="order-food-item order-food-item-out-of-stock">
+                    <img 
+                      src={food.image} 
+                      alt={food.title} 
+                      className="order-food-image order-food-image-out-of-stock" 
+                    />
+                    <div className="order-food-details">
+                      <h3 className="order-food-title">
+                        {food.title} {food.type === "Veg" ? "🥦" : "🍗"}
+                      </h3>
+                      <p className="order-food-description">
+                        {food.description.length > 100 
+                          ? `${food.description.substring(0, 100)}...` 
+                          : food.description}
+                      </p>
+                      <p className="order-food-price">₹{food.price}</p>
+                      <div className="order-out-of-stock-badge">Out of Stock</div>
+                    </div>
+                  </li>
+                ))}
+            </ul>
+          </div>
+        ) : null}
+
 
       {totalItems > 0 && (
         <button
