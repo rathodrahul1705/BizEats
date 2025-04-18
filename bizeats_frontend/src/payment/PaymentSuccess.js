@@ -50,7 +50,7 @@ const PaymentSuccess = () => {
         <p><strong>Payment ID:</strong> {state?.paymentId}</p>
         <p><strong>Order ID:</strong> {state?.orderId}</p>
         {state?.restaurantName && (
-          <p><strong>Restaurant:</strong> {state.restaurantName}</p>
+          <p><strong>Home Kitchen:</strong> {state.restaurantName}</p>
         )}
       </div>
 

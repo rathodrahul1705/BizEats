@@ -46,6 +46,7 @@ class RestaurantMenuSerializer(serializers.Serializer):
     id = serializers.CharField()
     food_type = serializers.CharField()
     category = serializers.CharField()
+    availability = serializers.BooleanField()
     
 
 class DeliveryTimingSerializer(serializers.Serializer):

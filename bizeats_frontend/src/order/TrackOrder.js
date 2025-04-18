@@ -203,11 +203,14 @@ const TrackOrder = ({ user }) => {
         <h2 className="order-summary-title">Track Order</h2>
         <div className="no-order-message">
           <h3>No Orders Found</h3>
-          <p>Looks like you haven’t placed any orders yet.</p>
+          <p>Bruh 😅 you haven’t placed any orders yet.</p>
+          <p>Don’t let your cravings ghost you 👻 – go grab some munchies! 🍕🍔🍟</p>
+          <a href="/menu" className="order-now-btn">Start Ordering</a>
         </div>
       </div>
     );
   }
+  
 
   if (!selectedOrder || loading) return <StripeLoader />;
 

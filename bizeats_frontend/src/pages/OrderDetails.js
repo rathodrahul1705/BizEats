@@ -17,6 +17,7 @@ const OrderDetails = ({ user, setUser }) => {
     deliveryTime: "",
     location: "",
     rating: 0,
+    minOrder: 0,
   });
   const [foodData, setFoodData] = useState([]);
   const [showResetCartModal, setShowResetCartModal] = useState(false);
@@ -102,6 +103,7 @@ const OrderDetails = ({ user, setUser }) => {
         deliveryTime: `${response.time_required_to_reach_loc} min`,
         location: response.Address,
         rating: response.rating,
+        minOrder: response.min_order || 0,
       });
 
       setFoodData(
@@ -115,6 +117,7 @@ const OrderDetails = ({ user, setUser }) => {
           location: response.Address,
           type: item?.food_type,
           category: item.category,
+          availability: item.availability,
         }))
       );
     } catch (error) {
@@ -153,6 +156,11 @@ const OrderDetails = ({ user, setUser }) => {
 
   const addToCart = async (id) => {
     const currentRestaurantId = localStorage.getItem("current_order_restaurant_id");
+    const foodItem = foodData.find(item => item.id === id);
+
+    if (!foodItem?.availability) {
+      return; // Don't proceed if item is out of stock
+    }
 
     if (currentRestaurantId && currentRestaurantId !== restaurant_id) {
       setShowResetCartModal(true);
@@ -200,6 +208,9 @@ const OrderDetails = ({ user, setUser }) => {
   };
 
   const totalItems = Object.values(cart).reduce((sum, quantity) => sum + quantity, 0);
+  const totalAmount = foodData.reduce((sum, food) => {
+    return sum + (food.price * (cart[food.id] || 0));
+  }, 0);
 
   const updateCartCount = (count) => {
     localStorage.setItem("cart_count", count);
@@ -216,10 +227,11 @@ const OrderDetails = ({ user, setUser }) => {
   }, [cart]);
 
   const filteredFood = foodData.filter(
-    (food) => filter === "all" || food.type === filter
+    (food) => (filter === "all" || food.type === filter) && food.availability
   );
 
   const openFoodModal = (food) => {
+    if (!food.availability) return;
     setSelectedFood(food);
     setShowFoodModal(true);
   };
@@ -250,6 +262,9 @@ const OrderDetails = ({ user, setUser }) => {
         <p className="order-store-info">⏱ {storeDetails.deliveryTime}</p>
         <p className="order-store-info">📍 {storeDetails.location}</p>
         <p className="order-store-info">⭐ {storeDetails.rating} / 5</p>
+        {storeDetails.minOrder > 0 && (
+          <p className="order-store-info">💰 Min. Order: ₹{storeDetails.minOrder}</p>
+        )}
       </div>
 
       <div className="order-filter-container">
@@ -322,25 +337,39 @@ const OrderDetails = ({ user, setUser }) => {
 
                       <p className="order-food-price">₹{food.price}</p>
                       <div className="order-cart-actions">
-                        <button
-                          className="order-cart-btn"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            removeFromCart(food.id);
-                          }}
-                        >
-                          <MinusCircle size={20} />
-                        </button>
-                        <span className="order-cart-quantity">{cart[food.id] || 0}</span>
-                        <button
-                          className="order-cart-btn"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            addToCart(food.id);
-                          }}
-                        >
-                          <PlusCircle size={20} />
-                        </button>
+                        {cart[food.id] > 0 ? (
+                          <>
+                            <button
+                              className="order-cart-btn"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                removeFromCart(food.id);
+                              }}
+                            >
+                              <MinusCircle size={20} />
+                            </button>
+                            <span className="order-cart-quantity">{cart[food.id] || 0}</span>
+                            <button
+                              className="order-cart-btn"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                addToCart(food.id);
+                              }}
+                            >
+                              <PlusCircle size={20} />
+                            </button>
+                          </>
+                        ) : (
+                          <button
+                            className="order-add-to-cart-btn"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              addToCart(food.id);
+                            }}
+                          >
+                            Add
+                          </button>
+                        )}
                       </div>
                     </div>
                   </li>
@@ -351,13 +380,41 @@ const OrderDetails = ({ user, setUser }) => {
         ))}
       </div>
 
+      {/* Show out of stock items at the bottom */}
+      <div className="order-out-of-stock-section">
+        <h3 className="order-out-of-stock-header">Currently Unavailable</h3>
+        <ul className="order-food-list">
+          {foodData.filter(food => !food.availability).map((food) => (
+            <li key={food.id} className="order-food-item order-food-item-out-of-stock">
+              <img 
+                src={food.image} 
+                alt={food.title} 
+                className="order-food-image order-food-image-out-of-stock" 
+              />
+              <div className="order-food-details">
+                <h3 className="order-food-title">
+                  {food.title} {food.type === "Veg" ? "🥦" : "🍗"}
+                </h3>
+                <p className="order-food-description">
+                  {food.description.length > 100 
+                    ? `${food.description.substring(0, 100)}...` 
+                    : food.description}
+                </p>
+                <p className="order-food-price">₹{food.price}</p>
+                <div className="order-out-of-stock-badge">Out of Stock</div>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
+
       {totalItems > 0 && (
         <button
           className="order-view-cart-btn"
           onClick={() => navigate("/cart")}
         >
           <ShoppingCart size={20} />
-          View Cart ({totalItems})
+          View Cart ({totalItems}) • ₹{totalAmount.toFixed(2)}
         </button>
       )}
 

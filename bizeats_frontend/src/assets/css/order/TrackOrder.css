@@ -179,19 +179,142 @@
 }
 
 /* No Orders */
-.no-orders {
+
+.track-order-container.no-orders {
   text-align: center;
-  padding: 40px 16px;
-  background: #fff8f0;
-  border-radius: 16px;
-  color: #e65c00;
-  box-shadow: 0 2px 8px rgba(230, 92, 0, 0.1);
+  padding: 40px 20px;
+  border-radius: 20px;
+  margin-top: 40px;
+  position: relative;
+  overflow: hidden;
+  animation: containerReveal 1s ease-out forwards;
 }
 
-.no-orders h3 {
-  font-size: 24px;
-  margin-bottom: 10px;
+/* Animated shimmer overlay */
+.track-order-container.no-orders::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -75%;
+  width: 150%;
+  height: 100%;
+  background: linear-gradient(120deg, transparent, rgba(255,255,255,0.2), transparent);
+  animation: shimmer 2.5s infinite linear;
 }
+
+.no-order-message {
+  position: relative;
+  padding: 40px 24px;
+  background: #ffffffdd;
+  backdrop-filter: blur(12px);
+  border-radius: 24px;
+  max-width: 640px;
+  margin: 0 auto;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.1);
+  transform: scale(0.96);
+  animation: floatPop 1.2s ease-in-out forwards;
+}
+
+.no-order-message h3 {
+  font-size: 28px;
+  font-weight: 800;
+  color: #ff6600;
+  margin-bottom: 18px;
+  animation: popText 0.8s ease forwards;
+}
+
+.no-order-message p {
+  font-size: 17px;
+  color: #333;
+  margin-bottom: 16px;
+  line-height: 1.6;
+  animation: fadeInUp 1.4s ease forwards;
+}
+
+.order-now-btn {
+  display: inline-block;
+  margin-top: 24px;
+  padding: 14px 30px;
+  background: #ff6600;
+  color: #fff;
+  font-weight: 700;
+  border-radius: 50px;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 24px rgba(255, 102, 0, 0.4);
+  animation: pulseGlow 2.5s infinite ease-in-out;
+}
+
+.order-now-btn:hover {
+  background: #ff7e26;
+  transform: scale(1.1);
+  box-shadow: 0 10px 30px rgba(255, 126, 38, 0.6);
+}
+
+/* ---------------- Animations ---------------- */
+
+@keyframes shimmer {
+  0% {
+    left: -75%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+@keyframes containerReveal {
+  0% {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes floatPop {
+  0% {
+    opacity: 0;
+    transform: scale(0.92) translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes popText {
+  0% {
+    transform: scale(0.85);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 0 rgba(255, 102, 0, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 24px rgba(255, 102, 0, 0.6);
+  }
+}
+
 
 /* Leaflet Adjustments */
 .leaflet-routing-alternatives-container {
