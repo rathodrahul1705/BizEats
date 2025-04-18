@@ -8,6 +8,7 @@ import fetchData from "../components/services/apiService";
 import StripeLoader from "../loader/StripeLoader";
 
 const PaymentOption = ({ user }) => {
+  const rayzorpay_api_key = process.env.REACT_APP_RAZORPAY_API_KEY
   const { restaurant_id } = useParams();
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [restaurantOrderDetails, setRestaurantOrderDetails] = useState(null);
@@ -209,7 +210,7 @@ const PaymentOption = ({ user }) => {
       const orderData = await orderRes.json();
 
       const options = {
-        key: "rzp_live_mUk0ZYQjZGCxK1",
+        key: rayzorpay_api_key,
         amount: orderData.amount,
         currency: orderData.currency,
         name: "Eatoor",

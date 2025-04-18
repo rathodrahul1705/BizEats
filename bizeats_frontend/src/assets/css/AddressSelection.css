@@ -141,10 +141,6 @@
   box-shadow: 0 4px 12px rgba(0, 123, 255, 0.2);
 }
 
-.proceed-btn:hover {
-  background-color: #0069d9;
-}
-
 /* Disabled state styling */
 .proceed-btn:disabled {
   background-color: #b8d4f0;

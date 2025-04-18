@@ -62,11 +62,12 @@ const AddressForm = ({ onClose, onSave }) => {
     let query = [street, city, state, zip, country].filter(Boolean).join(", ");
     query = query.replace(/[^\x20-\x7E]/g, "");
 
-    const apiKey = "cVMkjEbmY4Qu0FfAbUOa7CWfzUOyR00wMNS6F7hT";
+    const ola_api_key = process.env.REACT_APP_OLA_MAP_API_KEY;
+
     if (!query.trim()) return null;
 
     try {
-      const url = `https://api.olamaps.io/places/v1/geocode?address=${encodeURIComponent(query)}&language=en&api_key=${apiKey}`;
+      const url = `https://api.olamaps.io/places/v1/geocode?address=${encodeURIComponent(query)}&language=en&api_key=${ola_api_key}`;
       const response = await fetch(url, {
         headers: {
           "X-Request-Id": Date.now().toString(),

@@ -1,4 +1,4 @@
-const BASE_URL = "https://www.eatoor.com/api";
+const BASE_URL = `${process.env.REACT_APP_API_URL}/api`;
 
 const API_ENDPOINTS = {
   AUTH: {
