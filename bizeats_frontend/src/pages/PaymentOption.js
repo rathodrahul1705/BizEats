@@ -161,7 +161,6 @@ const PaymentOption = ({ user }) => {
     setLoading(true);
     try {
       if (selectedPayment === "cod") {
-        setPostPaymentProcessing(true);
         await storeOrderDetails("cod");
         updateCartCount();
         navigate("/order-confirmation", {
