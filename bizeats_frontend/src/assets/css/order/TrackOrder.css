@@ -1,11 +1,56 @@
+/* Add these new styles to your existing CSS */
+
+.restaurant-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.restaurant-name {
+  font-size: 24px;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
+
+.order-status-badge {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.order-status-badge.on-the-way {
+  background-color: #fff8e6;
+  color: #e65c00;
+  border: 1px solid #ffd8b8;
+}
+
+.order-status-badge.pending {
+  background-color: #f0f0f0;
+  color: #666;
+  border: 1px solid #ddd;
+}
+
+.order-status-badge.delivered {
+  background-color: #e6f7ee;
+  color: #00a859;
+  border: 1px solid #b8e6d0;
+}
+
+/* Keep all your existing CSS below this point */
 .track-order-container {
-  padding: 24px;
   max-width: 960px;
   margin: 0 auto;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   background: #fdfdfd;
   position: relative;
   z-index: 1;
+  padding: 0 16px;
 }
 
 /* Header */
@@ -13,19 +58,20 @@
   display: flex;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 16px;
   margin-bottom: 24px;
   align-items: center;
   background-color: #fdfdfd;
   position: relative;
   z-index: 2;
+  padding: 16px 0;
 }
 
 .order-summary-title {
   font-size: 28px;
   font-weight: 600;
   color: #222;
-  flex: 1 1 100%;
+  margin: 0;
 }
 
 .order-selector {
@@ -34,23 +80,40 @@
   gap: 8px;
 }
 
-.order-selector select {
+.order-select-dropdown {
   padding: 8px 12px;
   border-radius: 6px;
-  border: 1px solid #ccc;
+  border: 1px solid #ddd;
   font-size: 16px;
   background-color: white;
+  color: #333;
+  min-width: 200px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.order-select-dropdown:hover {
+  border-color: #e65c00;
+}
+
+.order-select-dropdown:focus {
+  outline: none;
+  border-color: #e65c00;
+  box-shadow: 0 0 0 2px rgba(230, 92, 0, 0.2);
 }
 
 /* Card Layout */
 .order-summary-card {
-  background: #fff;
-  border-radius: 20px;
-  padding: 24px;
+  background: white;
+  border-radius: 16px;
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.06);
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  gap: 24px;
+  padding: 24px;
+  margin-bottom: 32px;
+  position: relative;
+  overflow: hidden;
 }
 
 /* Map Container */
@@ -58,9 +121,17 @@
   height: 300px;
   border-radius: 16px;
   overflow: hidden;
-  margin-bottom: 24px;
+  margin-bottom: 16px;
   position: relative;
   z-index: 0;
+  transition: height 0.3s ease;
+}
+
+.track-map-container.expanded {
+  height: 70vh;
+  margin: -24px -24px 16px -24px;
+  border-radius: 0;
+  width: calc(100% + 48px);
 }
 
 .delivery-map {
@@ -68,18 +139,66 @@
   width: 100%;
 }
 
+.map-toggle-button {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  background: white;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  z-index: 1000;
+  transition: all 0.2s ease;
+}
+
+.map-toggle-button:hover {
+  background: #f5f5f5;
+  transform: scale(1.05);
+}
+
+.map-toggle-button:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(230, 92, 0, 0.3);
+}
+
 /* Progress Bar */
 .progress-section {
   margin-top: 12px;
+  padding: 16px 0;
+  background: #f9f9f9;
+  border-radius: 12px;
+}
+
+.progress-status {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  padding: 0 8px;
+}
+
+.status-label {
+  font-weight: 500;
+  color: #555;
+}
+
+.status-value {
+  font-weight: 600;
+  color: #e65c00;
 }
 
 .progress-bar-wrapper {
   background: #e0e0e0;
   border-radius: 999px;
-  height: 14px;
-  width: 100%;
+  height: 10px;
+  width: calc(100% - 32px);
   overflow: visible;
-  margin-top: 8px;
+  margin: 8px auto;
   position: relative;
 }
 
@@ -93,7 +212,7 @@
 .bike-icon {
   position: absolute;
   top: 50%;
-  transform: translate(-50%, -50%);
+  transform: translateY(-50%);
   transition: left 0.4s ease;
   z-index: 2;
   background: white;
@@ -102,17 +221,260 @@
   box-shadow: 0 0 6px rgba(0, 0, 0, 0.15);
 }
 
-/* Map Icon */
-.map-bike-icon {
-  width: 32px;
-  height: 32px;
+.progress-labels {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 8px;
+  margin-top: 8px;
+  font-size: 12px;
+  color: #666;
+}
+
+
+.custom-bike-icon .custom-icon-wrapper {
+  background-color: white;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  background: white;
-  border: 2px solid #e65c00;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+}
+
+.custom-bike-icon .custom-icon-wrapper:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.custom-cloud-kitchen-icon .custom-icon-wrapper {
+  background-color: white;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.leaflet-interactive.leaflet-circle {
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  animation: pulse 2s infinite;
+}
+
+.leaflet-interactive {
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.leaflet-popup-content {
+  font-size: 14px;
+  padding: 8px 12px;
+}
+
+/* .reached-notification {
+  background-color: #d4edda;
+  color: #155724;
+  padding: 12px 20px;
+  border-radius: 4px;
+  margin: 10px 0;
+  display: flex;
+  align-items: center;
+  animation: fadeIn 0.5s ease-in;
+}
+
+.reached-notification svg {
+  margin-right: 10px;
+} */
+
+/* Mobile-optimized reached notification */
+.reached-notification {
+  /* Base styles */
+  background-color: #d4edda;
+  color: #155724;
+  padding: 14px 16px;
+  border-radius: 8px;
+  margin: 12px 0;
+  display: flex;
+  align-items: center;
+  animation: fadeIn 0.3s ease-out;
+  
+  /* Mobile-specific adjustments */
+  width: calc(100% - 32px); /* Full width minus padding */
+  max-width: 400px; /* Maximum width for larger mobiles */
+  margin-left: auto;
+  margin-right: auto;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  
+  /* Better touch target */
+  min-height: 48px; /* Minimum touch target size */
+}
+
+.reached-notification svg {
+  margin-right: 12px;
+  flex-shrink: 0; /* Prevent icon from shrinking */
+  width: 20px;
+  height: 20px;
+}
+
+/* Text container for better overflow handling */
+.reached-notification-text {
+  flex: 1;
+  font-size: 15px;
+  line-height: 1.4;
+  word-break: break-word; /* Handle long words */
+}
+
+/* Animation */
+@keyframes fadeIn {
+  from { 
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Landscape orientation adjustments */
+@media (max-width: 767px) and (orientation: landscape) {
+  .reached-notification {
+    width: 80%;
+    padding: 12px 14px;
+  }
+}
+
+/* Very small devices (e.g., iPhone 5/SE) */
+@media (max-width: 320px) {
+  .reached-notification {
+    padding: 12px;
+    font-size: 14px;
+  }
+  
+  .reached-notification svg {
+    margin-right: 8px;
+    width: 18px;
+    height: 18px;
+  }
+}
+
+/* Tablet and larger - optional if you want different behavior */
+@media (min-width: 768px) {
+  .reached-notification {
+    max-width: 500px;
+    padding: 16px 24px;
+    border-radius: 12px;
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ETA */
+
+/* ETA Container */
+
+.eta {
+  background-color: #f8f9fa;
+  border-left: 4px solid #e65c00;
+  padding: 14px 16px;
+  border-radius: 0 8px 8px 0;
+  margin: 16px 0;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  max-width: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.eta.arrived {
+  background-color: #e6f7ee;
+  border-left-color: #28a745;
+}
+
+.eta strong {
+  color: #e65c00;
+  font-weight: 600;
+}
+
+.eta.arrived strong {
+  color: #28a745;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-left: 8px;
+  background-color: #e65c00;
+  color: white;
+}
+
+.eta.arrived .status-badge {
+  background-color: #28a745;
+}
+
+.eta-note {
+  font-size: 12px;
+  color: #666;
+  margin-top: 8px;
+  line-height: 1.4;
+}
+
+
+.leaflet-popup-content-wrapper {
+  border-radius: 12px !important;
+  background: #28a745 !important;
+  color: white !important;
+  font-weight: 500 !important;
+  padding: 8px 12px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+.leaflet-popup-tip-container {
+  display: none !important;
+}
+
+@keyframes pulse {
+  0% {
+    stroke-width: 2;
+    stroke-opacity: 1;
+  }
+  50% {
+    stroke-width: 4;
+    stroke-opacity: 0.7;
+  }
+  100% {
+    stroke-width: 2;
+    stroke-opacity: 1;
+  }
+}
+
+/* Animation for real-time updates */
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.8; }
+  100% { opacity: 1; }
+}
+
+.eta.updating {
+  animation: pulse 1.5s infinite;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .eta {
+    max-width: 100%;
+    margin: 8px 0;
+  }
 }
 
 /* Grid Info */
@@ -123,14 +485,27 @@
 }
 
 .order-section h3 {
-  margin-bottom: 8px;
+  margin-bottom: 12px;
   font-size: 18px;
   font-weight: 600;
   color: #e65c00;
+  position: relative;
+  padding-bottom: 6px;
+}
+
+.order-section h3::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 40px;
+  height: 3px;
+  background: #ffd8b8;
+  border-radius: 3px;
 }
 
 .order-section p {
-  margin: 4px 0;
+  margin: 6px 0;
   color: #444;
   line-height: 1.4;
 }
@@ -139,13 +514,14 @@
 .item-line {
   display: flex;
   justify-content: space-between;
-  padding: 6px 0;
+  padding: 8px 0;
   border-bottom: 1px solid #f0f0f0;
 }
 
 .item-name-qty {
   display: flex;
   gap: 10px;
+  align-items: center;
 }
 
 .item-name {
@@ -154,6 +530,7 @@
 
 .item-qty {
   color: #888;
+  font-size: 0.9em;
 }
 
 .item-total {
@@ -170,16 +547,18 @@
 .pricing-line {
   display: flex;
   justify-content: space-between;
-  padding: 5px 0;
+  padding: 8px 0;
 }
 
 .total-line {
   font-size: 18px;
   font-weight: bold;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed #ddd;
 }
 
 /* No Orders */
-
 .track-order-container.no-orders {
   text-align: center;
   padding: 40px 20px;
@@ -188,18 +567,6 @@
   position: relative;
   overflow: hidden;
   animation: containerReveal 1s ease-out forwards;
-}
-
-/* Animated shimmer overlay */
-.track-order-container.no-orders::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -75%;
-  width: 150%;
-  height: 100%;
-  background: linear-gradient(120deg, transparent, rgba(255,255,255,0.2), transparent);
-  animation: shimmer 2.5s infinite linear;
 }
 
 .no-order-message {
@@ -247,74 +614,9 @@
 
 .order-now-btn:hover {
   background: #ff7e26;
-  transform: scale(1.1);
+  transform: scale(1.05);
   box-shadow: 0 10px 30px rgba(255, 126, 38, 0.6);
 }
-
-/* ---------------- Animations ---------------- */
-
-@keyframes shimmer {
-  0% {
-    left: -75%;
-  }
-  100% {
-    left: 100%;
-  }
-}
-
-@keyframes containerReveal {
-  0% {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes floatPop {
-  0% {
-    opacity: 0;
-    transform: scale(0.92) translateY(20px);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
-}
-
-@keyframes popText {
-  0% {
-    transform: scale(0.85);
-    opacity: 0;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-@keyframes fadeInUp {
-  0% {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes pulseGlow {
-  0%, 100% {
-    box-shadow: 0 0 0 rgba(255, 102, 0, 0.3);
-  }
-  50% {
-    box-shadow: 0 0 24px rgba(255, 102, 0, 0.6);
-  }
-}
-
 
 /* Leaflet Adjustments */
 .leaflet-routing-alternatives-container {
@@ -332,75 +634,221 @@
   box-shadow: 0 0 6px rgba(0, 0, 0, 0.1);
 }
 
-.eta-note {
-  font-size: 0.85rem;
-  color: #e65c00;
-  margin-top: 4px;
-}
-
 /* Responsive Design */
 @media (max-width: 768px) {
+  .track-order-container {
+      padding: 0 12px;
+  }
+  
   .track-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 16px;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      padding: 12px 0;
   }
 
   .order-summary-title {
-    font-size: 24px;
+      font-size: 24px;
   }
 
-  .order-selector select {
-    font-size: 14px;
+  .order-selector {
+      width: 100%;
   }
 
-  .order-info-grid {
-    grid-template-columns: 1fr;
+  .order-select-dropdown {
+      width: 100%;
+  }
+
+  .order-summary-card {
+      padding: 16px;
+      gap: 20px;
   }
 
   .track-map-container {
-    height: 250px;
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
   }
 
-  .map-bike-icon {
-    width: 28px;
-    height: 28px;
+  .track-map-container.expanded {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 100vh !important;
+    width: 100vw !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    z-index: 1000;
   }
 
-  .bike-icon {
-    padding: 3px;
+  .order-info-grid {
+      grid-template-columns: 1fr;
+  }
+
+  .progress-section {
+      padding: 12px 0;
   }
 
   .progress-bar-wrapper {
-    height: 12px;
+      height: 8px;
+  }
+
+  .bike-icon {
+      padding: 3px;
   }
 }
 
-.agent-reached-popup {
-  background: rgba(0, 128, 0, 0.9);
-  color: white;
-  padding: 10px 16px;
-  border-radius: 10px;
-  position: absolute;
-  top: 80px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 999;
-  font-size: 1rem;
-  font-weight: 600;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+@media (max-width: 480px) {
+  .track-map-container {
+      height: 200px;
+  }
+
+  .order-summary-title {
+      font-size: 22px;
+  }
+
+  .order-section h3 {
+      font-size: 16px;
+  }
+
+  .item-name {
+      font-size: 14px;
+  }
+
+  .item-total {
+      font-size: 14px;
+  }
+
+  .pricing-line {
+      font-size: 14px;
+  }
+
+  .total-line {
+      font-size: 16px;
+  }
 }
 
-.congrats-message {
-  background-color: #fff4cc;
+/* Animations */
+@keyframes containerReveal {
+  0% {
+      opacity: 0;
+      transform: translateY(30px);
+  }
+  100% {
+      opacity: 1;
+      transform: translateY(0);
+  }
+}
+
+@keyframes floatPop {
+  0% {
+      opacity: 0;
+      transform: scale(0.92) translateY(20px);
+  }
+  100% {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes popText {
+  0% {
+      transform: scale(0.85);
+      opacity: 0;
+  }
+  100% {
+      transform: scale(1);
+      opacity: 1;
+  }
+}
+
+@keyframes fadeInUp {
+  0% {
+      opacity: 0;
+      transform: translateY(12px);
+  }
+  100% {
+      opacity: 1;
+      transform: translateY(0);
+  }
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+      box-shadow: 0 0 0 rgba(255, 102, 0, 0.3);
+  }
+  50% {
+      box-shadow: 0 0 24px rgba(255, 102, 0, 0.6);
+  }
+}
+
+/* Shared button styles */
+.restaurant-title-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.header-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.call-button, .refresh-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  background-color: #f8f9fa;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.call-button svg, .refresh-button svg {
   color: #e65c00;
-  border: 2px dashed #e65c00;
-  padding: 15px 25px;
-  border-radius: 12px;
-  margin: 20px auto;
-  text-align: center;
-  font-size: 1.2rem;
-  font-weight: 600;
-  max-width: 90%;
-  box-shadow: 0 0 10px rgba(255, 166, 0, 0.3);
+  width: 20px;
+  height: 20px;
+}
+
+/* Refresh button specific styles */
+.refresh-button:hover {
+  background-color: #e9ecef;
+  transform: rotate(45deg);
+}
+
+.refresh-button:active {
+  transform: rotate(90deg);
+  transition: transform 0.1s ease;
+}
+
+/* Call button specific styles */
+.call-button:hover {
+  background-color: #e9ecef;
+  transform: scale(1.05);
+}
+
+.call-button:active {
+  transform: scale(0.95);
+}
+
+/* Refresh spinner */
+.refresh-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  border-radius: 50%;
+  border-top-color: #495057;
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }

@@ -7,7 +7,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, generics, permissions
 from api.models import Cart, Order, OrderStatusLog, RestaurantLocation, RestaurantMenu, User, UserDeliveryAddress, OrderLiveLocation
-import json
+from math import radians, sin, cos, sqrt, atan2
 from django.db import transaction
 from django.db.models import Q 
 from django.db.models import Sum, Count
@@ -76,6 +76,8 @@ class TrackOrder(APIView):
 
                 order_data = {
                     "order_number": order.order_number,
+                    "restaurant_name": order.restaurant.restaurant_name,
+                    "restaurant_contact": order.restaurant.owner_details.owner_contact,
                     "status": order.get_status_display(),
                     "placed_on": order.created_at.strftime("%Y-%m-%d %H:%M:%S"),
                     "delivery_address": address_details,
@@ -281,6 +283,20 @@ class LiveLocationDetails(APIView):
     Handles tracking orders for a user.
     """
 
+    def haversine_distance(self, lat1, lon1, lat2, lon2):
+        lat1, lon1, lat2, lon2 = map(float, [lat1, lon1, lat2, lon2])  # Convert Decimals to floats
+        R = 6371  # Radius of Earth in km
+        dLat = radians(lat2 - lat1)
+        dLon = radians(lon2 - lon1)
+        a = sin(dLat / 2)**2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dLon / 2)**2
+        c = 2 * atan2(sqrt(a), sqrt(1 - a))
+        return R * c
+
+    def estimate_time_minutes(self, lat1, lon1, lat2, lon2, speed_kmph=15):
+        distance_km = self.haversine_distance(lat1, lon1, lat2, lon2)
+        time_hours = distance_km / speed_kmph
+        return round(time_hours * 60)  # Return time in minutes
+
     def post(self, request, *args, **kwargs):
         try:
             order_id = request.data.get("order_id")
@@ -296,7 +312,6 @@ class LiveLocationDetails(APIView):
             delivery_address = order.delivery_address
             restaurant = order.restaurant
 
-            # Get restaurant location from related RestaurantLocation model
             try:
                 restaurant_location = restaurant.restaurant_location
             except RestaurantLocation.DoesNotExist:
@@ -305,21 +320,30 @@ class LiveLocationDetails(APIView):
                     status=status.HTTP_404_NOT_FOUND
                 )
 
-            # Validate delivery address location
             if not delivery_address or not delivery_address.latitude or not delivery_address.longitude:
                 return Response(
                     {"status": "error", "message": "Delivery address location not found."},
                     status=status.HTTP_404_NOT_FOUND
                 )
 
-            # Cycle through dummy coordinates to simulate movement
+            # Set live location values
             if live_location:
                 live_location_latitude = live_location.latitude
                 live_location_longitude = live_location.longitude
             else:
                 live_location_latitude = None
                 live_location_longitude = None
-                
+
+            # Calculate ETA if delivery agent location is available
+            estimated_time_minutes = None
+            if live_location_latitude and live_location_longitude:
+                estimated_time_minutes = self.estimate_time_minutes(
+                    live_location_latitude,
+                    live_location_longitude,
+                    delivery_address.latitude,
+                    delivery_address.longitude
+                )
+
             return Response({
                 "status": "success",
                 "user_destination": {
@@ -333,7 +357,8 @@ class LiveLocationDetails(APIView):
                 "deliver_agent_location": {
                     "lat": live_location_latitude,
                     "lng": live_location_longitude,
-                }
+                },
+                "estimated_time_minutes": estimated_time_minutes
             }, status=status.HTTP_200_OK)
 
         except Order.DoesNotExist:
