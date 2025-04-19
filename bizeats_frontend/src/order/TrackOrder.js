@@ -260,8 +260,12 @@ const TrackOrder = ({ user }) => {
           setUserLocation(parseLocation(res.user_destination));
           setRestaurantLocation(parseLocation(res.restaurant_location));
           setDeliveryAgentLocation(parseLocation(res.deliver_agent_location));
-  
-          if (res.estimated_time_minutes) {
+          
+          console.log("res.estimated_time_minutes====",res.estimated_time_minutes)
+
+          if (res.estimated_time_minutes === null) {
+            setEstimatedTimestamp("agent_not_assigned");
+          } else if (res.estimated_time_minutes) {
             setEstimatedTimestamp(res.estimated_time_minutes);
           } else {
             setEstimatedTimestamp("arrived");
@@ -394,6 +398,12 @@ const TrackOrder = ({ user }) => {
                 <span className="status-badge">{selectedOrder.status}</span>
                 <p className="eta-note">Enjoy your meal!</p>
               </>
+            ) : estimatedTimestamp === "agent_not_assigned" ? (
+              <>
+                <strong>Waiting for agent assignment</strong>
+                <span className="status-badge">{selectedOrder.status}</span>
+                <p className="eta-note">We’ll notify you once a delivery agent is assigned.</p>
+              </>
             ) : (
               <>
                 <strong>Arriving:</strong> {estimatedTimestamp} mins
@@ -403,6 +413,7 @@ const TrackOrder = ({ user }) => {
             )}
           </div>
         )}
+
       </div>
 
       <div className={`order-summary-card ${isMapExpanded ? 'map-expanded' : ''}`}>
