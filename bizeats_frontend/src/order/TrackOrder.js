@@ -249,23 +249,21 @@ const TrackOrder = ({ user }) => {
           order_id: selectedOrder.order_number,
         });
         if (res.status === "success") {
-          setUserLocation({
-            lat: parseFloat(res.user_destination.lat),
-            lng: parseFloat(res.user_destination.lng),
-          });
-          setRestaurantLocation({
-            lat: parseFloat(res.restaurant_location.lat),
-            lng: parseFloat(res.restaurant_location.lng),
-          });
-          if (res.deliver_agent_location) {
-            setDeliveryAgentLocation({
-              lat: parseFloat(res.deliver_agent_location.lat),
-              lng: parseFloat(res.deliver_agent_location.lng),
-            });
-          }
+          // Validate and parse location data
+          const parseLocation = (loc) => {
+            if (!loc) return null;
+            const lat = parseFloat(loc.lat);
+            const lng = parseFloat(loc.lng);
+            return !isNaN(lat) && !isNaN(lng) ? { lat, lng } : null;
+          };
+  
+          setUserLocation(parseLocation(res.user_destination));
+          setRestaurantLocation(parseLocation(res.restaurant_location));
+          setDeliveryAgentLocation(parseLocation(res.deliver_agent_location));
+  
           if (res.estimated_time_minutes) {
             setEstimatedTimestamp(res.estimated_time_minutes);
-          }else{
+          } else {
             setEstimatedTimestamp("arrived");
           }
         }
@@ -413,29 +411,34 @@ const TrackOrder = ({ user }) => {
           ref={mapContainerRef}
         >
           {userLocation && restaurantLocation && initialCenter && (
-            <MapContainer
-              center={initialCenter}
-              zoom={15}
-              scrollWheelZoom={true}
-              className="delivery-map"
-            >
-              <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+          <MapContainer
+            center={initialCenter}
+            zoom={15}
+            scrollWheelZoom={true}
+            className="delivery-map"
+          >
+            <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+            {restaurantLocation && (
               <Marker position={[restaurantLocation.lat, restaurantLocation.lng]} icon={kitchenIcon}>
                 <Popup>Restaurant: {selectedOrder?.restaurant_name}</Popup>
               </Marker>
+            )}
+            {userLocation && (
               <Marker position={[userLocation.lat, userLocation.lng]} icon={customerIcon}>
                 <Popup>Your Location</Popup>
               </Marker>
-              {selectedOrder.status === "On the Way" && (
-                <RoutingWithLiveBike
-                  orderId={selectedOrder.order_number}
-                  to={[userLocation.lat, userLocation.lng]}
-                  setDuration={setDuration}
-                  setHasReached={setHasReached}
-                />
-              )}
-            </MapContainer>
-          )}
+            )}
+            {selectedOrder.status === "On the Way" && (
+              <RoutingWithLiveBike
+                orderId={selectedOrder.order_number}
+                to={userLocation ? [userLocation.lat, userLocation.lng] : null}
+                setDuration={setDuration}
+                setHasReached={setHasReached}
+                status={selectedOrder.status}
+              />
+            )}
+          </MapContainer>
+        )}
         </div>
 
         <div className="progress-section">
