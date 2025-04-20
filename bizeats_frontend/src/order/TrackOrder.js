@@ -262,8 +262,6 @@ const TrackOrder = ({ user }) => {
           setRestaurantLocation(parseLocation(res.restaurant_location));
           setDeliveryAgentLocation(parseLocation(res.deliver_agent_location));
           
-          console.log("res.estimated_time_minutes====",res.estimated_time_minutes)
-
           if (res.estimated_time_minutes === null) {
             setEstimatedTimestamp("agent_not_assigned");
           } else if (res.estimated_time_minutes) {
