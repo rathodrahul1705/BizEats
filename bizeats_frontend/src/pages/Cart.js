@@ -276,7 +276,7 @@ const Cart = ({ user, setUser }) => {
             Check out the homepage for more delicious homemade meals options!
           </p>
           <button className="cart-explore-btn" onClick={() => navigate("/")}>
-            Explore restaurants near you
+            Explore home kitchens near you
           </button>
         </div>
       )}
