@@ -592,11 +592,7 @@ class PlaceOrderAPI(APIView):
                 subtotal = sum(item.item.item_price * item.quantity for item in cart_items)
                 tax = subtotal * Decimal('0.00')  # Example 5% tax
                 delivery_fee = data['delivery_fee']
-                
-                total_before_discount = subtotal + tax + delivery_fee
-                discount = total_before_discount * Decimal('0.10')
-                total = total_before_discount - discount
-                total = total.quantize(Decimal('1.'), rounding=ROUND_UP)
+                total = data['total_amount']
 
                 # Create order
                 current_time = datetime.now()

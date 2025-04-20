@@ -137,6 +137,8 @@ const PaymentOption = ({ user }) => {
       razorpay_order_id,
       razorpay_payment_id,
       delivery_fee: restaurantOrderDetails.delivery_fee, // Added delivery_fee here
+      total_amount: restaurantOrderDetails.total_amount, // Added delivery_fee here
+      
     };
 
     try {

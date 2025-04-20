@@ -254,6 +254,12 @@ class OrderPlacementSerializer(serializers.Serializer):
         required=False,
         allow_null=True
     )
+    total_amount = serializers.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        required=False,
+        allow_null=True
+    )
     delivery_address_id = serializers.CharField(required=True)
     special_instructions = serializers.CharField(required=False, allow_blank=True)
 

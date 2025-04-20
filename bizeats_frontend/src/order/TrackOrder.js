@@ -521,7 +521,7 @@ const TrackOrder = ({ user }) => {
           </div>
           <div className="pricing-line total-line">
             <span>Total:</span>
-            <span>₹{selectedOrder.total}</span>
+            <span>₹{total}</span>
           </div>
         </div>
       </div>
