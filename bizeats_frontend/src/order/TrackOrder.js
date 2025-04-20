@@ -400,7 +400,7 @@ const TrackOrder = ({ user }) => {
               </>
             ) : estimatedTimestamp === "agent_not_assigned" ? (
               <>
-                <strong>Waiting for agent assignment</strong>
+                <strong>Assigning a delivery agent...</strong>
                 <span className="status-badge">{selectedOrder.status}</span>
                 <p className="eta-note">We’ll notify you once a delivery agent is assigned.</p>
               </>

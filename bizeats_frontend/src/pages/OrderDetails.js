@@ -6,6 +6,11 @@ import API_ENDPOINTS from "../components/config/apiConfig";
 import fetchData from "../components/services/apiService";
 import { getOrCreateSessionId } from "../components/helper/Helper";
 import StripeLoader from "../loader/StripeLoader";
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { FreeMode, Navigation } from 'swiper/modules';
+import 'swiper/css';
+import 'swiper/css/free-mode';
+import 'swiper/css/navigation';
 
 const OrderDetails = ({ user, setUser }) => {
   const [loading, setLoading] = useState(true);
@@ -27,6 +32,30 @@ const OrderDetails = ({ user, setUser }) => {
   const [categoryVisibility, setCategoryVisibility] = useState({});
   const navigate = useNavigate();
   const sessionId = getOrCreateSessionId();
+
+  const [deals, setDeals] = useState([
+    {
+      id: 1,
+      title: "Free Delivery",
+      description: "On orders above ₹100",
+      icon: "🏍️",
+      color: "#fff"
+    },
+    {
+      id: 2,
+      title: "Limbu Pani Free",
+      description: "With every order",
+      icon: "🍋",
+      color: "#fff"
+    },
+    {
+      id: 3,
+      title: "10% Off",
+      description: "On every order",
+      icon: "🤑",
+      color: "#fff"
+    }
+  ]);
 
   // Initialize all categories as visible by default
   useEffect(() => {
@@ -265,6 +294,44 @@ const OrderDetails = ({ user, setUser }) => {
         {storeDetails.minOrder > 0 && (
           <p className="order-store-info">💰 Min. Order: ₹{storeDetails.minOrder}</p>
         )}
+      </div>
+
+      {/* Add Deals Swiper Section */}
+      <div className="order-deals-section">
+        <div className="order-deals-header-wrapper">
+          <h2 className="order-deals-title">Deals for You</h2>
+
+          <div className="order-deals-swiper-wrapper">
+            <Swiper
+              slidesPerView={1}
+              spaceBetween={16}
+              modules={[Navigation]}
+              className="order-deals-swiper"
+              breakpoints={{
+                640: {
+                  slidesPerView: 2,
+                },
+                768: {
+                  slidesPerView: 3,
+                },
+              }}
+            >
+              {deals.map((deal) => (
+                <SwiperSlide key={deal.id}>
+                  <div className="order-deal-card">
+                    <div className="order-deal-inner">
+                      <div className="order-deal-icon">{deal.icon}</div>
+                      <div className="order-deal-content">
+                        <h3 className="order-deal-title">{deal.title}</h3>
+                        <p className="order-deal-description">{deal.description}</p>
+                      </div>
+                    </div>
+                  </div>
+                </SwiperSlide>
+              ))}
+            </Swiper>
+          </div>
+        </div>
       </div>
 
       <div className="order-filter-container">

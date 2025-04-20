@@ -23,6 +23,13 @@ const Cart = ({ user, setUser }) => {
     return parseInt(localStorage.getItem("cart_current_step")) || 1;
   });
 
+  useEffect(() => {
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  }, [step]);
+
   const [userSelectedAddress, setUserSelectedAddress] = useState(
     localStorage.getItem("user_full_address") || null
   );

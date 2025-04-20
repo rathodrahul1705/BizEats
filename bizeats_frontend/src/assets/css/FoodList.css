@@ -183,9 +183,9 @@
         grid-template-columns: repeat(1, 1fr);
     }
     
-    .food-section{
+    /* .food-section{
         width: 100%;
-    }
+    } */
     .food-card{
         width: 100%;
         max-width: 100%;

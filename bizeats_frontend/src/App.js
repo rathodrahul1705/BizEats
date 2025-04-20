@@ -28,6 +28,7 @@ import PrivacyPolicy from "./components/links/PrivacyPolicy"
 import TermsAndConditions from "./components/links/TermsAndConditions"
 import CancellationPolicy from "./components/links/CancellationPolicy"
 import Pricing from "./components/links/Pricing"
+import ScrollToTop from "./components/ScrollToTop"
 
 
 const PrivateRoute = ({ children, user }) => user ? children : <Navigate to="/" />;
@@ -71,6 +72,7 @@ const App = () => {
 
   return (
     <Router>
+      <ScrollToTop />
       <div className="app-container">
         <Header 
           user={user} 

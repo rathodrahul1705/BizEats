@@ -469,14 +469,14 @@ class RestaurantDetailMenuView(APIView):
             serializer = RestaurantMasterSerializer(restaurant)
             
             restaurant_location = RestaurantLocation.objects.get(restaurant=restaurant)
-            
+
             address_parts = [
                 restaurant_location.area_sector_locality,
                 restaurant_location.city
             ]
             address = ", ".join(filter(None, address_parts))
 
-            time_required_to_reach_loc = 30  # This could be dynamic based on user location
+            time_required_to_reach_loc = 45  # This could be dynamic based on user location
             
             for item in serializer.data['menu_items']:
                 if item["item_image"]:

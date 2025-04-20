@@ -824,3 +824,213 @@
         font-size: 15px;
     }
 }
+
+/* Deals Section */
+.order-deals-section {
+    margin: 2rem 0;
+    padding: 0 0.5rem;
+  }
+  
+  .order-deals-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #333;
+    margin: 0 0 10px;
+    position: relative;
+    display: inline-block;
+    padding-bottom: 8px;
+  }
+  
+  .order-deals-title::after {
+    content: '';
+    position: absolute;
+    display: block;
+    width: 60px;
+    height: 4px;
+    background: linear-gradient(to right, #e65c00, #ff8c33);
+    border-radius: 4px;
+    bottom: 0;
+    left: 0;
+  }
+  
+  .order-deals-swiper-wrapper {
+    position: relative;
+    padding: 5px 0 15px;
+  }
+  
+  .order-deals-swiper {
+    padding: 10px 5px;
+  }
+  
+  /* Fixed card dimensions */
+  .order-deal-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.25rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    border: 1px solid #f0f0f0;
+    height: 120px; /* Fixed height */
+    min-height: 120px; /* Ensures height doesn't shrink */
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    display: flex;
+    align-items: center;
+  }
+  
+  .order-deal-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.12);
+  }
+  
+  .order-deal-inner {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    width: 100%; /* Ensure full width */
+  }
+  
+  .order-deal-icon {
+    font-size: 2rem;
+    margin-right: 1.25rem;
+    flex-shrink: 0;
+    color: #e65c00;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(230, 92, 0, 0.1);
+    border-radius: 50%;
+  }
+  
+  .order-deal-content {
+    color: #333;
+    flex: 1;
+    min-width: 0; /* Prevent text overflow */
+  }
+  
+  .order-deal-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin: 0 0 0.5rem;
+    color: #222;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .order-deal-description {
+    font-size: 0.9rem;
+    margin: 0;
+    color: #666;
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 2; /* Limit to 2 lines */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  
+  /* Swiper Navigation */
+  .order-deals-swiper .swiper-button-next,
+  .order-deals-swiper .swiper-button-prev {
+    width: 36px;
+    height: 36px;
+    background: white;
+    border-radius: 50%;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    color: #e65c00;
+    transition: all 0.3s ease;
+    top: 50%;
+    margin-top: -18px;
+  }
+  
+  .order-deals-swiper .swiper-button-next::after,
+  .order-deals-swiper .swiper-button-prev::after {
+    font-size: 16px;
+    font-weight: bold;
+  }
+  
+  .order-deals-swiper .swiper-button-next:hover,
+  .order-deals-swiper .swiper-button-prev:hover {
+    background: #e65c00;
+    color: white;
+    transform: scale(1.1);
+  }
+  
+  /* Mobile adjustments */
+  @media (max-width: 639px) {
+    .order-deals-section {
+      margin: 1.5rem 0;
+      padding: 0 0.25rem;
+    }
+    
+    .order-deals-title {
+      font-size: 1.3rem;
+    }
+    
+    .order-deal-card {
+      padding: 1rem;
+      margin: 0 0.25rem;
+      height: 110px; /* Slightly smaller for mobile */
+      min-height: 110px;
+    }
+    
+    .order-deal-icon {
+      font-size: 1.6rem;
+      margin-right: 1rem;
+      width: 44px;
+      height: 44px;
+    }
+    
+    .order-deal-title {
+      font-size: 1rem;
+    }
+    
+    .order-deal-description {
+      font-size: 0.82rem;
+      -webkit-line-clamp: 2; /* Keep 2 lines on mobile */
+    }
+    
+    .order-deals-swiper .swiper-button-next,
+    .order-deals-swiper .swiper-button-prev {
+      display: none;
+    }
+  }
+  
+  /* Tablet */
+  @media (min-width: 640px) and (max-width: 767px) {
+    .order-deals-swiper {
+      padding: 10px;
+    }
+    
+    .order-deal-card {
+      margin: 0;
+      height: 120px;
+      min-height: 120px;
+    }
+  }
+  
+  /* Desktop */
+  @media (min-width: 768px) {
+    .order-deals-section {
+      margin: 2.5rem 0;
+    }
+    
+    .order-deals-title {
+      font-size: 1.7rem;
+    }
+    
+    .order-deal-card {
+      height: 130px; /* Slightly taller on desktop */
+      min-height: 130px;
+    }
+    
+    .order-deal-icon {
+      font-size: 2.2rem;
+      width: 56px;
+      height: 56px;
+    }
+
+    
+    .order-deal-description {
+      font-size: 0.95rem;
+    }
+  }

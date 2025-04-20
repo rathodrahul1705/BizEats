@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { FaCreditCard, FaMoneyBillWave } from "react-icons/fa";
+import { FaCreditCard, FaMoneyBillWave, FaStore, FaUser } from "react-icons/fa";
 import { ArrowLeft } from "lucide-react";
 import "../assets/css/PaymentOption.css";
 import API_ENDPOINTS from "../components/config/apiConfig";
@@ -8,7 +8,7 @@ import fetchData from "../components/services/apiService";
 import StripeLoader from "../loader/StripeLoader";
 
 const PaymentOption = ({ user }) => {
-  const rayzorpay_api_key = process.env.REACT_APP_RAZORPAY_API_KEY
+  const razorpay_api_key = process.env.REACT_APP_RAZORPAY_API_KEY;
   const { restaurant_id } = useParams();
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [restaurantOrderDetails, setRestaurantOrderDetails] = useState(null);
@@ -23,18 +23,18 @@ const PaymentOption = ({ user }) => {
     {
       id: "online",
       name: "Online Payment",
-      icon: <FaCreditCard />,
+      icon: <FaCreditCard className="payment-option-payment-icon" />,
       description: "Pay securely with cards, UPI or netbanking",
     },
     {
       id: "cod",
       name: "Cash on Delivery",
-      icon: <FaMoneyBillWave />,
+      icon: <FaMoneyBillWave className="payment-option-payment-icon" />,
       description: "Pay by cash/UPI when you receive your order",
     },
   ];
 
-  const fetchOrderDetails = async () => {
+  const fetchOrderDetails = useCallback(async () => {
     try {
       const response = await fetchData(API_ENDPOINTS.ORDER.GET_ORDER_DETAILS, "POST", {
         user_id: user?.user_id || null,
@@ -43,31 +43,39 @@ const PaymentOption = ({ user }) => {
 
       if (response.status === "success") {
         const { restaurant_details, order_summary } = response;
+        const itemTotal = order_summary?.total_order_amount || 0;
+        const deliveryFee = itemTotal > 100 ? 0 : 20;
+        const taxAmount = order_summary?.tax_amount || 0;
+        const discount = Math.round((itemTotal + deliveryFee + taxAmount) * 0.10);
+        const totalPayable = itemTotal + deliveryFee + taxAmount - discount;
+      
         setRestaurantOrderDetails({
           restaurant_name: restaurant_details?.restaurant_name || "Unknown Restaurant",
           restaurant_address: restaurant_details?.restaurant_address || "No address",
           customer_address: user_address,
           currency: order_summary?.currency || "INR",
           number_of_items: order_summary?.number_of_items || 0,
-          total_amount: order_summary?.total_order_amount || 0,
-          delivery_fee: order_summary?.delivery_fee || 0,
-          tax_amount: order_summary?.tax_amount || 0,
+          item_total: itemTotal,
+          delivery_fee: deliveryFee,
+          tax_amount: taxAmount,
+          discount,
+          total_amount: totalPayable,
           user_name: user?.full_name || "Customer",
         });
       }
     } catch (error) {
       console.error("Error fetching order details:", error);
     }
-  };
+  }, [user?.user_id, restaurant_id, user_address]);
 
   useEffect(() => {
     if (user?.user_id && restaurant_id) {
       fetchOrderDetails();
     }
-  }, [user?.user_id, restaurant_id]);
+  }, [user?.user_id, restaurant_id, fetchOrderDetails]);
 
-  const loadRazorpayScript = () =>
-    new Promise((resolve) => {
+  const loadRazorpayScript = useCallback(() => {
+    return new Promise((resolve) => {
       if (window.Razorpay) return resolve(true);
       const script = document.createElement("script");
       script.src = "https://checkout.razorpay.com/v1/checkout.js";
@@ -75,8 +83,9 @@ const PaymentOption = ({ user }) => {
       script.onerror = () => resolve(false);
       document.body.appendChild(script);
     });
+  }, []);
 
-  const handlePaymentSuccess = async (paymentData, razorpay_order_id) => {
+  const handlePaymentSuccess = useCallback(async (paymentData, razorpay_order_id) => {
     try {
       setPostPaymentProcessing(true);
       const storedOrder = await storeOrderDetails("online", razorpay_order_id, paymentData.razorpay_payment_id);
@@ -102,9 +111,9 @@ const PaymentOption = ({ user }) => {
     } finally {
       setPostPaymentProcessing(false);
     }
-  };
+  }, [navigate, restaurantOrderDetails, restaurant_id, delivery_address_id]);
 
-  const handlePaymentFailure = (error) => {
+  const handlePaymentFailure = useCallback((error) => {
     navigate("/payment/failed", {
       state: {
         error: error.message || "Payment failed",
@@ -114,9 +123,9 @@ const PaymentOption = ({ user }) => {
         deliveryAddressId: delivery_address_id,
       },
     });
-  };
+  }, [navigate, restaurantOrderDetails, restaurant_id, delivery_address_id]);
 
-  const storeOrderDetails = async (method = "cod", razorpay_order_id = null, razorpay_payment_id = null) => {
+  const storeOrderDetails = useCallback(async (method = "cod", razorpay_order_id = null, razorpay_payment_id = null) => {
     const payment_method = method === "cod" ? 5 : 1;
     const orderData = {
       user_id: user?.user_id,
@@ -131,17 +140,15 @@ const PaymentOption = ({ user }) => {
 
     try {
       const response = await fetchData(API_ENDPOINTS.ORDER.UPDATE_ORDER_DETAILS, "POST", orderData);
-
       if (response.status === "success") {
         return response;
-      } else {
-        throw new Error(response.message || "Failed to update order details");
       }
+      throw new Error(response.message || "Failed to update order details");
     } catch (error) {
       console.error("Error storing order details:", error);
       throw error;
     }
-  };
+  }, [user?.user_id, restaurant_id, delivery_address_id]);
 
   const updateCartCount = useCallback(() => {
     localStorage.removeItem("cart_count");
@@ -152,7 +159,7 @@ const PaymentOption = ({ user }) => {
     window.dispatchEvent(new Event("storage"));
   }, []);
 
-  const initiatePayment = async () => {
+  const initiatePayment = useCallback(async () => {
     if (!selectedPayment) {
       alert("Please select a payment method");
       return;
@@ -180,9 +187,9 @@ const PaymentOption = ({ user }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedPayment, storeOrderDetails, updateCartCount, navigate, restaurantOrderDetails, restaurant_id, delivery_address_id]);
 
-  const processOnlinePayment = async () => {
+  const processOnlinePayment = useCallback(async () => {
     try {
       const isLoaded = await loadRazorpayScript();
       if (!isLoaded) throw new Error("Failed to load Razorpay SDK");
@@ -209,7 +216,7 @@ const PaymentOption = ({ user }) => {
       const orderData = await orderRes.json();
 
       const options = {
-        key: rayzorpay_api_key,
+        key: razorpay_api_key,
         amount: orderData.amount,
         currency: orderData.currency,
         name: "Eatoor",
@@ -235,45 +242,49 @@ const PaymentOption = ({ user }) => {
     } catch (err) {
       handlePaymentFailure(err);
     }
-  };
+  }, [loadRazorpayScript, restaurantOrderDetails, razorpay_api_key, user, restaurant_id, handlePaymentSuccess, handlePaymentFailure]);
 
-  const handleBack = () => navigate(-1);
+  const handleBack = useCallback(() => navigate(-1), [navigate]);
 
   if (!restaurantOrderDetails) return <StripeLoader />;
 
   return (
-    <div className="payment-page-container">
+    <div className="payment-option-container">
       {postPaymentProcessing && (
-        <div className="overlay-loader">
-          <div className="verifying-box">
-            <div className="verify_spinner" />
+        <div className="payment-option-overlay-loader">
+          <div className="payment-option-verifying-box">
+            <div className="payment-option-verify-spinner" />
             <p>Payment Verifying...</p>
           </div>
         </div>
       )}
 
-      <div className="payment-header-container">
-        <h1 className="page-title">Payment Details</h1>
-        <button className="back-button" onClick={handleBack}>
+      <div className="payment-option-header-wrapper">
+        <h1 className="payment-option-page-title">Payment Details</h1>
+        <button className="payment-option-back-button" onClick={handleBack}>
           <ArrowLeft size={20} />
           <span>Back</span>
         </button>
       </div>
 
-      <div className="payment-container">
-        <div className="delivery-route">
-          <div className="address-point">
-            <div className="point-marker start" />
-            <div className="address-details">
+      <div className="payment-option-content">
+        <div className="payment-option-delivery-route">
+          <div className="payment-option-address-point">
+            <div className="payment-option-point-icon">
+              <FaStore className="payment-option-store-icon" />
+            </div>
+            <div className="payment-option-address-details">
               <h3>From</h3>
               <p><strong>{restaurantOrderDetails.restaurant_name}</strong></p>
               <p>{restaurantOrderDetails.restaurant_address}</p>
             </div>
           </div>
-          <div className="delivery-line" />
-          <div className="address-point">
-            <div className="point-marker end" />
-            <div className="address-details">
+          <div className="payment-option-delivery-line" />
+          <div className="payment-option-address-point">
+            <div className="payment-option-point-icon">
+              <FaUser className="payment-option-user-icon" />
+            </div>
+            <div className="payment-option-address-details">
               <h3>To</h3>
               <p><strong>{restaurantOrderDetails.user_name}</strong></p>
               <p>{restaurantOrderDetails.customer_address}</p>
@@ -281,34 +292,53 @@ const PaymentOption = ({ user }) => {
           </div>
         </div>
 
-        <div className="order-summary-card_payment">
+        <div className="payment-option-order-summary-card">
           <h3>Order Summary</h3>
-          <div className="order-details">
-            <p><span>⏱</span> Estimated delivery: 30-45 mins</p>
-            <p><span>🛒</span> {restaurantOrderDetails.number_of_items} items</p>
-            {restaurantOrderDetails.delivery_fee > 0 && (
-              <p><span>🚚</span> Delivery fee: ₹{restaurantOrderDetails.delivery_fee}</p>
-            )}
+          <div className="payment-option-order-details">
+            <div className="payment-option-order-item">
+              <span className="payment-option-item-icon">🛒</span>
+              <span className="payment-option-item-label">{restaurantOrderDetails.number_of_items} items</span>
+            </div>
+            <div className="payment-option-order-item">
+              <span className="payment-option-item-icon">📦</span>
+              <span className="payment-option-item-label">Item Total:</span>
+              <span className="payment-option-item-value">₹{restaurantOrderDetails.item_total}</span>
+            </div>
+            <div className="payment-option-order-item">
+              <span className="payment-option-item-icon">🏍️</span>
+              <span className="payment-option-item-label">Delivery Fee:</span>
+              <span className="payment-option-item-value">₹{restaurantOrderDetails.delivery_fee}</span>
+            </div>
             {restaurantOrderDetails.tax_amount > 0 && (
-              <p><span>🧾</span> Tax: ₹{restaurantOrderDetails.tax_amount}</p>
+              <div className="payment-option-order-item">
+                <span className="payment-option-item-icon">🧾</span>
+                <span className="payment-option-item-label">Tax:</span>
+                <span className="payment-option-item-value">₹{restaurantOrderDetails.tax_amount}</span>
+              </div>
             )}
-            <p className="order-total">
-              <span>Total:</span> ₹{restaurantOrderDetails.total_amount}
-            </p>
+            <div className="payment-option-order-item discount">
+              <span className="payment-option-item-icon">🎁</span>
+              <span className="payment-option-item-label">Discount (10%):</span>
+              <span className="payment-option-item-value">- ₹{restaurantOrderDetails.discount}</span>
+            </div>
+            <div className="payment-option-order-total">
+              <span className="payment-option-total-label">Total Payable:</span>
+              <span className="payment-option-total-value">₹{restaurantOrderDetails.total_amount}</span>
+            </div>
           </div>
         </div>
 
-        <div className="payment-methods-section">
+        <div className="payment-option-methods-section">
           <h2>Select Payment Method</h2>
-          <div className="payment-methods-grid">
+          <div className="payment-option-methods-grid">
             {paymentMethods.map((method) => (
               <div
                 key={method.id}
-                className={`payment-method-card ${selectedPayment === method.id ? "selected" : ""}`}
+                className={`payment-option-method-card ${selectedPayment === method.id ? "selected" : ""}`}
                 onClick={() => setSelectedPayment(method.id)}
               >
-                <div className="method-icon">{method.icon}</div>
-                <div className="method-info">
+                <div className="payment-option-method-icon">{method.icon}</div>
+                <div className="payment-option-method-info">
                   <h4>{method.name}</h4>
                   <p>{method.description}</p>
                 </div>
@@ -317,15 +347,15 @@ const PaymentOption = ({ user }) => {
           </div>
         </div>
 
-        <div className="payment-actions">
+        <div className="payment-option-actions">
           <button
-            className={`payment-button ${loading ? "processing" : ""}`}
+            className={`payment-option-button ${loading ? "processing" : ""}`}
             onClick={initiatePayment}
             disabled={!selectedPayment || loading}
           >
             {loading ? (
               <>
-                <span className="payment_spinner" />
+                <span className="payment-option-spinner" />
                 Processing...
               </>
             ) : selectedPayment === "cod" ? (
