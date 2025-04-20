@@ -248,6 +248,12 @@ class OrderPlacementSerializer(serializers.Serializer):
         required=True
     )
     is_takeaway = serializers.BooleanField(default=False)
+    delivery_fee = serializers.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        required=False,
+        allow_null=True
+    )
     delivery_address_id = serializers.CharField(required=True)
     special_instructions = serializers.CharField(required=False, allow_blank=True)
 

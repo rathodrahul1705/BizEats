@@ -1,8 +1,8 @@
 from django.core.mail import send_mail, EmailMessage
-from django.conf import settings
 from api.models import Cart, Order, RestaurantMenu, User, UserDeliveryAddress
-from decimal import Decimal
 from decouple import config
+from decimal import Decimal, ROUND_UP, ROUND_HALF_UP
+from django.conf import settings
 
 def get_order_email_content(order):
     status_messages = {
@@ -45,42 +45,43 @@ def get_order_email_content(order):
         "message": "There is an update regarding your order. Please check your order details."
     })
 
-
 def send_order_status_email(order):
+    
     user = User.objects.filter(id=order.user_id).first()
     cart_items = Cart.objects.filter(order_number=order.order_number)
     delivery_address = UserDeliveryAddress.objects.filter(id=order.delivery_address_id).first()
 
-    address_string = ""
-    if delivery_address:
-        address_parts = [
-            delivery_address.street_address,
-            delivery_address.city,
-            delivery_address.state,
-            delivery_address.zip_code,
-            delivery_address.country
-        ]
-        address_string = ", ".join([part for part in address_parts if part])
+    address_parts = filter(None, [
+        delivery_address.street_address if delivery_address else "",
+        delivery_address.city if delivery_address else "",
+        delivery_address.state if delivery_address else "",
+        delivery_address.zip_code if delivery_address else "",
+        delivery_address.country if delivery_address else "",
+    ])
+    address_string = ", ".join(address_parts)
 
     item_rows = ""
-    subtotal = Decimal(0)
+    subtotal = Decimal("0.00")
 
     for item in cart_items:
         menu_item = RestaurantMenu.objects.filter(id=item.item_id).first()
-        price = menu_item.item_price if menu_item else Decimal(0)
+        price = menu_item.item_price if menu_item else Decimal("0.00")
         item_total = price * item.quantity
         subtotal += item_total
 
         item_rows += f"""
             <tr>
-                <td style="padding: 10px 0;">{item.quantity} x {menu_item.item_name if menu_item else "Unknown"}</td>
+                <td style="padding: 10px 0;">{item.quantity} x {menu_item.item_name if menu_item else "Unknown Item"}</td>
                 <td style="padding: 10px 0; text-align: right;">₹{item_total:.2f}</td>
             </tr>
         """
 
     handling_fee = Decimal("0.00")
-    delivery_fee = Decimal("0.00")
-    grand_total = subtotal + handling_fee + delivery_fee
+    delivery_fee = order.delivery_fee or Decimal("0.00")
+    total_before_discount = subtotal + handling_fee + delivery_fee
+    raw_discount = total_before_discount * Decimal("0.10")
+    discount = raw_discount.quantize(Decimal("1."), rounding=ROUND_HALF_UP)
+    grand_total = (total_before_discount - discount).quantize(Decimal("1."), rounding=ROUND_HALF_UP)
 
     email_content = get_order_email_content(order)
     subject = email_content["subject"]
@@ -91,12 +92,7 @@ def send_order_status_email(order):
     <html>
     <head>
         <style>
-            body {{
-                font-family: 'Segoe UI', sans-serif;
-                background-color: #f4f4f4;
-                margin: 0;
-                padding: 0;
-            }}
+            body {{ font-family: 'Segoe UI', sans-serif; background-color: #f4f4f4; }}
             .container {{
                 background-color: #fff;
                 max-width: 650px;
@@ -106,36 +102,13 @@ def send_order_status_email(order):
                 box-shadow: 0 5px 15px rgba(0,0,0,0.07);
                 border-top: 6px solid #ff6600;
             }}
-            .header {{
-                text-align: center;
-                margin-bottom: 10px;
-            }}
-            .header img {{
-                max-height: 60px;
-            }}
-            .sub-header {{
-                text-align: center;
-                font-size: 15px;
-                color: #666;
-                margin-bottom: 20px;
-            }}
-            .section-title {{
-                font-size: 16px;
-                font-weight: bold;
-                margin: 25px 0 10px;
-                color: #444;
-            }}
-            table {{
-                width: 100%;
-                border-collapse: collapse;
-            }}
-            td {{
-                font-size: 14px;
-                border-bottom: 1px solid #eee;
-            }}
-            .summary-table td {{
-                padding: 10px 0;
-            }}
+            .header {{ text-align: center; }}
+            .header img {{ max-height: 60px; }}
+            .sub-header {{ text-align: center; font-size: 15px; color: #666; margin: 20px 0; }}
+            .section-title {{ font-size: 16px; font-weight: bold; margin-top: 25px; }}
+            table {{ width: 100%; border-collapse: collapse; }}
+            td {{ font-size: 14px; border-bottom: 1px solid #eee; }}
+            .summary-table td {{ padding: 10px 0; }}
             .summary-table tr:last-child td {{
                 font-weight: bold;
                 font-size: 16px;
@@ -143,26 +116,16 @@ def send_order_status_email(order):
                 padding-top: 12px;
                 color: #333;
             }}
-            .footer {{
-                text-align: center;
-                font-size: 13px;
-                color: #aaa;
-                margin-top: 40px;
-            }}
-            .track-button {{
-                text-align: center;
-                margin: 20px 0;
-            }}
+            .track-button {{ text-align: center; margin: 20px 0; }}
             .track-button a {{
-                display: inline-block;
                 background-color: #ff6600;
                 color: #fff;
                 padding: 12px 25px;
-                font-size: 15px;
                 font-weight: bold;
                 border-radius: 6px;
                 text-decoration: none;
             }}
+            .footer {{ text-align: center; font-size: 13px; color: #aaa; margin-top: 40px; }}
         </style>
     </head>
     <body>
@@ -176,7 +139,7 @@ def send_order_status_email(order):
             <p>{message_text}</p>
 
             <div class="track-button">
-                <a href="{config("REACT_APP_BASE_URL")}/track-order">Track Your Order</a>
+                <a href="{settings.REACT_APP_BASE_URL}/track-order">Track Your Order</a>
             </div>
 
             <div class="section-title">Delivery Address:</div>
@@ -202,6 +165,10 @@ def send_order_status_email(order):
                     <td style="text-align: right;">₹{delivery_fee:.2f}</td>
                 </tr>
                 <tr>
+                    <td>Discount (10%)</td>
+                    <td style="text-align: right;">-₹{discount:.2f}</td>
+                </tr>
+                <tr>
                     <td>Grand Total</td>
                     <td style="text-align: right;">₹{grand_total:.2f}</td>
                 </tr>
@@ -215,20 +182,20 @@ def send_order_status_email(order):
     </html>
     """
 
-    recipient_list = [user.email, order.restaurant.owner_details.owner_email_address]
+    recipient_list = list(filter(None, [
+        user.email if user else None,
+        getattr(order.restaurant.owner_details, "owner_email_address", None)
+    ]))
 
-    send_mail(
-        subject=subject,
-        message="This is an HTML-only email.",
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=recipient_list,
-        html_message=html_message,
-        fail_silently=False,
-    )
-
-
-
-
+    if recipient_list:
+        send_mail(
+            subject=subject,
+            message="This is an HTML-only email.",
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=recipient_list,
+            html_message=html_message,
+            fail_silently=False,
+        )
 
 def send_otp_email(user, subject, otp_type):
 

@@ -14,6 +14,7 @@ import { Bike, Maximize2, Minimize2, ChevronDown, ChevronUp } from "lucide-react
 import API_ENDPOINTS from "../components/config/apiConfig";
 import fetchData from "../components/services/apiService";
 import StripeLoader from "../loader/StripeLoader";
+import { Decimal } from 'decimal.js';
 
 // Fix default icon paths
 delete L.Icon.Default.prototype._getIconUrl;
@@ -355,6 +356,13 @@ const TrackOrder = ({ user }) => {
     }
   };
 
+  const subtotal = Number(selectedOrder.subtotal);
+  const deliveryFee = Number(selectedOrder.delivery_fee);
+
+  const totalBeforeDiscount = subtotal + deliveryFee;
+  const discount = Math.round(totalBeforeDiscount * 0.10);  // round discount to nearest integer
+  const total = Math.ceil(totalBeforeDiscount - discount);  // round total up to nearest rupee
+
   return (
     <div className="track-order-container">
       <div className="track-header">
@@ -500,11 +508,19 @@ const TrackOrder = ({ user }) => {
 
         <div className="order-pricing">
           <div className="pricing-line">
-            <span>Subtotal</span>
+            <span>Subtotal:</span>
             <span>₹{selectedOrder.subtotal}</span>
           </div>
+          <div className="pricing-line">
+            <span>Delivery Fee:</span>
+            <span>₹{selectedOrder.delivery_fee}</span>
+          </div>
+          <div className="pricing-line">
+            <span>Discount (10%):</span>
+            <span>₹{discount}</span>
+          </div>
           <div className="pricing-line total-line">
-            <span>Total</span>
+            <span>Total:</span>
             <span>₹{selectedOrder.total}</span>
           </div>
         </div>

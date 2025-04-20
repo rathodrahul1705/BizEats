@@ -136,6 +136,7 @@ const PaymentOption = ({ user }) => {
       special_instructions: "Less spicy please",
       razorpay_order_id,
       razorpay_payment_id,
+      delivery_fee: restaurantOrderDetails.delivery_fee, // Added delivery_fee here
     };
 
     try {
@@ -148,7 +149,7 @@ const PaymentOption = ({ user }) => {
       console.error("Error storing order details:", error);
       throw error;
     }
-  }, [user?.user_id, restaurant_id, delivery_address_id]);
+  }, [user?.user_id, restaurant_id, delivery_address_id, restaurantOrderDetails]);
 
   const updateCartCount = useCallback(() => {
     localStorage.removeItem("cart_count");
@@ -259,7 +260,7 @@ const PaymentOption = ({ user }) => {
         </div>
       )}
 
-      <div className="payment-option-header-wrapper">
+    <div className="payment-option-header-wrapper">
         <h1 className="payment-option-page-title">Payment Details</h1>
         <button className="payment-option-back-button" onClick={handleBack}>
           <ArrowLeft size={20} />

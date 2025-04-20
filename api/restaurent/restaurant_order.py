@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from decimal import Decimal
+from decimal import Decimal, ROUND_UP
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
@@ -590,9 +590,13 @@ class PlaceOrderAPI(APIView):
 
                 # Calculate order totals
                 subtotal = sum(item.item.item_price * item.quantity for item in cart_items)
-                tax = subtotal * Decimal('0.05')  # Example 5% tax
-                delivery_fee = Decimal('50.00') if not data['is_takeaway'] else Decimal('0.00')
-                total = subtotal + tax + delivery_fee
+                tax = subtotal * Decimal('0.00')  # Example 5% tax
+                delivery_fee = data['delivery_fee']
+                
+                total_before_discount = subtotal + tax + delivery_fee
+                discount = total_before_discount * Decimal('0.10')
+                total = total_before_discount - discount
+                total = total.quantize(Decimal('1.'), rounding=ROUND_UP)
 
                 # Create order
                 current_time = datetime.now()
@@ -605,6 +609,7 @@ class PlaceOrderAPI(APIView):
                     payment_status=1,  # Pending
                     payment_method=data['payment_method'],
                     subtotal=subtotal,
+                    delivery_fee=delivery_fee,
                     tax=tax,
                     delivery_date= future_time,
                     quantity=1,

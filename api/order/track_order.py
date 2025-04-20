@@ -76,6 +76,7 @@ class TrackOrder(APIView):
 
                 order_data = {
                     "order_number": order.order_number,
+                    "delivery_fee": order.delivery_fee,
                     "restaurant_name": order.restaurant.restaurant_name,
                     "restaurant_contact": order.restaurant.owner_details.owner_contact,
                     "status": order.get_status_display(),
@@ -84,8 +85,7 @@ class TrackOrder(APIView):
                     "estimated_delivery": order.delivery_date.strftime("%Y-%m-%d %H:%M:%S") if order.delivery_date else "Not available",
                     "items": item_details,
                     "subtotal": str(subtotal),
-                    # "total": str(order.total_amount)
-                    "total": str(subtotal)
+                    "total": str(order.total_amount)
                 }
 
                 data.append(order_data)
