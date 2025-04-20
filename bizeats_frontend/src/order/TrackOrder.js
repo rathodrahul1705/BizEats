@@ -336,16 +336,27 @@ const TrackOrder = ({ user }) => {
     if (!utcDateString) return "N/A";
     const utcDate = new Date(utcDateString.replace(' ', 'T') + 'Z');
     if (isNaN(utcDate.getTime())) return "Invalid Date";
-    const istDate = new Date(utcDate.getTime() + (5.5 * 60 * 60 * 1000));
-    const day = String(istDate.getDate()).padStart(2, '0');
-    const month = String(istDate.getMonth() + 1).padStart(2, '0');
-    const year = istDate.getFullYear();
-    const hours = String(istDate.getHours()).padStart(2, '0');
-    const minutes = String(istDate.getMinutes()).padStart(2, '0');
-    const seconds = String(istDate.getSeconds()).padStart(2, '0');
-    return `${day}-${month}-${year}, ${hours}:${minutes}:${seconds}`;
+  
+    const options = {
+      timeZone: 'Asia/Kolkata',
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    };
+  
+    const formatter = new Intl.DateTimeFormat('en-GB', options);
+    const formattedDate = formatter.format(utcDate).replace(',', '');
+  
+    // Convert "dd/mm/yyyy hh:mm:ss" → "dd-mm-yyyy, hh:mm:ss"
+    const [datePart, timePart] = formattedDate.split(' ');
+    const dateWithHyphen = datePart.replace(/\//g, '-');
+    return `${dateWithHyphen}, ${timePart}`;
   };
-
+  
   const handleCallRestaurant = () => {
     if (selectedOrder?.restaurant_contact) {
       window.location.href = `tel:${selectedOrder.restaurant_contact}`;
@@ -493,8 +504,8 @@ const TrackOrder = ({ user }) => {
 
         <div className="order-section">
           <h3>Items Ordered</h3>
-          {selectedOrder.items.map((item, idx) => (
-            <div className="item-line" key={idx}>
+          {selectedOrder.items.map((item, val) => (
+            <div className="item-line" key={val}>
               <div className="item-name-qty">
                 <span className="item-name">{item.item_name}</span>
                 <span className="item-qty">x{item.quantity}</span>
@@ -515,7 +526,7 @@ const TrackOrder = ({ user }) => {
           </div>
           <div className="pricing-line">
             <span>Discount (10%):</span>
-            <span>₹{discount}</span>
+            <span>- ₹{discount}</span>
           </div>
           <div className="pricing-line total-line">
             <span>Total:</span>
