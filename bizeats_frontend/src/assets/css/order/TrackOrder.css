@@ -273,7 +273,6 @@
 
 .leaflet-popup-content {
   font-size: 14px;
-  padding: 8px 12px;
 }
 
 /* .reached-notification {
@@ -435,7 +434,6 @@
   background: #28a745 !important;
   color: white !important;
   font-weight: 500 !important;
-  padding: 8px 12px !important;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
 }
 
@@ -853,3 +851,66 @@
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
+/* Payment Status Styles */
+.payment-status {
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  margin-left: 6px;
+}
+
+.payment-status.paid,
+.payment-status.completed,
+.payment-status.success {
+  background-color: #e6f7ee;
+  color: #28a745;
+}
+
+.payment-status.pending {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.payment-status.failed,
+.payment-status.declined {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.payment-status.refunded {
+  background-color: #e2e3e5;
+  color: #383d41;
+}
+
+/* Payment Method Icons */
+.payment-method-icon {
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+/* Transaction ID styling */
+.order-section p strong {
+  min-width: 110px;
+  display: inline-block;
+}
+
+/* Responsive adjustments for payment section */
+@media (max-width: 768px) {
+  .order-info-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .order-section {
+    border-bottom: 1px solid #eee;
+    padding-bottom: 1rem;
+    margin-bottom: 1rem;
+  }
+  
+  .order-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+  }
+}
+

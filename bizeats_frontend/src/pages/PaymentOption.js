@@ -101,7 +101,7 @@ const PaymentOption = ({ user }) => {
             amount: restaurantOrderDetails.total_amount,
             restaurantName: restaurantOrderDetails.restaurant_name,
             restaurant_id,
-            paymentMethod: "online",
+            payment_type: 2,
             deliveryAddressId: delivery_address_id,
           },
         });
@@ -126,11 +126,12 @@ const PaymentOption = ({ user }) => {
   }, [navigate, restaurantOrderDetails, restaurant_id, delivery_address_id]);
 
   const storeOrderDetails = useCallback(async (method = "cod", razorpay_order_id = null, razorpay_payment_id = null) => {
-    const payment_method = method === "cod" ? 5 : 1;
+    const payment_type = method === "cod" ? 1 : 2;
     const orderData = {
       user_id: user?.user_id,
       restaurant_id,
-      payment_method,
+      payment_method: 5,
+      payment_type: payment_type,
       delivery_address_id,
       is_takeaway: false,
       special_instructions: "Less spicy please",

@@ -372,6 +372,8 @@ const TrackOrder = ({ user }) => {
   const discount = Math.round(totalBeforeDiscount * 0.10);  // round discount to nearest integer
   const total = Math.ceil(totalBeforeDiscount - discount);  // round total up to nearest rupee
 
+  console.log("selectedOrder===",selectedOrder)
+
   return (
     <div className="track-order-container">
       <div className="track-header">
@@ -415,22 +417,26 @@ const TrackOrder = ({ user }) => {
                 <span className="status-badge">{selectedOrder.status}</span>
                 <p className="eta-note">Enjoy your meal!</p>
               </>
-            ) : estimatedTimestamp === "agent_not_assigned" ? (
+            ) : estimatedTimestamp === "agent_not_assigned" &&
+              !["Delivered", "Cancelled", "Refunded"].includes(selectedOrder.status) ? (
               <>
                 <strong>Assigning a delivery agent...</strong>
                 <span className="status-badge">{selectedOrder.status}</span>
                 <p className="eta-note">We’ll notify you once a delivery agent is assigned.</p>
               </>
-            ) : (
+            ) : typeof estimatedTimestamp === "number" &&
+              !["Delivered", "Cancelled", "Refunded"].includes(selectedOrder.status) ? (
               <>
                 <strong>Arriving:</strong> {estimatedTimestamp} mins
                 <span className="status-badge">{selectedOrder.status}</span>
                 <p className="eta-note">Note: Time shown is an estimate once your order is out for delivery.</p>
               </>
+            ) : (
+              <span className="status-badge">{selectedOrder.status}</span>
             )}
           </div>
         )}
-
+        
       </div>
 
       <div className={`order-summary-card ${isMapExpanded ? 'map-expanded' : ''}`}>
@@ -500,6 +506,45 @@ const TrackOrder = ({ user }) => {
             <h3>Estimated Delivery</h3>
             <p><strong>Expected By:</strong> {convertUTCtoIST(selectedOrder.estimated_delivery)}</p>
           </div>
+
+          <div className="order-section">
+            <h3>Payment Details</h3>
+            {/* <p><strong>Method:</strong> {selectedOrder.payment_method || 'Online Payment'}</p>\ */}
+            <p><strong>Payment Method:</strong> 
+              {selectedOrder.payment_method === 'Credit Card' && (
+                <span className="payment-method">
+                  <svg className="payment-method-icon" width="16" height="16" viewBox="0 0 24 24" fill="#5d78ff">
+                    <path d="M20 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/>
+                  </svg>
+                  Credit Card
+                </span>
+              )}
+              {selectedOrder.payment_method === 'UPI' && (
+                <span className="payment-method">
+                  <svg className="payment-method-icon" width="16" height="16" viewBox="0 0 24 24" fill="#5f2af2">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                  </svg>
+                  UPI
+                </span>
+              )}
+              {selectedOrder.payment_method === 'Cash on Delivery' && (
+                <span className="payment-method">
+                  <svg className="payment-method-icon" width="16" height="16" viewBox="0 0 24 24" fill="#4caf50">
+              <path d="M6 4v2h7.59c-.33.58-.86 1.11-1.59 1.59V9H6v2h5.06c.41.72 1.01 1.27 1.76 1.67L6 20h3l5.03-5.43C16.16 14.22 18 12.54 18 10c0-1.1-.9-2-2-2h-1.17c.11-.31.17-.65.17-1 0-.35-.06-.69-.17-1H18V4H6z"/>
+            </svg>
+                  Cash on Delivery
+                </span>
+              )}
+              {!selectedOrder.payment_method && 'Online Payment'}
+            </p>
+            <p><strong>Payment Status:</strong> 
+              <span className={`payment-status ${selectedOrder.payment_status?.toLowerCase()}`}>
+                {selectedOrder.payment_status == 'Completed' ? "Paid" : selectedOrder.payment_status || 'Paid'}
+              </span>
+            </p>
+            <p><strong>Transaction ID:</strong> {selectedOrder.transaction_id || 'NA'}</p>
+          </div>
+
         </div>
 
         <div className="order-section">

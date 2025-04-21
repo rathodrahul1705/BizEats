@@ -344,6 +344,11 @@ class Order(models.Model):
         (5, 'Cash on Delivery')
     )
 
+    PAYMENT_TYPE = (
+        (1, 'online'),
+        (2, 'cod'),
+    )
+
     user = models.ForeignKey(User, on_delete=models.PROTECT, related_name='orders')
     restaurant = models.ForeignKey(RestaurantMaster, on_delete=models.PROTECT)
     order_number = models.CharField(max_length=20, null=True)
@@ -352,6 +357,12 @@ class Order(models.Model):
     status = models.PositiveSmallIntegerField(choices=ORDER_STATUS_CHOICES, default=1)
     payment_status = models.PositiveSmallIntegerField(choices=PAYMENT_STATUS_CHOICES, default=1)
     payment_method = models.PositiveSmallIntegerField(choices=PAYMENT_METHOD_CHOICES)
+    payment_type = models.PositiveSmallIntegerField(
+        choices=PAYMENT_TYPE,
+        null=True,
+        blank=True,
+        default=None
+    )
     subtotal = models.DecimalField(max_digits=10, decimal_places=2)
     tax = models.DecimalField(max_digits=10, decimal_places=2, null=True)
     delivery_fee = models.DecimalField(max_digits=10, decimal_places=2, null=True)
@@ -370,7 +381,7 @@ class Order(models.Model):
         ordering = ['-order_date']
 
     def __str__(self):
-        return f"Order #{self.order_number} - {self.get_status_display()}"
+        return f"Order #{self.order_number} - {self.get_status_display()} {self.get_payment_status_display()} {self.get_payment_method_display()}"
 
 class OrderStatusLog(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='status_logs')
@@ -406,8 +417,15 @@ class Payment(models.Model):
         (4, 'Cash on Delivery'),
     )
 
+
     order = models.ForeignKey('Order', on_delete=models.PROTECT, related_name='payments')
     payment_gateway = models.PositiveSmallIntegerField(choices=PAYMENT_GATEWAY_CHOICES)
+    payment_type = models.PositiveSmallIntegerField(
+        choices=Order.PAYMENT_TYPE,
+        null=True,
+        blank=True,
+        default=None
+    )
     payment_method = models.PositiveSmallIntegerField(choices=Order.PAYMENT_METHOD_CHOICES)
     status = models.PositiveSmallIntegerField(choices=PAYMENT_STATUS_CHOICES, default=1)
     

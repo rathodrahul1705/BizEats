@@ -254,7 +254,7 @@ const Cart = ({ user, setUser }) => {
           </ul>
           <div className="cart-summary-section">
             <div className="cart-total-section">
-              <span>Total:</span>
+              <span className="cart_total">Total:</span>
               <span>₹{totalPrice}</span>
             </div>
             <button className="cart-proceed-btn" onClick={handlePayment}>
@@ -320,7 +320,7 @@ const Cart = ({ user, setUser }) => {
           </ul>
           <div className="cart-summary-section">
             <div className="cart-total-section">
-              <span>Total:</span>
+              <span className="cart_total">Total:</span>
               <span>₹{totalPrice}</span>
             </div>
             <button 

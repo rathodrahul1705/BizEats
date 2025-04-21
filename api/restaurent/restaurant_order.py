@@ -9,7 +9,8 @@ from rest_framework import status, generics, permissions
 from api.emailer.email_notifications import send_order_status_email
 from api.models import Cart, Order, OrderStatusLog, RestaurantMenu, User
 import json
-from django.db import transaction
+from django.utils.timezone import now
+from django.db import transaction, IntegrityError
 from django.db.models import Q 
 from django.db.models import Sum, Count
 from django.db.models.functions import Coalesce
@@ -594,6 +595,11 @@ class PlaceOrderAPI(APIView):
                 delivery_fee = data['delivery_fee']
                 total = data['total_amount']
 
+                if data['payment_type'] == 1: # COD
+                    payment_status = 2 # Pending
+                else:
+                    payment_status = 5 # Completed
+
                 # Create order
                 current_time = datetime.now()
                 future_time = current_time + timedelta(minutes=45)
@@ -601,9 +607,10 @@ class PlaceOrderAPI(APIView):
                     user_id=data['user_id'],
                     restaurant_id=data['restaurant_id'],
                     order_number=self._generate_order_number(),
-                    status=1,  # Pending
-                    payment_status=1,  # Pending
-                    payment_method=data['payment_method'],
+                    status=1,
+                    payment_status= payment_status,
+                    payment_method= data['payment_method'],
+                    payment_type=data['payment_type'],
                     subtotal=subtotal,
                     delivery_fee=delivery_fee,
                     tax=tax,

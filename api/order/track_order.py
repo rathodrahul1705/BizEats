@@ -6,7 +6,7 @@ from django.utils.decorators import method_decorator
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, generics, permissions
-from api.models import Cart, Order, OrderStatusLog, RestaurantLocation, RestaurantMenu, User, UserDeliveryAddress, OrderLiveLocation
+from api.models import Cart, Order, OrderStatusLog, RestaurantLocation, RestaurantMenu, User, UserDeliveryAddress, OrderLiveLocation, Payment
 from math import radians, sin, cos, sqrt, atan2
 from django.db import transaction
 from django.db.models import Q 
@@ -37,7 +37,12 @@ class TrackOrder(APIView):
             for order in orders:
                 # Get delivery address
                 delivery_address = UserDeliveryAddress.objects.filter(id=order.delivery_address_id).first()
-                
+                payment_details = Payment.objects.filter(order_id=order.id).first()
+                if payment_details:
+                    transaction_id = payment_details.razorpay_payment_id
+                else:
+                    transaction_id = None
+
                 if delivery_address:
                     address_parts = [
                         delivery_address.street_address,
@@ -80,12 +85,15 @@ class TrackOrder(APIView):
                     "restaurant_name": order.restaurant.restaurant_name,
                     "restaurant_contact": order.restaurant.owner_details.owner_contact,
                     "status": order.get_status_display(),
+                    "payment_status": order.get_payment_status_display(),
+                    "payment_method": order.get_payment_method_display(),
                     "placed_on": order.created_at.strftime("%Y-%m-%d %H:%M:%S"),
                     "delivery_address": address_details,
                     "estimated_delivery": order.delivery_date.strftime("%Y-%m-%d %H:%M:%S") if order.delivery_date else "Not available",
                     "items": item_details,
                     "subtotal": str(subtotal),
-                    "total": str(order.total_amount)
+                    "total": str(order.total_amount),
+                    "transaction_id": transaction_id
                 }
 
                 data.append(order_data)

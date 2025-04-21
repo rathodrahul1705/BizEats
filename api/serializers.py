@@ -243,6 +243,10 @@ class UserDeliveryAddressSerializer(serializers.ModelSerializer):
 class OrderPlacementSerializer(serializers.Serializer):
     user_id = serializers.IntegerField(required=True)
     restaurant_id = serializers.CharField(required=True, max_length=20)
+    payment_type = serializers.ChoiceField(
+        choices=Order.PAYMENT_TYPE,
+        required=True
+    )
     payment_method = serializers.ChoiceField(
         choices=Order.PAYMENT_METHOD_CHOICES,
         required=True

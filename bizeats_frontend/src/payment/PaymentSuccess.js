@@ -22,6 +22,7 @@ const PaymentSuccess = () => {
       razorpay_signature: state.razorpay_signature,
       amount: state.amount,
       deliveryAddressId: state.deliveryAddressId,
+      payment_type: state.payment_type,
       eatoor_order_id: state.eatoor_order_id,
       eatoor_order_number: state.eatoor_order_number,
       restaurant_id: state.restaurant_id,

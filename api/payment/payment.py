@@ -30,28 +30,24 @@ def create_order(request):
     except Exception as e:
         return Response({'error': str(e)}, status=400)
 
-# @csrf_exempt
-# @api_view(['POST'])
-# def verify_payment(request):
-#     try:
-#         data = request.data
-#         params_dict = {
-#             'razorpay_order_id': data['razorpay_order_id'],
-#             'razorpay_payment_id': data['razorpay_payment_id'],
-#             'razorpay_signature': data['razorpay_signature']
-#         }
-        
-#         # Verify payment signature
-#         client.utility.verify_payment_signature(params_dict)
-#         payment_details = client.payment.fetch(data['razorpay_payment_id'])
-        
-#         # Payment successful - save to database, etc.
-#         # Add your business logic here
-        
-#         return Response({'status': 'Payment Successful','payment_details':payment_details})
-        
-#     except Exception as e:
-#         return Response({'error': str(e)}, status=400)
+def get_payment_method_code(razorpay_method, card_type=None):
+    if razorpay_method == 'card':
+        if card_type == 'credit':
+            return 1  # Credit Card
+        elif card_type == 'debit':
+            return 2  # Debit Card (new code)
+        elif card_type == 'prepaid':
+            return 2  # Prepaid Card
+        else:
+            return 7
+    elif razorpay_method == 'upi':
+        return 3
+    elif razorpay_method == 'netbanking':
+        return 4
+    elif razorpay_method == 'cash':
+        return 5
+    return None
+
 
 @csrf_exempt
 @api_view(['POST'])
@@ -74,12 +70,14 @@ def verify_payment(request):
         order = Order.objects.get(id=data['eatoor_order_id'])
 
         # Step 4: Create or update the payment record
+        payment_method_code = get_payment_method_code(payment_details.get('method'), payment_details.get('type', None))
         payment, created = Payment.objects.update_or_create(
             razorpay_payment_id=data['razorpay_payment_id'],
             defaults={
                 'order': order,
                 'payment_gateway': 1,  # Razorpay
-                'payment_method': order.payment_method,
+                'payment_method': payment_method_code,
+                'payment_type': data['payment_type'],
                 'status': 5,  # Captured
                 'razorpay_order_id': data['razorpay_order_id'],
                 'razorpay_signature': data['razorpay_signature'],
@@ -93,6 +91,9 @@ def verify_payment(request):
                 'raw_response': payment_details
             }
         )
+
+        order.payment_method = payment_method_code
+        order.save()
 
         return Response({
             'status': 'Payment Successful',
