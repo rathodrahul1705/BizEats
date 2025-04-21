@@ -73,13 +73,14 @@ function RoutingWithLiveBike({ orderId, to, setDuration, setHasReached }) {
         const res = await fetchData(API_ENDPOINTS.TRACK.ORDER_LIVE_LOCATION, "POST", { order_id: orderId });
         if (
           res.status === "success" &&
-          res.deliver_agent_location &&
+          res.deliver_agent_location?.lat != null &&
+          res.deliver_agent_location?.lng != null &&
           res.restaurant_location &&
           res.user_destination
         ) {
-          const agent = L.latLng(res.deliver_agent_location.lat, res.deliver_agent_location.lng);
-          const restaurant = L.latLng(res.restaurant_location.lat, res.restaurant_location.lng);
-          const customer = L.latLng(res.user_destination.lat, res.user_destination.lng);
+          const agent = L.latLng(res.deliver_agent_location?.lat, res.deliver_agent_location?.lng);
+          const restaurant = L.latLng(res.restaurant_location?.lat, res.restaurant_location?.lng);
+          const customer = L.latLng(res.user_destination?.lat, res.user_destination?.lng);
 
           // Skip if no significant movement
           if (prevLatLng.current && agent.distanceTo(prevLatLng.current) < 5) return;
@@ -181,7 +182,7 @@ function RoutingWithLiveBike({ orderId, to, setDuration, setHasReached }) {
     };
 
     fetchAndUpdate();
-    const interval = setInterval(fetchAndUpdate, 15000);
+    const interval = setInterval(fetchAndUpdate, 120000);
 
     return () => {
       clearInterval(interval);
@@ -253,8 +254,8 @@ const TrackOrder = ({ user }) => {
           // Validate and parse location data
           const parseLocation = (loc) => {
             if (!loc) return null;
-            const lat = parseFloat(loc.lat);
-            const lng = parseFloat(loc.lng);
+            const lat = parseFloat(loc?.lat);
+            const lng = parseFloat(loc?.lng);
             return !isNaN(lat) && !isNaN(lng) ? { lat, lng } : null;
           };
   
@@ -372,8 +373,6 @@ const TrackOrder = ({ user }) => {
   const discount = Math.round(totalBeforeDiscount * 0.10);  // round discount to nearest integer
   const total = Math.ceil(totalBeforeDiscount - discount);  // round total up to nearest rupee
 
-  console.log("selectedOrder===",selectedOrder)
-
   return (
     <div className="track-order-container">
       <div className="track-header">
@@ -453,19 +452,19 @@ const TrackOrder = ({ user }) => {
           >
             <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
             {restaurantLocation && (
-              <Marker position={[restaurantLocation.lat, restaurantLocation.lng]} icon={kitchenIcon}>
+              <Marker position={[restaurantLocation?.lat, restaurantLocation?.lng]} icon={kitchenIcon}>
                 <Popup>Restaurant: {selectedOrder?.restaurant_name}</Popup>
               </Marker>
             )}
             {userLocation && (
-              <Marker position={[userLocation.lat, userLocation.lng]} icon={customerIcon}>
+              <Marker position={[userLocation?.lat, userLocation?.lng]} icon={customerIcon}>
                 <Popup>Your Location</Popup>
               </Marker>
             )}
             {selectedOrder.status === "On the Way" && (
               <RoutingWithLiveBike
                 orderId={selectedOrder.order_number}
-                to={userLocation ? [userLocation.lat, userLocation.lng] : null}
+                to={userLocation ? [userLocation?.lat, userLocation?.lng] : null}
                 setDuration={setDuration}
                 setHasReached={setHasReached}
                 status={selectedOrder.status}

@@ -117,7 +117,7 @@ const OrderManagement = ({ user }) => {
       onTheWayOrders.forEach(order => {
         updateLiveLocation(order.order_number);
       });
-    }, 5000);
+    }, 120000);
 
     return () => clearInterval(interval); // Cleanup on unmount
   }, [orders]);

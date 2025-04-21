@@ -398,24 +398,18 @@ class UpdateOrderLiveLocationView(APIView):
                     "message": "order_number, latitude, and longitude are required."
                 }, status=status.HTTP_400_BAD_REQUEST)
 
-            # Check if a live location entry exists
-            live_location = OrderLiveLocation.objects.filter(order_number=order_number).order_by("-timestamp").first()
+            # ✅ Check if order_number already exists in OrderLiveLocation
+            live_location, created = OrderLiveLocation.objects.update_or_create(
+                order_number=order_number,
+                defaults={
+                    "latitude": latitude,
+                    "order_number": order_number,
+                    "longitude": longitude,
+                    "timestamp": timezone.now()
+                }
+            )
 
-            if live_location:
-                # Update the latest location
-                live_location.latitude = latitude
-                live_location.longitude = longitude
-                live_location.timestamp = timezone.now()
-                live_location.save()
-                message = "Live location updated successfully."
-            else:
-                # Create a new one
-                OrderLiveLocation.objects.create(
-                    order_number=order_number,
-                    latitude=latitude,
-                    longitude=longitude,
-                )
-                message = "Live location created successfully."
+            message = "Live location created successfully." if created else "Live location updated successfully."
 
             return Response({
                 "status": "success",
@@ -427,3 +421,5 @@ class UpdateOrderLiveLocationView(APIView):
                 "status": "error",
                 "message": str(e)
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
