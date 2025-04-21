@@ -1,7 +1,7 @@
 from django.urls import path, re_path, include
 
 from api.payment.payment import create_order, verify_payment
-from .views import UserProfileView, UserRegistrationView, OTPVerificationView, UserLoginView, ContactUsView, ReactAppView
+from .views import CustomTokenRefreshView, UserProfileView, UserRegistrationView, OTPVerificationView, UserLoginView, ContactUsView, ReactAppView
 from .restaurent.registration_process import RestaurantStoreStepOne, RestaurantStoreStepTwo, RestaurantStoreStepThree, RestaurantStoreStepFour, RestaurantByUserAPIView, RestaurantByRestauranrtAPIView, RestaurantMenueStore, RestaurantMenueList,RestaurantMenueDetails,RestaurantMenueUpdate,RestaurantMenueDelete, RestaurantListAPI, RestaurantDetailMenuView
 from django.conf import settings
 from django.conf.urls.static import static
@@ -18,6 +18,7 @@ urlpatterns = [
     path("api/verify-otp/", OTPVerificationView.as_view(), name="verify-otp"),
     path("api/login/", UserLoginView.as_view(), name="user-login"),
     path("api/user/", UserProfileView.as_view(), name="user-profile"), 
+    path('api/token/refresh/', CustomTokenRefreshView.as_view(), name='custom_token_refresh'),
 
     path("api/contact-us/", ContactUsView.as_view(), name="contact-us"), 
 

@@ -6,6 +6,7 @@ const API_ENDPOINTS = {
     VERIFY_OTP: `${BASE_URL}/verify-otp/`,
     LOGIN: `${BASE_URL}/login/`,
     USER_PROFILE: `${BASE_URL}/user/`,
+    REFRESH_TOKEN: `${BASE_URL}/token/refresh/`,
   },
   RESTAURANT: {
     BY_USER: (userId) => 
