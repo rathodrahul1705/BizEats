@@ -113,10 +113,10 @@ const Header = ({ user, setUser }) => {
                           <span>Profile</span>
                         </Link>
 
-                        <Link to="/track-order" className="header__dropdown-item">
+                        {/* <Link to="/track-order" className="header__dropdown-item">
                           <Package size={16} className="header__dropdown-icon" /> 
                           <span>Track Order</span>
-                        </Link>
+                        </Link> */}
 
                         {is_restaurant_register === "true" && (
                           <Link to="/vendor-dashboard" className="header__dropdown-item">

@@ -172,12 +172,13 @@ const PaymentOption = ({ user }) => {
     setLoading(true);
     try {
       if (selectedPayment === "cod") {
-        await storeOrderDetails("cod");
+        const storedOrder = await storeOrderDetails("cod");
         updateCartCount();
         navigate("/order-confirmation", {
           state: {
             paymentMethod: "Cash on Delivery",
             amount: restaurantOrderDetails.total_amount,
+            order_number: storedOrder.order_number,
             restaurantName: restaurantOrderDetails.restaurant_name,
             restaurant_id,
             deliveryAddressId: delivery_address_id,

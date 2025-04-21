@@ -49,7 +49,7 @@ const PaymentSuccess = () => {
       <div className="payment-details">
         <p><strong>Amount Paid:</strong> ₹{state?.amount}</p>
         <p><strong>Payment ID:</strong> {state?.paymentId}</p>
-        <p><strong>Order ID:</strong> {state?.orderId}</p>
+        <p><strong>Order Number:</strong> {state?.eatoor_order_number}</p>
         {state?.restaurantName && (
           <p><strong>Home Kitchen:</strong> {state.restaurantName}</p>
         )}
@@ -58,7 +58,7 @@ const PaymentSuccess = () => {
       <div className="action-buttons">
         <button
           className="primary-btn"
-          onClick={() => navigate('/track-order')}
+          onClick={() => navigate(`/track-order/${state?.eatoor_order_number}`)}
         >
           Track Your Order
         </button>

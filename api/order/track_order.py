@@ -26,13 +26,13 @@ class TrackOrder(APIView):
     def post(self, request, *args, **kwargs):
         try:
             user_id = request.data.get('user_id')
+            order_number = request.data.get('order_number')
             user = User.objects.filter(id=user_id).first()
             if not user:
                 return Response({"status": "error", "message": "User not found"}, status=status.HTTP_404_NOT_FOUND)
 
             full_name = user.full_name
-            orders = Order.objects.filter(user_id=user_id)
-
+            orders = Order.objects.filter(user_id=user_id, order_number=order_number)
             data = []
             for order in orders:
                 # Get delivery address
@@ -211,7 +211,7 @@ class OrderDetails(APIView):
                 return Response({"status": "error", "message": "User not found"}, status=status.HTTP_404_NOT_FOUND)
 
             full_name = user.full_name
-            orders = Order.objects.filter(user_id=user_id,status=6)
+            orders = Order.objects.filter(user_id=user_id)
             config_data  = config("REACT_APP_BASE_URL")
             data = []
             for order in orders:
@@ -423,3 +423,39 @@ class UpdateOrderLiveLocationView(APIView):
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+@method_decorator(csrf_exempt, name='dispatch')
+class GetActiveOrders(APIView):
+    """
+    Handles tracking orders for a user.
+    """
+
+    def post(self, request, *args, **kwargs):
+        try:
+            user_id = request.data.get('user_id')
+            user = User.objects.filter(id=user_id).first()
+            if not user:
+                return Response({"status": "error", "message": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
+            orders = Order.objects.filter(user_id=user_id).exclude(status__in=[6, 7, 8])
+            data = []
+            for order in orders:
+
+                order_data = {
+                    "order_number": order.order_number,
+                    "status": order.get_status_display(),
+                    "placed_on": order.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+                    "estimated_delivery": order.delivery_date.strftime("%Y-%m-%d %H:%M:%S") if order.delivery_date else "Not available",
+                }
+
+                data.append(order_data)
+
+            return Response({
+                "status": "success",
+                "orders": data
+            })
+
+        except Exception as e:
+            return Response(
+                {"status": "error", "message": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )

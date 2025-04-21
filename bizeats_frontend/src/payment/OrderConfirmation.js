@@ -6,7 +6,7 @@ import '../assets/css/payment/PaymentStatus.css';
 const OrderConfirmation = () => {
   const { state } = useLocation();
   const navigate = useNavigate();
-
+  
   return (
     <div className="payment-status-container confirmation">
       <div className="status-icon">
@@ -18,6 +18,7 @@ const OrderConfirmation = () => {
         <p className="delivery-info">
           <FaClock /> Your order will be delivered in 30-45 minutes
         </p>
+        <p><strong>Order Number:</strong> {state?.order_number}</p>
         <p><strong>Payment Method:</strong> {state?.paymentMethod}</p>
         <p><strong>Order Total:</strong> ₹{state?.amount}</p>
         {state?.restaurantName && (
@@ -28,7 +29,7 @@ const OrderConfirmation = () => {
       <div className="action-buttons">
         <button 
           className="primary-btn"
-          onClick={() => navigate('/track-order')}
+          onClick={() => navigate(`/track-order/${state?.order_number}`)}
         >
           <FaCartPlus /> Track Your Order
         </button>

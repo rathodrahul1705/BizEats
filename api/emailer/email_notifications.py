@@ -139,7 +139,7 @@ def send_order_status_email(order):
             <p>{message_text}</p>
 
             <div class="track-button">
-                <a href="{settings.REACT_APP_BASE_URL}/track-order">Track Your Order</a>
+                <a href="{settings.REACT_APP_BASE_URL}/track-order/{order.order_number}">Track Your Order</a>
             </div>
 
             <div class="section-title">Delivery Address:</div>

@@ -14,7 +14,8 @@ import { Bike, Maximize2, Minimize2, ChevronDown, ChevronUp } from "lucide-react
 import API_ENDPOINTS from "../components/config/apiConfig";
 import fetchData from "../components/services/apiService";
 import StripeLoader from "../loader/StripeLoader";
-import { Decimal } from 'decimal.js';
+import { useParams } from "react-router-dom";
+
 
 // Fix default icon paths
 delete L.Icon.Default.prototype._getIconUrl;
@@ -197,6 +198,7 @@ function RoutingWithLiveBike({ orderId, to, setDuration, setHasReached }) {
 }
 
 const TrackOrder = ({ user }) => {
+  const { order_number } = useParams();
   const [orders, setOrders] = useState([]);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [noOrders, setNoOrders] = useState(false);
@@ -222,12 +224,15 @@ const TrackOrder = ({ user }) => {
     Refunded: 0,
   };
 
+  // console.log("order_number===",order_number)
+
   useEffect(() => {
     const fetchOrders = async () => {
       try {
         setLoading(true);
         const res = await fetchData(API_ENDPOINTS.TRACK.TRACK_ORDER, "POST", {
           user_id: user?.user_id,
+          order_number:order_number
         });
         if (res.status === "success" && res.orders.length) {
           setOrders(res.orders);

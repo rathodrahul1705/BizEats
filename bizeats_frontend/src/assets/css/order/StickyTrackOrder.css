@@ -1,0 +1,361 @@
+/* Base Sticky Order Component */
+.sticky-order {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #fff;
+    border-top: 1px solid #ddd;
+    z-index: 1000;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  .sticky-order__content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  
+  .sticky-order__status-indicator {
+    flex-shrink: 0;
+  }
+  
+  .sticky-order__icon {
+    font-size: 24px;
+  }
+  
+  .sticky-order__icon--delivering {
+    color: #e65c00;
+    animation: pulse 1.5s infinite;
+  }
+  
+  .sticky-order__icon--preparing {
+    color: #666;
+  }
+  
+  .sticky-order__info {
+    flex-grow: 1;
+    min-width: 0;
+  }
+  
+  .sticky-order__status-message {
+    display: flex;
+    flex-direction: column;
+    font-size: 14px;
+    color: #333;
+  }
+  
+  .sticky-order__title {
+    font-weight: 600;
+    margin-bottom: 2px;
+  }
+
+  .sticky-order__time {
+    font-size: 13px;
+    color: #777;
+  }
+
+  .sticky-order__selection {
+    position: relative;
+  }
+  
+  .sticky-order__selector {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #f8f8f8;
+    padding: 4px 10px;
+    border-radius: 16px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  
+  .sticky-order__selector:hover {
+    background: #f0f0f0;
+  }
+  
+  .sticky-order__number {
+    color: #e65c00;
+    font-weight: 600;
+    font-size: 13px;
+  }
+  
+  .sticky-order__expand-icon {
+    color: #999;
+    display: flex;
+    align-items: center;
+  }
+  
+  .sticky-order__dropdown {
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    width: 280px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    margin-bottom: 10px;
+    z-index: 1001;
+    overflow: hidden;
+  }
+  
+  .sticky-order__dropdown-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 12px;
+    background: #f5f5f5;
+    border-bottom: 1px solid #eee;
+    font-size: 12px;
+    font-weight: 500;
+  }
+  
+  .sticky-order__close-button {
+    background: none;
+    border: none;
+    color: #999;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+  }
+  
+  .sticky-order__list {
+    max-height: 200px;
+    overflow-y: auto;
+  }
+  
+  .sticky-order__item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    cursor: pointer;
+    border-bottom: 1px solid #f5f5f5;
+  }
+  
+  .sticky-order__item:hover {
+    background: #f9f9f9;
+  }
+  
+  .sticky-order__item--selected {
+    background: #fff5f0;
+  }
+  
+  .sticky-order__item-status .sticky-order__icon--delivering {
+    color: #e65c00;
+  }
+  
+  .sticky-order__item-status .sticky-order__icon--preparing {
+    color: #666;
+  }
+  
+  .sticky-order__item-details {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .sticky-order__item-number {
+    font-weight: 600;
+    font-size: 13px;
+    color: #333;
+  }
+  
+  .sticky-order__item-time {
+    font-size: 11px;
+    color: #666;
+  }
+  
+  .sticky-order__button {
+  background: #e65c00;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 14px;
+  font-size: 14px;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+  
+  .sticky-order__button:hover {
+    background: #d35400;
+  }
+  
+  /* Track Order Popup */
+  .sticky-order__popup {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1100;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end; /* Align to bottom */
+    padding: 0;
+  }
+  
+  .sticky-order__popup-content {
+    background: white;
+    border-radius: 12px 12px 0 0;
+    width: 100%;
+    max-height: 90vh;
+    overflow: hidden;
+    box-shadow: 0 -2px 20px rgba(0, 0, 0, 0.15);
+    animation: slideUpFromBottom 0.3s ease;
+  }
+  
+  .sticky-order__popup-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .sticky-order__popup-header h3 {
+    margin: 0;
+    font-size: 18px;
+    color: #333;
+  }
+  
+  .sticky-order__popup-close {
+    background: none;
+    border: none;
+    color: #999;
+    cursor: pointer;
+    padding: 4px;
+  }
+  
+  .sticky-order__popup-close {
+    background: none;
+    border: none;
+    color: #999;
+    cursor: pointer;
+    padding: 4px;
+  }
+  
+  .sticky-order__popup-body {
+    padding: 20px;
+    overflow-y: auto;
+    max-height: calc(90vh - 60px);
+  }
+
+  .sticky-order__popup-body p {
+    margin: 0 0 16px;
+    color: #666;
+    font-size: 14px;
+  }
+  
+  .sticky-order__popup-list {
+    max-height: 50vh;
+    overflow-y: auto;
+  }
+  
+  .sticky-order__popup-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 10px;
+    border-bottom: 1px solid #f0f0f0;
+    cursor: pointer;
+  }
+  
+  .sticky-order__popup-item:hover {
+    background: #fafafa;
+  }
+  
+  .sticky-order__popup-item-details {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .sticky-order__popup-item-number {
+    font-weight: 600;
+    font-size: 14px;
+    color: #e65c00;
+  }
+  
+  .sticky-order__popup-item-time {
+    font-size: 12px;
+    color: #666;
+  }
+  
+  /* Animations */
+  @keyframes pulse {
+    0% {
+      transform: scale(1);
+      opacity: 1;
+    }
+    50% {
+      transform: scale(1.1);
+      opacity: 0.7;
+    }
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+
+
+  
+  @keyframes slideUp {
+    from {
+      transform: translateY(40px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .sticky-order__content {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 10px;
+    }
+  
+    .sticky-order__button {
+      align-self: flex-end;
+    }
+  
+    .sticky-order__dropdown {
+      width: 100%;
+      left: 0;
+    }
+  }
+  
+
+/* Slide animation from bottom */
+@keyframes slideUpFromBottom {
+    from {
+      transform: translateY(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0%);
+      opacity: 1;
+    }
+  }
+
+  /* Responsive tweaks */
+@media (max-width: 600px) {
+    .sticky-order__content {
+      flex-direction: row;
+      align-items: flex-start;
+    }
+  
+    .sticky-order__info {
+      flex-grow: 1;
+      margin-top: 4px;
+    }
+  
+    .sticky-order__button {
+      margin-left: auto;
+    }
+  }

@@ -29,6 +29,8 @@ import TermsAndConditions from "./components/links/TermsAndConditions"
 import CancellationPolicy from "./components/links/CancellationPolicy"
 import Pricing from "./components/links/Pricing"
 import ScrollToTop from "./components/ScrollToTop"
+import StickyTrackOrder from '../src/order/StickyTrackOrder';
+
 
 
 const PrivateRoute = ({ children, user }) => user ? children : <Navigate to="/" />;
@@ -110,6 +112,7 @@ const App = () => {
 
             {/* Private + location-restricted routes */}
             <Route path="/track-order" element={renderPrivateWithLocation(TrackOrder)} />
+            <Route path="/track-order/:order_number" element={renderPrivateWithLocation(TrackOrder)} />
             <Route path="/profile" element={renderPrivateWithLocation(Profile)} />
 
             {/* Vendor routes */}
@@ -169,9 +172,15 @@ const App = () => {
               </VendorPrivateRoute>
             } />
 
+
+
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </main>
+        
+          <StickyTrackOrder
+            user={user}
+          />
 
         <Footer currentCity={city} />
       </div>

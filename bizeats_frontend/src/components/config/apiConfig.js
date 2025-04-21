@@ -82,6 +82,7 @@ const API_ENDPOINTS = {
     ORDER_DETAILS: `${BASE_URL}/order/order-details/`,
     ORDER_LIVE_LOCATION: `${BASE_URL}/order/live-location-details/`,
     UPDATE_LIVE_LOCATION: `${BASE_URL}/order/update-location/`,
+    GET_ACTTIVE_ORDER: `${BASE_URL}/order/active-orders/`,
   },
   
   CONTACT: {
