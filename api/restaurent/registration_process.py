@@ -351,8 +351,6 @@ class RestaurantMenueUpdate(APIView):
         food_type = request.data.get('food_type', menu_item.food_type)
         cuisines = request.data.get('cuisines', '').split(',')  # Split cuisines by comma
 
-        print("availability===",availability)
-
         # Handle image update
         item_image = request.FILES.get('item_image')
 
