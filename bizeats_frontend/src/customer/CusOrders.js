@@ -55,7 +55,14 @@ const CusOrders = () => {
 
   return (
     <div className="cus-orders">
-      <h3 className="cus-orders__title">Your Order History</h3>
+      
+      {
+        orders.length > 0 ?(
+          <h3 className="cus-orders__title">Your Order History</h3>
+        ):
+        ""
+      }
+      
       {loading ? (
         <StripeLoader />
       ) : noOrders || orders.length === 0 ? (
