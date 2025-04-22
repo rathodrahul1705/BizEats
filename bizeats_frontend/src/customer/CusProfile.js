@@ -40,6 +40,8 @@ const Profile = ({ user, setUser }) => {
     setIsEditing(false);
   };
 
+  console.log("updatedUser==",updatedUser)
+  
   return (
     <div className="profile-container">
       {/* Profile Header */}
@@ -78,35 +80,36 @@ const Profile = ({ user, setUser }) => {
 
       {/* Edit Profile Modal - Sliding from Right */}
       {isEditing && (
-      <>
-        <div className="modal-overlay show" onClick={() => setIsEditing(false)}></div>
-        <div className="edit-profile-modal slide-in">
-          <div className="modal-header">
-            <h3>Edit Profile</h3>
-            <button className="close-btn" onClick={() => setIsEditing(false)}>&times;</button>
-          </div>
-          <div className="modal-content">
-            <label>Email Address:</label>
-            <input
-              type="email"
-              value={updatedUser.email}
-              onChange={(e) => setUpdatedUser({ ...updatedUser, email: e.target.value })}
-            />
-            <label>Phone Number:</label>
-            <input
-              type="text"
-              value={updatedUser.contact}
-              maxLength={10}
-              onChange={(e) => setUpdatedUser({ ...updatedUser, contact: e.target.value })}
-            />
-            <div className="modal-buttons">
-              <button onClick={handleSaveChanges} className="save-btn">Save</button>
-              {/* <button onClick={() => setIsEditing(false)} className="cancel-btn">Cancel</button> */}
+        <>
+          <div className="cus-orders__modal-overlay cus-orders__modal-overlay--show" onClick={() => setIsEditing(false)}></div>
+          <div className="cus-orders__edit-modal">
+            <div className="cus-orders__modal-header">
+              <h3 className="cus-orders__modal-title">Edit Profile</h3>
+              <button className="cus-orders__modal-close" onClick={() => setIsEditing(false)}>&times;</button>
+            </div>
+            <div className="cus-orders__modal-content">
+              <label className="cus-orders__modal-label">Email Address:</label>
+              <input
+                type="email"
+                className="cus-orders__modal-input"
+                value={updatedUser.email}
+                onChange={(e) => setUpdatedUser({ ...updatedUser, email: e.target.value })}
+              />
+              <label className="cus-orders__modal-label">Phone Number:</label>
+              <input
+                type="text"
+                className="cus-orders__modal-input"
+                value={updatedUser.contact}
+                maxLength={10}
+                onChange={(e) => setUpdatedUser({ ...updatedUser, contact: e.target.value })}
+              />
+              <div className="cus-orders__modal-actions">
+                <button onClick={handleSaveChanges} className="cus-orders__modal-save">Save</button>
+              </div>
             </div>
           </div>
-        </div>
-      </>
-    )}
+        </>
+      )}
     </div>
   );
 };

@@ -268,8 +268,7 @@ class OrderDetails(APIView):
                     "estimated_delivery": order.delivery_date.strftime("%Y-%m-%d %H:%M:%S") if order.delivery_date else "Not available",
                     "items": item_details,
                     "subtotal": str(subtotal),
-                    # "total": str(order.total_amount)
-                    "total": str(subtotal)
+                    "total": str(order.total_amount),
                 }
 
                 data.append(order_data)

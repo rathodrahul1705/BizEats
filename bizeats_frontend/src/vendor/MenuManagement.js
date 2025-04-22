@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { Edit, Trash, PlusCircle, X } from "lucide-react";
+import { Edit, Trash, PlusCircle, X, Menu } from "lucide-react";
 import "../assets/css/vendor/MenuManagement.css";
 import { useParams } from "react-router-dom";
 import API_ENDPOINTS from "../components/config/apiConfig";
 import fetchData from "../components/services/apiService";
+import StripeLoader from "../loader/StripeLoader";
 
 const MenuManagement = () => {
   const { restaurant_id } = useParams();
@@ -136,6 +137,9 @@ const MenuManagement = () => {
     }
   };
 
+  if (loading && menuItems.length === 0) {
+    return <StripeLoader />;
+  }
   return (
     <div className="vendor-menu">
       <div className="vendor-header">
@@ -166,12 +170,7 @@ const MenuManagement = () => {
         </button>
       </div>
 
-      {loading ? (
-        <div className="empty-state">
-          <div className="spinner"></div>
-          <p>Loading menu items...</p>
-        </div>
-      ) : menuItems.length > 0 ? (
+      {menuItems.length > 0 ? (
         <div className="table-container">
           <table className="vendor-menu-table">
             <thead>
