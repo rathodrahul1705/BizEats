@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import "../assets/css/Home.css";
 import { ArrowRightCircle } from "lucide-react";
@@ -12,34 +12,21 @@ import API_ENDPOINTS from "../components/config/apiConfig";
 import fetchData from "../components/services/apiService";
 import StripeLoader from "../loader/StripeLoader";
 import HomePageThali from "../assets/img/homepage.webp";
-
-// Carousel images (replace with your actual images)
-const carouselImages = [
-  {
-    url: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
-    title: "Authentic Home-Cooked Meals",
-    subtitle: "Made with love by local home chefs"
-  },
-  {
-    url: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
-    title: "Healthy & Nutritious",
-    subtitle: "Fresh ingredients, balanced meals"
-  },
-  {
-    url: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
-    title: "Diverse Cuisines",
-    subtitle: "Explore flavors from around the city"
-  },
-  {
-    url: "https://images.unsplash.com/photo-1565958011703-44f9829ba187?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80",
-    title: "Delivered to Your Doorstep",
-    subtitle: "Hot, fresh, and ready to enjoy"
-  }
-];
+import HomePageUpma from "../assets/img/home_page_upma.avif";
+import HomePagePoha from "../assets/img/home_page_poha.png";
+import HomePageMaggie from "../assets/img/home_page_maggie.webp";
+import HomePageEggRoll from "../assets/img/home_page_egg_roll.avif";
+import HomePageChickenBiryani from "../assets/img/home_page_chicken_biryani.avif";
+import HomePageEggBiryani from "../assets/img/home_page_egg_biryani.jpg";
+import HomePageGulabJamun from "../assets/img/home_page_gulab_jamun.jpg";
+import HomePageKokamSarbat from "../assets/img/homa_page_kokam_sarbat.jpg";
 
 const Home = () => {
   const [loading, setLoading] = useState(true);
   const [restaurants, setRestaurants] = useState([]);
+  const swiperRef = useRef(null);
+  const [isBeginning, setIsBeginning] = useState(true);
+  const [isEnd, setIsEnd] = useState(false);
 
   useEffect(() => {
     const fetchRestaurants = async () => {
@@ -56,6 +43,71 @@ const Home = () => {
 
     fetchRestaurants();
   }, []);
+
+  const handlePrev = () => {
+    if (swiperRef.current && !isBeginning) {
+      swiperRef.current.swiper.slidePrev();
+    }
+  };
+
+  const handleNext = () => {
+    if (swiperRef.current && !isEnd) {
+      swiperRef.current.swiper.slideNext();
+    }
+  };
+
+  const updateNavigationState = () => {
+    if (swiperRef.current) {
+      setIsBeginning(swiperRef.current.swiper.isBeginning);
+      setIsEnd(swiperRef.current.swiper.isEnd);
+    }
+  };
+
+  // console.log("restaurants===",restaurants[0]?.restaurant_id)
+
+  // Food Items Data
+  const foodItems = [
+    {
+      name: "Chicken Biryani",
+      image: HomePageChickenBiryani,
+      restaurant_id: restaurants[0]?.restaurant_id
+    },
+    {
+      name: "Gulab Jamun",
+      image: HomePageGulabJamun,
+      restaurant_id: restaurants[0]?.restaurant_id
+    },
+    {
+      name: "Upma",
+      image: HomePageUpma,
+      restaurant_id: restaurants[0]?.restaurant_id
+    },
+    {
+      name: "Poha",
+      image: HomePagePoha,
+      restaurant_id: restaurants[0]?.restaurant_id
+    },
+    {
+      name: "Maggie",
+      image: HomePageMaggie,
+      restaurant_id: restaurants[0]?.restaurant_id
+    },
+    {
+      name: "Egg Roll",
+      image: HomePageEggRoll,
+      restaurant_id: restaurants[0]?.restaurant_id
+    },
+    {
+      name: "Egg Biryani",
+      image: HomePageEggBiryani,
+      restaurant_id: restaurants[0]?.restaurant_id
+    },
+    {
+      name: "Beverage",
+      image: HomePageKokamSarbat,
+      restaurant_id: restaurants[0]?.restaurant_id
+    }
+  ];
 
   if (loading && restaurants.length === 0) {
     return <StripeLoader />;
@@ -83,50 +135,64 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Premium Carousel Section */}
-      {/* Premium Carousel Section */}
-      <section className="premium-carousel-section">
+      {/* Food Circle Slider */}
+      <section className="food-section-slider">
         <div className="section-container">
-          <div className="carousel-wrapper">
+            <h2 className="section-heading">Popular Food Categories</h2>
+
+          <div className="food-section-slider__wrapper">
             <Swiper
-              modules={[Autoplay, EffectFade, Pagination, Navigation]}
-              effect="fade"
-              spaceBetween={0}
-              slidesPerView={1}
-              loop={true}
-              autoplay={{
-                delay: 5000,
-                disableOnInteraction: false,
+              ref={swiperRef}
+              modules={[Navigation]}
+              spaceBetween={20}
+              slidesPerView={4}
+              onSlideChange={updateNavigationState}
+              onSwiper={updateNavigationState}
+              touchEventsTarget="container"
+              allowTouchMove={true}
+              simulateTouch={true}
+              breakpoints={{
+                320: {
+                  slidesPerView: 1.5,
+                  spaceBetween: 10,
+                },
+                480: {
+                  slidesPerView: 2.5,
+                  spaceBetween: 15,
+                },
+                640: {
+                  slidesPerView: 3,
+                  spaceBetween: 20,
+                },
+                768: {
+                  slidesPerView: 4,
+                  spaceBetween: 20,
+                },
+                1024: {
+                  slidesPerView: 4,
+                  spaceBetween: 20,
+                },
               }}
-              pagination={{
-                clickable: true,
-                dynamicBullets: true,
-              }}
-              navigation={true}
-              className="premium-carousel"
             >
-              {carouselImages.map((slide, index) => (
+              {foodItems.map((item, index) => (
                 <SwiperSlide key={index}>
-                  <div className="carousel-slide">
-                    <div className="carousel-image-overlay"></div>
-                    <img 
-                      src={slide.url} 
-                      alt={`Carousel ${index + 1}`} 
-                      className="carousel-image"
-                    />
-                    <div className="carousel-content">
-                      <div className="carousel-text-container">
-                        <h1 className="carousel-title">{slide.title}</h1>
-                        <p className="carousel-subtitle">{slide.subtitle}</p>
-                      </div>
+                  <Link to={`/order-details/${item?.restaurant_id}`} className="food-section-slider__item">
+                    <div className="food-section-slider__image-wrapper">
+                      <img
+                        src={item.image}
+                        alt={item.name}
+                        className="food-section-slider__image"
+                      />
                     </div>
-                  </div>
+                    <p className="food-section-slider__name">{item.name}</p>
+                  </Link>
                 </SwiperSlide>
               ))}
             </Swiper>
           </div>
         </div>
       </section>
+
 
       {/* How It Works Section */}
       <section className="how-it-works">
@@ -187,9 +253,7 @@ const Home = () => {
                       <p className="food-location">📍 {restaurant.restaurant_location}</p>
                       <p className="food-delivery">⏳ 45</p>
                       <p className="food-delivery">{restaurant.item_cuisines}</p>
-
                       <p className="food-brand">{restaurant.restaurant_name}</p>
-
                     </div>
                   </div>
                 </Link>
