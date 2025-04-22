@@ -143,7 +143,8 @@ class RestaurantOrders(APIView):
                     "estimated_delivery": order.delivery_date.strftime("%Y-%m-%d %H:%M:%S") if order.delivery_date else "Not available",
                     "items": item_details,
                     "subtotal": str(subtotal),
-                    "total": str(subtotal),
+                    "delivery_fee": str(order.delivery_fee),
+                    "total": str(order.total_amount),
                     "status": order.status
                 }
 

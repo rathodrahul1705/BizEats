@@ -201,6 +201,7 @@ const OrderManagement = ({ user }) => {
 
               <div className="pricing">
                 <p><strong>Subtotal:</strong> ₹{order.subtotal}</p>
+                <p><strong>Delivery Fee:</strong> ₹{order.delivery_fee}</p>
                 <p><strong>Total:</strong> ₹{order.total}</p>
               </div>
 
