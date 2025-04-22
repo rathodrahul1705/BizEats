@@ -346,10 +346,12 @@ class RestaurantMenueUpdate(APIView):
         spice_level = request.data.get('spice_level', menu_item.spice_level)
         preparation_time = request.data.get('preparation_time', menu_item.preparation_time)
         serving_size = request.data.get('serving_size', menu_item.serving_size)
-        availability = request.data.get('availability', str(menu_item.availability)).lower() == 'true'
+        availability = request.data.get('availability')
         stock_quantity = request.data.get('stock_quantity', menu_item.stock_quantity)
         food_type = request.data.get('food_type', menu_item.food_type)
         cuisines = request.data.get('cuisines', '').split(',')  # Split cuisines by comma
+
+        print("availability===",availability)
 
         # Handle image update
         item_image = request.FILES.get('item_image')

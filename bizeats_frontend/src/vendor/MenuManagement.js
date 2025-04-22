@@ -23,12 +23,14 @@ const MenuManagement = () => {
     availability: true,
     stock_quantity: "",
     cuisines: [],
-    food_type: "Veg", // Added food_type to formData
+    food_type: "Veg",
   });
 
   const categories = ["Appetizer", "Main Course", "Breakfast", "Dessert", "Beverage"];
   const spiceLevels = ["Mild", "Medium", "Spicy", "Extra Spicy"];
   const cuisinesList = ["Indian", "Chinese", "Italian", "Mexican", "American"];
+  const servingSizes = ["Small", "Medium", "Large"];
+  const foodTypes = ["Veg", "Non-Veg"];
 
   useEffect(() => {
     fetchMenuItems();
@@ -69,7 +71,10 @@ const MenuManagement = () => {
 
   const handleEdit = (item) => {
     setEditingItem(item.id);
-    setFormData({ ...item });
+    setFormData({ 
+      ...item,
+      cuisines: item.cuisines || [], // Ensure cuisines is always an array
+    });
     setShowModal(true);
   };
 
@@ -80,6 +85,8 @@ const MenuManagement = () => {
       Object.keys(formData).forEach((key) => {
         if (key === "cuisines") {
           formData.cuisines.forEach((cuisine) => formDataToSend.append("cuisines[]", cuisine));
+        } else if (key === "availability") {
+          formDataToSend.append(key, formData[key] ? "1" : "0");
         } else {
           formDataToSend.append(key, formData[key]);
         }
@@ -94,6 +101,9 @@ const MenuManagement = () => {
       const response = await fetch(endpoint, {
         method,
         body: formDataToSend,
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem("access")}`
+        }
       });
 
       if (!response.ok) throw new Error(`Failed to ${editingItem ? "update" : "add"} menu item.`);
@@ -106,6 +116,8 @@ const MenuManagement = () => {
   };
 
   const handleDelete = async (itemId) => {
+    if (!window.confirm("Are you sure you want to delete this menu item?")) return;
+    
     try {
       const response = await fetchData(
         API_ENDPOINTS.RESTAURANT.RES_MENUE_DELETE(itemId, restaurant_id),
@@ -149,96 +161,149 @@ const MenuManagement = () => {
             setShowModal(true);
           }}
         >
-          <PlusCircle size={18} /> Add Menu Item
+          <PlusCircle size={18} />
+          <span>Add Item</span>
         </button>
       </div>
 
       {loading ? (
-        <p>Loading menu items...</p>
-      ) : (
-        <table className="vendor-menu-table">
-          <thead>
-            <tr>
-              <th>Image</th>
-              <th>Name</th>
-              <th>Price</th>
-              <th>Category</th>
-              <th>Availability</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {menuItems.length > 0 ? (
-              menuItems.map((item) => (
+        <div className="empty-state">
+          <div className="spinner"></div>
+          <p>Loading menu items...</p>
+        </div>
+      ) : menuItems.length > 0 ? (
+        <div className="table-container">
+          <table className="vendor-menu-table">
+            <thead>
+              <tr>
+                <th>Image</th>
+                <th>Name</th>
+                <th>Price</th>
+                <th>Category</th>
+                <th>Availability</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {menuItems.map((item) => (
                 <tr key={item.id}>
                   <td>
-                    <img className="menue-images" src={item.item_image} alt={item.item_name} />
+                    <img 
+                      className="menue-images" 
+                      src={item.item_image || "https://via.placeholder.com/60"} 
+                      alt={item.item_name} 
+                    />
                   </td>
                   <td>{item.item_name}</td>
-                  <td>{item.item_price}</td>
+                  <td>₹{item.item_price}</td>
                   <td>{item.category}</td>
-                  <td>{item.availability ? "Available" : "Out of Stock"}</td>
                   <td>
-                    <button className="edit" onClick={() => handleEdit(item)}>
-                      <Edit size={16} /> Edit
-                    </button>
-                    <button className="delete" onClick={() => handleDelete(item.id)}>
-                      <Trash size={16} /> Delete
-                    </button>
+                    <span className={`availability-badge ${item.availability ? 'available' : 'not-available'}`}>
+                      {item.availability ? "Available" : "Out of Stock"}
+                    </span>
+                  </td>
+                  <td>
+                    <div className="action-buttons">
+                      <button 
+                        className="edit" 
+                        onClick={() => handleEdit(item)}
+                        aria-label="Edit item"
+                      >
+                        <Edit size={16} />
+                      </button>
+                      <button 
+                        className="delete" 
+                        onClick={() => handleDelete(item.id)}
+                        aria-label="Delete item"
+                      >
+                        <Trash size={16} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="6">No menu items found.</td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <div className="empty-state">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="64"
+            height="64"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <path d="M16 10a4 4 0 0 1-8 0"></path>
+          </svg>
+          <h3>No Menu Items Found</h3>
+          <p>Add your first menu item to get started</p>
+        </div>
       )}
 
       {showModal && (
-        <div className="modal-overlay-add-menue show">
+        <div className="modal-overlay show">
           <div className="modal-content">
             <button className="close-modal" onClick={() => setShowModal(false)}>
               <X size={24} />
             </button>
             <h3>{editingItem ? "Edit Menu Item" : "Add New Menu Item"}</h3>
             <form onSubmit={handleSubmit}>
-              <label>
-                Item Name
+              <div className="form-group">
+                <label>Item Name</label>
                 <input
                   type="text"
+                  className="form-control"
                   name="item_name"
                   placeholder="Item Name"
                   value={formData.item_name}
                   onChange={handleChange}
                   required
                 />
-              </label>
-              <label>
-                Price
+              </div>
+
+              <div className="form-group">
+                <label>Price</label>
                 <input
                   type="number"
+                  className="form-control"
                   name="item_price"
                   placeholder="Price"
                   value={formData.item_price}
                   onChange={handleChange}
                   required
+                  min="0"
+                  step="0.01"
                 />
-              </label>
-              <label>
-                Description
+              </div>
+
+              <div className="form-group">
+                <label>Description</label>
                 <textarea
+                  className="form-control"
                   name="description"
                   placeholder="Description"
                   value={formData.description}
                   onChange={handleChange}
+                  rows="3"
                 />
-              </label>
-              <label>
-                Category
-                <select name="category" value={formData.category} onChange={handleChange} required>
+              </div>
+
+              <div className="form-group">
+                <label>Category</label>
+                <select
+                  className="form-control"
+                  name="category"
+                  value={formData.category}
+                  onChange={handleChange}
+                  required
+                >
                   <option value="">Select Category</option>
                   {categories.map((cat) => (
                     <option key={cat} value={cat}>
@@ -246,76 +311,130 @@ const MenuManagement = () => {
                     </option>
                   ))}
                 </select>
-              </label>
-              <label>
-                Cuisines
-                <select name="cuisines" multiple value={formData.cuisines} onChange={handleCuisineChange}>
+              </div>
+
+              <div className="form-group">
+                <label>Cuisines</label>
+                <select
+                  className="form-control"
+                  name="cuisines"
+                  multiple
+                  value={formData.cuisines}
+                  onChange={handleCuisineChange}
+                >
                   {cuisinesList.map((cuisine) => (
                     <option key={cuisine} value={cuisine}>
                       {cuisine}
                     </option>
                   ))}
                 </select>
-              </label>
-              <label>
-                Spice Level
-                <select name="spice_level" value={formData.spice_level} onChange={handleChange}>
+                <small className="form-text">Hold Ctrl/Cmd to select multiple</small>
+              </div>
+
+              <div className="form-group">
+                <label>Spice Level</label>
+                <select
+                  className="form-control"
+                  name="spice_level"
+                  value={formData.spice_level}
+                  onChange={handleChange}
+                >
                   {spiceLevels.map((level) => (
                     <option key={level} value={level}>
                       {level}
                     </option>
                   ))}
                 </select>
-              </label>
-              <label>
-                Preparation Time (mins)
+              </div>
+
+              <div className="form-group">
+                <label>Preparation Time (minutes)</label>
                 <input
                   type="number"
+                  className="form-control"
                   name="preparation_time"
-                  placeholder="Preparation Time (mins)"
+                  placeholder="Preparation Time"
                   value={formData.preparation_time}
                   onChange={handleChange}
+                  min="0"
                 />
-              </label>
-              <label>
-                Serving Size
-                <select name="serving_size" value={formData.serving_size} onChange={handleChange}>
-                  <option value="Small">Small</option>
-                  <option value="Medium">Medium</option>
-                  <option value="Large">Large</option>
+              </div>
+
+              <div className="form-group">
+                <label>Serving Size</label>
+                <select
+                  className="form-control"
+                  name="serving_size"
+                  value={formData.serving_size}
+                  onChange={handleChange}
+                >
+                  {servingSizes.map((size) => (
+                    <option key={size} value={size}>
+                      {size}
+                    </option>
+                  ))}
                 </select>
-              </label>
-              <label>
-                Food Type
-                <select name="food_type" value={formData.food_type} onChange={handleChange} required>
-                  <option value="Veg">Veg</option>
-                  <option value="Non-Veg">Non-Veg</option>
+              </div>
+
+              <div className="form-group">
+                <label>Food Type</label>
+                <select
+                  className="form-control"
+                  name="food_type"
+                  value={formData.food_type}
+                  onChange={handleChange}
+                  required
+                >
+                  {foodTypes.map((type) => (
+                    <option key={type} value={type}>
+                      {type}
+                    </option>
+                  ))}
                 </select>
-              </label>
-              <label>
-                Stock Quantity
+              </div>
+
+              <div className="form-group">
+                <label>Stock Quantity</label>
                 <input
                   type="number"
+                  className="form-control"
                   name="stock_quantity"
                   placeholder="Stock Quantity"
                   value={formData.stock_quantity}
                   onChange={handleChange}
+                  min="0"
                 />
-              </label>
-              <label>
-                Item Image
-                <input type="file" accept="image/*" onChange={handleFileChange} />
-              </label>
-              <label className="checkbox-label">
+              </div>
+
+              <div className="form-group">
+                <label>Item Image</label>
+                <input 
+                  type="file" 
+                  className="form-control"
+                  accept="image/*" 
+                  onChange={handleFileChange} 
+                />
+                {formData.item_image && !(formData.item_image instanceof File) && (
+                  <img 
+                    src={formData.item_image} 
+                    alt="Current" 
+                    style={{ width: '100px', marginTop: '10px' }} 
+                  />
+                )}
+              </div>
+
+              <div className="form-group checkbox-group">
                 <input
                   type="checkbox"
+                  id="availability"
                   name="availability"
                   checked={formData.availability}
                   onChange={handleChange}
                 />
-                Available
-              </label>
-              <button type="submit" className="add-item-button">
+                <label htmlFor="availability">Available</label>
+              </div>
+
+              <button type="submit" className="submit-btn">
                 {editingItem ? "Update Item" : "Add Item"}
               </button>
             </form>
