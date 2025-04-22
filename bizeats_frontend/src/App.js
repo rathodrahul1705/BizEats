@@ -1,7 +1,7 @@
 // src/App.js
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { useLocation } from './location/LocationService';
+
 import Header from './components/Header';
 import Footer from './components/Footer';
 import Home from './pages/Home';
@@ -20,8 +20,6 @@ import PaymentSuccess from './payment/PaymentSuccess';
 import PaymentFailed from './payment/PaymentFailed';
 import OrderConfirmation from './payment/OrderConfirmation';
 import TrackOrder from './order/TrackOrder';
-import LocationRestriction from './location/LocationRestriction';
-import LoadingScreen from './location/LoadingScreen';
 import AboutUs from "./components/links/AboutUs"
 import ContactUs from "./components/links/ContactUs"
 import PrivacyPolicy from "./components/links/PrivacyPolicy"
@@ -31,8 +29,6 @@ import Pricing from "./components/links/Pricing"
 import ScrollToTop from "./components/ScrollToTop"
 import StickyTrackOrder from '../src/order/StickyTrackOrder';
 
-
-
 const PrivateRoute = ({ children, user }) => user ? children : <Navigate to="/" />;
 
 const VendorPrivateRoute = ({ children, user, is_restaurant_register }) => {
@@ -41,10 +37,7 @@ const VendorPrivateRoute = ({ children, user, is_restaurant_register }) => {
   return children;
 };
 
-const LocationCheckRoute = ({ children, isAllowed }) => isAllowed ? children : <LocationRestriction />;
-
 const App = () => {
-  const { isAllowed, error, city, checkLocation } = useLocation();
   const [user, setUser] = React.useState(() => JSON.parse(localStorage.getItem('user')) || null);
   const [is_restaurant_register, setIsRestaurantRegister] = React.useState(
     () => JSON.parse(localStorage.getItem('is_restaurant_register')) || false
@@ -56,66 +49,52 @@ const App = () => {
       : localStorage.removeItem('user');
   }, [user]);
 
-  if (isAllowed === null) return <LoadingScreen message="Checking your location..." />;
-
-  const renderWithLocation = (Component, props = {}) => (
-    <LocationCheckRoute isAllowed={isAllowed}>
-      <Component {...props} currentCity={city} />
-    </LocationCheckRoute>
-  );
-
-  const renderPrivateWithLocation = (Component, props = {}) => (
-    <PrivateRoute user={user}>
-      <LocationCheckRoute isAllowed={isAllowed}>
-        <Component {...props} user={user} setUser={setUser} currentCity={city} />
-      </LocationCheckRoute>
-    </PrivateRoute>
-  );
-
   return (
     <Router>
       <ScrollToTop />
       <div className="app-container">
-        <Header 
-          user={user} 
-          setUser={setUser} 
-          currentCity={city}
-          onLocationRetry={checkLocation}
-        />
+        <Header user={user} setUser={setUser} />
 
         <main className="content">
           <Routes>
-            <Route path="/" element={<Home currentCity={city} />} />
-            
-            <Route path="/about-us" element={<AboutUs currentCity={city} />} />
-            <Route path="/contact-us" element={<ContactUs currentCity={city} />} />
-            <Route path="/privacy-policy" element={<PrivacyPolicy currentCity={city} />} />
-            <Route path="/terms-and-conditions" element={<TermsAndConditions currentCity={city} />} />
-            <Route path="/cancellation-refund-policy" element={<CancellationPolicy currentCity={city} />} />
-            <Route path="/pricing" element={<Pricing currentCity={city} />} />
+            <Route path="/" element={<Home />} />
 
-            <Route path="/location-restricted" element={
-              <LocationRestriction error={error} onRetry={checkLocation} />
+            <Route path="/about-us" element={<AboutUs />} />
+            <Route path="/contact-us" element={<ContactUs />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
+            <Route path="/cancellation-refund-policy" element={<CancellationPolicy />} />
+            <Route path="/pricing" element={<Pricing />} />
+
+            <Route path="/offers" element={<Offers />} />
+            <Route path="/food-list" element={<FoodList />} />
+            <Route path="/cart" element={<Cart user={user} setUser={setUser} />} />
+            <Route path="/order-details" element={<OrderDetails />} />
+            <Route path="/order-details/:restaurant_id" element={<OrderDetails user={user} setUser={setUser} />} />
+            <Route path="/payments/:restaurant_id" element={<PaymentOption user={user} setUser={setUser} />} />
+            <Route path="/register-your-restaurent" element={<RestHome setUser={setUser} setIsRestaurantRegister={setIsRestaurantRegister} />} />
+            <Route path="/payment/success" element={<PaymentSuccess />} />
+            <Route path="/payment/failed" element={<PaymentFailed />} />
+            <Route path="/order-confirmation" element={<OrderConfirmation />} />
+
+            {/* Private Routes */}
+            <Route path="/track-order" element={
+              <PrivateRoute user={user}>
+                <TrackOrder user={user} setUser={setUser} />
+              </PrivateRoute>
+            } />
+            <Route path="/track-order/:order_number" element={
+              <PrivateRoute user={user}>
+                <TrackOrder user={user} setUser={setUser} />
+              </PrivateRoute>
+            } />
+            <Route path="/profile" element={
+              <PrivateRoute user={user}>
+                <Profile user={user} setUser={setUser} />
+              </PrivateRoute>
             } />
 
-            {/* Location-restricted routes */}
-            <Route path="/offers" element={renderWithLocation(Offers)} />
-            <Route path="/food-list" element={renderWithLocation(FoodList)} />
-            <Route path="/cart" element={renderWithLocation(Cart, { user, setUser })} />
-            <Route path="/order-details" element={renderWithLocation(OrderDetails)} />
-            <Route path="/order-details/:restaurant_id" element={renderWithLocation(OrderDetails, { user, setUser })} />
-            <Route path="/payments/:restaurant_id" element={renderWithLocation(PaymentOption, { user, setUser })} />
-            <Route path="/register-your-restaurent" element={renderWithLocation(RestHome, { setUser, setIsRestaurantRegister })} />
-            <Route path="/payment/success" element={renderWithLocation(PaymentSuccess)} />
-            <Route path="/payment/failed" element={renderWithLocation(PaymentFailed)} />
-            <Route path="/order-confirmation" element={renderWithLocation(OrderConfirmation)} />
-
-            {/* Private + location-restricted routes */}
-            <Route path="/track-order" element={renderPrivateWithLocation(TrackOrder)} />
-            <Route path="/track-order/:order_number" element={renderPrivateWithLocation(TrackOrder)} />
-            <Route path="/profile" element={renderPrivateWithLocation(Profile)} />
-
-            {/* Vendor routes */}
+            {/* Vendor Routes */}
             <Route path="/register-restaurant" element={
               <PrivateRoute user={user}>
                 <RestaurantRegistration 
@@ -125,7 +104,6 @@ const App = () => {
                 />
               </PrivateRoute>
             } />
-
             <Route path="/register-restaurant/:restaurant_id" element={
               <PrivateRoute user={user}>
                 <RestaurantRegistration 
@@ -135,54 +113,28 @@ const App = () => {
                 />
               </PrivateRoute>
             } />
-
             <Route path="/vendor-dashboard" element={
               <VendorPrivateRoute user={user} is_restaurant_register={is_restaurant_register}>
-                <LocationCheckRoute isAllowed={isAllowed}>
-                  <DashboardOverview 
-                    user={user} 
-                    setUser={setUser} 
-                    currentCity={city} 
-                  />
-                </LocationCheckRoute>
+                <DashboardOverview user={user} setUser={setUser} />
               </VendorPrivateRoute>
             } />
-
             <Route path="/vendor-dashboard/menu/:restaurant_id" element={
               <VendorPrivateRoute user={user} is_restaurant_register={is_restaurant_register}>
-                <LocationCheckRoute isAllowed={isAllowed}>
-                  <MenuManagement 
-                    user={user} 
-                    setUser={setUser} 
-                    currentCity={city} 
-                  />
-                </LocationCheckRoute>
+                <MenuManagement user={user} setUser={setUser} />
               </VendorPrivateRoute>
             } />
-
             <Route path="/vendor-dashboard/order/management/:restaurant_id" element={
               <VendorPrivateRoute user={user} is_restaurant_register={is_restaurant_register}>
-                <LocationCheckRoute isAllowed={isAllowed}>
-                  <OrderManagement 
-                    user={user} 
-                    setUser={setUser} 
-                    currentCity={city} 
-                  />
-                </LocationCheckRoute>
+                <OrderManagement user={user} setUser={setUser} />
               </VendorPrivateRoute>
             } />
-
-
 
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </main>
-        
-          <StickyTrackOrder
-            user={user}
-          />
 
-        <Footer currentCity={city} />
+        <StickyTrackOrder user={user} />
+        <Footer />
       </div>
     </Router>
   );
