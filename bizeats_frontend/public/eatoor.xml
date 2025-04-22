@@ -4,7 +4,6 @@
   xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
 
   <!-- Homepage -->
-
   <url>
     <loc>https://www.eatoor.com/</loc>
     <lastmod>2025-04-11</lastmod>
@@ -28,6 +27,48 @@
       <image:caption>EATOOR Website Logo</image:caption>
       <image:title>Order RAT96933884</image:title>
     </image:image>
+  </url>
+
+  <!-- Additional Pages -->
+  <url>
+    <loc>https://www.eatoor.com/about-us</loc>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://www.eatoor.com/contact-us</loc>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://www.eatoor.com/privacy-policy</loc>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://www.eatoor.com/terms-and-conditions</loc>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://www.eatoor.com/cancellation-refund-policy</loc>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://www.instagram.com/eatoor.official/</loc>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://www.facebook.com/profile.php?id=61575132847349</loc>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://x.com/eatoor_official</loc>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
   </url>
 
 </urlset>

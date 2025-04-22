@@ -1,11 +1,17 @@
 import React from 'react';
-import { FaInstagram, FaFacebook, FaTwitter } from 'react-icons/fa';
+import { FaInstagram, FaFacebook } from 'react-icons/fa';
 import { MdEmail, MdPhone } from 'react-icons/md';
 import { Link } from 'react-router-dom';
 import "../assets/css/Footer.css";
 
 const Footer = () => {
   const isMobile = window.innerWidth < 768;
+
+  const TwitterXIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1227" width="1em" height="1em" fill="#000">
+      <path d="M685.5 529.5L1170 0H1064L627 480.5L250 0H0L509 690L0 1227H106L573 720.5L963 1227H1200L685.5 529.5Z" />
+    </svg>
+  );
 
   return (
     <footer className="footer">
@@ -44,7 +50,7 @@ const Footer = () => {
               <FaFacebook />
             </a>
             <a href="https://x.com/eatoor_official" className="footer__social-link" target="_blank" rel="noopener noreferrer">
-              <FaTwitter />
+              <TwitterXIcon />
             </a>
           </div>
         </div>
