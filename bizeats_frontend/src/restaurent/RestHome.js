@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ArrowRight, CheckCircle } from "lucide-react";
 import SignIn from "../components/SignIn";
 import ExistingRestaurant from "./ExistingRestaurant"; // Import the modal
@@ -114,7 +114,10 @@ const RestHome = ({ setUser }) => {
         <p className="contact-text">
           Our support team is available 24/7 to assist you. Reach out to us anytime.
         </p>
-        <button className="contact-button">Contact Us</button>
+        <Link to={`/contact-us`}>
+          <button className="contact-button">Contact Us</button>
+        </Link>
+       
       </section>
 
       {/* Sign-In Popup */}
