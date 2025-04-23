@@ -1,78 +1,337 @@
-.location-restriction-container {
-  max-width: 500px;
-  margin: 2rem auto;
-  padding: 2rem;
-  text-align: center;
-  border-radius: 16px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-  font-family: 'Comic Sans MS', 'Segoe UI', cursive;
-  animation: bounceIn 0.6s ease;
+/* Main container - full viewport overlay */
+.location-restriction {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  background-color: rgba(245, 247, 250, 0.95);
+  z-index: 1000;
+  backdrop-filter: blur(3px);
 }
 
-@keyframes bounceIn {
-  0% {
-    transform: scale(0.9);
-    opacity: 0;
-  }
-  60% {
-    transform: scale(1.05);
+/* Card styling with subtle animation */
+.location-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+  padding: 2.5rem;
+  max-width: 500px;
+  width: 100%;
+  text-align: center;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1);
+  transform: translateY(10px);
+  opacity: 0;
+  animation: cardEnter 0.6s forwards 0.2s;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+@keyframes cardEnter {
+  to {
+    transform: translateY(0);
     opacity: 1;
   }
-  100% {
-    transform: scale(1);
-  }
+}
+
+.location-card h2 {
+  color: #000;
+  font-size: 1.8rem;
+  margin-bottom: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+/* Loading state with pulse animation */
+.location-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 0;
+}
+
+.location-spinner {
+  border: 4px solid rgba(230, 92, 0, 0.1);
+  border-radius: 50%;
+  border-top: 4px solid #e65c00;
+  width: 50px;
+  height: 50px;
+  animation: spin 0.8s linear infinite;
+  margin-bottom: 1.5rem;
+  position: relative;
+}
+
+.location-spinner::after {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: -8px;
+  right: -8px;
+  bottom: -8px;
+  border: 4px solid rgba(230, 92, 0, 0.05);
+  border-radius: 50%;
+}
+
+.location-loading p {
+  color: #7f8c8d;
+  font-size: 1.1rem;
+  font-weight: 500;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.8; }
+  50% { opacity: 0.4; }
+}
+
+/* Success state with checkmark animation */
+.location-success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1.5rem 0;
+}
+
+.success-icon {
+  width: 70px;
+  height: 70px;
+  color: #2ecc71;
+  margin-bottom: 1.5rem;
+  animation: checkmarkScale 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes checkmarkScale {
+  0% { transform: scale(0.8); opacity: 0; }
+  80% { transform: scale(1.1); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.location-success p {
+  color: #fff;
+  font-size: 1.25rem;
+  margin: 0.5rem 0;
+  line-height: 1.4;
+}
+
+.location-success strong {
+  color: #e65c00;
+  font-weight: 700;
+  background: #e65c00;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Error state with attention-grabbing animation */
+.location-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1.5rem 0;
 }
 
 .error-icon {
-  font-size: 4rem;
-  color: #ff6b6b;
-  margin-bottom: 1rem;
-  animation: wiggle 1s infinite;
-}
-
-@keyframes wiggle {
-  0%, 100% { transform: rotate(-10deg); }
-  50% { transform: rotate(10deg); }
-}
-
-.restriction-title {
-  font-size: 2rem;
-  color: #ff8800;
-  margin-bottom: 0.5rem;
-}
-
-.restriction-message {
-  font-size: 1.1rem;
-  color: #333;
-  margin-bottom: 1rem;
-  line-height: 1.6;
-}
-
-.restriction-instruction {
-  font-size: 1rem;
-  color: #555;
+  width: 70px;
+  height: 70px;
+  color: #e74c3c;
   margin-bottom: 1.5rem;
+  animation: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
 }
 
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-5px); }
+  40%, 80% { transform: translateX(5px); }
+}
+
+.location-error p {
+  color: #fff;
+  font-size: 1.1rem;
+  margin: 0.5rem 0 2rem;
+  line-height: 1.5;
+  padding: 0 1rem;
+}
+
+/* Enhanced error message styling */
+.location-error .error-detail {
+  background-color: #fef2f2;
+  border-left: 4px solid #e74c3c;
+  padding: 0.8rem;
+  margin: 1rem 0;
+  text-align: left;
+  border-radius: 0 4px 4px 0;
+  font-size: 0.95rem;
+  color: #7f8c8d;
+}
+
+/* Button styling with gradient and hover effects */
 .retry-button {
-  background-color: #e65c00;
+  background: #e65c00;
   color: white;
   border: none;
-  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  padding: 1rem 2rem;
   font-size: 1rem;
-  border-radius: 24px;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
+  margin-top: 1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 15px rgba(230, 92, 0, 0.3);
+  position: relative;
+  overflow: hidden;
 }
 
 .retry-button:hover {
-  background-color: #e65c00;
-  transform: scale(1.05);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(230, 92, 0, 0.4);
 }
 
-.contact-support {
-  font-size: 0.875rem;
-  color: #888;
+.retry-button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.retry-button:disabled {
+  background: #bdc3c7;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.retry-button::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to right, rgba(255,255,255,0.3), rgba(255,255,255,0));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.retry-button:hover::after {
+  opacity: 1;
+}
+
+/* Location permission instructions */
+.location-help {
   margin-top: 2rem;
+  padding: 1rem;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  text-align: left;
 }
 
+.location-help h3 {
+  color: #fff;
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+}
+
+.location-help ol {
+  padding-left: 1.5rem;
+  color: #7f8c8d;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+/* Responsive design with breakpoints */
+@media (max-width: 768px) {
+  .location-card {
+    padding: 2rem 1.5rem;
+    border-radius: 12px;
+  }
+  
+  .location-card h2 {
+    font-size: 1.6rem;
+  }
+  
+  .location-success p,
+  .location-error p {
+    font-size: 1.1rem;
+  }
+  
+  .success-icon,
+  .error-icon {
+    width: 60px;
+    height: 60px;
+  }
+}
+
+@media (max-width: 480px) {
+  .location-restriction {
+    padding: 15px;
+  }
+  
+  .location-card {
+    padding: 1.8rem 1.2rem;
+    border-radius: 10px;
+  }
+  
+  .location-card h2 {
+    font-size: 1.4rem;
+    margin-bottom: 1.2rem;
+  }
+  
+  .location-loading p {
+    font-size: 1rem;
+  }
+  
+  .location-success p,
+  .location-error p {
+    font-size: 1rem;
+    padding: 0;
+  }
+  
+  .retry-button {
+    padding: 0.9rem 1.5rem;
+    font-size: 0.95rem;
+  }
+  
+  .location-help {
+    padding: 0.8rem;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .location-restriction {
+    background-color: rgba(0, 0, 0, 0.85);
+  }
+  
+  .location-card {
+    background: #fff;
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+  
+  .location-card h2 {
+    color: #000;
+  }
+  
+  .location-success p,
+  .location-error p {
+    color: #000;
+  }
+  
+  .location-loading p {
+    color: #bdc3c7;
+  }
+  
+  .location-help {
+    background-color: #34495e;
+  }
+  
+  .location-help h3 {
+    color: #ecf0f1;
+  }
+  
+  .location-help ol {
+    color: #bdc3c7;
+  }
+}
