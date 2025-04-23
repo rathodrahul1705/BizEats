@@ -28,7 +28,10 @@ const LocationRestriction = ({ onLocationVerified }) => {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
-  const navigate = useNavigate(); // initialize navigation
+  const navigate = useNavigate();
+
+  // Store the watchPosition ID to clean up later
+  const [watchId, setWatchId] = useState(null);
 
   const verifyLocation = (lat, lng) => {
     for (const city in SERVICEABLE_CITIES) {
@@ -45,20 +48,27 @@ const LocationRestriction = ({ onLocationVerified }) => {
     };
   };
 
-
   const handleLocationSuccess = (position) => {
     const { latitude, longitude } = position.coords;
     const status = verifyLocation(latitude, longitude);
     setLocationStatus(status);
     setIsLoading(false);
-  
+
     if (status.isAllowed) {
-      setTimeout(() => {
-        navigate(0); // this refreshes the current route
-      }, 1000);
+      // Clear any existing watch
+      if (watchId) {
+        navigator.geolocation.clearWatch(watchId);
+        setWatchId(null);
+      }
+      
+      if (onLocationVerified) {
+        onLocationVerified(status.city);
+      } else {
+        // Use navigate to go to the same page to trigger a refresh
+        navigate('.', { replace: true });
+      }
     }
   };
-
 
   const handleLocationError = (error) => {
     let errorMessage;
@@ -102,23 +112,47 @@ const LocationRestriction = ({ onLocationVerified }) => {
       return;
     }
 
-    setIsLoading(true); // Show loader immediately
+    setIsLoading(true);
+    setRetryCount(0);
 
-    setTimeout(() => {
-      navigator.geolocation.getCurrentPosition(
-        handleLocationSuccess,
-        handleLocationError,
-        {
-          timeout: 10000,
-          enableHighAccuracy: true,
-          maximumAge: 0
-        }
-      );
-    }, 300); // 300ms loader delay before starting geo fetch
+    // Clear any existing watch
+    if (watchId) {
+      navigator.geolocation.clearWatch(watchId);
+    }
+
+    // First try with getCurrentPosition
+    navigator.geolocation.getCurrentPosition(
+      handleLocationSuccess,
+      (error) => {
+        // If getCurrentPosition fails, start watching position
+        const id = navigator.geolocation.watchPosition(
+          handleLocationSuccess,
+          handleLocationError,
+          {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 0
+          }
+        );
+        setWatchId(id);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+      }
+    );
   };
 
   useEffect(() => {
     checkLocation();
+
+    // Clean up the watchPosition when component unmounts
+    return () => {
+      if (watchId) {
+        navigator.geolocation.clearWatch(watchId);
+      }
+    };
   }, []);
 
   return (
