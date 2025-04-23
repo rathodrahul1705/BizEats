@@ -1,153 +1,66 @@
-/* Main container - full viewport overlay */
-.location-restriction {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+.location-restrict-container {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
   align-items: center;
-  padding: 20px;
-  background-color: rgba(245, 247, 250, 0.95);
-  z-index: 1000;
-  backdrop-filter: blur(3px);
-}
-
-/* Card styling with subtle animation */
-.location-card {
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
-  padding: 2.5rem;
-  max-width: 500px;
-  width: 100%;
+  justify-content: center;
+  height: 50vh;
   text-align: center;
-  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1);
-  transform: translateY(10px);
-  opacity: 0;
-  animation: cardEnter 0.6s forwards 0.2s;
-  border: 1px solid rgba(0, 0, 0, 0.05);
+  padding: 20px;
+  background-color: #ffffff;
+  color: #000000;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-@keyframes cardEnter {
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
+.location-restrict-heading {
+  color: #e65c00;
+  font-size: 2.5rem;
+  margin-bottom: 20px;
 }
 
-.location-card h2 {
-  color: #000;
-  font-size: 1.8rem;
-  margin-bottom: 1.5rem;
-  font-weight: 700;
-  letter-spacing: -0.5px;
+.location-restrict-message {
+  font-size: 1.25rem;
+  margin-bottom: 30px;
+  max-width: 600px;
 }
 
-/* Loading state with pulse animation */
-.location-loading {
+.location-restrict-buttons {
   display: flex;
-  flex-direction: column;
-  align-items: center;
+  gap: 15px;
+  flex-wrap: wrap;
   justify-content: center;
-  padding: 2rem 0;
+  margin-bottom: 20px;
 }
 
-.location-spinner {
-  border: 4px solid rgba(230, 92, 0, 0.1);
-  border-radius: 50%;
-  border-top: 4px solid #e65c00;
-  width: 50px;
-  height: 50px;
-  animation: spin 0.8s linear infinite;
-  margin-bottom: 1.5rem;
-  position: relative;
+.location-btn {
+  padding: 10px 24px;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
 }
 
-.location-spinner::after {
-  content: '';
-  position: absolute;
-  top: -8px;
-  left: -8px;
-  right: -8px;
-  bottom: -8px;
-  border: 4px solid rgba(230, 92, 0, 0.05);
-  border-radius: 50%;
-}
-
-.location-loading p {
-  color: #7f8c8d;
-  font-size: 1.1rem;
-  font-weight: 500;
-  animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 0.8; }
-  50% { opacity: 0.4; }
-}
-
-/* Success and error sections */
-.location-success {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  color: #27ae60;
-}
-
-.location-error {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  color: #e74c3c;
-}
-
-.success-icon, .error-icon {
-  width: 50px;
-  height: 50px;
-  margin-bottom: 1rem;
-}
-
-/* Retry button */
-.retry-button {
+.location-btn.primary {
   background-color: #e65c00;
   color: white;
-  border: none;
-  padding: 10px 20px;
-  font-size: 1.1rem;
-  font-weight: 600;
-  border-radius: 6px;
-  cursor: pointer;
-  margin-top: 1.5rem;
-  transition: background-color 0.3s;
-  position: relative;
 }
 
-.retry-button:disabled {
-  background-color: #d35400;
-  cursor: not-allowed;
+.location-btn.primary:hover {
+  background-color: #cc5200;
 }
 
-.retry-button:hover {
-  background-color: #c04b00;
+.location-btn.secondary {
+  background-color: black;
+  color: white;
 }
 
-.retry-button:active {
-  background-color: #e65c00;
+.location-btn.secondary:hover {
+  background-color: #333333;
 }
 
-/* Add animation for spinning loader in retry button */
-.button-loader {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  margin-top: -10px;
-  margin-left: -10px;
-  width: 20px;
-  height: 20px;
-  border: 3px solid rgba(255, 255, 255, 0.4);
-  border-top: 3px solid white;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
+.location-restrict-note {
+  margin-top: 30px;
+  font-size: 0.95rem;
+  color: #6c757d;
+  max-width: 500px;
 }

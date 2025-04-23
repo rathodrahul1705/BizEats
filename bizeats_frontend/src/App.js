@@ -1,6 +1,5 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-
 import Header from './components/Header';
 import Footer from './components/Footer';
 import Home from './pages/Home';
@@ -39,31 +38,80 @@ const VendorPrivateRoute = ({ children, user, is_restaurant_register }) => {
 
 const LocationGuard = ({ children }) => {
   const location = useLocation();
-  const [allowed, setAllowed] = React.useState(null);
+  const [status, setStatus] = React.useState({ allowed: null, errorMessage: null });
 
   React.useEffect(() => {
-    if (location.pathname === '/') {
-      setAllowed(true);
+    const unrestrictedRoutes = [
+      '/',
+      '/about-us',
+      '/contact-us',
+      '/privacy-policy',
+      '/terms-and-conditions',
+      '/cancellation-refund-policy',
+      '/pricing',
+      '/check-location'
+    ];
+
+    if (unrestrictedRoutes.includes(location.pathname)) {
+      setStatus({ allowed: true, errorMessage: null });
       return;
     }
 
-    navigator.permissions.query({ name: 'geolocation' }).then((result) => {
-      if (result.state === 'granted' || result.state === 'prompt') {
-        navigator.geolocation.getCurrentPosition(
-          () => setAllowed(true),
-          () => setAllowed(false)
-        );
-      } else {
-        setAllowed(false);
-      }
-    });
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        const isAllowed = checkCityLocation(latitude, longitude);
+        if (isAllowed) {
+          setStatus({ allowed: true, errorMessage: null });
+        } else {
+          setStatus({
+            allowed: false,
+            errorMessage: "Our services are currently only available in Thane Maharashtra. It seems you're accessing from outside our service area."
+          });
+        }
+      },
+      (error) => {
+        console.error("Error getting location:", error);
+        setStatus({
+          allowed: false,
+          errorMessage: "We couldn't access your location. Please enable location services on your device and try again."
+        });
+      },
+      { enableHighAccuracy: true, timeout: 7000, maximumAge: 0 }
+    );
   }, [location.pathname]);
 
-  if (allowed === false) {
-    return <LocationChecker />;
+  if (status.allowed === false) {
+    return <LocationChecker message={status.errorMessage} />;
   }
 
-  return allowed ? children : <div></div>;
+  return status.allowed ? children : <div></div>;
+};
+
+
+const checkCityLocation = (lat, lng) => {
+  const cityBounds = {
+    thane: {
+      north: 19.4,
+      south: 19.1,
+      west: 72.9,
+      east: 73.2
+    }
+  };
+
+  for (const city in cityBounds) {
+    const bounds = cityBounds[city];
+    if (
+      lat >= bounds.south &&
+      lat <= bounds.north &&
+      lng >= bounds.west &&
+      lng <= bounds.east
+    ) {
+      return true;
+    }
+  }
+
+  return false;
 };
 
 const App = () => {
@@ -106,7 +154,6 @@ const App = () => {
               <Route path="/payment/success" element={<PaymentSuccess />} />
               <Route path="/payment/failed" element={<PaymentFailed />} />
               <Route path="/order-confirmation" element={<OrderConfirmation />} />
-
               <Route path="/check-location" element={<LocationChecker />} />
 
               {/* Private Routes */}
