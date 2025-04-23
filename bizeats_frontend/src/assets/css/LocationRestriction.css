@@ -3,12 +3,13 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 50vh;
+  height: 60vh;
   text-align: center;
   padding: 20px;
   background-color: #ffffff;
   color: #000000;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  box-sizing: border-box;
 }
 
 .location-restrict-heading {
@@ -32,12 +33,13 @@
 }
 
 .location-btn {
-  padding: 10px 24px;
+  padding: 12px 28px;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   font-size: 1rem;
   cursor: pointer;
   transition: background-color 0.3s ease;
+  min-width: 140px;
 }
 
 .location-btn.primary {
@@ -63,4 +65,49 @@
   font-size: 0.95rem;
   color: #6c757d;
   max-width: 500px;
+}
+
+/* ✅ Responsive tweaks for mobile */
+@media (max-width: 768px) {
+  .location-restrict-heading {
+    font-size: 2rem;
+  }
+
+  .location-restrict-message {
+    font-size: 1.1rem;
+    padding: 0 10px;
+  }
+
+  .location-btn {
+    font-size: 0.95rem;
+    padding: 10px 20px;
+  }
+
+  .location-restrict-note {
+    font-size: 0.85rem;
+    padding: 0 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .location-restrict-heading {
+    font-size: 1.75rem;
+  }
+
+  .location-restrict-message {
+    font-size: 1rem;
+  }
+
+  .location-restrict-buttons {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .location-btn {
+    width: 100%;
+  }
+
+  .location-restrict-note {
+    font-size: 0.8rem;
+  }
 }
