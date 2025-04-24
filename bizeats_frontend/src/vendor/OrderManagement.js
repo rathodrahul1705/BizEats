@@ -189,7 +189,7 @@ const OrderManagement = ({ user }) => {
             <div className="vendor-card-header">
               <div className="vendor-card-info">
                 <h3 className="order-number">#{order.order_number}</h3>
-                <p><strong>Placed:</strong> {order.placed_on}</p>
+                <p><strong>Placed:</strong> {convertUTCtoIST(order.placed_on)}</p>
               </div>
               <div className="status-box">
                 <label htmlFor={`status-${order.order_number}`}>Status</label>
