@@ -82,6 +82,10 @@ class RestaurantCartAddOrRemove(APIView):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
             
+            restaurant_menu = RestaurantMenu.objects.filter(
+                    id=item_id,
+                ).first()
+            
             if user_id is None and session_id:
 
                 cart = Cart.objects.filter(
@@ -93,6 +97,8 @@ class RestaurantCartAddOrRemove(APIView):
                 if cart is not None:
 
                     cart.quantity += quantity
+                    cart.item_price += restaurant_menu.item_price
+                    cart.description = restaurant_menu.description
                     cart.user_id = user_id
                     cart.save()
                     message = "Item quantity updated in cart"
@@ -102,6 +108,8 @@ class RestaurantCartAddOrRemove(APIView):
                     Cart.objects.create(
                         user_id=user_id,
                         session_id=session_id,
+                        item_price=restaurant_menu.item_price,
+                        description=restaurant_menu.description,
                         restaurant_id=restaurant_id,
                         item_id=item_id,
                         quantity=quantity,
@@ -120,6 +128,8 @@ class RestaurantCartAddOrRemove(APIView):
 
                     cart.quantity += quantity
                     cart.user_id = user_id
+                    cart.item_price += restaurant_menu.item_price
+                    cart.description = restaurant_menu.description
                     cart.save()
                     message = "Item quantity updated in cart"
                     
@@ -129,6 +139,8 @@ class RestaurantCartAddOrRemove(APIView):
                         user_id=user_id,
                         session_id=session_id,
                         restaurant_id=restaurant_id,
+                        item_price=restaurant_menu.item_price,
+                        description=restaurant_menu.description,
                         item_id=item_id,
                         quantity=quantity,
                     )
@@ -153,6 +165,10 @@ class RestaurantCartAddOrRemove(APIView):
         """
         try:
 
+            restaurant_menu = RestaurantMenu.objects.filter(
+                    id=item_id,
+                ).first()
+            
             if user_id is None and session_id:
 
                 cart = Cart.objects.exclude(cart_status=5).get(
@@ -170,6 +186,7 @@ class RestaurantCartAddOrRemove(APIView):
                 
             if cart.quantity > 1:
                 cart.quantity -= 1
+                cart.item_price -= restaurant_menu.item_price
                 cart.save()
                 message = "Item quantity reduced in cart"
             else:
@@ -247,7 +264,7 @@ class RestaurantCartList(APIView):
                 cart_details.append({
                     "item_id": item.item_id,
                     "item_name": item.item.item_name,
-                    "item_price": float(item.item.item_price),
+                    "item_price": float(item.item_price),
                     "quantity": item.quantity,
                     "item_image": request.build_absolute_uri(item.item.item_image.url) if item.item.item_image else None,
                 })
@@ -291,8 +308,8 @@ class CartWithRestaurantDetails(APIView):
                     "id": item.id,
                     "restaurant_id": item.restaurant_id,
                     "item_name": item.item.item_name,
-                    "item_description": item.item.description,
-                    "item_price": float(item.item.item_price),
+                    "item_description": item.description,
+                    "item_price": float(item.item_price),
                     "quantity": item.quantity,
                     "item_image": request.build_absolute_uri(item.item.item_image.url) if item.item.item_image else None,
                 })
@@ -525,12 +542,12 @@ class RestaurantOrderDetailsAPI(APIView):
         total_amount = 0.0
         
         for item in cart_items:
-            item_total = float(item.item.item_price) * item.quantity
+            item_total = float(item.item_price)
             item_details.append({
                 "item_id": item.item.id,
                 "item_name": item.item.item_name,
                 "quantity": item.quantity,
-                "unit_price": float(item.item.item_price),
+                "unit_price": float(item.item_price),
                 "total_price": round(item_total, 2)
             })
             total_amount += item_total
@@ -590,7 +607,7 @@ class PlaceOrderAPI(APIView):
                     )
 
                 # Calculate order totals
-                subtotal = sum(item.item.item_price * item.quantity for item in cart_items)
+                subtotal = sum(item.item_price for item in cart_items)
                 tax = subtotal * Decimal('0.00')  # Example 5% tax
                 delivery_fee = data['delivery_fee']
                 total = data['total_amount']

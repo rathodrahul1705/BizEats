@@ -69,14 +69,14 @@ class TrackOrder(APIView):
                 subtotal = Decimal(0)
                 for item in cart_items:
                     menu_item = RestaurantMenu.objects.filter(id=item.item_id).first()
-                    price = menu_item.item_price if menu_item else Decimal(0)
-                    item_total = price * item.quantity
+                    price = item.item_price if item.item_price is not None else Decimal(0)
+                    item_total = price
                     subtotal += item_total
                     item_details.append({
                         "item_name": menu_item.item_name if menu_item else "Unknown",
                         "quantity": item.quantity,
                         "unit_price": str(price),
-                        "total_price": str(item_total),
+                        "total_price": str(item_total)
                     })
 
                 order_data = {
@@ -126,8 +126,8 @@ class RestaurantOrders(APIView):
                 subtotal = Decimal(0)
                 for item in cart_items:
                     menu_item = RestaurantMenu.objects.filter(id=item.item_id).first()
-                    price = menu_item.item_price if menu_item else Decimal(0)
-                    item_total = price * item.quantity
+                    price = item.item_price if item.item_price is not None else Decimal(0)
+                    item_total = price
                     subtotal += item_total
                     item_details.append({
                         "item_name": menu_item.item_name if menu_item else "Unknown",
@@ -251,8 +251,8 @@ class OrderDetails(APIView):
                 subtotal = Decimal(0)
                 for item in cart_items:
                     menu_item = RestaurantMenu.objects.filter(id=item.item_id).first()
-                    price = menu_item.item_price if menu_item else Decimal(0)
-                    item_total = price * item.quantity
+                    price = item.item_price if item.item_price is not None else Decimal(0)
+                    item_total = price
                     subtotal += item_total
                     item_details.append({
                         "item_name": menu_item.item_name if menu_item else "Unknown",
