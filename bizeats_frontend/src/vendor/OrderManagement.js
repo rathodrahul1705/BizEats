@@ -130,6 +130,31 @@ const OrderManagement = ({ user }) => {
     return matchesId && matchesName && matchesStatus;
   });
 
+  const convertUTCtoIST = (utcDateString) => {
+    if (!utcDateString) return "N/A";
+    const utcDate = new Date(utcDateString.replace(' ', 'T') + 'Z');
+    if (isNaN(utcDate.getTime())) return "Invalid Date";
+  
+    const options = {
+      timeZone: 'Asia/Kolkata',
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    };
+  
+    const formatter = new Intl.DateTimeFormat('en-GB', options);
+    const formattedDate = formatter.format(utcDate).replace(',', '');
+  
+    // Convert "dd/mm/yyyy hh:mm:ss" → "dd-mm-yyyy, hh:mm:ss"
+    const [datePart, timePart] = formattedDate.split(' ');
+    const dateWithHyphen = datePart.replace(/\//g, '-');
+    return `${dateWithHyphen}, ${timePart}`;
+  };
+
   return (
     <div className="vendor-orders">
       <h2 className="vendor-order-title">Order Management</h2>
@@ -188,7 +213,7 @@ const OrderManagement = ({ user }) => {
 
             <div className="vendor-card-body">
               <p><strong>Customer:</strong> {order.full_name}</p>
-              <p><strong>Estimated Delivery:</strong> {order.estimated_delivery}</p>
+              <p><strong>Estimated Delivery:</strong> {convertUTCtoIST(order.estimated_delivery)}</p>
 
               <div className="item-list">
                 {order.items.map((item, i) => (
