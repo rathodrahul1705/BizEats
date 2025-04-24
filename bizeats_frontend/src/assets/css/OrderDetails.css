@@ -1034,3 +1034,132 @@
       font-size: 0.95rem;
     }
   }
+
+  /* Restaurant Header with Shop Closed Banner */
+.order-store-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  
+  .order-store-title {
+    margin: 0;
+    flex: 1;
+    min-width: 200px; /* Prevent title from getting too small */
+  }
+  
+  /* Shop Closed Banner - Updated for side-by-side layout */
+  .order-shop-closed-banner {
+    background-color: #e65c00;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-weight: bold;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    animation: pulse 2s infinite;
+    border: 1px solid #d35400;
+    font-size: 14px;
+    white-space: nowrap;
+    align-self: center;
+  }
+  
+  @keyframes pulse {
+    0% {
+      box-shadow: 0 0 0 0 rgba(230, 92, 0, 0.7);
+    }
+    70% {
+      box-shadow: 0 0 0 8px rgba(230, 92, 0, 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(230, 92, 0, 0);
+    }
+  }
+  
+  /* Disabled Add Button */
+  .order-add-to-cart-btn:disabled,
+  .order-cart-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+  
+  .order-add-to-cart-btn:disabled {
+    background-color: #f5f5f5 !important;
+    color: #999 !important;
+    border: 1px solid #ddd !important;
+  }
+  
+  .order-cart-btn:disabled svg {
+    color: #999 !important;
+  }
+  
+  /* Disabled View Cart Button */
+  .order-view-cart-btn:disabled {
+    background-color: #f5f5f5;
+    color: #999;
+    border: 1px solid #ddd;
+    cursor: not-allowed;
+  }
+  
+  /* Disabled Food Items when shop is closed */
+  .order-food-item:has(button:disabled) {
+    position: relative;
+  }
+  
+  /* Modal disabled state */
+  .order-food-modal-overlay:has(button:disabled) .order-food-modal {
+    position: relative;
+  }
+  
+  /* Additional disabled state styling */
+  .order-food-item:has(button:disabled) .order-food-image {
+    filter: grayscale(30%);
+  }
+  
+  .order-food-item:has(button:disabled) .order-food-price {
+    color: #999;
+  }
+  
+  .order-food-modal-overlay:has(button:disabled) .order-food-modal-image {
+    filter: brightness(0.9) grayscale(20%);
+  }
+  
+  /* Responsive Adjustments */
+  @media (max-width: 768px) {
+    .order-store-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+    }
+    
+    .order-store-title {
+      width: 100%;
+    }
+    
+    .order-shop-closed-banner {
+      align-self: flex-start;
+      white-space: normal;
+      text-align: left;
+      padding: 6px 10px;
+      font-size: 13px;
+    }
+    
+    .order-food-item:has(button:disabled)::after {
+      font-size: 11px;
+      padding: 4px;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .order-shop-closed-banner {
+      width: 100%;
+      text-align: center;
+    }
+    
+    .order-food-modal-overlay:has(button:disabled) .order-food-modal::before {
+      font-size: 14px;
+      padding: 8px;
+    }
+  }

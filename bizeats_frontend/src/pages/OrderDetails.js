@@ -30,6 +30,7 @@ const OrderDetails = ({ user, setUser }) => {
   const [selectedFood, setSelectedFood] = useState(null);
   const [showFoodModal, setShowFoodModal] = useState(false);
   const [categoryVisibility, setCategoryVisibility] = useState({});
+  const [isShopOpen, setIsShopOpen] = useState(true);
   const navigate = useNavigate();
   const sessionId = getOrCreateSessionId();
 
@@ -57,6 +58,19 @@ const OrderDetails = ({ user, setUser }) => {
     }
   ]);
 
+  // Check if shop is open (9 AM to 9 PM IST)
+  const checkShopTimings = () => {
+    const now = new Date();
+    // Convert to IST (UTC+5:30)
+    const istOffset = 330 * 60 * 1000; // 5 hours 30 minutes in milliseconds
+    const istTime = new Date(now.getTime() + istOffset);
+    const currentHour = istTime.getUTCHours();
+    
+    // Shop is open between 9 AM (9) and 9 PM (21)
+    const open = currentHour >= 9 && currentHour < 21;
+    setIsShopOpen(open);
+  };
+
   // Initialize all categories as visible by default
   useEffect(() => {
     if (foodData.length > 0) {
@@ -68,6 +82,13 @@ const OrderDetails = ({ user, setUser }) => {
       setCategoryVisibility(initialVisibility);
     }
   }, [foodData]);
+
+  useEffect(() => {
+    checkShopTimings();
+    // Check every minute to update shop status
+    const interval = setInterval(checkShopTimings, 60000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -160,6 +181,8 @@ const OrderDetails = ({ user, setUser }) => {
   }, [restaurant_id]);
 
   const addItem = async (id) => {
+    if (!isShopOpen) return;
+    
     try {
       const response = await fetchData(
         API_ENDPOINTS.ORDER.ADD_TO_CART,
@@ -184,6 +207,8 @@ const OrderDetails = ({ user, setUser }) => {
   };
 
   const addToCart = async (id) => {
+    if (!isShopOpen) return;
+    
     const currentRestaurantId = localStorage.getItem("current_order_restaurant_id");
     const foodItem = foodData.find(item => item.id === id);
 
@@ -260,7 +285,7 @@ const OrderDetails = ({ user, setUser }) => {
   );
 
   const openFoodModal = (food) => {
-    if (!food.availability) return;
+    if (!food.availability || !isShopOpen) return;
     setSelectedFood(food);
     setShowFoodModal(true);
   };
@@ -285,7 +310,14 @@ const OrderDetails = ({ user, setUser }) => {
 
   return (
     <div className="order-page-container">
-      <h1 className="order-store-title">{storeDetails.name}</h1>
+      <div className="order-store-header">
+        <h1 className="order-store-title">{storeDetails.name}</h1>
+        {!isShopOpen && (
+          <div className="order-shop-closed-banner">
+            🚫 Shop Closed (Open 9AM-9PM)
+          </div>
+        )}
+      </div>
 
       <div className="order-store-details-card">
         <p className="order-store-info">⏱ {storeDetails.deliveryTime}</p>
@@ -422,6 +454,7 @@ const OrderDetails = ({ user, setUser }) => {
                                 e.stopPropagation();
                                 addToCart(food.id);
                               }}
+                              disabled={!isShopOpen}
                             >
                               <PlusCircle size={20} />
                             </button>
@@ -433,6 +466,7 @@ const OrderDetails = ({ user, setUser }) => {
                               e.stopPropagation();
                               addToCart(food.id);
                             }}
+                            disabled={!isShopOpen}
                           >
                             Add
                           </button>
@@ -479,11 +513,11 @@ const OrderDetails = ({ user, setUser }) => {
           </div>
         ) : null}
 
-
       {totalItems > 0 && (
         <button
           className="order-view-cart-btn"
           onClick={() => navigate("/cart")}
+          disabled={!isShopOpen}
         >
           <ShoppingCart size={20} />
           View Cart ({totalItems}) • ₹{totalAmount.toFixed(2)}
@@ -497,7 +531,7 @@ const OrderDetails = ({ user, setUser }) => {
             <p>Your cart contains items from another restaurant. Would you like to reset your cart?</p>
             <div className="order-modal-actions">
               <button onClick={() => setShowResetCartModal(false)}>No</button>
-              <button onClick={handleFreshStart}>Yes, Start Fresh</button>
+              <button onClick={handleFreshStart} disabled={!isShopOpen}>Yes, Start Fresh</button>
             </div>
           </div>
         </div>
@@ -541,6 +575,7 @@ const OrderDetails = ({ user, setUser }) => {
                       e.stopPropagation();
                       addToCart(selectedFood.id);
                     }}
+                    disabled={!isShopOpen}
                   >
                     <PlusCircle size={24} />
                   </button>
