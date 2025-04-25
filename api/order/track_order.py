@@ -121,6 +121,27 @@ class RestaurantOrders(APIView):
             for order in orders:
                 user = User.objects.filter(id=order.user_id).first()
 
+                payment_details = Payment.objects.filter(order_id=order.id).first()
+                if payment_details:
+                    transaction_id = payment_details.razorpay_payment_id
+                else:
+                    transaction_id = None
+
+                delivery_address = UserDeliveryAddress.objects.filter(id=order.delivery_address_id).first()
+                
+                if delivery_address:
+                    address_parts = [
+                        delivery_address.street_address,
+                        delivery_address.city,
+                        delivery_address.state,
+                        delivery_address.zip_code,
+                        delivery_address.country
+                    ]
+                    address_string = ", ".join([part for part in address_parts if part])
+                else:
+                    address_string = ""
+
+
                 cart_items = Cart.objects.filter(order_number=order.order_number)
                 item_details = []
                 subtotal = Decimal(0)
@@ -138,14 +159,20 @@ class RestaurantOrders(APIView):
 
                 order_data = {
                     "full_name": user.full_name,
+                    "email": user.email,
+                    "phone_number": user.contact_number,
                     "order_number": order.order_number,
+                    "delivery_address": address_string,
                     "placed_on": order.created_at.strftime("%Y-%m-%d %H:%M:%S"),
                     "estimated_delivery": order.delivery_date.strftime("%Y-%m-%d %H:%M:%S") if order.delivery_date else "Not available",
                     "items": item_details,
                     "subtotal": str(subtotal),
                     "delivery_fee": str(order.delivery_fee),
                     "total": str(order.total_amount),
-                    "status": order.status
+                    "status": order.status,
+                    "transaction_id": transaction_id,
+                    "payment_status": order.get_payment_status_display(),
+                    "payment_method": order.get_payment_method_display(),
                 }
 
                 data.append(order_data)

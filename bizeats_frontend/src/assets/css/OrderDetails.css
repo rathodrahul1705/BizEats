@@ -1139,7 +1139,6 @@
     }
     
     .order-shop-closed-banner {
-      align-self: flex-start;
       white-space: normal;
       text-align: left;
       padding: 6px 10px;
@@ -1154,7 +1153,6 @@
   
   @media (max-width: 480px) {
     .order-shop-closed-banner {
-      width: 100%;
       text-align: center;
     }
     

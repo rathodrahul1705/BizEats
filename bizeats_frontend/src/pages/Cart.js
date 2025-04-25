@@ -138,7 +138,7 @@ const Cart = ({ user, setUser }) => {
     handleCartOperation(item_id, id, "delete");
   };
 
-  const totalPrice = cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
+  const totalPrice = cartItems.reduce((total, item) => total + item.price, 0);
 
   const handleProceed = () => {
     if (cartItems.length === 0) {
