@@ -1,7 +1,7 @@
 from django.urls import path, re_path, include
 
 from api.payment.payment import create_order, verify_payment
-from api.vendor.Vendor import GetVendorWiseCounts
+from .vendor.Vendor import GetVendorWiseCounts
 from .views import CustomTokenRefreshView, UserProfileView, UserRegistrationView, OTPVerificationView, UserLoginView, ContactUsView, ReactAppView
 from .restaurent.registration_process import RestaurantStoreStepOne, RestaurantStoreStepTwo, RestaurantStoreStepThree, RestaurantStoreStepFour, RestaurantByUserAPIView, RestaurantByRestauranrtAPIView, RestaurantMenueStore, RestaurantMenueList,RestaurantMenueDetails,RestaurantMenueUpdate,RestaurantMenueDelete, RestaurantListAPI, RestaurantDetailMenuView
 from django.conf import settings
