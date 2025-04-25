@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
+import { X, Clock } from "lucide-react";
 import {
   MapContainer,
   TileLayer,
@@ -212,6 +213,80 @@ const TrackOrder = ({ user }) => {
   const [hasReached, setHasReached] = useState(false);
   const mapContainerRef = useRef(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const [cancelTimer, setCancelTimer] = useState(120); // 2 minutes in seconds
+  const [canCancel, setCanCancel] = useState(true);
+  const [isCancelling, setIsCancelling] = useState(false);
+  
+  useEffect(() => {
+    if (!selectedOrder) return;
+  
+    const placedTimeKey = `cancel_timer_start_${order_number}`;
+  
+    if (!localStorage.getItem(placedTimeKey)) {
+      localStorage.setItem(placedTimeKey, new Date(selectedOrder.placed_on.replace(' ', 'T') + 'Z').toISOString());
+    }
+  
+    const placedTime = new Date(localStorage.getItem(placedTimeKey));
+    const currentTime = new Date();
+    const elapsed = Math.floor((currentTime - placedTime) / 1000);
+    const remaining = 120 - elapsed;
+  
+    if (remaining <= 0) {
+      setCancelTimer(0);
+      setCanCancel(false);
+      return;
+    } else {
+      setCancelTimer(remaining);
+      setCanCancel(true);
+    }
+  
+    const interval = setInterval(() => {
+      setCancelTimer(prev => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          setCanCancel(false);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  
+    return () => clearInterval(interval);
+  }, [selectedOrder]);
+  
+  const handleCancelOrder = async () => {
+    if (!canCancel || isCancelling) return;
+    
+    if (!window.confirm("Are you sure you want to cancel this order?")) return;
+  
+    try {
+      setIsCancelling(true);
+      const res = await fetchData(API_ENDPOINTS.ORDERS.CANCEL_ORDER, "POST", {
+        order_id: selectedOrder.order_number,
+        user_id: user?.user_id
+      });
+  
+      if (res.status === "success") {
+        // Update the order status locally
+        setSelectedOrder(prev => ({
+          ...prev,
+          status: "Cancelled",
+          payment_status: "Refunded"
+        }));
+        setCanCancel(false);
+        alert("Order cancelled successfully. Any payment will be refunded.");
+      } else {
+        alert("Failed to cancel order: " + (res.message || "Please try again later"));
+      }
+    } catch (err) {
+      console.error("Cancel order error:", err);
+      alert("Failed to cancel order. Please try again later.");
+    } finally {
+      setIsCancelling(false);
+    }
+  };
+  
 
   const statusMap = {
     Pending: 0,
@@ -583,6 +658,25 @@ const TrackOrder = ({ user }) => {
           </div>
         </div>
       </div>
+
+      {/* {
+        canCancel && !["Cancelled", "Refunded", "Delivered"].includes(selectedOrder.status) && (
+          <div className="cancel-order-container">
+            <div className="cancel-timer">
+              <Clock size={14} />
+              {Math.floor(cancelTimer / 60)}:{String(cancelTimer % 60).padStart(2, '0')}
+            </div>
+            <button
+              className="cancel-order-btn"
+              onClick={handleCancelOrder}
+              disabled={isCancelling}
+            >
+              <X size={18} />
+              {isCancelling ? "Cancelling..." : "Cancel Order"}
+            </button>
+          </div>
+        )
+      } */}
     </div>
   );
 };

@@ -167,6 +167,42 @@ const OrderManagement = ({ user }) => {
     return `${dateWithHyphen}, ${timePart}`;
   };
 
+  const markOrderAsPaid = async (orderNumber) => {
+    const accessToken = localStorage.getItem("access");
+    const response = await fetch(API_ENDPOINTS.PAYMENT.MARKED_PAYMENT(orderNumber), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${accessToken}` // If needed
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to mark order as paid');
+    }
+    
+    return response.json();
+  };
+
+  const handleMarkAsPaid = async (orderNumber) => {
+    try {
+      const response = await markOrderAsPaid(orderNumber);
+      
+      setOrders(prevOrders => 
+        prevOrders.map(order => 
+          order.order_number === orderNumber 
+            ? { ...order, payment_status: "Completed" } 
+            : order
+        )
+      );
+      
+      setRecentlyUpdatedOrder(orderNumber);
+      setTimeout(() => setRecentlyUpdatedOrder(null), 3000);
+    } catch (error) {
+      console.error('Failed to mark order as paid:', error);
+    }
+  };
+
   const getStatusColor = (status) => {
     switch(status) {
       case "Pending": return "#F59E0B";
@@ -234,49 +270,89 @@ const OrderManagement = ({ user }) => {
           {filteredOrders.map((order) => (
             <div className={`vendor-card ${expandedOrder === order.order_number ? 'expanded' : ''}`} key={order.order_number}>
               <div className="vendor-card-header" onClick={() => toggleOrderExpand(order.order_number)}>
-                <div className="vendor-card-info">
-                  <div className="order-number-status">
-                    <h3 className="order-number">#{order.order_number}</h3>
-                    <span className="status-badge" style={{ backgroundColor: getStatusColor(order.status.label) }}>
-                      {order.status.label}
-                    </span>
-                  </div>
-                  <p className="order-time"><FaClock /> {convertUTCtoIST(order.placed_on)}</p>
-                </div>
-                <div className="customer-info-mini">
-                  <p><FaUser /> {order.full_name}</p>
-                  <p>
-                    <FaPhone />{' '}
-                    {order.phone_number ? (
-                      <a
-                        href={`tel:${order.phone_number}`}
-                        style={{ color: '#007bff' }}
-                      >
-                        {order.phone_number}
-                      </a>
-                    ) : (
-                      'N/A'
-                    )}
-                  </p>
+              <div className="vendor-card-info">
+                <div className="order-number-status">
+                  <h3 className="order-number">#{order.order_number}</h3>
+                  <span className="status-badge" style={{ backgroundColor: getStatusColor(order.status.label) }}>
+                    {order.status.label}
+                  </span>
+                  {(() => {
+                    const status = order.status.label.toLowerCase();
+                    const isCOD = order.payment_method === 'Cash on Delivery';
+
+                    if (['canceled', 'refunded'].includes(status)) {
+                      return (
+                        <span className="marked-paid-badge">
+                          Marked as Paid: ❌
+                        </span>
+                      );
+                    }
+
+                    if (isCOD) {
+                        return (
+                          <span className="marked-paid-badge">
+                            Marked as Paid: {order?.payment_status == "Completed" ? '✅' : '❌'}
+                          </span>
+                        );
+                      return null; // For other statuses, show nothing
+                    }
+
+                    return (
+                      <span className="marked-paid-badge">
+                        Marked as Paid: ✅
+                      </span>
+                    );
+                  })()}
 
                 </div>
-                <div className="order-actions">
-                  <select
-                    className="status-select"
-                    value={order.status.id}
-                    onChange={(e) => handleStatusChange(order.order_number, e.target.value)}
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    {statusOptions.map((status) => (
-                      <option key={status.id} value={status.id}>{status.label}</option>
-                    ))}
-                  </select>
-                  {recentlyUpdatedOrder === order.order_number && (
-                    <p className="status-update-success">Status updated ✅</p>
-                  )}
-                </div>
+                <p className="order-time"><FaClock /> {convertUTCtoIST(order.placed_on)}</p>
               </div>
-
+              <div className="customer-info-mini">
+                <p><FaUser /> {order.full_name}</p>
+                <p>
+                  <FaPhone />{' '}
+                  {order.phone_number ? (
+                    <a
+                      href={`tel:${order.phone_number}`}
+                      style={{ color: '#007bff' }}
+                    >
+                      {order.phone_number}
+                    </a>
+                  ) : (
+                    'N/A'
+                  )}
+                </p>
+              </div>
+              <div className="order-actions">
+                <select
+                  className="status-select"
+                  value={order.status.id}
+                  onChange={(e) => handleStatusChange(order.order_number, e.target.value)}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {statusOptions.map((status) => (
+                    <option key={status.id} value={status.id}>{status.label}</option>
+                  ))}
+                </select>
+                
+                {order.status.label.toLowerCase() === 'delivered' && 
+                order.payment_method === 'Cash on Delivery' && order?.payment_status != "Completed" && (
+                  <button 
+                    className="mark-paid-button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleMarkAsPaid(order.order_number);
+                    }}
+                  >
+                    Mark as Paid
+                  </button>
+                )}
+                
+                {recentlyUpdatedOrder === order.order_number && (
+                  <p className="status-update-success">Status updated ✅</p>
+                )}
+              </div>
+            </div>
               {expandedOrder === order.order_number && (
                 <div className="vendor-card-details">
                   <div className="details-grid">

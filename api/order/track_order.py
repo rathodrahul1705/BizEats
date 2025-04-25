@@ -486,3 +486,27 @@ class GetActiveOrders(APIView):
                 {"status": "error", "message": str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
+
+@method_decorator(csrf_exempt, name='dispatch')
+class MarkAsPaid(APIView):
+    """
+    API endpoint to receive and store/update live location updates from restaurant during delivery.
+    """
+
+    def post(self, request, order_number, *args, **kwargs):
+        try:
+
+            print("order_number===",order_number)
+
+            Order.objects.filter(order_number=order_number).update(payment_status=5)
+            message = "Order Marked As Paid"
+            return Response({
+                "status": "success",
+                "message": message
+            }, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response({
+                "status": "error",
+                "message": str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

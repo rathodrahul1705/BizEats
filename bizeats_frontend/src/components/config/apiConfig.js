@@ -73,7 +73,8 @@ const API_ENDPOINTS = {
 
   PAYMENT: {
     CREATE_ORDER: `${BASE_URL}/restaurant/order/create-order/`,
-    VERIFY_PAYMENT: `${BASE_URL}/restaurant/order/verify-payment/`
+    VERIFY_PAYMENT: `${BASE_URL}/restaurant/order/verify-payment/`,
+    MARKED_PAYMENT: (order_number) => `${BASE_URL}/restaurant/order/mark-paid/${order_number}/`,
 
   },
 
