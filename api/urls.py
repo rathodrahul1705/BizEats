@@ -1,6 +1,7 @@
 from django.urls import path, re_path, include
 
 from api.payment.payment import create_order, verify_payment
+from api.vendor.Vendor import GetVendorWiseCounts
 from .views import CustomTokenRefreshView, UserProfileView, UserRegistrationView, OTPVerificationView, UserLoginView, ContactUsView, ReactAppView
 from .restaurent.registration_process import RestaurantStoreStepOne, RestaurantStoreStepTwo, RestaurantStoreStepThree, RestaurantStoreStepFour, RestaurantByUserAPIView, RestaurantByRestauranrtAPIView, RestaurantMenueStore, RestaurantMenueList,RestaurantMenueDetails,RestaurantMenueUpdate,RestaurantMenueDelete, RestaurantListAPI, RestaurantDetailMenuView
 from django.conf import settings
@@ -71,6 +72,8 @@ urlpatterns = [
 
     path("api/order/update-location/", UpdateOrderLiveLocationView.as_view(), name="update_order_location"),
     path("api/order/active-orders/", GetActiveOrders.as_view(), name="get_active_orders"),
+
+    path("api/order/vendor-dashboard-details/", GetVendorWiseCounts.as_view(), name="get_active_orders"),
 
     re_path(r'^(?!media/).*$', ReactAppView.as_view(), name='react-app'),
 

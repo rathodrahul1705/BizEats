@@ -7,11 +7,27 @@ import fetchData from "../components/services/apiService";
 const DashboardOverview = ({ user, setUser }) => {
   const [selectedRestaurant, setSelectedRestaurant] = useState(null);
   const [restaurantsList, setRestaurantsList] = useState([]);
+  const [dashboardData, setDashboardData] = useState({
+    total_orders: 0,
+    total_revenue: 0,
+    pending_orders: 0,
+    delivered_orders: 0
+  });
+  const [dateFilter, setDateFilter] = useState(new Date().toISOString().split("T")[0]);
+  const [timeRangeFilter, setTimeRangeFilter] = useState("today");
 
   const handleRestaurantChange = (event) => {
-    const restaurantId = event.target.value; // Keep as string
+    const restaurantId = event.target.value;
     const restaurant = restaurantsList.find((r) => r.restaurant_id === restaurantId);
     setSelectedRestaurant(restaurant);
+  };
+
+  const handleDateChange = (event) => {
+    setDateFilter(event.target.value);
+  };
+
+  const handleTimeRangeChange = (event) => {
+    setTimeRangeFilter(event.target.value);
   };
 
   useEffect(() => {
@@ -27,7 +43,7 @@ const DashboardOverview = ({ user, setUser }) => {
         );
         if (response?.live_restaurants?.length) {
           setRestaurantsList(response.live_restaurants);
-          setSelectedRestaurant(response.live_restaurants[0]); // Set default selection
+          setSelectedRestaurant(response.live_restaurants[0]);
         }
       } catch (error) {
         console.error("Error fetching restaurants:", error);
@@ -36,6 +52,36 @@ const DashboardOverview = ({ user, setUser }) => {
 
     fetchRestaurants();
   }, [user?.user_id]);
+
+  useEffect(() => {
+    if (!selectedRestaurant?.restaurant_id) return;
+  
+    const fetchVendorCountDetails = async () => {
+      try {
+        const payload = {
+          restaurant_id: selectedRestaurant?.restaurant_id || "",
+          date: dateFilter,
+          time_range: timeRangeFilter
+        };
+  
+        const response = await fetchData(
+          API_ENDPOINTS.RESTAURANT.RES_VENDOR_COUNT,
+          "POST",
+          payload,
+          localStorage.getItem("access")
+        );
+  
+        if (response?.status === "success") {
+          setDashboardData(response.data);
+        }
+      } catch (error) {
+        console.error("Error fetching vendor count details:", error);
+      }
+    };
+  
+    fetchVendorCountDetails();
+  }, [selectedRestaurant?.restaurant_id, dateFilter, timeRangeFilter]);
+  
 
   return (
     <div className="vendor-overview">
@@ -54,23 +100,44 @@ const DashboardOverview = ({ user, setUser }) => {
         </div>
       </div>
 
+      {/* Filters Section */}
+      <div className="vendor-filters">
+        <div className="filter-group">
+          <label>Date</label>
+          <input 
+            type="date" 
+            value={dateFilter} 
+            onChange={handleDateChange} 
+          />
+        </div>
+        <div className="filter-group">
+          <label>Time Range</label>
+          <select value={timeRangeFilter} onChange={handleTimeRangeChange}>
+            <option value="today">Today</option>
+            <option value="week">This Week</option>
+            <option value="month">This Month</option>
+            <option value="custom">Custom</option>
+          </select>
+        </div>
+      </div>
+
       <div className="vendor-container">
         <div className="vendor-summary">
           <div className="vendor-card">
-            <h3>Total Orders Today</h3>
-            <p>0</p>
+            <h3>Total Orders</h3>
+            <p>{dashboardData.total_orders}</p>
           </div>
           <div className="vendor-card">
-            <h3>Revenue Today</h3>
-            <p>0</p>
+            <h3>Revenue</h3>
+            <p>₹{dashboardData.total_revenue}</p>
           </div>
           <div className="vendor-card">
             <h3>Pending Orders</h3>
-            <p>0</p>
+            <p>{dashboardData.pending_orders}</p>
           </div>
           <div className="vendor-card">
-            <h3>Customer Reviews</h3>
-            <p>0</p>
+            <h3>Delivered Orders</h3>
+            <p>{dashboardData.delivered_orders}</p>
           </div>
         </div>
 
@@ -86,18 +153,6 @@ const DashboardOverview = ({ user, setUser }) => {
                 <h4>Order Management</h4>
                 <p>View and manage orders</p>
               </Link>
-              {/* <Link to={`/vendor-dashboard/analytics/${selectedRestaurant.restaurant_id}`} className="vendor-link-card">
-                <h4>Analytics</h4>
-                <p>View sales and insights</p>
-              </Link>
-              <Link to={`/vendor-dashboard/notifications/${selectedRestaurant.restaurant_id}`} className="vendor-link-card">
-                <h4>Notifications</h4>
-                <p>Check alerts and messages</p>
-              </Link>
-              <Link to={`/vendor-dashboard/settings/${selectedRestaurant.restaurant_id}`} className="vendor-link-card">
-                <h4>Settings</h4>
-                <p>Update restaurant details</p>
-              </Link> */}
               <Link to={`/register-your-restaurent`} className="vendor-link-card">
                 <h4>Register Your Restaurant</h4>
                 <p>Manage your restaurant</p>
