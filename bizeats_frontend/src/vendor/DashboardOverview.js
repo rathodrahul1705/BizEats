@@ -11,7 +11,7 @@ const DashboardOverview = ({ user, setUser }) => {
     total_orders: 0,
     total_revenue: 0,
     pending_orders: 0,
-    delivered_orders: 0
+    delivered_orders: 0,
   });
   const [dateFilter, setDateFilter] = useState(new Date().toISOString().split("T")[0]);
   const [timeRangeFilter, setTimeRangeFilter] = useState("today");
@@ -22,13 +22,8 @@ const DashboardOverview = ({ user, setUser }) => {
     setSelectedRestaurant(restaurant);
   };
 
-  const handleDateChange = (event) => {
-    setDateFilter(event.target.value);
-  };
-
-  const handleTimeRangeChange = (event) => {
-    setTimeRangeFilter(event.target.value);
-  };
+  const handleDateChange = (event) => setDateFilter(event.target.value);
+  const handleTimeRangeChange = (event) => setTimeRangeFilter(event.target.value);
 
   useEffect(() => {
     if (!user?.user_id) return;
@@ -55,22 +50,22 @@ const DashboardOverview = ({ user, setUser }) => {
 
   useEffect(() => {
     if (!selectedRestaurant?.restaurant_id) return;
-  
+
     const fetchVendorCountDetails = async () => {
       try {
         const payload = {
-          restaurant_id: selectedRestaurant?.restaurant_id || "",
+          restaurant_id: selectedRestaurant.restaurant_id,
           date: dateFilter,
-          time_range: timeRangeFilter
+          time_range: timeRangeFilter,
         };
-  
+
         const response = await fetchData(
           API_ENDPOINTS.RESTAURANT.RES_VENDOR_COUNT,
           "POST",
           payload,
           localStorage.getItem("access")
         );
-  
+
         if (response?.status === "success") {
           setDashboardData(response.data);
         }
@@ -78,39 +73,32 @@ const DashboardOverview = ({ user, setUser }) => {
         console.error("Error fetching vendor count details:", error);
       }
     };
-  
+
     fetchVendorCountDetails();
   }, [selectedRestaurant?.restaurant_id, dateFilter, timeRangeFilter]);
-  
 
   return (
-    <div className="vendor-overview">
-      {/* Header & Restaurant Dropdown */}
-      <div className="vendor-header">
+    <div className="dashboard-overview">
+      <div className="header-section">
         <h2>Dashboard Overview</h2>
-        <div className="dropdown-container">
+        <div className="dropdown-wrapper">
           <label>Restaurant</label>
           <select value={selectedRestaurant?.restaurant_id || ""} onChange={handleRestaurantChange}>
             {restaurantsList.map((restaurant) => (
               <option key={restaurant.restaurant_id} value={restaurant.restaurant_id}>
-                {restaurant.restaurant_name} ({restaurant.location?.area_sector_locality} {restaurant.location?.city})
+                {restaurant.restaurant_name} ({restaurant.location?.area_sector_locality}, {restaurant.location?.city})
               </option>
             ))}
           </select>
         </div>
       </div>
 
-      {/* Filters Section */}
-      <div className="vendor-filters">
-        <div className="filter-group">
+      <div className="filters">
+        <div className="filter-item">
           <label>Date</label>
-          <input 
-            type="date" 
-            value={dateFilter} 
-            onChange={handleDateChange} 
-          />
+          <input type="date" value={dateFilter} onChange={handleDateChange} />
         </div>
-        <div className="filter-group">
+        <div className="filter-item">
           <label>Time Range</label>
           <select value={timeRangeFilter} onChange={handleTimeRangeChange}>
             <option value="today">Today</option>
@@ -121,39 +109,39 @@ const DashboardOverview = ({ user, setUser }) => {
         </div>
       </div>
 
-      <div className="vendor-container">
-        <div className="vendor-summary">
-          <div className="vendor-card">
+      <div className="dashboard-content">
+        <div className="summary-cards">
+          <div className="card">
             <h3>Total Orders</h3>
             <p>{dashboardData.total_orders}</p>
           </div>
-          <div className="vendor-card">
+          <div className="card">
             <h3>Revenue</h3>
             <p>₹{dashboardData.total_revenue}</p>
           </div>
-          <div className="vendor-card">
+          <div className="card">
             <h3>Pending Orders</h3>
             <p>{dashboardData.pending_orders}</p>
           </div>
-          <div className="vendor-card">
+          <div className="card">
             <h3>Delivered Orders</h3>
             <p>{dashboardData.delivered_orders}</p>
           </div>
         </div>
 
         {selectedRestaurant && (
-          <div className="vendor-links">
+          <div className="quick-links">
             <h3>Quick Links</h3>
-            <div className="vendor-link-grid">
-              <Link to={`/vendor-dashboard/menu/${selectedRestaurant.restaurant_id}`} className="vendor-link-card">
+            <div className="links-grid">
+              <Link to={`/vendor-dashboard/menu/${selectedRestaurant.restaurant_id}`} className="link-card">
                 <h4>Menu Management</h4>
                 <p>Manage your restaurant menu</p>
               </Link>
-              <Link to={`/vendor-dashboard/order/management/${selectedRestaurant.restaurant_id}`} className="vendor-link-card">
+              <Link to={`/vendor-dashboard/order/management/${selectedRestaurant.restaurant_id}`} className="link-card">
                 <h4>Order Management</h4>
                 <p>View and manage orders</p>
               </Link>
-              <Link to={`/register-your-restaurent`} className="vendor-link-card">
+              <Link to={`/register-your-restaurent`} className="link-card">
                 <h4>Register Your Restaurant</h4>
                 <p>Manage your restaurant</p>
               </Link>
