@@ -42,15 +42,15 @@ const OrderDetails = ({ user, setUser }) => {
       icon: "🏍️",
       color: "#fff"
     },
-    // {
-    //   id: 2,
-    //   title: "Limbu Pani Free",
-    //   description: "With every order",
-    //   icon: "🍋",
-    //   color: "#fff"
-    // },
     {
       id: 2,
+      title: "Free Chaas",
+      description: "With every order",
+      icon: "🥛",
+      color: "#fff"
+    },
+    {
+      id: 3,
       title: "10% Off",
       description: "On every order",
       icon: "🤑",
