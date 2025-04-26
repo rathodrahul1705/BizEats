@@ -1,152 +1,375 @@
-.dashboard-overview {
-  padding: 24px;
-  font-family: "Segoe UI", sans-serif;
-  color: #1f2937;
+:root {
+  --primary-color: #e65c00; /* Updated primary color */
+  --primary-hover: #cc5200;
+  --secondary-color: #f8f8f8;
+  --text-color: #000000; /* Black for text */
+  --text-light: #555555;
+  --bg-color: #ffffff; /* White background */
+  --card-bg: #ffffff;
+  --border-radius: 8px;
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.header-section {
+/* Vendor Dashboard Container */
+.vendor-dashboard {
+  background-color: var(--bg-color);
+  min-height: 100vh;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: var(--text-color);
+}
+
+/* Dashboard Overview - Main Section */
+.dashboard-overview {
+  padding: 1.5rem;
+}
+
+/* Header Section */
+.dashboard-overview .header-section {
   display: flex;
   justify-content: space-between;
-  flex-wrap: wrap;
   align-items: center;
-  margin-bottom: 20px;
-}
-
-.dropdown-wrapper {
-  display: flex;
-  flex-direction: column;
-  min-width: 220px;
-}
-
-.dropdown-wrapper label {
-  margin-bottom: 6px;
-  font-weight: 600;
-  font-size: 14px;
-}
-
-.dropdown-wrapper select {
-  padding: 10px;
-  font-size: 14px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-  background-color: #f3f4f6;
-  transition: border 0.3s;
-}
-
-.dropdown-wrapper select:focus {
-  outline: none;
-  border-color: #2563eb;
-  box-shadow: 0 0 4px rgba(37, 99, 235, 0.4);
-}
-
-/* Filters */
-.filters {
-  display: flex;
-  gap: 20px;
   flex-wrap: wrap;
-  background-color: #fff;
-  padding: 16px;
-  margin-bottom: 24px;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 }
 
-.filter-item {
+.dashboard-overview .header-section h2 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--text-color);
+  margin: 0;
+}
+
+/* Dropdown/Select Styles */
+.dashboard-overview .dropdown-wrapper {
   display: flex;
   flex-direction: column;
-  min-width: 160px;
+  min-width: 240px;
+  position: relative;
 }
 
-.filter-item label {
+.dashboard-overview .dropdown-wrapper label {
+  margin-bottom: 0.5rem;
   font-weight: 500;
-  margin-bottom: 6px;
+  font-size: 0.875rem;
+  color: var(--text-light);
 }
 
-.filter-item input,
-.filter-item select {
-  padding: 8px 10px;
-  font-size: 14px;
-  border-radius: 5px;
-  border: 1px solid #d1d5db;
-  background-color: #f9fafb;
+.dashboard-overview .dropdown-wrapper select {
+  padding: 0.75rem 1rem;
+  font-size: 0.9375rem;
+  border-radius: var(--border-radius);
+  border: 1px solid #ddd;
+  background-color: var(--card-bg);
+  appearance: none;
+  transition: var(--transition);
+  cursor: pointer;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 1rem;
+}
+
+.dashboard-overview .dropdown-wrapper select:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(230, 92, 0, 0.2);
+}
+
+/* Filters Section */
+.dashboard-overview .filters {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  background-color: var(--card-bg);
+  padding: 1.25rem;
+  margin-bottom: 2rem;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.dashboard-overview .filter-item {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 180px;
+}
+
+.dashboard-overview .filter-item label {
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--text-light);
+}
+
+.dashboard-overview .filter-item input,
+.dashboard-overview .filter-item select {
+  padding: 0.75rem 1rem;
+  font-size: 0.9375rem;
+  border-radius: var(--border-radius);
+  border: 1px solid #ddd;
+  background-color: var(--card-bg);
+  transition: var(--transition);
+}
+
+.dashboard-overview .filter-item input:focus,
+.dashboard-overview .filter-item select:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(230, 92, 0, 0.2);
 }
 
 /* Summary Cards */
-.dashboard-content {
+.dashboard-overview .dashboard-content {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 1.5rem;
 }
 
-.summary-cards {
+.dashboard-overview .summary-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1.25rem;
 }
 
-.card {
-  background: #ffffff;
-  padding: 20px;
-  border-radius: 10px;
+.dashboard-overview .card {
+  background: var(--card-bg);
+  padding: 1.5rem;
+  border-radius: var(--border-radius);
   text-align: center;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
-  transition: transform 0.2s ease;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition);
+  border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
-.card:hover {
+.dashboard-overview .card:hover {
   transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
 }
 
-.card h3 {
-  font-size: 16px;
-  margin-bottom: 8px;
+.dashboard-overview .card h3 {
+  font-size: 1rem;
+  margin-bottom: 0.75rem;
+  color: var(--text-light);
+  font-weight: 500;
 }
 
-.card p {
-  font-size: 22px;
-  font-weight: bold;
-  color: #3b82f6;
+.dashboard-overview .card p {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  margin: 0;
 }
 
-/* Quick Links */
-.quick-links {
-  background-color: #fff;
-  padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+/* Quick Links Section */
+.dashboard-overview .quick-links {
+  background-color: var(--card-bg);
+  padding: 1.5rem;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
-.links-grid {
+.dashboard-overview .quick-links h3 {
+  font-size: 1.25rem;
+  margin-bottom: 1rem;
+  color: var(--text-color);
+}
+
+.dashboard-overview .links-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 15px;
-  margin-top: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1.25rem;
+  margin-top: 1rem;
 }
 
-.link-card {
-  background-color: #f3f4f6;
-  padding: 16px;
-  border-radius: 8px;
+.dashboard-overview .link-card {
+  padding: 1.5rem;
+  border-radius: var(--border-radius);
   text-decoration: none;
-  color: #1f2937;
-  transition: all 0.3s ease;
+  color: var(--text-color);
+  transition: var(--transition);
+  display: flex;
+  flex-direction: column;
+  border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
-.link-card:hover {
-  background-color: #e0e7ff;
+.dashboard-overview .link-card:hover {
+  background-color: #ffe6d9;
   transform: translateY(-3px);
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-md);
+  color: var(--primary-color);
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .header-section {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 16px;
-  }
+.dashboard-overview .link-card:hover h4 {
+  color: var(--primary-color);
+}
 
-  .filters {
-    flex-direction: column;
+.dashboard-overview .link-card h4 {
+  font-size: 1.125rem;
+  margin-bottom: 0.5rem;
+  color: var(--text-color);
+  transition: var(--transition);
+}
+
+.dashboard-overview .link-card p {
+  font-size: 0.875rem;
+  color: var(--text-light);
+  margin: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .dashboard-overview {
+    padding: 1rem;
   }
+  
+  .dashboard-overview .header-section {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+  
+  .dashboard-overview .dropdown-wrapper {
+    min-width: 100%;
+  }
+  
+  .dashboard-overview .filters {
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem;
+  }
+  
+  .dashboard-overview .filter-item {
+    min-width: 100%;
+  }
+  
+  .dashboard-overview .summary-cards {
+    grid-template-columns: 1fr 1fr;
+  }
+  
+  .dashboard-overview .links-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-overview .summary-cards {
+    grid-template-columns: 1fr;
+  }
+  
+  .dashboard-overview .card {
+    padding: 1.25rem;
+  }
+  
+  .dashboard-overview .card h3 {
+    font-size: 0.9375rem;
+  }
+  
+  .dashboard-overview .card p {
+    font-size: 1.5rem;
+  }
+}
+
+/* Vendor Dashboard Details Sub-Sections */
+.vendor-dashboard-details {
+  background-color: var(--bg-color);
+  padding: 1.5rem;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-sm);
+  margin-top: 1.5rem;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.vendor-dashboard-details .section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.vendor-dashboard-details .section-header h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-color);
+  margin: 0;
+}
+
+.vendor-dashboard-details .section-content {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.vendor-dashboard-details .detail-card {
+  background-color: var(--card-bg);
+  padding: 1.25rem;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.vendor-dashboard-details .detail-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.vendor-dashboard-details .detail-card .card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.vendor-dashboard-details .detail-card .card-header h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-color);
+  margin: 0;
+}
+
+.vendor-dashboard-details .detail-card .card-header .badge {
+  background-color: var(--primary-color);
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.vendor-dashboard-details .detail-card .card-body {
+  font-size: 0.875rem;
+  color: var(--text-light);
+}
+
+.vendor-dashboard-details .detail-card .card-footer {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.vendor-dashboard-details .detail-card .action-btn {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.vendor-dashboard-details .detail-card .action-btn:hover {
+  background-color: var(--primary-hover);
 }
