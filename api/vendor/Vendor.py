@@ -124,9 +124,10 @@ class GetVendorWiseCounts(APIView):
                 'on_the_way': orders.filter(status=5).count(),
             }
 
-            # Current month revenue, expense, profit
-            current_month_start = now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-            current_month_end = (current_month_start + timedelta(days=32)).replace(day=1) - timedelta(seconds=1)
+            current_month_start = date_obj.replace(day=1)  # Only set 'day' to 1
+            next_month_start = (current_month_start + timedelta(days=32)).replace(day=1)
+            current_month_end = next_month_start - timedelta(seconds=1)
+
 
             # Get all orders for the current month
             current_month_orders = Order.objects.filter(
