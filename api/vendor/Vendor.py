@@ -8,7 +8,9 @@ from api.emailer.email_notifications import send_order_status_email
 from decouple import config
 from django.db.models import Sum, Count, F, FloatField
 from django.utils.dateparse import parse_date
-from django.utils import timezone
+from datetime import timedelta
+from django.utils.timezone import now
+
 
         
 # @method_decorator(csrf_exempt, name='dispatch')
@@ -57,7 +59,6 @@ from django.utils import timezone
 #                 "status": "error",
 #                 "message": str(e)
 #             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
 
 @method_decorator(csrf_exempt, name='dispatch')
 class GetVendorWiseCounts(APIView):
@@ -123,6 +124,38 @@ class GetVendorWiseCounts(APIView):
                 'on_the_way': orders.filter(status=5).count(),
             }
 
+            # Current month revenue, expense, profit
+            current_month_start = now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+            current_month_end = (current_month_start + timedelta(days=32)).replace(day=1) - timedelta(seconds=1)
+
+            # Get all orders for the current month
+            current_month_orders = Order.objects.filter(
+                restaurant_id=restaurant_id,
+                order_date__range=[current_month_start, current_month_end]
+            )
+
+            # Exclude canceled (7) and refunded (8) orders for current month revenue
+            current_month_revenue_orders = current_month_orders.exclude(status__in=[7, 8])
+            current_month_revenue = current_month_revenue_orders.aggregate(
+                total=Sum('total_amount')
+            )['total'] or 0
+
+            # Get order numbers for the current month revenue orders
+            current_month_order_numbers = current_month_revenue_orders.values_list('order_number', flat=True)
+
+            # Get carts for the current month
+            current_month_carts = Cart.objects.filter(order_number__in=current_month_order_numbers)
+
+            # Calculate current month expense: Sum of (item_price)
+            current_month_expense = current_month_carts.aggregate(
+                total=Sum(
+                    F('item_price'),
+                    output_field=FloatField()
+                )
+            )['total'] or 0
+
+            current_month_profit = float(current_month_revenue) - float(current_month_expense)
+
             return Response({
                 "status": "success",
                 "data": {
@@ -135,6 +168,10 @@ class GetVendorWiseCounts(APIView):
                     "canceled_orders": status_counts['canceled'],
                     "refunded_orders": status_counts['refunded'],
                     "pending_orders": status_counts['pending'],
+                    # Current month data
+                    "current_month_revenue": float(current_month_revenue),
+                    "current_month_expense": float(current_month_expense),
+                    "current_month_profit": float(current_month_profit),
                 }
             }, status=status.HTTP_200_OK)
 

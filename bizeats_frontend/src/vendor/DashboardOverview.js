@@ -14,7 +14,9 @@ const DashboardOverview = ({ user, setUser }) => {
     delivered_orders: 0,
     canceled_orders: 0,
     refunded_orders: 0,
-    profit: 0
+    profit: 0,
+    current_month_revenue: 0,
+    current_month_expense: 0
   });
   const [dateFilter, setDateFilter] = useState(new Date().toISOString().split("T")[0]);
   const [timeRangeFilter, setTimeRangeFilter] = useState("today");
@@ -75,7 +77,12 @@ const DashboardOverview = ({ user, setUser }) => {
         );
 
         if (response?.status === "success") {
-          setDashboardData(response.data);
+          setDashboardData({
+            ...response.data,
+            // Include monthly data if available in response
+            current_month_revenue: response.data.current_month_revenue || 0,
+            current_month_expense: response.data.current_month_expense || 0
+          });
         }
       } catch (error) {
         console.error("Error fetching vendor count details:", error);
@@ -226,6 +233,38 @@ const DashboardOverview = ({ user, setUser }) => {
               <option value="month">This Month</option>
               <option value="year">This Year</option>
             </select>
+          </div>
+        </div>
+
+                {/* Monthly Summary Section - Added this new section */}
+        <div className="monthly-summary">
+          <div className="summary-card revenue">
+            <div className="summary-content">
+              <h3>Monthly Revenue</h3>
+              <p className="amount">{formatCurrency(dashboardData.current_month_revenue)}</p>
+              <p className="period">Current Month</p>
+            </div>
+            <div className="summary-icon">💰</div>
+          </div>
+          <div className="summary-card expense">
+            <div className="summary-content">
+              <h3>Monthly Expense</h3>
+              <p className="amount">{formatCurrency(dashboardData.current_month_expense)}</p>
+              <p className="period">Current Month</p>
+            </div>
+            <div className="summary-icon">📉</div>
+          </div>
+          <div className={`summary-card ${dashboardData.current_month_revenue - dashboardData.current_month_expense >= 0 ? 'profit' : 'loss'}`}>
+            <div className="summary-content">
+              <h3>Monthly {dashboardData.current_month_revenue - dashboardData.current_month_expense >= 0 ? 'Profit' : 'Loss'}</h3>
+              <p className="amount">
+                {formatCurrency(Math.abs(dashboardData.current_month_revenue - dashboardData.current_month_expense))}
+              </p>
+              <p className="period">Current Month</p>
+            </div>
+            <div className="summary-icon">
+              {dashboardData.current_month_revenue - dashboardData.current_month_expense >= 0 ? '📈' : '📉'}
+            </div>
           </div>
         </div>
 
