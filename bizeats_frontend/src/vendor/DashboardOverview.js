@@ -12,6 +12,9 @@ const DashboardOverview = ({ user, setUser }) => {
     total_revenue: 0,
     pending_orders: 0,
     delivered_orders: 0,
+    canceled_orders: 0,
+    refunded_orders: 0,
+    profit: 0
   });
   const [dateFilter, setDateFilter] = useState(new Date().toISOString().split("T")[0]);
   const [timeRangeFilter, setTimeRangeFilter] = useState("today");
@@ -90,14 +93,95 @@ const DashboardOverview = ({ user, setUser }) => {
       currency: 'INR',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
-    }).format(amount).replace('₹', '₹');
+    }).format(amount).replace('₹', '₹ ');
   };
+
+  // Card data organized into logical groups
+  const cardGroups = [
+    {
+      title: "Orders Overview",
+      cards: [
+        { 
+          title: "Total Orders", 
+          value: dashboardData.total_orders,
+          badge: "Today",
+          icon: "📦"
+        },
+        { 
+          title: "Pending Orders", 
+          value: dashboardData.pending_orders,
+          badge: "Active",
+          icon: "⏳"
+        },
+        { 
+          title: "Delivered Orders", 
+          value: dashboardData.delivered_orders,
+          badge: "Completed",
+          icon: "✅"
+        }
+      ]
+    },
+    {
+      title: "Financial Overview",
+      cards: [
+        { 
+          title: "Total Revenue", 
+          value: formatCurrency(dashboardData.total_revenue),
+          badge: "All Time",
+          icon: "💰"
+        },
+        { 
+          title: "Profit/Burn", 
+          value: formatCurrency(dashboardData.profit),
+          badge: "All Time",
+          icon: dashboardData.profit >= 0 ? "📈" : "📉",
+          isProfit: dashboardData.profit >= 0
+        },
+        { 
+          title: "Avg. Order Value", 
+          value: dashboardData.total_orders > 0 
+            ? formatCurrency(dashboardData.total_revenue / dashboardData.total_orders)
+            : formatCurrency(0),
+          badge: "Today",
+          icon: "🧮"
+        }
+      ]
+    },
+    {
+      title: "Order Status",
+      cards: [
+        { 
+          title: "Canceled Orders", 
+          value: dashboardData.canceled_orders,
+          badge: "Issues",
+          icon: "❌"
+        },
+        { 
+          title: "Refunded Orders", 
+          value: dashboardData.refunded_orders,
+          badge: "Issues",
+          icon: "🔄"
+        },
+        { 
+          title: "Completion Rate", 
+          value: dashboardData.total_orders > 0 
+            ? `${Math.round((dashboardData.delivered_orders / dashboardData.total_orders) * 100)}%`
+            : "0%",
+          badge: "Efficiency",
+          icon: "🎯"
+        }
+      ]
+    }
+  ];
 
   return (
     <div className="vendor-dashboard">
       <div className="dashboard-overview">
         <div className="header-section">
-          <h2>Dashboard Overview</h2>
+          <div className="header-content">
+            <h2>Dashboard Overview</h2>
+            <p className="subtitle">Monitor your restaurant's performance</p>
+          </div>
           <div className="dropdown-wrapper">
             <label>Restaurant</label>
             <select 
@@ -126,15 +210,15 @@ const DashboardOverview = ({ user, setUser }) => {
           </div>
           <div className="filter-item">
             <label>Time Range</label>
-            <select 
-              value={timeRangeFilter} 
+            <select
+              value={timeRangeFilter}
               onChange={handleTimeRangeChange}
               disabled={isLoading}
             >
               <option value="today">Today</option>
               <option value="week">This Week</option>
               <option value="month">This Month</option>
-              <option value="custom">Custom</option>
+              <option value="year">This Year</option>
             </select>
           </div>
         </div>
@@ -146,58 +230,67 @@ const DashboardOverview = ({ user, setUser }) => {
           </div>
         ) : (
           <div className="dashboard-content">
-            <div className="summary-cards">
-              <div className="card">
-                <h3>Total Orders</h3>
-                <p>{dashboardData.total_orders}</p>
-                <div className="card-badge">Today</div>
+            {/* Card Groups */}
+            {cardGroups.map((group, groupIndex) => (
+              <div key={groupIndex} className="card-group">
+                <h3 className="group-title">{group.title}</h3>
+                <div className="cards-container">
+                  {group.cards.map((card, cardIndex) => (
+                    <div 
+                      key={cardIndex} 
+                      className={`card ${card.isProfit !== undefined ? (card.isProfit ? 'positive' : 'negative') : ''}`}
+                    >
+                      <div className="card-header">
+                        <span className="card-icon">{card.icon}</span>
+                        <span className="card-badge">{card.badge}</span>
+                      </div>
+                      <div className="card-body">
+                        <h4>{card.title}</h4>
+                        <p>{card.value}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
-              <div className="card">
-                <h3>Revenue</h3>
-                <p>{formatCurrency(dashboardData.total_revenue)}</p>
-                <div className="card-badge">All Time</div>
-              </div>
-              <div className="card">
-                <h3>Pending Orders</h3>
-                <p>{dashboardData.pending_orders}</p>
-                <div className="card-badge">Active</div>
-              </div>
-              <div className="card">
-                <h3>Delivered Orders</h3>
-                <p>{dashboardData.delivered_orders}</p>
-                <div className="card-badge">Completed</div>
-              </div>
-            </div>
+            ))}
 
+            {/* Quick Links */}
             {selectedRestaurant && (
               <div className="quick-links">
                 <h3>Quick Actions</h3>
+                <p className="subtitle">Manage your restaurant operations</p>
                 <div className="links-grid">
                   <Link 
                     to={`/vendor-dashboard/menu/${selectedRestaurant.restaurant_id}`} 
                     className="link-card"
                   >
-                    <div className="link-icon"></div>
-                    <h4>Menu Management</h4>
-                    <p>Update your restaurant menu items</p>
+                    <div className="link-icon">🍽️</div>
+                    <div className="link-content">
+                      <h4>Menu Management</h4>
+                      <p>Update your restaurant menu items</p>
+                    </div>
                     <div className="link-arrow">→</div>
                   </Link>
                   <Link 
                     to={`/vendor-dashboard/order/management/${selectedRestaurant.restaurant_id}`} 
                     className="link-card"
                   >
-                    <div className="link-icon"></div>
-                    <h4>Order Management</h4>
-                    <p>View and process customer orders</p>
+                    <div className="link-icon">📋</div>
+                    <div className="link-content">
+                      <h4>Order Management</h4>
+                      <p>View and process customer orders</p>
+                    </div>
                     <div className="link-arrow">→</div>
                   </Link>
                   <Link 
                     to={`/register-your-restaurent`} 
                     className="link-card"
                   >
-                    <div className="link-icon"></div>
-                    <h4>Restaurant Settings</h4>
-                    <p>Manage your restaurant details</p>
+                    <div className="link-icon">⚙️</div>
+                    <div className="link-content">
+                      <h4>Restaurant Settings</h4>
+                      <p>Manage your restaurant details</p>
+                    </div>
                     <div className="link-arrow">→</div>
                   </Link>
                 </div>

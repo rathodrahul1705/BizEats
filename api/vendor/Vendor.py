@@ -84,26 +84,22 @@ class GetVendorWiseCounts(APIView):
                 order_date__date=date_obj
             )
 
-            # Calculate various metrics
             total_orders = orders.count()
-            
-            # Revenue is sum of total_amount for all orders except refunded
-            revenue = orders.exclude(status=8).aggregate(
+
+            # Exclude canceled (7) and refunded (8) orders for revenue
+            revenue_orders = orders.exclude(status__in=[7, 8])
+
+            revenue = revenue_orders.aggregate(
                 total=Sum('total_amount')
             )['total'] or 0
-            
-            # Expense calculation (this is a placeholder - you'll need to implement your actual expense logic)
-            # Typically expenses might include:
-            # - Cost of goods sold (from order items)
-            # - Delivery costs
-            # - Platform fees, etc.
-            # You'll need to implement this based on your business logic
-            expense = 0.00  # Replace with your actual expense calculation
-            
-            # Profit is revenue minus expense
+
+            # Placeholder for expense calculation
+            expense = 0.00  # Replace with actual logic if needed
+
+            # Profit = revenue - expense
             profit = float(revenue) - float(expense)
-            
-            # Status-based counts
+
+            # Status-wise counts
             status_counts = {
                 'delivered': orders.filter(status=6).count(),
                 'canceled': orders.filter(status=7).count(),
@@ -123,7 +119,6 @@ class GetVendorWiseCounts(APIView):
                     "expense": float(expense),
                     "profit": float(profit),
                     "status_counts": status_counts,
-                    # Additional breakdown if needed
                     "delivered_orders": status_counts['delivered'],
                     "canceled_orders": status_counts['canceled'],
                     "refunded_orders": status_counts['refunded'],
@@ -136,3 +131,4 @@ class GetVendorWiseCounts(APIView):
                 "status": "error",
                 "message": str(e)
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
