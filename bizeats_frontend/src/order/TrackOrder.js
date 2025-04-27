@@ -446,12 +446,9 @@ const TrackOrder = ({ user }) => {
     }
   };
 
-  const subtotal = Number(selectedOrder.subtotal);
-  const deliveryFee = Number(selectedOrder.delivery_fee);
-
-  const totalBeforeDiscount = subtotal + deliveryFee;
-  const discount = Math.round(totalBeforeDiscount * 0.10);  // round discount to nearest integer
-  const total = Math.ceil(totalBeforeDiscount - discount);  // round total up to nearest rupee
+  const discount = selectedOrder?.coupon_discount
+  const total = selectedOrder?.total;
+  const discount_text = selectedOrder?.coupon_code_text;
 
   return (
     <div className="track-order-container">
@@ -649,7 +646,7 @@ const TrackOrder = ({ user }) => {
             <span>₹{selectedOrder.delivery_fee}</span>
           </div>
           <div className="pricing-line">
-            <span>Discount (10%):</span>
+            <span>{discount_text}:</span>
             <span>- ₹{discount}</span>
           </div>
           <div className="pricing-line total-line">

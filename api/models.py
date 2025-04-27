@@ -377,6 +377,8 @@ class Order(models.Model):
     special_requests = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(default=now)
     updated_at = models.DateTimeField(auto_now=True)
+    coupon = models.ForeignKey('Coupon', on_delete=models.SET_NULL, null=True, blank=True, related_name='orders')
+    coupon_discount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, help_text="Discount amount from coupon")
 
     class Meta:
         db_table = "order_details"
@@ -524,3 +526,25 @@ class OrderLiveLocation(models.Model):
 
     def __str__(self):
         return f"Order #{self.order_number} location at {self.timestamp}"
+    
+class Coupon(models.Model):
+    DISCOUNT_TYPE_CHOICES = (
+        ('percentage', 'Percentage'),
+        ('fixed', 'Fixed Amount'),
+    )
+
+    code = models.CharField(max_length=50, unique=True)
+    discount_type = models.CharField(max_length=20, choices=DISCOUNT_TYPE_CHOICES)
+    discount_value = models.DecimalField(max_digits=10, decimal_places=2)
+    minimum_order_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    valid_from = models.DateTimeField()
+    valid_to = models.DateTimeField()
+    max_uses = models.PositiveIntegerField(null=True, blank=True)
+    max_uses_per_user = models.PositiveIntegerField(null=True, blank=True)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        db_table = "coupen_master"
+
+    def __str__(self):
+        return f"{self.is_active} {self.valid_from} {self.valid_to}"

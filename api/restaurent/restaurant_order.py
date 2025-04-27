@@ -7,7 +7,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, generics, permissions
 from api.emailer.email_notifications import send_order_status_email
-from api.models import Cart, Order, OrderStatusLog, RestaurantMenu, User
+from api.models import Cart, Coupon, Order, OrderStatusLog, RestaurantMenu, User
 import json
 from django.utils.timezone import now
 from django.db import transaction, IntegrityError
@@ -606,6 +606,16 @@ class PlaceOrderAPI(APIView):
                         status=status.HTTP_400_BAD_REQUEST
                     )
 
+                if data['code']:
+
+                    coupon = Coupon.objects.get(code=data['code'])
+                    if coupon:
+                        coupon_id = coupon.id
+                    else:
+                        coupon_id = None
+                else:
+                    coupon_id = None
+            
                 # Calculate order totals
                 subtotal = sum(item.item_price for item in cart_items)
                 tax = subtotal * Decimal('0.00')  # Example 5% tax
@@ -621,6 +631,8 @@ class PlaceOrderAPI(APIView):
                 current_time = datetime.now()
                 future_time = current_time + timedelta(minutes=45)
                 order = Order.objects.create(
+                    coupon_id=coupon_id,
+                    coupon_discount=data['discount_amount'],
                     user_id=data['user_id'],
                     restaurant_id=data['restaurant_id'],
                     order_number=self._generate_order_number(),

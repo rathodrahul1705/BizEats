@@ -7,7 +7,7 @@ from .restaurent.registration_process import RestaurantStoreStepOne, RestaurantS
 from django.conf import settings
 from django.conf.urls.static import static
 from .restaurent.restaurant_order import PlaceOrderAPI, RestaurantCartAddOrRemove, RestaurantCartList, CartWithRestaurantDetails,CartWithRestaurantDetailsClear, UserDeliveryAddressCreateView, UserDeliveryAddressUpdateView, UserDeliveryAddressListCreateView, CartWithRestaurantUserUpdate, RestaurantOrderDetailsAPI
-from .order.track_order import GetActiveOrders, LiveLocationDetails, MarkAsPaid, OrderDetails, TrackOrder, RestaurantOrders, OrderStatusUpdate, UpdateOrderLiveLocationView
+from .order.track_order import ApplyCouponOrder, GetActiveOrders, LiveLocationDetails, MarkAsPaid, OrderDetails, TrackOrder, RestaurantOrders, OrderStatusUpdate, UpdateOrderLiveLocationView
 from django.http import JsonResponse
 
 
@@ -74,6 +74,7 @@ urlpatterns = [
     path("api/order/active-orders/", GetActiveOrders.as_view(), name="get_active_orders"),
 
     path("api/order/vendor-dashboard-details/", GetVendorWiseCounts.as_view(), name="get_active_orders"),
+    path("api/order/apply-coupen-order/", ApplyCouponOrder.as_view(), name="apply-coupen-order"),
 
     re_path(r'^(?!media/).*$', ReactAppView.as_view(), name='react-app'),
 

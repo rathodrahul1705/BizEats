@@ -45,14 +45,18 @@ const fetchData = async (url, method = "GET", body = null, token = null, isFormD
         }
 
         const response = await fetch(url, options);
+        
+        
         if (response.status === 401 && !url.includes("/token/refresh")) {
             throw new Error("UNAUTHORIZED"); // we'll catch this and handle refresh
         }
 
         const data = await response.json();
+        console.log("response==",!response.ok)
 
         if (!response.ok) {
-            throw new Error(data?.detail || "Something went wrong");
+            // throw new Error(data?.detail || "Something went wrong");
+            return data;
         }
 
         return data;

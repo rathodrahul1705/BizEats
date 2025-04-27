@@ -69,7 +69,8 @@ const API_ENDPOINTS = {
     UPDATE_ORDER_DETAILS: `${BASE_URL}/restaurant/order/details/update/`,
 
     VENDOR_ORDERS: `${BASE_URL}/restaurant/orders/details`,
-    UPDATE_ORDER_STATUS: `${BASE_URL}/order/update-order-status/`
+    UPDATE_ORDER_STATUS: `${BASE_URL}/order/update-order-status/`,
+    VALIDATE_COUPEN: `${BASE_URL}/order/apply-coupen-order/`
 
   },
 
@@ -90,7 +91,11 @@ const API_ENDPOINTS = {
   
   CONTACT: {
     CONTACT_US: `${BASE_URL}/contact-us/`,
-  }
+  },
+
+  // COUPONS: {
+  //   VALIDATE_COUPEN: `${BASE_URL}/order/apply-coupen-order/`
+  // }
 };
 
 export default API_ENDPOINTS;

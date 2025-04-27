@@ -6,7 +6,7 @@ from django.utils.decorators import method_decorator
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, generics, permissions
-from api.models import Cart, Order, OrderStatusLog, RestaurantLocation, RestaurantMenu, User, UserDeliveryAddress, OrderLiveLocation, Payment
+from api.models import Cart, Order, OrderStatusLog, RestaurantLocation, RestaurantMenu, User, UserDeliveryAddress, OrderLiveLocation, Payment, Coupon
 from math import radians, sin, cos, sqrt, atan2
 from django.db import transaction
 from django.db.models import Q 
@@ -38,6 +38,7 @@ class TrackOrder(APIView):
                 # Get delivery address
                 delivery_address = UserDeliveryAddress.objects.filter(id=order.delivery_address_id).first()
                 payment_details = Payment.objects.filter(order_id=order.id).first()
+
                 if payment_details:
                     transaction_id = payment_details.razorpay_payment_id
                 else:
@@ -79,6 +80,25 @@ class TrackOrder(APIView):
                         "total_price": str(item_total)
                     })
 
+                if order.coupon_id:
+                    coupon = Coupon.objects.get(id=order.coupon_id)
+
+                    if coupon:
+                        coupon_code = coupon.code
+                        coupon_code_text = f"Discount coupon ({coupon_code})"
+                    else:
+                        # Apply a 10% discount
+                        total_before_discount = subtotal + order.delivery_fee
+                        discount = total_before_discount * Decimal('0.10')
+                        coupon_code = None
+                        coupon_code_text = "Discount (10%)"
+                else:
+                    # Apply a 10% discount
+                    total_before_discount = subtotal + order.delivery_fee
+                    discount = total_before_discount * Decimal('0.10')
+                    coupon_code = None
+                    coupon_code_text = "Discount (10%)"
+
                 order_data = {
                     "order_number": order.order_number,
                     "delivery_fee": order.delivery_fee,
@@ -93,7 +113,10 @@ class TrackOrder(APIView):
                     "items": item_details,
                     "subtotal": str(subtotal),
                     "total": str(order.total_amount),
-                    "transaction_id": transaction_id
+                    "coupon_code": coupon_code,
+                    "coupon_discount": order.coupon_discount if order.coupon_discount else discount,
+                    "coupon_code_text": coupon_code_text,
+                    "transaction_id": transaction_id,
                 }
 
                 data.append(order_data)
@@ -496,8 +519,6 @@ class MarkAsPaid(APIView):
     def post(self, request, order_number, *args, **kwargs):
         try:
 
-            print("order_number===",order_number)
-
             Order.objects.filter(order_number=order_number).update(payment_status=5)
             message = "Order Marked As Paid"
             return Response({
@@ -510,3 +531,73 @@ class MarkAsPaid(APIView):
                 "status": "error",
                 "message": str(e)
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@method_decorator(csrf_exempt, name='dispatch')
+class ApplyCouponOrder(APIView):
+
+    def post(self, request, *args, **kwargs):
+        try:
+            coupon_code = request.data.get('code')
+            order_amount = request.data.get('order_amount')
+            restaurant_id = request.data.get('restaurant_id')
+            user_id = request.data.get('user_id')
+
+            if not all([coupon_code, order_amount, restaurant_id, user_id]):
+                return Response({
+                    "status": "error",
+                    "message": "All fields (coupon_code, order_amount, restaurant_id, user_id) are required."
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            try:
+                coupon = Coupon.objects.get(code=coupon_code)
+            except Coupon.DoesNotExist:
+                return Response({
+                    "status": "error",
+                    "message": "Invalid coupon code."
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            now = timezone.now()
+            if not (coupon.is_active and coupon.valid_from <= now <= coupon.valid_to):
+                return Response({
+                    "status": "error",
+                    "message": "Coupon is either inactive or expired."
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            try:
+                order_amount = float(order_amount)
+            except (ValueError, TypeError):
+                return Response({
+                    "status": "error",
+                    "message": "Invalid order amount."
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            if order_amount < float(coupon.minimum_order_amount):
+                return Response({
+                    "status": "error",
+                    "message": f"Minimum order amount should be ₹{coupon.minimum_order_amount} to apply this coupon."
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            coupon_discount_value = float(coupon.discount_value) if isinstance(coupon.discount_value, Decimal) else coupon.discount_value
+
+            if coupon.discount_type == 'percentage':
+                discount_amount = (coupon_discount_value / 100) * order_amount
+            else:
+                discount_amount = coupon_discount_value
+            
+            discount_amount = min(discount_amount, order_amount)
+            final_total_amount = max(order_amount - discount_amount, 0)
+
+            return Response({
+                "status": "success",
+                "message": "Coupon applied successfully!",
+                "discount_amount": round(discount_amount, 2),
+                "final_total_amount": round(final_total_amount, 2)
+            }, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response({
+                "status": "error",
+                "message": "Something went wrong while applying the coupon.",
+                "error_details": str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+

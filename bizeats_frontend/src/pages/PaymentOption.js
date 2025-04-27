@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { FaCreditCard, FaMoneyBillWave, FaStore, FaUser } from "react-icons/fa";
+import { FaCreditCard, FaMoneyBillWave, FaStore, FaUser, FaTag } from "react-icons/fa";
 import { ArrowLeft } from "lucide-react";
 import "../assets/css/PaymentOption.css";
 import API_ENDPOINTS from "../components/config/apiConfig";
@@ -14,6 +14,10 @@ const PaymentOption = ({ user }) => {
   const [restaurantOrderDetails, setRestaurantOrderDetails] = useState(null);
   const [loading, setLoading] = useState(false);
   const [postPaymentProcessing, setPostPaymentProcessing] = useState(false);
+  const [couponCode, setCouponCode] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [couponError, setCouponError] = useState("");
+  const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
   const navigate = useNavigate();
 
   const user_address = localStorage.getItem("user_full_address") || "No address found";
@@ -46,7 +50,15 @@ const PaymentOption = ({ user }) => {
         const itemTotal = order_summary?.total_order_amount || 0;
         const deliveryFee = itemTotal > 100 ? 0 : 20;
         const taxAmount = order_summary?.tax_amount || 0;
-        const discount = Math.round((itemTotal + deliveryFee + taxAmount) * 0.10);
+        
+        // Calculate discount based on applied coupon or default 10%
+        let discount = 0;
+        if (appliedCoupon) {
+          discount = appliedCoupon.discount_amount;
+        } else {
+          discount = Math.round((itemTotal + deliveryFee + taxAmount) * 0.10);
+        }
+        
         const totalPayable = itemTotal + deliveryFee + taxAmount - discount;
       
         setRestaurantOrderDetails({
@@ -66,13 +78,70 @@ const PaymentOption = ({ user }) => {
     } catch (error) {
       console.error("Error fetching order details:", error);
     }
-  }, [user?.user_id, restaurant_id, user_address]);
+  }, [user?.user_id, restaurant_id, user_address, appliedCoupon]);
 
   useEffect(() => {
     if (user?.user_id && restaurant_id) {
       fetchOrderDetails();
     }
   }, [user?.user_id, restaurant_id, fetchOrderDetails]);
+
+  const applyCoupon = useCallback(async () => {
+    if (!couponCode.trim()) {
+      setCouponError("Please enter a coupon code");
+      return;
+    }
+  
+    setIsApplyingCoupon(true);
+    setCouponError("");
+  
+    try {
+      const response = await fetchData(API_ENDPOINTS.ORDER.VALIDATE_COUPEN, "POST", {
+        code: couponCode,
+        user_id: user?.user_id || null,
+        restaurant_id,
+        order_amount: restaurantOrderDetails?.item_total || 0,
+      });
+      
+      if (response && typeof response === "object") {
+        const responseData = response?.data || response;
+  
+        if (responseData?.status === "success") {
+          const { discount_amount, final_total_amount, message } = responseData;
+  
+          setAppliedCoupon({
+            code: couponCode,
+            discount_amount: discount_amount || 0,
+            final_total_amount: final_total_amount || 0,
+            message: message || "Coupon applied successfully",
+          });
+  
+          // Re-fetch order details to update the prices with the applied discount
+          fetchOrderDetails();
+        } else {
+          const errorMessage = responseData?.message || 
+                               responseData?.error?.message || 
+                               "Invalid coupon code";
+          setCouponError(errorMessage);
+        }
+      } else {
+        throw new Error("Unexpected response format from server");
+      }
+    } catch (error) {
+      console.error("Error applying coupon:", error);
+      setCouponError(error.message || "Failed to apply coupon. Please try again.");
+    } finally {
+      setIsApplyingCoupon(false);
+    }
+  }, [couponCode, user?.user_id, restaurant_id, restaurantOrderDetails?.item_total, fetchOrderDetails]);
+  
+  
+  const removeCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponCode("");
+    setCouponError("");
+    fetchOrderDetails(); // Refresh order details without discount
+  };
 
   const loadRazorpayScript = useCallback(() => {
     return new Promise((resolve) => {
@@ -103,6 +172,7 @@ const PaymentOption = ({ user }) => {
             restaurant_id,
             payment_type: 2,
             deliveryAddressId: delivery_address_id,
+            couponCode: appliedCoupon?.code || null,
           },
         });
       }
@@ -111,7 +181,7 @@ const PaymentOption = ({ user }) => {
     } finally {
       setPostPaymentProcessing(false);
     }
-  }, [navigate, restaurantOrderDetails, restaurant_id, delivery_address_id]);
+  }, [navigate, restaurantOrderDetails, restaurant_id, delivery_address_id, appliedCoupon]);
 
   const handlePaymentFailure = useCallback((error) => {
     navigate("/payment/failed", {
@@ -121,9 +191,10 @@ const PaymentOption = ({ user }) => {
         restaurantName: restaurantOrderDetails?.restaurant_name,
         restaurant_id,
         deliveryAddressId: delivery_address_id,
+        couponCode: appliedCoupon?.code || null,
       },
     });
-  }, [navigate, restaurantOrderDetails, restaurant_id, delivery_address_id]);
+  }, [navigate, restaurantOrderDetails, restaurant_id, delivery_address_id, appliedCoupon]);
 
   const storeOrderDetails = useCallback(async (method = "cod", razorpay_order_id = null, razorpay_payment_id = null) => {
     const payment_type = method === "cod" ? 1 : 2;
@@ -137,9 +208,10 @@ const PaymentOption = ({ user }) => {
       special_instructions: "Less spicy please",
       razorpay_order_id,
       razorpay_payment_id,
-      delivery_fee: restaurantOrderDetails.delivery_fee, // Added delivery_fee here
-      total_amount: restaurantOrderDetails.total_amount, // Added delivery_fee here
-      
+      delivery_fee: restaurantOrderDetails.delivery_fee,
+      total_amount: restaurantOrderDetails.total_amount,
+      code: appliedCoupon?.code || null,
+      discount_amount: appliedCoupon?.discount_amount || 0,
     };
 
     try {
@@ -152,7 +224,7 @@ const PaymentOption = ({ user }) => {
       console.error("Error storing order details:", error);
       throw error;
     }
-  }, [user?.user_id, restaurant_id, delivery_address_id, restaurantOrderDetails]);
+  }, [user?.user_id, restaurant_id, delivery_address_id, restaurantOrderDetails, appliedCoupon]);
 
   const updateCartCount = useCallback(() => {
     localStorage.removeItem("cart_count");
@@ -182,6 +254,7 @@ const PaymentOption = ({ user }) => {
             restaurantName: restaurantOrderDetails.restaurant_name,
             restaurant_id,
             deliveryAddressId: delivery_address_id,
+            couponCode: appliedCoupon?.code || null,
           },
         });
       } else {
@@ -192,7 +265,7 @@ const PaymentOption = ({ user }) => {
     } finally {
       setLoading(false);
     }
-  }, [selectedPayment, storeOrderDetails, updateCartCount, navigate, restaurantOrderDetails, restaurant_id, delivery_address_id]);
+  }, [selectedPayment, storeOrderDetails, updateCartCount, navigate, restaurantOrderDetails, restaurant_id, delivery_address_id, appliedCoupon]);
 
   const processOnlinePayment = useCallback(async () => {
     try {
@@ -209,6 +282,7 @@ const PaymentOption = ({ user }) => {
           notes: {
             userId: user?.user_id,
             restaurantId: restaurant_id,
+            couponCode: appliedCoupon?.code || null,
           },
         }),
       });
@@ -247,7 +321,7 @@ const PaymentOption = ({ user }) => {
     } catch (err) {
       handlePaymentFailure(err);
     }
-  }, [loadRazorpayScript, restaurantOrderDetails, razorpay_api_key, user, restaurant_id, handlePaymentSuccess, handlePaymentFailure]);
+  }, [loadRazorpayScript, restaurantOrderDetails, razorpay_api_key, user, restaurant_id, appliedCoupon, handlePaymentSuccess, handlePaymentFailure]);
 
   const handleBack = useCallback(() => navigate(-1), [navigate]);
 
@@ -264,7 +338,7 @@ const PaymentOption = ({ user }) => {
         </div>
       )}
 
-    <div className="payment-option-header-wrapper">
+      <div className="payment-option-header-wrapper">
         <h1 className="payment-option-page-title">Payment Details</h1>
         <button className="payment-option-back-button" onClick={handleBack}>
           <ArrowLeft size={20} />
@@ -299,6 +373,7 @@ const PaymentOption = ({ user }) => {
 
         <div className="payment-option-order-summary-card">
           <h3>Order Summary</h3>
+
           <div className="payment-option-order-details">
             <div className="payment-option-order-item">
               <span className="payment-option-item-icon">🛒</span>
@@ -323,9 +398,52 @@ const PaymentOption = ({ user }) => {
             )}
             <div className="payment-option-order-item discount">
               <span className="payment-option-item-icon">🎁</span>
-              <span className="payment-option-item-label">Discount (10%):</span>
+              <span className="payment-option-item-label">
+                {appliedCoupon ? "Coupon Discount" : "Discount (10%)"}:
+              </span>
               <span className="payment-option-item-value">- ₹{restaurantOrderDetails.discount}</span>
             </div>
+
+            <div className="payment-option-coupon-section">
+              {!appliedCoupon ? (
+                <div className="payment-option-coupon-input-group">
+                  <input
+                    type="text"
+                    value={couponCode}
+                    onChange={(e) => setCouponCode(e.target.value)}
+                    placeholder="Enter coupon code"
+                    className="payment-option-coupon-input"
+                  />
+                  <button 
+                    onClick={applyCoupon}
+                    disabled={isApplyingCoupon || !couponCode.trim()}
+                    className="payment-option-coupon-apply"
+                  >
+                    {isApplyingCoupon ? (
+                      <>
+                        <span className="payment-option-spinner" />
+                        Applying...
+                      </>
+                    ) : "Apply"}
+                  </button>
+                </div>
+              ) : (
+                <div className="payment-option-coupon-applied">
+                  <div className="payment-option-coupon-success">
+                    <FaTag className="payment-option-coupon-icon" />
+                    <span>Coupon Applied: {appliedCoupon.code} (-₹{appliedCoupon.discount_amount})</span>
+                  </div>
+                  <button 
+                    onClick={removeCoupon}
+                    className="payment-option-coupon-remove"
+                  >
+                    Remove
+                  </button>
+                </div>
+              )}
+              {couponError && <div className="payment-option-coupon-error">{couponError}</div>}
+            </div>
+          
             <div className="payment-option-order-total">
               <span className="payment-option-total-label">Total Payable:</span>
               <span className="payment-option-total-value">₹{restaurantOrderDetails.total_amount}</span>

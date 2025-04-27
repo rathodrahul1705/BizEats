@@ -266,7 +266,17 @@ class OrderPlacementSerializer(serializers.Serializer):
     )
     delivery_address_id = serializers.CharField(required=True)
     special_instructions = serializers.CharField(required=False, allow_blank=True)
-
+    code = serializers.CharField(
+        required=False,
+        allow_null=True
+    )
+    discount_amount = serializers.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        required=False,
+        allow_null=True
+    )
+    
 class ContactUsSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=100)
     email = serializers.EmailField()

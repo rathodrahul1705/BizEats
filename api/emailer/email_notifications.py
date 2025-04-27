@@ -1,5 +1,5 @@
 from django.core.mail import send_mail, EmailMessage
-from api.models import Cart, Order, RestaurantMenu, User, UserDeliveryAddress
+from api.models import Cart, Coupon, Order, RestaurantMenu, User, UserDeliveryAddress
 from decouple import config
 from decimal import Decimal, ROUND_UP, ROUND_HALF_UP
 from django.conf import settings
@@ -77,12 +77,27 @@ def send_order_status_email(order):
         """
 
     handling_fee = Decimal("0.00")
-    delivery_fee = order.delivery_fee or Decimal("0.00")
-    total_before_discount = subtotal + handling_fee + delivery_fee
-    raw_discount = total_before_discount * Decimal("0.10")
-    discount = raw_discount.quantize(Decimal("1."), rounding=ROUND_HALF_UP)
-    grand_total = (total_before_discount - discount).quantize(Decimal("1."), rounding=ROUND_HALF_UP)
 
+    if order.coupon_id:
+        coupon = Coupon.objects.get(id=order.coupon_id)
+
+        if coupon:
+            coupon_code = coupon.code
+            coupon_code_text = f"Discount coupon ({coupon_code})"
+        else:
+            # Apply a 10% discount
+            total_before_discount = subtotal + order.delivery_fee
+            discount = total_before_discount * Decimal('0.10')
+            coupon_code = None
+            coupon_code_text = "Discount (10%)"
+    else:
+        # Apply a 10% discount
+        total_before_discount = subtotal + order.delivery_fee
+        discount = total_before_discount * Decimal('0.10')
+        coupon_code = None
+        coupon_code_text = "Discount (10%)"
+    
+    discount_amount = order.coupon_discount if order.coupon_discount else discount
     email_content = get_order_email_content(order)
     subject = email_content["subject"]
     message_text = email_content["message"]
@@ -162,15 +177,15 @@ def send_order_status_email(order):
                 </tr>
                 <tr>
                     <td>Delivery Fee</td>
-                    <td style="text-align: right;">₹{delivery_fee:.2f}</td>
+                    <td style="text-align: right;">₹{order.delivery_fee:.2f}</td>
                 </tr>
                 <tr>
-                    <td>Discount (10%)</td>
-                    <td style="text-align: right;">-₹{discount:.2f}</td>
+                    <td>{coupon_code_text}</td>
+                    <td style="text-align: right;">-₹{discount_amount:.2f}</td>
                 </tr>
                 <tr>
                     <td>Grand Total</td>
-                    <td style="text-align: right;">₹{grand_total:.2f}</td>
+                    <td style="text-align: right;">₹{order.total_amount:.2f}</td>
                 </tr>
             </table>
 
