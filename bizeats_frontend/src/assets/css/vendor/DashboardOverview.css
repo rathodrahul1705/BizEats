@@ -499,10 +499,6 @@ body {
 }
 
 @media (max-width: 992px) {
-  .dashboard-overview {
-    padding: 16px;
-  }
-  
   .dashboard-overview .header-section {
     flex-direction: column;
     align-items: stretch;
