@@ -418,6 +418,7 @@
   display: flex;
   gap: 20px;
   margin-bottom: 30px;
+  flex-wrap: wrap; /* Ensures cards wrap on smaller screens */
 }
 
 .summary-card {
@@ -430,6 +431,7 @@
   justify-content: space-between;
   align-items: center;
   transition: transform 0.3s ease;
+  margin-bottom: 20px; /* Adds spacing between cards on small screens */
 }
 
 .summary-card:hover {
@@ -474,4 +476,46 @@
 .summary-icon {
   font-size: 40px;
   opacity: 0.2;
+}
+
+/* Mobile Responsive Styles */
+@media (max-width: 768px) {
+  .monthly-summary {
+    flex-direction: column; /* Stack cards vertically on smaller screens */
+    gap: 15px;
+  }
+
+  .summary-card {
+    flex: none; /* Remove flex-grow to prevent cards from growing */
+    width: 100%; /* Ensure cards take full width */
+    margin-bottom: 15px;
+    padding: 15px;
+  }
+
+  .summary-content h3 {
+    font-size: 14px; /* Smaller font size for mobile */
+  }
+
+  .summary-content .amount {
+    font-size: 20px; /* Adjusted font size for mobile */
+  }
+
+  .summary-content .period {
+    font-size: 12px; /* Smaller period font size */
+  }
+
+  .summary-icon {
+    font-size: 30px; /* Smaller icon size for mobile */
+  }
+}
+
+/* Web Responsive Styles */
+@media (min-width: 769px) {
+  .monthly-summary {
+    flex-direction: row; /* Ensure cards are in a row on larger screens */
+  }
+
+  .summary-card {
+    flex: 1; /* Allow cards to take equal width */
+  }
 }
