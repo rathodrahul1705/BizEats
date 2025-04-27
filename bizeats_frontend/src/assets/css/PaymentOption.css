@@ -524,91 +524,110 @@
 /* Coupon Section Styles */
 .payment-option-coupon-input-group {
   display: flex;
-  gap: 0.5rem;
-  margin-bottom: 0.5rem;
+  gap: 8px;
+  margin-top: 10px;
+  width: 100%;
 }
 
 .payment-option-coupon-input {
-  flex-grow: 1;
-  padding: 0.75rem 1rem;
-  border: 1px solid var(--payment-option-border-color);
-  border-radius: var(--payment-option-radius-sm);
-  font-size: 0.875rem;
-  transition: var(--payment-option-transition);
+  flex: 1;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: border-color 0.3s;
 }
 
 .payment-option-coupon-input:focus {
   outline: none;
-  border-color: var(--payment-option-primary);
-  box-shadow: 0 0 0 2px rgba(230, 92, 0, 0.2);
+  border-color: #e65c00;
 }
 
 .payment-option-coupon-apply {
-  padding: 0 1.25rem;
-  background-color: var(--payment-option-primary);
+  background-color: #e65c00;
   color: white;
   border: none;
-  border-radius: var(--payment-option-radius-sm);
-  font-size: 0.875rem;
+  border-radius: 6px;
+  padding: 10px 15px;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  transition: var(--payment-option-transition);
-  white-space: nowrap;
+  transition: background-color 0.3s;
 }
+
+
+.payment-option-coupon-apply:hover {
+  background-color: #ff8533;
+}
+
 
 .payment-option-coupon-apply:hover:not(:disabled) {
   background-color: var(--payment-option-primary-dark);
 }
 
 .payment-option-coupon-apply:disabled {
-  background-color: #e0e0e0;
-  color: #a0a0a0;
+  background-color: #cccccc;
   cursor: not-allowed;
+}
+
+.payment-option-coupon-cancel {
+  background-color: #f5f5f5;
+  color: #666;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 10px 15px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.payment-option-coupon-cancel:hover {
+  background-color: #e0e0e0;
 }
 
 .payment-option-coupon-applied {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background-color: var(--payment-option-primary-extra-light);
-  padding: 0.75rem 1rem;
-  border-radius: var(--payment-option-radius-sm);
-  margin-bottom: 0.5rem;
+  background-color: #f0fff0;
+  padding: 10px 15px;
+  border-radius: 6px;
+  margin-top: 10px;
 }
 
 .payment-option-coupon-success {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  color: var(--payment-option-secondary);
-  font-weight: 500;
-  font-size: 0.875rem;
+  gap: 8px;
+  color: #2e7d32;
+  font-size: 14px;
+  font-weight: 600;
 }
 
 .payment-option-coupon-icon {
-  color: var(--payment-option-secondary);
+  color: #2e7d32;
 }
 
 .payment-option-coupon-remove {
   background: none;
   border: none;
-  color: var(--payment-option-primary);
-  font-size: 0.75rem;
+  color: #d32f2f;
+  font-size: 14px;
   font-weight: 600;
-  text-decoration: underline;
   cursor: pointer;
-  padding: 0.25rem;
+  text-decoration: underline;
 }
 
 .payment-option-coupon-remove:hover {
-  color: var(--payment-option-primary-dark);
+  color: #ff6659;
 }
 
 .payment-option-coupon-error {
-  color: #e53935;
-  font-size: 0.8125rem;
-  margin-top: 0.25rem;
-  font-weight: 500;
+  color: #d32f2f;
+  font-size: 13px;
+  margin-top: 5px;
+  padding-left: 5px;
 }
 
 /* Responsive adjustments */
@@ -620,4 +639,20 @@
   .payment-option-coupon-apply {
     padding: 0.75rem;
   }
+}
+
+.payment-option-have-coupon {
+  background: none;
+  border: none;
+  color: #e65c00;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 5px 0;
+  text-decoration: underline;
+  transition: color 0.2s;
+}
+
+.payment-option-have-coupon:hover {
+  color: #ff8533;
 }

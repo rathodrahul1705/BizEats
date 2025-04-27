@@ -18,6 +18,7 @@ const PaymentOption = ({ user }) => {
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [couponError, setCouponError] = useState("");
   const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
+  const [showCouponInput, setShowCouponInput] = useState(false);
   const navigate = useNavigate();
 
   const user_address = localStorage.getItem("user_full_address") || "No address found";
@@ -118,6 +119,7 @@ const PaymentOption = ({ user }) => {
   
           // Re-fetch order details to update the prices with the applied discount
           fetchOrderDetails();
+          setShowCouponInput(false);
         } else {
           const errorMessage = responseData?.message || 
                                responseData?.error?.message || 
@@ -135,12 +137,16 @@ const PaymentOption = ({ user }) => {
     }
   }, [couponCode, user?.user_id, restaurant_id, restaurantOrderDetails?.item_total, fetchOrderDetails]);
   
-  
   const removeCoupon = () => {
     setAppliedCoupon(null);
     setCouponCode("");
     setCouponError("");
     fetchOrderDetails(); // Refresh order details without discount
+  };
+
+  const toggleCouponInput = () => {
+    setShowCouponInput(!showCouponInput);
+    setCouponError("");
   };
 
   const loadRazorpayScript = useCallback(() => {
@@ -406,27 +412,44 @@ const PaymentOption = ({ user }) => {
 
             <div className="payment-option-coupon-section">
               {!appliedCoupon ? (
-                <div className="payment-option-coupon-input-group">
-                  <input
-                    type="text"
-                    value={couponCode}
-                    onChange={(e) => setCouponCode(e.target.value)}
-                    placeholder="Enter coupon code"
-                    className="payment-option-coupon-input"
-                  />
-                  <button 
-                    onClick={applyCoupon}
-                    disabled={isApplyingCoupon || !couponCode.trim()}
-                    className="payment-option-coupon-apply"
-                  >
-                    {isApplyingCoupon ? (
-                      <>
-                        <span className="payment-option-spinner" />
-                        Applying...
-                      </>
-                    ) : "Apply"}
-                  </button>
-                </div>
+                <>
+                  {!showCouponInput ? (
+                    <button 
+                      className="payment-option-have-coupon"
+                      onClick={toggleCouponInput}
+                    >
+                      Have a coupon code?
+                    </button>
+                  ) : (
+                    <div className="payment-option-coupon-input-group">
+                      <input
+                        type="text"
+                        value={couponCode}
+                        onChange={(e) => setCouponCode(e.target.value)}
+                        placeholder="Enter coupon code"
+                        className="payment-option-coupon-input"
+                      />
+                      <button 
+                        onClick={applyCoupon}
+                        disabled={isApplyingCoupon || !couponCode.trim()}
+                        className="payment-option-coupon-apply"
+                      >
+                        {isApplyingCoupon ? (
+                          <>
+                            <span className="payment-option-spinner" />
+                            Applying...
+                          </>
+                        ) : "Apply"}
+                      </button>
+                      <button 
+                        onClick={toggleCouponInput}
+                        className="payment-option-coupon-cancel"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  )}
+                </>
               ) : (
                 <div className="payment-option-coupon-applied">
                   <div className="payment-option-coupon-success">
