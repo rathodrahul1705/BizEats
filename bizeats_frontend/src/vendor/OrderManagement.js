@@ -329,6 +329,7 @@ const OrderManagement = ({ user }) => {
                   value={order.status.id}
                   onChange={(e) => handleStatusChange(order.order_number, e.target.value)}
                   onClick={(e) => e.stopPropagation()}
+                  disabled={order.status.id == '7' || order.status.id == '8'}
                 >
                   {statusOptions.map((status) => (
                     <option key={status.id} value={status.id}>{status.label}</option>
