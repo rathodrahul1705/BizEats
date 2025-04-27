@@ -6,9 +6,10 @@ from rest_framework import status, generics, permissions
 from api.models import Cart, Order, OrderStatusLog, RestaurantLocation, RestaurantMenu, User, UserDeliveryAddress, OrderLiveLocation, Payment
 from api.emailer.email_notifications import send_order_status_email
 from decouple import config
-from django.db.models import Sum, Count
+from django.db.models import Sum, Count, F, FloatField
 from django.utils.dateparse import parse_date
 from django.utils import timezone
+
         
 # @method_decorator(csrf_exempt, name='dispatch')
 # class GetVendorWiseCounts(APIView):
@@ -57,6 +58,7 @@ from django.utils import timezone
 #                 "message": str(e)
 #             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+
 @method_decorator(csrf_exempt, name='dispatch')
 class GetVendorWiseCounts(APIView):
 
@@ -93,10 +95,20 @@ class GetVendorWiseCounts(APIView):
                 total=Sum('total_amount')
             )['total'] or 0
 
-            # Placeholder for expense calculation
-            expense = 0.00  # Replace with actual logic if needed
+            # Get all order_numbers from revenue_orders
+            order_numbers = revenue_orders.values_list('order_number', flat=True)
 
-            # Profit = revenue - expense
+            # Get related cart entries for those orders
+            carts = Cart.objects.filter(order_number__in=order_numbers)
+
+            # Calculate expense: Sum of (item_price)
+            expense = carts.aggregate(
+                total=Sum(
+                    F('item_price'),
+                    output_field=FloatField()
+                )
+            )['total'] or 0
+
             profit = float(revenue) - float(expense)
 
             # Status-wise counts
@@ -131,4 +143,3 @@ class GetVendorWiseCounts(APIView):
                 "status": "error",
                 "message": str(e)
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
