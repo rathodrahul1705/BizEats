@@ -131,6 +131,12 @@ const DashboardOverview = ({ user, setUser }) => {
           icon: "💰"
         },
         { 
+          title: "Total Expense", 
+          value: formatCurrency(dashboardData.expense),
+          badge: "All Time",
+          icon: "💰"
+        },
+        { 
           title: "Profit/Burn", 
           value: formatCurrency(dashboardData.profit),
           badge: "All Time",
