@@ -14,6 +14,7 @@ import RestaurantRegistration from './restaurent/RestaurantRegistration';
 import DashboardOverview from './vendor/DashboardOverview';
 import MenuManagement from './vendor/MenuManagement';
 import OrderManagement from './vendor/OrderManagement';
+import CouponManagement from './vendor/CouponManagement';
 import PaymentSuccess from './payment/PaymentSuccess';
 import PaymentFailed from './payment/PaymentFailed';
 import OrderConfirmation from './payment/OrderConfirmation';
@@ -126,6 +127,12 @@ const App = () => {
             <Route path="/vendor-dashboard/order/management/:restaurant_id" element={
               <VendorPrivateRoute user={user} is_restaurant_register={is_restaurant_register}>
                 <OrderManagement user={user} setUser={setUser} />
+              </VendorPrivateRoute>
+            } />
+
+            <Route path="/vendor-dashboard/coupon/management/:restaurant_id" element={
+              <VendorPrivateRoute user={user} is_restaurant_register={is_restaurant_register}>
+                <CouponManagement user={user} setUser={setUser} />
               </VendorPrivateRoute>
             } />
 

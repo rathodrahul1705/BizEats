@@ -141,11 +141,11 @@ const MenuManagement = () => {
     return <StripeLoader />;
   }
   return (
-    <div className="vendor-menu">
-      <div className="vendor-header">
+    <div className="vendor-menu-management">
+      <div className="vendor-menu-management-header">
         <h2>Menu Management</h2>
         <button
-          className="vendor-button add-item"
+          className="vendor-menu-management-button vendor-menu-management-add-item"
           onClick={() => {
             setEditingItem(null);
             setFormData({
@@ -171,8 +171,8 @@ const MenuManagement = () => {
       </div>
 
       {menuItems.length > 0 ? (
-        <div className="table-container">
-          <table className="vendor-menu-table">
+        <div className="vendor-menu-management-table-container">
+          <table className="vendor-menu-management-table">
             <thead>
               <tr>
                 <th>Image</th>
@@ -188,7 +188,7 @@ const MenuManagement = () => {
                 <tr key={item.id}>
                   <td>
                     <img 
-                      className="menue-images" 
+                      className="vendor-menu-management-images" 
                       src={item.item_image || "https://via.placeholder.com/60"} 
                       alt={item.item_name} 
                     />
@@ -197,21 +197,21 @@ const MenuManagement = () => {
                   <td>₹{item.item_price}</td>
                   <td>{item.category}</td>
                   <td>
-                    <span className={`availability-badge ${item.availability ? 'available' : 'not-available'}`}>
+                    <span className={`vendor-menu-management-availability-badge ${item.availability ? 'vendor-menu-management-available' : 'vendor-menu-management-not-available'}`}>
                       {item.availability ? "Available" : "Out of Stock"}
                     </span>
                   </td>
                   <td>
-                    <div className="action-buttons">
+                    <div className="vendor-menu-management-action-buttons">
                       <button 
-                        className="edit" 
+                        className="vendor-menu-management-edit" 
                         onClick={() => handleEdit(item)}
                         aria-label="Edit item"
                       >
                         <Edit size={16} />
                       </button>
                       <button 
-                        className="delete" 
+                        className="vendor-menu-management-delete" 
                         onClick={() => handleDelete(item.id)}
                         aria-label="Delete item"
                       >
@@ -225,7 +225,7 @@ const MenuManagement = () => {
           </table>
         </div>
       ) : (
-        <div className="empty-state">
+        <div className="vendor-menu-management-empty-state">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="64"
@@ -247,18 +247,18 @@ const MenuManagement = () => {
       )}
 
       {showModal && (
-        <div className="modal-overlay show">
-          <div className="modal-content">
-            <button className="close-modal" onClick={() => setShowModal(false)}>
+        <div className="vendor-menu-management-modal-overlay vendor-menu-management-show">
+          <div className="vendor-menu-management-modal-content">
+            <button className="vendor-menu-management-close-modal" onClick={() => setShowModal(false)}>
               <X size={24} />
             </button>
             <h3>{editingItem ? "Edit Menu Item" : "Add New Menu Item"}</h3>
             <form onSubmit={handleSubmit}>
-              <div className="form-group">
+              <div className="vendor-menu-management-form-group">
                 <label>Item Name</label>
                 <input
                   type="text"
-                  className="form-control"
+                  className="vendor-menu-management-form-control"
                   name="item_name"
                   placeholder="Item Name"
                   value={formData.item_name}
@@ -267,11 +267,11 @@ const MenuManagement = () => {
                 />
               </div>
 
-              <div className="form-group">
+              <div className="vendor-menu-management-form-group">
                 <label>Price</label>
                 <input
                   type="number"
-                  className="form-control"
+                  className="vendor-menu-management-form-control"
                   name="item_price"
                   placeholder="Price"
                   value={formData.item_price}
@@ -282,10 +282,10 @@ const MenuManagement = () => {
                 />
               </div>
 
-              <div className="form-group">
+              <div className="vendor-menu-management-form-group">
                 <label>Description</label>
                 <textarea
-                  className="form-control"
+                  className="vendor-menu-management-form-control"
                   name="description"
                   placeholder="Description"
                   value={formData.description}
@@ -294,10 +294,10 @@ const MenuManagement = () => {
                 />
               </div>
 
-              <div className="form-group">
+              <div className="vendor-menu-management-form-group">
                 <label>Category</label>
                 <select
-                  className="form-control"
+                  className="vendor-menu-management-form-control"
                   name="category"
                   value={formData.category}
                   onChange={handleChange}
@@ -312,10 +312,10 @@ const MenuManagement = () => {
                 </select>
               </div>
 
-              <div className="form-group">
+              <div className="vendor-menu-management-form-group">
                 <label>Cuisines</label>
                 <select
-                  className="form-control"
+                  className="vendor-menu-management-form-control"
                   name="cuisines"
                   multiple
                   value={formData.cuisines}
@@ -327,13 +327,13 @@ const MenuManagement = () => {
                     </option>
                   ))}
                 </select>
-                <small className="form-text">Hold Ctrl/Cmd to select multiple</small>
+                <small className="vendor-menu-management-form-text">Hold Ctrl/Cmd to select multiple</small>
               </div>
 
-              <div className="form-group">
+              <div className="vendor-menu-management-form-group">
                 <label>Spice Level</label>
                 <select
-                  className="form-control"
+                  className="vendor-menu-management-form-control"
                   name="spice_level"
                   value={formData.spice_level}
                   onChange={handleChange}
@@ -346,11 +346,11 @@ const MenuManagement = () => {
                 </select>
               </div>
 
-              <div className="form-group">
+              <div className="vendor-menu-management-form-group">
                 <label>Preparation Time (minutes)</label>
                 <input
                   type="number"
-                  className="form-control"
+                  className="vendor-menu-management-form-control"
                   name="preparation_time"
                   placeholder="Preparation Time"
                   value={formData.preparation_time}
@@ -359,10 +359,10 @@ const MenuManagement = () => {
                 />
               </div>
 
-              <div className="form-group">
+              <div className="vendor-menu-management-form-group">
                 <label>Serving Size</label>
                 <select
-                  className="form-control"
+                  className="vendor-menu-management-form-control"
                   name="serving_size"
                   value={formData.serving_size}
                   onChange={handleChange}
@@ -375,10 +375,10 @@ const MenuManagement = () => {
                 </select>
               </div>
 
-              <div className="form-group">
+              <div className="vendor-menu-management-form-group">
                 <label>Food Type</label>
                 <select
-                  className="form-control"
+                  className="vendor-menu-management-form-control"
                   name="food_type"
                   value={formData.food_type}
                   onChange={handleChange}
@@ -392,11 +392,11 @@ const MenuManagement = () => {
                 </select>
               </div>
 
-              <div className="form-group">
+              <div className="vendor-menu-management-form-group">
                 <label>Stock Quantity</label>
                 <input
                   type="number"
-                  className="form-control"
+                  className="vendor-menu-management-form-control"
                   name="stock_quantity"
                   placeholder="Stock Quantity"
                   value={formData.stock_quantity}
@@ -405,11 +405,11 @@ const MenuManagement = () => {
                 />
               </div>
 
-              <div className="form-group">
+              <div className="vendor-menu-management-form-group">
                 <label>Item Image</label>
                 <input 
                   type="file" 
-                  className="form-control"
+                  className="vendor-menu-management-form-control"
                   accept="image/*" 
                   onChange={handleFileChange} 
                 />
@@ -422,7 +422,7 @@ const MenuManagement = () => {
                 )}
               </div>
 
-              <div className="form-group checkbox-group">
+              <div className="vendor-menu-management-form-group vendor-menu-management-checkbox-group">
                 <input
                   type="checkbox"
                   id="availability"
@@ -433,7 +433,7 @@ const MenuManagement = () => {
                 <label htmlFor="availability">Available</label>
               </div>
 
-              <button type="submit" className="submit-btn">
+              <button type="submit" className="vendor-menu-management-submit-btn">
                 {editingItem ? "Update Item" : "Add Item"}
               </button>
             </form>

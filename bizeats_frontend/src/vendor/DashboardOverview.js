@@ -338,6 +338,17 @@ const DashboardOverview = ({ user, setUser }) => {
                     </div>
                     <div className="link-arrow">→</div>
                   </Link>
+                  <Link 
+                    to={`/vendor-dashboard/coupon/management/${selectedRestaurant.restaurant_id}`} 
+                    className="link-card"
+                  >
+                    <div className="link-icon">🏷️</div>
+                    <div className="link-content">
+                      <h4>Coupon Management</h4>
+                      <p>Manage your coupon details</p>
+                    </div>
+                    <div className="link-arrow">→</div>
+                  </Link>
                 </div>
               </div>
             )}

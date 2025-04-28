@@ -93,9 +93,12 @@ const API_ENDPOINTS = {
     CONTACT_US: `${BASE_URL}/contact-us/`,
   },
 
-  // COUPONS: {
-  //   VALIDATE_COUPEN: `${BASE_URL}/order/apply-coupen-order/`
-  // }
+  COUPONS: {
+    CREATE: `${BASE_URL}/vendor/coupons/create/`,
+    FETCH: `${BASE_URL}/vendor/coupons/`,
+    DELETE: (coupon_id) => `${BASE_URL}/vendor/coupons/${coupon_id}/delete/`,
+    UPDATE: (coupon_id) => `${BASE_URL}/vendor/coupons/${coupon_id}/update/`
+  }
 };
 
 export default API_ENDPOINTS;

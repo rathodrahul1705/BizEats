@@ -1,6 +1,7 @@
 from django.urls import path, re_path, include
 
 from api.payment.payment import create_order, verify_payment
+from api.vendor.Coupon import CouponCreateView, CouponDeleteView, CouponDetailView, CouponListView, CouponUpdateView
 from .vendor.Vendor import GetVendorWiseCounts
 from .views import CustomTokenRefreshView, UserProfileView, UserRegistrationView, OTPVerificationView, UserLoginView, ContactUsView, ReactAppView
 from .restaurent.registration_process import RestaurantStoreStepOne, RestaurantStoreStepTwo, RestaurantStoreStepThree, RestaurantStoreStepFour, RestaurantByUserAPIView, RestaurantByRestauranrtAPIView, RestaurantMenueStore, RestaurantMenueList,RestaurantMenueDetails,RestaurantMenueUpdate,RestaurantMenueDelete, RestaurantListAPI, RestaurantDetailMenuView
@@ -75,6 +76,12 @@ urlpatterns = [
 
     path("api/order/vendor-dashboard-details/", GetVendorWiseCounts.as_view(), name="get_active_orders"),
     path("api/order/apply-coupen-order/", ApplyCouponOrder.as_view(), name="apply-coupen-order"),
+
+    path('api/vendor/coupons/create/', CouponCreateView.as_view(), name='coupon-create'),     
+    path('api/vendor/coupons/', CouponListView.as_view(), name='coupon-list'),                 
+    path('api/vendor/coupons/<int:pk>/', CouponDetailView.as_view(), name='coupon-detail'),    
+    path('api/vendor/coupons/<int:pk>/update/', CouponUpdateView.as_view(), name='coupon-update'),  
+    path('api/vendor/coupons/<int:pk>/delete/', CouponDeleteView.as_view(), name='coupon-delete'),
 
     re_path(r'^(?!media/).*$', ReactAppView.as_view(), name='react-app'),
 
