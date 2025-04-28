@@ -52,7 +52,6 @@ const fetchData = async (url, method = "GET", body = null, token = null, isFormD
         }
 
         const data = await response.json();
-        console.log("response==",!response.ok)
 
         if (!response.ok) {
             // throw new Error(data?.detail || "Something went wrong");
