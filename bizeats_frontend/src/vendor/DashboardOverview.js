@@ -1,8 +1,34 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { Bar, Line } from "react-chartjs-2";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  LineElement,
+  PointElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler
+} from "chart.js";
 import "../assets/css/vendor/DashboardOverview.css";
 import API_ENDPOINTS from "../components/config/apiConfig";
 import fetchData from "../components/services/apiService";
+
+// Register ChartJS components
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  LineElement,
+  PointElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler
+);
 
 const DashboardOverview = ({ user, setUser }) => {
   const [selectedRestaurant, setSelectedRestaurant] = useState(null);
@@ -16,11 +42,14 @@ const DashboardOverview = ({ user, setUser }) => {
     refunded_orders: 0,
     profit: 0,
     current_month_revenue: 0,
-    current_month_expense: 0
+    current_month_expense: 0,
+    order_trends: [],
+    revenue_trends: []
   });
   const [dateFilter, setDateFilter] = useState(new Date().toISOString().split("T")[0]);
   const [timeRangeFilter, setTimeRangeFilter] = useState("today");
   const [isLoading, setIsLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("overview");
 
   const handleRestaurantChange = (event) => {
     const restaurantId = event.target.value;
@@ -79,9 +108,10 @@ const DashboardOverview = ({ user, setUser }) => {
         if (response?.status === "success") {
           setDashboardData({
             ...response.data,
-            // Include monthly data if available in response
             current_month_revenue: response.data.current_month_revenue || 0,
-            current_month_expense: response.data.current_month_expense || 0
+            current_month_expense: response.data.current_month_expense || 0,
+            order_trends: response.data.order_trends || [],
+            revenue_trends: response.data.revenue_trends || []
           });
         }
       } catch (error) {
@@ -101,6 +131,80 @@ const DashboardOverview = ({ user, setUser }) => {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
     }).format(amount).replace('₹', '₹ ');
+  };
+
+  // Prepare chart data
+  const prepareChartData = () => {
+    const labels = dashboardData.order_trends.map(item => item.date || item.day);
+    
+    return {
+      orderData: {
+        labels,
+        datasets: [
+          {
+            label: 'Total Orders',
+            data: dashboardData.order_trends.map(item => item.total_orders),
+            backgroundColor: 'rgba(54, 162, 235, 0.5)',
+            borderColor: 'rgba(54, 162, 235, 1)',
+            borderWidth: 2,
+            tension: 0.4,
+            fill: true
+          },
+          {
+            label: 'Delivered Orders',
+            data: dashboardData.order_trends.map(item => item.delivered_orders),
+            backgroundColor: 'rgba(75, 192, 192, 0.5)',
+            borderColor: 'rgba(75, 192, 192, 1)',
+            borderWidth: 2,
+            tension: 0.4
+          }
+        ]
+      },
+      revenueData: {
+        labels,
+        datasets: [
+          {
+            label: 'Revenue (₹)',
+            data: dashboardData.revenue_trends.map(item => item.revenue),
+            backgroundColor: 'rgba(153, 102, 255, 0.2)',
+            borderColor: 'rgba(153, 102, 255, 1)',
+            borderWidth: 2,
+            tension: 0.4,
+            fill: true
+          }
+        ]
+      }
+    };
+  };
+
+  const { orderData, revenueData } = prepareChartData();
+
+  const chartOptions = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: 'top',
+      },
+      tooltip: {
+        mode: 'index',
+        intersect: false,
+      }
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        grid: {
+          drawBorder: false,
+          color: 'rgba(0, 0, 0, 0.05)',
+        }
+      },
+      x: {
+        grid: {
+          display: false
+        }
+      }
+    },
+    maintainAspectRatio: false
   };
 
   // Card data organized into logical groups
@@ -211,6 +315,28 @@ const DashboardOverview = ({ user, setUser }) => {
           </div>
         </div>
 
+        {/* Navigation Tabs */}
+        <div className="dashboard-tabs">
+          <button 
+            className={`tab-button ${activeTab === "overview" ? "active" : ""}`}
+            onClick={() => setActiveTab("overview")}
+          >
+            Overview
+          </button>
+          <button 
+            className={`tab-button ${activeTab === "analytics" ? "active" : ""}`}
+            onClick={() => setActiveTab("analytics")}
+          >
+            Analytics
+          </button>
+          <button 
+            className={`tab-button ${activeTab === "quick-actions" ? "active" : ""}`}
+            onClick={() => setActiveTab("quick-actions")}
+          >
+            Quick Actions
+          </button>
+        </div>
+
         <div className="filters">
           <div className="filter-item">
             <label>Date</label>
@@ -236,72 +362,113 @@ const DashboardOverview = ({ user, setUser }) => {
           </div>
         </div>
 
-                {/* Monthly Summary Section - Added this new section */}
-        <div className="monthly-summary">
-          <div className="summary-card revenue">
-            <div className="summary-content">
-              <h3>Monthly Revenue</h3>
-              <p className="amount">{formatCurrency(dashboardData.current_month_revenue)}</p>
-              <p className="period">Current Month</p>
-            </div>
-            <div className="summary-icon">💰</div>
-          </div>
-          <div className="summary-card expense">
-            <div className="summary-content">
-              <h3>Monthly Expense</h3>
-              <p className="amount">{formatCurrency(dashboardData.current_month_expense)}</p>
-              <p className="period">Current Month</p>
-            </div>
-            <div className="summary-icon">📉</div>
-          </div>
-          <div className={`summary-card ${dashboardData.current_month_revenue - dashboardData.current_month_expense >= 0 ? 'profit' : 'loss'}`}>
-            <div className="summary-content">
-              <h3>Monthly {dashboardData.current_month_revenue - dashboardData.current_month_expense >= 0 ? 'Profit' : 'Loss'}</h3>
-              <p className="amount">
-                {formatCurrency(Math.abs(dashboardData.current_month_revenue - dashboardData.current_month_expense))}
-              </p>
-              <p className="period">Current Month</p>
-            </div>
-            <div className="summary-icon">
-              {dashboardData.current_month_revenue - dashboardData.current_month_expense >= 0 ? '📈' : '📉'}
-            </div>
-          </div>
-        </div>
-
         {isLoading ? (
           <div className="loading-state">
             <div className="loading-spinner"></div>
             <p>Loading dashboard data...</p>
           </div>
         ) : (
-          <div className="dashboard-content">
-            {/* Card Groups */}
-            {cardGroups.map((group, groupIndex) => (
-              <div key={groupIndex} className="card-group">
-                <h3 className="group-title">{group.title}</h3>
-                <div className="cards-container">
-                  {group.cards.map((card, cardIndex) => (
-                    <div 
-                      key={cardIndex} 
-                      className={`card ${card.isProfit !== undefined ? (card.isProfit ? 'positive' : 'negative') : ''}`}
-                    >
-                      <div className="card-header">
-                        <span className="card-icon">{card.icon}</span>
-                        <span className="card-badge">{card.badge}</span>
-                      </div>
-                      <div className="card-body">
-                        <h4>{card.title}</h4>
-                        <p>{card.value}</p>
-                      </div>
+          <>
+            {activeTab === "overview" && (
+              <div className="dashboard-content">
+                {/* Monthly Summary Section */}
+                <div className="monthly-summary">
+                  <div className="summary-card revenue">
+                    <div className="summary-content">
+                      <h3>Monthly Revenue</h3>
+                      <p className="amount">{formatCurrency(dashboardData.current_month_revenue)}</p>
+                      <p className="period">Current Month</p>
                     </div>
-                  ))}
+                    <div className="summary-icon">💰</div>
+                  </div>
+                  <div className="summary-card expense">
+                    <div className="summary-content">
+                      <h3>Monthly Expense</h3>
+                      <p className="amount">{formatCurrency(dashboardData.current_month_expense)}</p>
+                      <p className="period">Current Month</p>
+                    </div>
+                    <div className="summary-icon">📉</div>
+                  </div>
+                  <div className={`summary-card ${dashboardData.current_month_revenue - dashboardData.current_month_expense >= 0 ? 'profit' : 'loss'}`}>
+                    <div className="summary-content">
+                      <h3>Monthly {dashboardData.current_month_revenue - dashboardData.current_month_expense >= 0 ? 'Profit' : 'Loss'}</h3>
+                      <p className="amount">
+                        {formatCurrency(Math.abs(dashboardData.current_month_revenue - dashboardData.current_month_expense))}
+                      </p>
+                      <p className="period">Current Month</p>
+                    </div>
+                    <div className="summary-icon">
+                      {dashboardData.current_month_revenue - dashboardData.current_month_expense >= 0 ? '📈' : '📉'}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Card Groups */}
+                {cardGroups.map((group, groupIndex) => (
+                  <div key={groupIndex} className="card-group">
+                    <h3 className="group-title">{group.title}</h3>
+                    <div className="cards-container">
+                      {group.cards.map((card, cardIndex) => (
+                        <div 
+                          key={cardIndex} 
+                          className={`card ${card.isProfit !== undefined ? (card.isProfit ? 'positive' : 'negative') : ''}`}
+                        >
+                          <div className="card-header">
+                            <span className="card-icon">{card.icon}</span>
+                            <span className="card-badge">{card.badge}</span>
+                          </div>
+                          <div className="card-body">
+                            <h4>{card.title}</h4>
+                            <p>{card.value}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {activeTab === "analytics" && (
+              <div className="analytics-content">
+                <div className="chart-container">
+                  <h3>Order Trends</h3>
+                  <div className="chart-wrapper">
+                    {dashboardData.order_trends?.length > 0 ? (
+                      <Line data={orderData} options={chartOptions} />
+                    ) : (
+                      <div className="no-data">No order data available for the selected period</div>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="chart-container">
+                  <h3>Revenue Trends</h3>
+                  <div className="chart-wrapper">
+                    {dashboardData.revenue_trends?.length > 0 ? (
+                      <Bar data={revenueData} options={{
+                        ...chartOptions,
+                        plugins: {
+                          ...chartOptions.plugins,
+                          tooltip: {
+                            callbacks: {
+                              label: function(context) {
+                                return `₹${context.raw.toLocaleString()}`;
+                              }
+                            }
+                          }
+                        }
+                      }} />
+                    ) : (
+                      <div className="no-data">No revenue data available for the selected period</div>
+                    )}
+                  </div>
                 </div>
               </div>
-            ))}
+            )}
 
-            {/* Quick Links */}
-            {selectedRestaurant && (
-              <div className="quick-links">
+            {activeTab === "quick-actions" && selectedRestaurant && (
+              <div className="quick-actions-content">
                 <h3>Quick Actions</h3>
                 <p className="subtitle">Manage your restaurant operations</p>
                 <div className="links-grid">
@@ -317,6 +484,17 @@ const DashboardOverview = ({ user, setUser }) => {
                     <div className="link-arrow">→</div>
                   </Link>
                   <Link 
+                    to={`/vendor-dashboard/coupon/management/${selectedRestaurant.restaurant_id}`} 
+                    className="link-card"
+                  >
+                    <div className="link-icon">🏷️</div>
+                    <div className="link-content">
+                      <h4>Coupon Management</h4>
+                      <p>Manage your coupon details</p>
+                    </div>
+                    <div className="link-arrow">→</div>
+                  </Link>
+                  <Link 
                     to={`/vendor-dashboard/order/management/${selectedRestaurant.restaurant_id}`} 
                     className="link-card"
                   >
@@ -327,6 +505,28 @@ const DashboardOverview = ({ user, setUser }) => {
                     </div>
                     <div className="link-arrow">→</div>
                   </Link>
+                  {/* <Link 
+                    to={`/vendor-dashboard/reviews/${selectedRestaurant.restaurant_id}`} 
+                    className="link-card"
+                  >
+                    <div className="link-icon">⭐</div>
+                    <div className="link-content">
+                      <h4>Customer Reviews</h4>
+                      <p>View and respond to customer feedback</p>
+                    </div>
+                    <div className="link-arrow">→</div>
+                  </Link>
+                  <Link 
+                    to={`/vendor-dashboard/performance/${selectedRestaurant.restaurant_id}`} 
+                    className="link-card"
+                  >
+                    <div className="link-icon">📊</div>
+                    <div className="link-content">
+                      <h4>Performance Analytics</h4>
+                      <p>Detailed analytics and insights</p>
+                    </div>
+                    <div className="link-arrow">→</div>
+                  </Link> */}
                   <Link 
                     to={`/register-your-restaurent`} 
                     className="link-card"
@@ -338,21 +538,10 @@ const DashboardOverview = ({ user, setUser }) => {
                     </div>
                     <div className="link-arrow">→</div>
                   </Link>
-                  <Link 
-                    to={`/vendor-dashboard/coupon/management/${selectedRestaurant.restaurant_id}`} 
-                    className="link-card"
-                  >
-                    <div className="link-icon">🏷️</div>
-                    <div className="link-content">
-                      <h4>Coupon Management</h4>
-                      <p>Manage your coupon details</p>
-                    </div>
-                    <div className="link-arrow">→</div>
-                  </Link>
                 </div>
               </div>
             )}
-          </div>
+          </>
         )}
       </div>
     </div>
