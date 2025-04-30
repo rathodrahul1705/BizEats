@@ -236,7 +236,7 @@ const PaymentOption = ({ user }) => {
     localStorage.removeItem("cart_count");
     localStorage.removeItem("cart_current_step");
     localStorage.removeItem("user_full_address");
-    localStorage.removeItem("current_order_restaurant_id");
+    // localStorage.removeItem("current_order_restaurant_id");
     localStorage.removeItem("selected_address");
     window.dispatchEvent(new Event("storage"));
   }, []);

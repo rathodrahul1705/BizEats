@@ -95,7 +95,7 @@ const Cart = ({ user, setUser }) => {
         localStorage.setItem("current_order_restaurant_id", restaurantId);
       } else {
         localStorage.removeItem("cart_count");
-        localStorage.removeItem("current_order_restaurant_id");
+        // localStorage.removeItem("current_order_restaurant_id");
       }
       window.dispatchEvent(new Event("storage"));
     },
