@@ -264,7 +264,7 @@ class RestaurantCartList(APIView):
                 cart_details.append({
                     "item_id": item.item_id,
                     "item_name": item.item.item_name,
-                    "item_price": float(item.item_price),
+                    "item_price": item.item_price,
                     "quantity": item.quantity,
                     "item_image": request.build_absolute_uri(item.item.item_image.url) if item.item.item_image else None,
                 })
@@ -278,7 +278,7 @@ class RestaurantCartList(APIView):
             return Response({
                 "status": "error",
                 "message": str(e),
-            }, status=status.HTTP_400_BAD_REQUEST)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
 
 @method_decorator(csrf_exempt, name='dispatch')
