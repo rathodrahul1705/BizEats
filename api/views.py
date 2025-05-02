@@ -170,3 +170,28 @@ class CustomTokenRefreshView(APIView):
                 'detail': 'Token is invalid or expired',
                 'error': str(e)
             }, status=status.HTTP_401_UNAUTHORIZED)
+        
+
+class UserProfileUpdate(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        email = request.data.get('email')
+        contact_number = request.data.get('contact_number')
+
+        if email:
+            user.email = email
+        if contact_number:
+            user.contact_number = contact_number
+
+        user.save()
+
+        return Response({
+            'message': 'Profile updated successfully',
+            'user': {
+                'id': user.id,
+                'email': user.email,
+                'contact_number': user.contact_number
+            }
+        }, status=status.HTTP_200_OK)

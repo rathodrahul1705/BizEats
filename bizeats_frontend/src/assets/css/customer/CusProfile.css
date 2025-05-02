@@ -291,3 +291,78 @@ transform: scale(1.2);
   font-size: 0;
 }
 }
+
+/* Add these styles to your CusProfile.css file */
+
+/* Cancel button styles */
+.cus-orders__modal-cancel {
+  padding: 10px 20px;
+  background-color: #f5f5f5;
+  color: #333;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-left: 10px;
+}
+
+.cus-orders__modal-cancel:hover {
+  background-color: #e0e0e0;
+  border-color: #ccc;
+}
+
+.cus-orders__modal-cancel:disabled {
+  background-color: #f5f5f5;
+  color: #aaa;
+  cursor: not-allowed;
+  border-color: #eee;
+}
+
+/* Modal actions container - adjust if needed */
+.cus-orders__modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+  gap: 10px;
+}
+
+/* Save button adjustments to pair with cancel button */
+.cus-orders__modal-save {
+  padding: 10px 20px;
+  background-color: #4CAF50; /* Green color for save */
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.cus-orders__modal-save:hover {
+  background-color: #45a049;
+}
+
+.cus-orders__modal-save:disabled {
+  background-color: #a5d6a7;
+  cursor: not-allowed;
+}
+
+/* Spinner for loading state */
+.spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 1s ease-in-out infinite;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

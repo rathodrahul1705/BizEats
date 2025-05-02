@@ -98,6 +98,10 @@ const API_ENDPOINTS = {
     FETCH: `${BASE_URL}/vendor/coupons/`,
     DELETE: (coupon_id) => `${BASE_URL}/vendor/coupons/${coupon_id}/delete/`,
     UPDATE: (coupon_id) => `${BASE_URL}/vendor/coupons/${coupon_id}/update/`
+  },
+
+  PROFILE: {
+    UPDATE: `${BASE_URL}/user-profile-update/`,
   }
 };
 
