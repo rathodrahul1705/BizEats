@@ -314,7 +314,7 @@ const OrderDetails = ({ user, setUser }) => {
         <h1 className="order-store-title">{storeDetails.name}</h1>
         {!isShopOpen && (
           <div className="order-shop-closed-banner">
-            🚫 Shop Closed (Open 9AM-11PM)
+            🚫 Shop Closed (Open 9AM-10PM)
           </div>
         )}
       </div>
