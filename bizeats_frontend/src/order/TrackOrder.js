@@ -1,22 +1,15 @@
 import React, { useEffect, useState, useRef } from "react";
-import { X, Clock } from "lucide-react";
-import {
-  MapContainer,
-  TileLayer,
-  Marker,
-  useMap,
-  Popup,
-} from "react-leaflet";
+import { X, Clock, Bike, Maximize2, Minimize2 } from "lucide-react";
+import { MapContainer, TileLayer, Marker, useMap, Popup } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "leaflet-routing-machine";
 import "../assets/css/order/TrackOrder.css";
-import { Bike, Maximize2, Minimize2, ChevronDown, ChevronUp } from "lucide-react";
 import API_ENDPOINTS from "../components/config/apiConfig";
 import fetchData from "../components/services/apiService";
 import StripeLoader from "../loader/StripeLoader";
 import { useParams } from "react-router-dom";
-
+import SignIn from "../components/SignIn";
 
 // Fix default icon paths
 delete L.Icon.Default.prototype._getIconUrl;
@@ -84,25 +77,20 @@ function RoutingWithLiveBike({ orderId, to, setDuration, setHasReached }) {
           const restaurant = L.latLng(res.restaurant_location?.lat, res.restaurant_location?.lng);
           const customer = L.latLng(res.user_destination?.lat, res.user_destination?.lng);
 
-          // Skip if no significant movement
           if (prevLatLng.current && agent.distanceTo(prevLatLng.current) < 5) return;
           prevLatLng.current = agent;
 
-          // Update or create bike marker
           if (!bikeRef.current) {
             bikeRef.current = L.marker(agent, { icon: bikeIcon }).addTo(map);
-            // Center map on delivery agent when first loading
             map.setView(agent, 15);
           } else {
             bikeRef.current.setLatLng(agent);
           }
 
-          // Remove old route if it exists
           if (routeRef.current) {
             map.removeControl(routeRef.current);
           }
 
-          // Add new route
           routeRef.current = L.Routing.control({
             waypoints: [restaurant, agent, customer],
             lineOptions: { styles: [{ color: "#e65c00", weight: 5 }] },
@@ -117,7 +105,6 @@ function RoutingWithLiveBike({ orderId, to, setDuration, setHasReached }) {
               const adjustedDuration = Math.round((durationInSeconds / 60) * 1.5);
               setDuration(adjustedDuration);
           
-              // Only adjust bounds if not too close to customer
               const distanceToCustomer = agent.distanceTo(customer);
               if (distanceToCustomer > 30) {
                 const bounds = e.routes[0].bounds;
@@ -128,46 +115,30 @@ function RoutingWithLiveBike({ orderId, to, setDuration, setHasReached }) {
             })
             .addTo(map);
           
-          // Calculate distance to customer
           const distanceToCustomer = agent.distanceTo(customer);
           
-          // Handle when agent is very close to customer (within 30 meters)
           if (distanceToCustomer < 30) {
             setHasReached(true);
-            
-            // Show reached message
             setReachedMessage("Your order has arrived!");
             
-            // Remove existing circle if it exists
             if (circleRef.current) {
               map.removeLayer(circleRef.current);
             }
 
-            // Create new circle with more visible styling
             circleRef.current = L.circle(agent, {
-              radius: 30, // Fixed radius for better visibility
+              radius: 30,
               color: "#28a745",
               fillColor: "#28a745",
               fillOpacity: 0.2,
               weight: 0.6
             }).addTo(map);
 
-            // Add popup if not already added
-            // if (!popupRef.current) {
-            //   popupRef.current = L.popup({ autoClose: false, closeOnClick: false })
-            //     .setLatLng(agent)
-            //     .setContent("Your order has arrived!")
-            //     .openOn(map);
-            // }
-
-            // Fit bounds to include both agent and customer
             const bounds = L.latLngBounds([agent, customer]);
             map.fitBounds(bounds.pad(0.3));
           } else {
             setHasReached(false);
             setReachedMessage(null);
             
-            // Remove circle and popup if agent moved away
             if (circleRef.current) {
               map.removeLayer(circleRef.current);
               circleRef.current = null;
@@ -198,7 +169,8 @@ function RoutingWithLiveBike({ orderId, to, setDuration, setHasReached }) {
   return null;
 }
 
-const TrackOrder = ({ user }) => {
+const TrackOrder = ({ user, setUser }) => {
+  const [showSignIn, setShowSignIn] = useState(false);
   const { order_number } = useParams();
   const [orders, setOrders] = useState([]);
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -213,11 +185,17 @@ const TrackOrder = ({ user }) => {
   const [hasReached, setHasReached] = useState(false);
   const mapContainerRef = useRef(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
-
-  const [cancelTimer, setCancelTimer] = useState(120); // 2 minutes in seconds
+  const [cancelTimer, setCancelTimer] = useState(120);
   const [canCancel, setCanCancel] = useState(true);
   const [isCancelling, setIsCancelling] = useState(false);
-  
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (!storedUser && !user) {
+      setShowSignIn(true);
+    }
+  }, [user]);
+
   useEffect(() => {
     if (!selectedOrder) return;
   
@@ -268,7 +246,6 @@ const TrackOrder = ({ user }) => {
       });
   
       if (res.status === "success") {
-        // Update the order status locally
         setSelectedOrder(prev => ({
           ...prev,
           status: "Cancelled",
@@ -286,7 +263,6 @@ const TrackOrder = ({ user }) => {
       setIsCancelling(false);
     }
   };
-  
 
   const statusMap = {
     Pending: 0,
@@ -299,15 +275,13 @@ const TrackOrder = ({ user }) => {
     Refunded: 0,
   };
 
-  // console.log("order_number===",order_number)
-
   useEffect(() => {
     const fetchOrders = async () => {
       try {
         setLoading(true);
         const res = await fetchData(API_ENDPOINTS.TRACK.TRACK_ORDER, "POST", {
           user_id: user?.user_id,
-          order_number:order_number
+          order_number: order_number
         });
         if (res.status === "success" && res.orders.length) {
           setOrders(res.orders);
@@ -320,8 +294,7 @@ const TrackOrder = ({ user }) => {
       }
     };
     if (user?.user_id) fetchOrders();
-  }, [user?.user_id]);
-  
+  }, [user?.user_id, order_number]);
 
   useEffect(() => {
     const fetchLocations = async () => {
@@ -331,7 +304,6 @@ const TrackOrder = ({ user }) => {
           order_id: selectedOrder.order_number,
         });
         if (res.status === "success") {
-          // Validate and parse location data
           const parseLocation = (loc) => {
             if (!loc) return null;
             const lat = parseFloat(loc?.lat);
@@ -373,24 +345,6 @@ const TrackOrder = ({ user }) => {
     }
   };
 
-  if (noOrders)
-    return (
-      <div className="track-order-container no-orders">
-        <h2 className="order-summary-title">Track Order</h2>
-        <div className="no-order-message">
-          <h3>No Orders Found</h3>
-          <p>Bruh 😅 you haven't placed any orders yet.</p>
-          <p>Don't let your cravings ghost you 👻 – go grab some munchies! 🍕🍔🍟</p>
-          <a href="/menu" className="order-now-btn">Start Ordering</a>
-        </div>
-      </div>
-    );
-
-  if (!selectedOrder || loading) return <StripeLoader />;
-
-  const progress = statusMap[selectedOrder.status] || 0;
-  const initialCenter = deliveryAgentLocation || restaurantLocation || userLocation;
-    
   const handleRefresh = async () => {
     try {
       setIsRefreshing(true);
@@ -432,7 +386,6 @@ const TrackOrder = ({ user }) => {
     const formatter = new Intl.DateTimeFormat('en-GB', options);
     const formattedDate = formatter.format(utcDate).replace(',', '');
   
-    // Convert "dd/mm/yyyy hh:mm:ss" → "dd-mm-yyyy, hh:mm:ss"
     const [datePart, timePart] = formattedDate.split(' ');
     const dateWithHyphen = datePart.replace(/\//g, '-');
     return `${dateWithHyphen}, ${timePart}`;
@@ -446,9 +399,43 @@ const TrackOrder = ({ user }) => {
     }
   };
 
-  const discount = selectedOrder?.coupon_discount
+  const discount = selectedOrder?.coupon_discount;
   const total = selectedOrder?.total;
   const discount_text = selectedOrder?.coupon_code_text;
+
+  if (showSignIn) {
+    return (
+      <SignIn
+        onClose={() => setShowSignIn(false)}
+        onSuccess={() => {
+          setShowSignIn(false);
+        }}
+        setUser={(userData) => {
+          localStorage.setItem("user", JSON.stringify(userData));
+          setUser(userData);
+        }}
+      />
+    );
+  }
+
+  if (noOrders) {
+    return (
+      <div className="track-order-container no-orders">
+        <h2 className="order-summary-title">Track Order</h2>
+        <div className="no-order-message">
+          <h3>No Orders Found</h3>
+          <p>Bruh 😅 you haven't placed any orders yet.</p>
+          <p>Don't let your cravings ghost you 👻 – go grab some munchies! 🍕🍔🍟</p>
+          <a href="/menu" className="order-now-btn">Start Ordering</a>
+        </div>
+      </div>
+    );
+  }
+
+  if (!selectedOrder || loading) return <StripeLoader />;
+
+  const progress = statusMap[selectedOrder.status] || 0;
+  const initialCenter = deliveryAgentLocation || restaurantLocation || userLocation;
 
   return (
     <div className="track-order-container">
@@ -498,7 +485,7 @@ const TrackOrder = ({ user }) => {
               <>
                 <strong>Assigning a delivery agent...</strong>
                 <span className="status-badge">{selectedOrder.status}</span>
-                <p className="eta-note">We’ll notify you once a delivery agent is assigned.</p>
+                <p className="eta-note">We'll notify you once a delivery agent is assigned.</p>
               </>
             ) : typeof estimatedTimestamp === "number" &&
               !["Delivered", "Cancelled", "Refunded"].includes(selectedOrder.status) ? (
@@ -512,7 +499,6 @@ const TrackOrder = ({ user }) => {
             )}
           </div>
         )}
-        
       </div>
 
       <div className={`order-summary-card ${isMapExpanded ? 'map-expanded' : ''}`}>
@@ -521,34 +507,34 @@ const TrackOrder = ({ user }) => {
           ref={mapContainerRef}
         >
           {userLocation && restaurantLocation && initialCenter && (
-          <MapContainer
-            center={initialCenter}
-            zoom={15}
-            scrollWheelZoom={true}
-            className="delivery-map"
-          >
-            <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-            {restaurantLocation && (
-              <Marker position={[restaurantLocation?.lat, restaurantLocation?.lng]} icon={kitchenIcon}>
-                <Popup>Restaurant: {selectedOrder?.restaurant_name}</Popup>
-              </Marker>
-            )}
-            {userLocation && (
-              <Marker position={[userLocation?.lat, userLocation?.lng]} icon={customerIcon}>
-                <Popup>Your Location</Popup>
-              </Marker>
-            )}
-            {selectedOrder.status === "On the Way" && (
-              <RoutingWithLiveBike
-                orderId={selectedOrder.order_number}
-                to={userLocation ? [userLocation?.lat, userLocation?.lng] : null}
-                setDuration={setDuration}
-                setHasReached={setHasReached}
-                status={selectedOrder.status}
-              />
-            )}
-          </MapContainer>
-        )}
+            <MapContainer
+              center={initialCenter}
+              zoom={15}
+              scrollWheelZoom={true}
+              className="delivery-map"
+            >
+              <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+              {restaurantLocation && (
+                <Marker position={[restaurantLocation?.lat, restaurantLocation?.lng]} icon={kitchenIcon}>
+                  <Popup>Restaurant: {selectedOrder?.restaurant_name}</Popup>
+                </Marker>
+              )}
+              {userLocation && (
+                <Marker position={[userLocation?.lat, userLocation?.lng]} icon={customerIcon}>
+                  <Popup>Your Location</Popup>
+                </Marker>
+              )}
+              {selectedOrder.status === "On the Way" && (
+                <RoutingWithLiveBike
+                  orderId={selectedOrder.order_number}
+                  to={userLocation ? [userLocation?.lat, userLocation?.lng] : null}
+                  setDuration={setDuration}
+                  setHasReached={setHasReached}
+                  status={selectedOrder.status}
+                />
+              )}
+            </MapContainer>
+          )}
         </div>
 
         <div className="progress-section">
@@ -585,7 +571,6 @@ const TrackOrder = ({ user }) => {
 
           <div className="order-section">
             <h3>Payment Details</h3>
-            {/* <p><strong>Method:</strong> {selectedOrder.payment_method || 'Online Payment'}</p>\ */}
             <p><strong>Payment Method:</strong> 
               {selectedOrder.payment_method === 'Credit Card' && (
                 <span className="payment-method">
@@ -606,8 +591,8 @@ const TrackOrder = ({ user }) => {
               {selectedOrder.payment_method === 'Cash on Delivery' && (
                 <span className="payment-method">
                   <svg className="payment-method-icon" width="16" height="16" viewBox="0 0 24 24" fill="#4caf50">
-              <path d="M6 4v2h7.59c-.33.58-.86 1.11-1.59 1.59V9H6v2h5.06c.41.72 1.01 1.27 1.76 1.67L6 20h3l5.03-5.43C16.16 14.22 18 12.54 18 10c0-1.1-.9-2-2-2h-1.17c.11-.31.17-.65.17-1 0-.35-.06-.69-.17-1H18V4H6z"/>
-            </svg>
+                    <path d="M6 4v2h7.59c-.33.58-.86 1.11-1.59 1.59V9H6v2h5.06c.41.72 1.01 1.27 1.76 1.67L6 20h3l5.03-5.43C16.16 14.22 18 12.54 18 10c0-1.1-.9-2-2-2h-1.17c.11-.31.17-.65.17-1 0-.35-.06-.69-.17-1H18V4H6z"/>
+                  </svg>
                   Cash on Delivery
                 </span>
               )}
@@ -620,7 +605,6 @@ const TrackOrder = ({ user }) => {
             </p>
             <p><strong>Transaction ID:</strong> {selectedOrder.transaction_id || 'NA'}</p>
           </div>
-
         </div>
 
         <div className="order-section">
@@ -656,24 +640,22 @@ const TrackOrder = ({ user }) => {
         </div>
       </div>
 
-      {/* {
-        canCancel && !["Cancelled", "Refunded", "Delivered"].includes(selectedOrder.status) && (
-          <div className="cancel-order-container">
-            <div className="cancel-timer">
-              <Clock size={14} />
-              {Math.floor(cancelTimer / 60)}:{String(cancelTimer % 60).padStart(2, '0')}
-            </div>
-            <button
-              className="cancel-order-btn"
-              onClick={handleCancelOrder}
-              disabled={isCancelling}
-            >
-              <X size={18} />
-              {isCancelling ? "Cancelling..." : "Cancel Order"}
-            </button>
+      {canCancel && !["Cancelled", "Refunded", "Delivered"].includes(selectedOrder.status) && (
+        <div className="cancel-order-container">
+          <div className="cancel-timer">
+            <Clock size={14} />
+            {Math.floor(cancelTimer / 60)}:{String(cancelTimer % 60).padStart(2, '0')}
           </div>
-        )
-      } */}
+          <button
+            className="cancel-order-btn"
+            onClick={handleCancelOrder}
+            disabled={isCancelling}
+          >
+            <X size={18} />
+            {isCancelling ? "Cancelling..." : "Cancel Order"}
+          </button>
+        </div>
+      )}
     </div>
   );
 };

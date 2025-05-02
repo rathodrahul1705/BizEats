@@ -80,14 +80,14 @@ const App = () => {
 
             {/* Private Routes */}
             <Route path="/track-order" element={
-              <PrivateRoute user={user}>
+              // <PrivateRoute user={user}>
                 <TrackOrder user={user} setUser={setUser} />
-              </PrivateRoute>
+              // </PrivateRoute>
             } />
             <Route path="/track-order/:order_number" element={
-              <PrivateRoute user={user}>
+              // <PrivateRoute user={user}>
                 <TrackOrder user={user} setUser={setUser} />
-              </PrivateRoute>
+              // </PrivateRoute>
             } />
             <Route path="/profile" element={
               <PrivateRoute user={user}>
