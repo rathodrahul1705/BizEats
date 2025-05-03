@@ -472,3 +472,116 @@
 .cart_total{
   color: #e65c00;
 }
+
+/* Add these new styles to your existing OrderDetails.css */
+
+/* Share button styles */
+.order-share-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #666;
+  padding: 4px;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.order-share-btn:hover {
+  color: #ff6b6b;
+  background-color: rgba(255, 107, 107, 0.1);
+}
+
+.order-food-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Share options container */
+.order-share-container {
+  position: absolute;
+  right: 0;
+  top: 30px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 120px;
+}
+
+.modal-share {
+  position: absolute;
+  right: 20px;
+  top: 60px;
+}
+
+.order-share-option {
+  padding: 8px 12px;
+  border-radius: 4px;
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.order-share-option:hover {
+  background-color: #f5f5f5;
+}
+
+.order-share-option.whatsapp {
+  color: #25D366;
+}
+
+.order-share-option.facebook {
+  color: #1877F2;
+}
+
+.order-share-option.twitter {
+  color: #1DA1F2;
+}
+
+.order-share-option.instagram {
+  color: #E1306C;
+}
+
+.order-share-option.email {
+  color: #EA4335;
+}
+
+/* Modal share button */
+.order-food-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .order-share-container {
+    min-width: 100px;
+  }
+  
+  .order-share-option {
+    padding: 6px 8px;
+    font-size: 13px;
+  }
+  
+  .modal-share {
+    right: 10px;
+    top: 50px;
+  }
+}

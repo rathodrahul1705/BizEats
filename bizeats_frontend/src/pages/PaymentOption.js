@@ -51,7 +51,7 @@ const PaymentOption = ({ user }) => {
 
         const { restaurant_details, order_summary, distance_km, estimated_delivery_cost } = response;
         const itemTotal = order_summary?.total_order_amount || 0;
-        const deliveryFee = itemTotal > 100 ? 0 : estimated_delivery_cost;
+        const deliveryFee = itemTotal > 200 ? 0 : estimated_delivery_cost;
         const taxAmount = order_summary?.tax_amount || 0;
         
         // Calculate discount based on applied coupon or default 10%

@@ -1,5 +1,5 @@
-/* Order Page General Container */
-.order-page-container {
+/* Order Details Page Menu - General Container */
+.order-details-page-menu-container {
     padding: 20px;
     max-width: 800px;
     margin: auto;
@@ -8,8 +8,8 @@
     background-color: #fafafa;
 }
 
-/* Order Page Store Name */
-.order-store-title {
+/* Order Details Page Menu - Store Name */
+.order-details-page-menu-store-title {
     font-size: 28px;
     font-weight: 700;
     color: #333;
@@ -19,7 +19,7 @@
     padding-bottom: 10px;
 }
 
-.order-store-title::after {
+.order-details-page-menu-store-title::after {
     content: '';
     position: absolute;
     display: block;
@@ -31,8 +31,8 @@
     left: 0;
 }
 
-/* Order Page Store Details Card */
-.order-store-details-card {
+/* Order Details Page Menu - Store Details Card */
+.order-details-page-menu-store-details-card {
     background: #fff;
     padding: 20px;
     margin-bottom: 25px;
@@ -44,8 +44,8 @@
     gap: 12px;
 }
 
-/* Order Page Store Details Info */
-.order-store-info {
+/* Order Details Page Menu - Store Details Info */
+.order-details-page-menu-store-info {
     font-size: 15px;
     font-weight: 500;
     color: #555;
@@ -61,8 +61,8 @@
     border: 1px solid #eee;
 }
 
-/* Order Page Filter Container */
-.order-filter-container {
+/* Order Details Page Menu - Filter Container */
+.order-details-page-menu-filter-container {
     display: flex;
     justify-content: flex-start;
     gap: 12px;
@@ -72,12 +72,12 @@
     scrollbar-width: none;
 }
 
-.order-filter-container::-webkit-scrollbar {
+.order-details-page-menu-filter-container::-webkit-scrollbar {
     display: none;
 }
 
-/* Order Page Filter Buttons */
-.order-filter-btn {
+/* Order Details Page Menu - Filter Buttons */
+.order-details-page-menu-filter-btn {
     background: #f5f5f5;
     border: none;
     padding: 10px 20px;
@@ -95,40 +95,40 @@
     color: #555;
 }
 
-/* Order Page Active Filter Button */
-.order-filter-btn.active {
+/* Order Details Page Menu - Active Filter Button */
+.order-details-page-menu-filter-btn.active {
     background: linear-gradient(to right, #e65c00, #ff7b33);
     color: white;
     font-weight: 600;
     box-shadow: 0 4px 8px rgba(230, 92, 0, 0.2);
 }
 
-/* Order Page Hover Effect */
-.order-filter-btn:hover {
+/* Order Details Page Menu - Hover Effect */
+.order-details-page-menu-filter-btn:hover {
     background: #e0e0e0;
     transform: translateY(-2px);
 }
 
-.order-filter-btn.active:hover {
+.order-details-page-menu-filter-btn.active:hover {
     background: linear-gradient(to right, #cc5200, #e65c00);
 }
 
-/* Categories Container */
-.order-categories-container {
+/* Order Details Page Menu - Categories Container */
+.order-details-page-menu-categories-container {
     margin-top: 20px;
     display: flex;
     flex-direction: column;
     gap: 25px;
 }
 
-/* Out of Stock Section */
-.order-out-of-stock-section {
+/* Order Details Page Menu - Out of Stock Section */
+.order-details-page-menu-out-of-stock-section {
     margin-top: 40px;
     padding-top: 25px;
     border-top: 1px solid #eee;
 }
 
-.order-out-of-stock-header {
+.order-details-page-menu-out-of-stock-header {
     font-size: 18px;
     color: #888;
     margin-bottom: 20px;
@@ -138,24 +138,24 @@
     gap: 12px;
 }
 
-.order-out-of-stock-header::before,
-.order-out-of-stock-header::after {
+.order-details-page-menu-out-of-stock-header::before,
+.order-details-page-menu-out-of-stock-header::after {
     content: "";
     flex: 1;
     height: 1px;
     background: linear-gradient(to right, transparent, #ddd, transparent);
 }
 
-/* Category Section */
-.order-category-section {
+/* Order Details Page Menu - Category Section */
+.order-details-page-menu-category-section {
     background: #fff;
     border-radius: 12px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     overflow: hidden;
 }
 
-/* Category Header */
-.order-category-header {
+/* Order Details Page Menu - Category Header */
+.order-details-page-menu-category-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -166,11 +166,11 @@
     border-bottom: 1px solid #f0f0f0;
 }
 
-.order-category-header:hover {
+.order-details-page-menu-category-header:hover {
     background: linear-gradient(to right, #f5f5f5, #fff);
 }
 
-.order-category-header h3 {
+.order-details-page-menu-category-header h3 {
     font-size: 18px;
     font-weight: 700;
     color: #333;
@@ -180,8 +180,8 @@
     gap: 10px;
 }
 
-/* Order Page Food List */
-.order-food-list {
+/* Order Details Page Menu - Food List */
+.order-details-page-menu-food-list {
     list-style: none;
     padding: 15px;
     margin: 0;
@@ -190,8 +190,8 @@
     gap: 15px;
 }
 
-/* Order Page Food Item */
-.order-food-item {
+/* Order Details Page Menu - Food Item */
+.order-details-page-menu-food-item {
     display: flex;
     align-items: flex-start;
     background: #fff;
@@ -203,18 +203,18 @@
     overflow: hidden;
 }
 
-.order-food-item:hover {
+.order-details-page-menu-food-item:hover {
     transform: translateY(-3px);
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
 }
 
-.order-food-item-out-of-stock {
+.order-details-page-menu-food-item-out-of-stock {
     opacity: 0.7;
     background-color: #fafafa;
     position: relative;
 }
 
-.order-food-item-out-of-stock::after {
+.order-details-page-menu-food-item-out-of-stock::after {
     content: "";
     position: absolute;
     top: 0;
@@ -225,8 +225,8 @@
     z-index: 1;
 }
 
-/* Order Page Food Image */
-.order-food-image {
+/* Order Details Page Menu - Food Image */
+.order-details-page-menu-food-image {
     width: 120px;
     height: 100px;
     object-fit: cover;
@@ -238,25 +238,33 @@
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.order-food-image:hover {
+.order-details-page-menu-food-image:hover {
     transform: scale(1.03);
 }
 
-.order-food-image-out-of-stock {
+.order-details-page-menu-food-image-out-of-stock {
     filter: grayscale(100%) brightness(1.1);
     opacity: 0.8;
 }
 
-/* Order Page Food Details */
-.order-food-details {
+/* Order Details Page Menu - Food Details */
+.order-details-page-menu-food-details {
     flex: 1;
     text-align: left;
     position: relative;
     z-index: 2;
 }
 
-/* Order Page Food Title */
-.order-food-title {
+/* Order Details Page Menu - Food Header */
+.order-details-page-menu-food-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+/* Order Details Page Menu - Food Title */
+.order-details-page-menu-food-title {
     font-size: 16px;
     font-weight: 700;
     color: #222;
@@ -268,12 +276,12 @@
     transition: color 0.2s;
 }
 
-.order-food-title:hover {
+.order-details-page-menu-food-title:hover {
     color: #e65c00;
 }
 
-/* Order Page Food Description */
-.order-food-description {
+/* Order Details Page Menu - Food Description */
+.order-details-page-menu-food-description {
     font-size: 14px;
     color: #666;
     line-height: 1.5;
@@ -281,7 +289,7 @@
     cursor: pointer;
 }
 
-.order-read-more {
+.order-details-page-menu-read-more {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -297,13 +305,13 @@
     margin-top: 8px;
 }
 
-.order-read-more:hover {
+.order-details-page-menu-read-more:hover {
     background-color: rgba(230, 92, 0, 0.2);
     transform: translateY(-1px);
 }
 
-/* Order Page Food Price */
-.order-food-price {
+/* Order Details Page Menu - Food Price */
+.order-details-page-menu-food-price {
     font-size: 17px;
     font-weight: 700;
     color: #e65c00;
@@ -312,22 +320,21 @@
     align-items: center;
 }
 
-.order-food-price::before {
-    content: "₹";
+.order-details-page-menu-food-price::before {
     font-size: 15px;
     margin-right: 2px;
 }
 
-/* Order Page Cart Actions */
-.order-cart-actions {
+/* Order Details Page Menu - Cart Actions */
+.order-details-page-menu-cart-actions {
     display: flex;
     align-items: center;
     margin-top: 15px;
     gap: 10px;
 }
 
-/* Order Page Cart Buttons */
-.order-cart-btn {
+/* Order Details Page Menu - Cart Buttons */
+.order-details-page-menu-cart-btn {
     background: rgba(230, 92, 0, 0.1);
     border: none;
     width: 32px;
@@ -341,18 +348,18 @@
     padding: 0;
 }
 
-.order-cart-btn svg {
+.order-details-page-menu-cart-btn svg {
     stroke: #e65c00;
     width: 18px;
     height: 18px;
 }
 
-.order-cart-btn:hover {
+.order-details-page-menu-cart-btn:hover {
     background: rgba(230, 92, 0, 0.2);
     transform: scale(1.1);
 }
 
-.order-add-to-cart-btn {
+.order-details-page-menu-add-to-cart-btn {
     background: #e65c00;
     color: white;
     border: none;
@@ -365,18 +372,18 @@
     font-size: 14px;
 }
 
-.order-add-to-cart-btn:hover {
+.order-details-page-menu-add-to-cart-btn:hover {
     background: #cc5200;
     transform: translateY(-2px);
     box-shadow: 0 4px 10px rgba(230, 92, 0, 0.3);
 }
 
-.order-add-to-cart-btn:active {
+.order-details-page-menu-add-to-cart-btn:active {
     transform: translateY(0);
 }
 
-/* Order Page Cart Quantity */
-.order-cart-quantity {
+/* Order Details Page Menu - Cart Quantity */
+.order-details-page-menu-cart-quantity {
     font-size: 16px;
     font-weight: 700;
     color: #e65c00;
@@ -384,10 +391,10 @@
     text-align: center;
 }
 
-/* Out of Stock Badge */
-.order-out-of-stock-badge {
+/* Order Details Page Menu - Out of Stock Badge */
+.order-details-page-menu-out-of-stock-badge {
     position: absolute;
-    top:0;
+    top: 0;
     right: 0;
     background: #ff3b30;
     color: white;
@@ -400,8 +407,8 @@
     text-transform: uppercase;
 }
 
-/* Order Page View Cart Button */
-.order-view-cart-btn {
+/* Order Details Page Menu - View Cart Button */
+.order-details-page-menu-view-cart-btn {
     position: fixed;
     bottom: 20px;
     left: 50%;
@@ -423,18 +430,18 @@
     white-space: nowrap;
 }
 
-.order-view-cart-btn:hover {
+.order-details-page-menu-view-cart-btn:hover {
     background: linear-gradient(to right, #cc5200, #e65c00);
     transform: translateX(-50%) scale(1.05);
     box-shadow: 0 8px 20px rgba(230, 92, 0, 0.4);
 }
 
-.order-view-cart-btn:active {
+.order-details-page-menu-view-cart-btn:active {
     transform: translateX(-50%) scale(0.98);
 }
 
-/* Order Page Food Modal Styles */
-.order-food-modal-overlay {
+/* Order Details Page Menu - Food Modal Styles */
+.order-details-page-menu-food-modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
@@ -448,17 +455,17 @@
     backdrop-filter: blur(5px);
 }
 
-.order-food-modal-overlay.desktop {
+.order-details-page-menu-food-modal-overlay.desktop {
     align-items: center;
-    animation: orderFadeIn 0.3s ease-out;
+    animation: order-details-page-menu-fadeIn 0.3s ease-out;
 }
 
-.order-food-modal-overlay.mobile {
+.order-details-page-menu-food-modal-overlay.mobile {
     align-items: flex-end;
     animation: none;
 }
 
-.order-food-modal {
+.order-details-page-menu-food-modal {
     background: white;
     border-radius: 16px;
     overflow: hidden;
@@ -471,15 +478,15 @@
     box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
 }
 
-.order-food-modal-overlay.mobile .order-food-modal {
+.order-details-page-menu-food-modal-overlay.mobile .order-details-page-menu-food-modal {
     border-bottom-left-radius: 0;
     border-bottom-right-radius: 0;
     max-width: 100%;
-    animation: orderSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    animation: order-details-page-menu-slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     transform-origin: bottom center;
 }
 
-.order-close-modal-btn {
+.order-details-page-menu-close-modal-btn {
     position: absolute;
     top: 15px;
     right: 15px;
@@ -497,33 +504,33 @@
     transition: all 0.2s ease;
 }
 
-.order-close-modal-btn:hover {
+.order-details-page-menu-close-modal-btn:hover {
     background: white;
     transform: scale(1.1);
     box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
 }
 
-.order-close-modal-btn svg {
+.order-details-page-menu-close-modal-btn svg {
     stroke: #333;
 }
 
-.order-food-modal-content {
+.order-details-page-menu-food-modal-content {
     display: flex;
     flex-direction: column;
     overflow-y: auto;
 }
 
-.order-food-modal-image {
+.order-details-page-menu-food-modal-image {
     width: 100%;
     height: 250px;
     object-fit: cover;
 }
 
-.order-food-modal-details {
+.order-details-page-menu-food-modal-details {
     padding: 25px;
 }
 
-.order-food-modal-title {
+.order-details-page-menu-food-modal-title {
     font-size: 22px;
     font-weight: 700;
     color: #222;
@@ -531,14 +538,14 @@
     line-height: 1.3;
 }
 
-.order-food-modal-description {
+.order-details-page-menu-food-modal-description {
     font-size: 16px;
     color: #555;
     line-height: 1.6;
     margin-bottom: 20px;
 }
 
-.order-food-modal-info {
+.order-details-page-menu-food-modal-info {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -547,13 +554,13 @@
     color: #666;
 }
 
-.order-food-modal-price {
+.order-details-page-menu-food-modal-price {
     font-size: 24px;
     font-weight: 700;
     color: #e65c00;
 }
 
-.order-food-modal-actions {
+.order-details-page-menu-food-modal-actions {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -561,7 +568,7 @@
     margin-top: 20px;
 }
 
-.order-food-modal-actions .order-food-modal-cart-btn {
+.order-details-page-menu-food-modal-actions .order-details-page-menu-food-modal-cart-btn {
     background: rgba(230, 92, 0, 0.1);
     border: none;
     width: 40px;
@@ -575,18 +582,18 @@
     padding: 0;
 }
 
-.order-food-modal-actions .order-food-modal-cart-btn svg {
+.order-details-page-menu-food-modal-actions .order-details-page-menu-food-modal-cart-btn svg {
     stroke: #e65c00;
     width: 22px;
     height: 22px;
 }
 
-.order-food-modal-actions .order-food-modal-cart-btn:hover {
+.order-details-page-menu-food-modal-actions .order-details-page-menu-food-modal-cart-btn:hover {
     background: rgba(230, 92, 0, 0.2);
     transform: scale(1.1);
 }
 
-.order-food-modal-actions .order-food-modal-quantity {
+.order-details-page-menu-food-modal-actions .order-details-page-menu-food-modal-quantity {
     font-size: 22px;
     font-weight: 700;
     color: #e65c00;
@@ -594,8 +601,8 @@
     text-align: center;
 }
 
-/* Order Page Reset Cart Modal Styles */
-.order-reset-cart-modal-overlay {
+/* Order Details Page Menu - Reset Cart Modal Styles */
+.order-details-page-menu-reset-cart-modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
@@ -606,21 +613,21 @@
     align-items: center;
     justify-content: center;
     z-index: 1000;
-    animation: orderFadeIn 0.3s ease-out;
+    animation: order-details-page-menu-fadeIn 0.3s ease-out;
     backdrop-filter: blur(5px);
 }
 
-.order-reset-cart-modal {
+.order-details-page-menu-reset-cart-modal {
     background: white;
     width: 90%;
     max-width: 500px;
     padding: 25px;
     border-radius: 16px;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-    animation: orderSlideUp 0.3s ease-out;
+    animation: order-details-page-menu-slideUp 0.3s ease-out;
 }
 
-.order-reset-cart-modal h2 {
+.order-details-page-menu-reset-cart-modal h2 {
     font-size: 22px;
     margin-bottom: 15px;
     color: #333;
@@ -628,7 +635,7 @@
     font-weight: 700;
 }
 
-.order-reset-cart-modal p {
+.order-details-page-menu-reset-cart-modal p {
     font-size: 16px;
     color: #555;
     margin-bottom: 25px;
@@ -636,13 +643,13 @@
     line-height: 1.5;
 }
 
-.order-modal-actions {
+.order-details-page-menu-modal-actions {
     display: flex;
     justify-content: space-between;
     gap: 15px;
 }
 
-.order-modal-actions button {
+.order-details-page-menu-modal-actions button {
     flex: 1;
     padding: 14px;
     border: none;
@@ -653,185 +660,113 @@
     transition: all 0.2s;
 }
 
-.order-modal-actions button:first-child {
+.order-details-page-menu-modal-actions button:first-child {
     background-color: #f5f5f5;
     color: #333;
 }
 
-.order-modal-actions button:first-child:hover {
+.order-details-page-menu-modal-actions button:first-child:hover {
     background-color: #e0e0e0;
     transform: translateY(-2px);
 }
 
-.order-modal-actions button:last-child {
+.order-details-page-menu-modal-actions button:last-child {
     background: linear-gradient(to right, #e65c00, #ff7b33);
     color: white;
 }
 
-.order-modal-actions button:last-child:hover {
+.order-details-page-menu-modal-actions button:last-child:hover {
     background: linear-gradient(to right, #cc5200, #e65c00);
     transform: translateY(-2px);
 }
 
-/* Order Page Animations */
-@keyframes orderFadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+/* Order Details Page Menu - Share Container */
+.order-details-page-menu-share-container {
+    display: flex;
+    gap: 8px;
+    padding: 8px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    position: absolute;
+    right: 0;
+    top: 30px;
+    z-index: 10;
+    animation: order-details-page-menu-fadeIn 0.2s ease-out;
 }
 
-@keyframes orderSlideUp {
-    0% {
-        transform: translateY(100%);
-        opacity: 0;
-    }
-    100% {
-        transform: translateY(0);
-        opacity: 1;
-    }
+.order-details-page-menu-share-container.modal-share {
+    position: static;
+    margin: 10px 0;
+    justify-content: center;
+    box-shadow: none;
+    background: transparent;
 }
 
-/* Order Page Responsive */
-@media (max-width: 768px) {
-    .order-page-container {
-        padding: 15px;
-        padding-bottom: 90px;
-    }
-    
-    .order-store-title {
-        font-size: 24px;
-    }
-    
-    .order-store-details-card {
-        padding: 15px;
-        gap: 10px;
-    }
-    
-    .order-store-info {
-        font-size: 14px;
-        padding: 6px 12px;
-    }
-    
-    .order-filter-container {
-        gap: 10px;
-        margin-bottom: 20px;
-    }
-    
-    .order-filter-btn {
-        padding: 8px 16px;
-        font-size: 14px;
-    }
-    
-    .order-food-item {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-    
-    .order-food-image {
-        width: 100%;
-        height: 160px;
-        margin-right: 0;
-        margin-bottom: 15px;
-    }
-    
-    .order-food-title {
-        font-size: 17px;
-    }
-    
-    .order-food-description {
-        font-size: 14px;
-    }
-    
-    .order-food-price {
-        font-size: 18px;
-    }
-    
-    .order-view-cart-btn {
-        width: calc(100% - 40px);
-        padding: 14px 20px;
-        font-size: 15px;
-        bottom: 15px;
-    }
-    
-    .order-food-modal-title {
-        font-size: 20px;
-    }
-    
-    .order-food-modal-description {
-        font-size: 15px;
-    }
-    
-    .order-food-modal-image {
-        height: 200px;
-    }
+.order-details-page-menu-share-option {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+    color: white;
 }
 
-@media (max-width: 480px) {
-    .order-store-title {
-        font-size: 22px;
-    }
-    
-    .order-store-info {
-        font-size: 13px;
-        padding: 5px 10px;
-    }
-    
-    .order-filter-btn {
-        padding: 7px 14px;
-        font-size: 13px;
-    }
-    
-    .order-food-image {
-        height: 140px;
-    }
-    
-    .order-view-cart-btn {
-        font-size: 14px;
-        padding: 12px 18px;
-    }
-    
-    .order-food-modal-details {
-        padding: 20px;
-    }
-    
-    .order-food-modal-title {
-        font-size: 18px;
-    }
-    
-    .order-food-modal-description {
-        font-size: 14px;
-    }
-    
-    .order-food-modal-info {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 8px;
-    }
-    
-    .order-food-modal-price {
-        font-size: 22px;
-    }
-    
-    .order-reset-cart-modal h2 {
-        font-size: 20px;
-    }
-    
-    .order-reset-cart-modal p {
-        font-size: 15px;
-    }
-    
-    .order-modal-actions button {
-        padding: 12px;
-        font-size: 15px;
-    }
+.order-details-page-menu-share-option.whatsapp {
+    background-color: #25D366;
 }
 
-/* Deals Section */
-.order-deals-section {
+.order-details-page-menu-share-option.facebook {
+    background-color: #1877F2;
+}
+
+.order-details-page-menu-share-option.twitter {
+    background-color: #1DA1F2;
+}
+
+.order-details-page-menu-share-option.instagram {
+    background: linear-gradient(45deg, #405DE6, #5851DB, #833AB4, #C13584, #E1306C, #FD1D1D);
+}
+
+.order-details-page-menu-share-option.email {
+    background-color: #EA4335;
+}
+
+.order-details-page-menu-share-option:hover {
+    transform: scale(1.1);
+}
+
+.order-details-page-menu-share-option svg {
+    width: 18px;
+    height: 18px;
+}
+
+.order-details-page-menu-share-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.order-details-page-menu-share-btn:hover {
+    transform: scale(1.1);
+}
+
+/* Order Details Page Menu - Deals Section */
+.order-details-page-menu-deals-section {
     margin: 2rem 0;
     padding: 0 0.5rem;
-  }
-  
-  .order-deals-title {
+}
+
+.order-details-page-menu-deals-title {
     font-size: 1.5rem;
     font-weight: 700;
     color: #333;
@@ -839,9 +774,9 @@
     position: relative;
     display: inline-block;
     padding-bottom: 8px;
-  }
-  
-  .order-deals-title::after {
+}
+
+.order-details-page-menu-deals-title::after {
     content: '';
     position: absolute;
     display: block;
@@ -851,44 +786,44 @@
     border-radius: 4px;
     bottom: 0;
     left: 0;
-  }
-  
-  .order-deals-swiper-wrapper {
+}
+
+.order-details-page-menu-deals-swiper-wrapper {
     position: relative;
     padding: 5px 0 15px;
-  }
-  
-  .order-deals-swiper {
+}
+
+.order-details-page-menu-deals-swiper {
     padding: 10px 5px;
-  }
-  
-  /* Fixed card dimensions */
-  .order-deal-card {
+}
+
+/* Order Details Page Menu - Deal Card */
+.order-details-page-menu-deal-card {
     background: white;
     border-radius: 12px;
     padding: 1.25rem;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     border: 1px solid #f0f0f0;
-    height: 120px; /* Fixed height */
-    min-height: 120px; /* Ensures height doesn't shrink */
+    height: 120px;
+    min-height: 120px;
     transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
     display: flex;
     align-items: center;
-  }
-  
-  .order-deal-card:hover {
+}
+
+.order-details-page-menu-deal-card:hover {
     transform: translateY(-3px);
     box-shadow: 0 6px 15px rgba(0, 0, 0, 0.12);
-  }
-  
-  .order-deal-inner {
+}
+
+.order-details-page-menu-deal-inner {
     display: flex;
     align-items: center;
     height: 100%;
-    width: 100%; /* Ensure full width */
-  }
-  
-  .order-deal-icon {
+    width: 100%;
+}
+
+.order-details-page-menu-deal-icon {
     font-size: 2rem;
     margin-right: 1.25rem;
     flex-shrink: 0;
@@ -900,264 +835,291 @@
     justify-content: center;
     background: rgba(230, 92, 0, 0.1);
     border-radius: 50%;
-  }
-  
-  .order-deal-content {
+}
+
+.order-details-page-menu-deal-content {
     color: #333;
     flex: 1;
-    min-width: 0; /* Prevent text overflow */
-  }
-  
-  .order-deal-title {
+    min-width: 0;
+}
+
+.order-details-page-menu-deal-title {
     font-size: 1.1rem;
     font-weight: 700;
     margin: 0 0 0.5rem;
     color: #222;
     overflow: hidden;
     text-overflow: ellipsis;
-  }
-  
-  .order-deal-description {
+}
+
+.order-details-page-menu-deal-description {
     font-size: 0.9rem;
     margin: 0;
     color: #666;
     line-height: 1.5;
     display: -webkit-box;
-    -webkit-line-clamp: 2; /* Limit to 2 lines */
+    -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
-  }
-  
-  /* Swiper Navigation */
-  .order-deals-swiper .swiper-button-next,
-  .order-deals-swiper .swiper-button-prev {
-    width: 36px;
-    height: 36px;
-    background: white;
-    border-radius: 50%;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-    color: #e65c00;
-    transition: all 0.3s ease;
-    top: 50%;
-    margin-top: -18px;
-  }
-  
-  .order-deals-swiper .swiper-button-next::after,
-  .order-deals-swiper .swiper-button-prev::after {
-    font-size: 16px;
-    font-weight: bold;
-  }
-  
-  .order-deals-swiper .swiper-button-next:hover,
-  .order-deals-swiper .swiper-button-prev:hover {
-    background: #e65c00;
-    color: white;
-    transform: scale(1.1);
-  }
-  
-  /* Mobile adjustments */
-  @media (max-width: 639px) {
-    .order-deals-section {
-      margin: 1.5rem 0;
-      padding: 0 0.25rem;
-    }
-    
-    .order-deals-title {
-      font-size: 1.3rem;
-    }
-    
-    .order-deal-card {
-      padding: 1rem;
-      margin: 0 0.25rem;
-      height: 110px; /* Slightly smaller for mobile */
-      min-height: 110px;
-    }
-    
-    .order-deal-icon {
-      font-size: 1.6rem;
-      margin-right: 1rem;
-      width: 44px;
-      height: 44px;
-    }
-    
-    .order-deal-title {
-      font-size: 1rem;
-    }
-    
-    .order-deal-description {
-      font-size: 0.82rem;
-      -webkit-line-clamp: 2; /* Keep 2 lines on mobile */
-    }
-    
-    .order-deals-swiper .swiper-button-next,
-    .order-deals-swiper .swiper-button-prev {
-      display: none;
-    }
-  }
-  
-  /* Tablet */
-  @media (min-width: 640px) and (max-width: 767px) {
-    .order-deals-swiper {
-      padding: 10px;
-    }
-    
-    .order-deal-card {
-      margin: 0;
-      height: 120px;
-      min-height: 120px;
-    }
-  }
-  
-  /* Desktop */
-  @media (min-width: 768px) {
-    .order-deals-section {
-      margin: 2.5rem 0;
-    }
-    
-    .order-deals-title {
-      font-size: 1.7rem;
-    }
-    
-    .order-deal-card {
-      height: 130px; /* Slightly taller on desktop */
-      min-height: 130px;
-    }
-    
-    .order-deal-icon {
-      font-size: 2.2rem;
-      width: 56px;
-      height: 56px;
-    }
+}
 
-    
-    .order-deal-description {
-      font-size: 0.95rem;
-    }
-  }
-
-  /* Restaurant Header with Shop Closed Banner */
-.order-store-header {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 16px;
-    margin-bottom: 16px;
-  }
-  
-  .order-store-title {
-    margin: 0;
-    flex: 1;
-    min-width: 200px; /* Prevent title from getting too small */
-  }
-  
-  /* Shop Closed Banner - Updated for side-by-side layout */
-  .order-shop-closed-banner {
+/* Order Details Page Menu - Shop Closed Banner */
+.order-details-page-menu-shop-closed-banner {
     background-color: #e65c00;
     color: white;
     padding: 8px 12px;
     border-radius: 6px;
     font-weight: bold;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    animation: pulse 2s infinite;
+    animation: order-details-page-menu-pulse 2s infinite;
     border: 1px solid #d35400;
     font-size: 14px;
     white-space: nowrap;
     align-self: center;
-  }
-  
-  @keyframes pulse {
-    0% {
-      box-shadow: 0 0 0 0 rgba(230, 92, 0, 0.7);
-    }
-    70% {
-      box-shadow: 0 0 0 8px rgba(230, 92, 0, 0);
-    }
-    100% {
-      box-shadow: 0 0 0 0 rgba(230, 92, 0, 0);
-    }
-  }
-  
-  /* Disabled Add Button */
-  .order-add-to-cart-btn:disabled,
-  .order-cart-btn:disabled {
+}
+
+/* Order Details Page Menu - Disabled States */
+.order-details-page-menu-add-to-cart-btn:disabled,
+.order-details-page-menu-cart-btn:disabled {
     opacity: 0.6;
     cursor: not-allowed;
     pointer-events: none;
-  }
-  
-  .order-add-to-cart-btn:disabled {
+}
+
+.order-details-page-menu-add-to-cart-btn:disabled {
     background-color: #f5f5f5 !important;
     color: #999 !important;
     border: 1px solid #ddd !important;
-  }
-  
-  .order-cart-btn:disabled svg {
+}
+
+.order-details-page-menu-cart-btn:disabled svg {
     color: #999 !important;
-  }
-  
-  /* Disabled View Cart Button */
-  .order-view-cart-btn:disabled {
+}
+
+.order-details-page-menu-view-cart-btn:disabled {
     background-color: #f5f5f5;
     color: #999;
     border: 1px solid #ddd;
     cursor: not-allowed;
-  }
-  
-  /* Disabled Food Items when shop is closed */
-  .order-food-item:has(button:disabled) {
+}
+
+.order-details-page-menu-food-item:has(button:disabled) {
     position: relative;
-  }
-  
-  /* Modal disabled state */
-  .order-food-modal-overlay:has(button:disabled) .order-food-modal {
+}
+
+.order-details-page-menu-food-modal-overlay:has(button:disabled) .order-details-page-menu-food-modal {
     position: relative;
-  }
-  
-  /* Additional disabled state styling */
-  .order-food-item:has(button:disabled) .order-food-image {
+}
+
+.order-details-page-menu-food-item:has(button:disabled) .order-details-page-menu-food-image {
     filter: grayscale(30%);
-  }
-  
-  .order-food-item:has(button:disabled) .order-food-price {
+}
+
+.order-details-page-menu-food-item:has(button:disabled) .order-details-page-menu-food-price {
     color: #999;
-  }
-  
-  .order-food-modal-overlay:has(button:disabled) .order-food-modal-image {
+}
+
+.order-details-page-menu-food-modal-overlay:has(button:disabled) .order-details-page-menu-food-modal-image {
     filter: brightness(0.9) grayscale(20%);
-  }
-  
-  /* Responsive Adjustments */
-  @media (max-width: 768px) {
-    .order-store-header {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 8px;
+}
+
+/* Order Details Page Menu - Animations */
+@keyframes order-details-page-menu-fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes order-details-page-menu-slideUp {
+    0% {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+    100% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes order-details-page-menu-pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(230, 92, 0, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 8px rgba(230, 92, 0, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(230, 92, 0, 0);
+    }
+}
+
+/* Order Details Page Menu - Responsive */
+@media (max-width: 768px) {
+    .order-details-page-menu-container {
+        padding: 15px;
+        padding-bottom: 90px;
     }
     
-    .order-store-title {
-      width: 100%;
+    .order-details-page-menu-store-title {
+        font-size: 24px;
     }
     
-    .order-shop-closed-banner {
-      white-space: normal;
-      text-align: left;
-      padding: 6px 10px;
-      font-size: 13px;
+    .order-details-page-menu-store-details-card {
+        padding: 15px;
+        gap: 10px;
     }
     
-    .order-food-item:has(button:disabled)::after {
-      font-size: 11px;
-      padding: 4px;
-    }
-  }
-  
-  @media (max-width: 480px) {
-    .order-shop-closed-banner {
-      text-align: center;
+    .order-details-page-menu-store-info {
+        font-size: 14px;
+        padding: 6px 12px;
     }
     
-    .order-food-modal-overlay:has(button:disabled) .order-food-modal::before {
-      font-size: 14px;
-      padding: 8px;
+    .order-details-page-menu-filter-container {
+        gap: 10px;
+        margin-bottom: 20px;
     }
-  }
+    
+    .order-details-page-menu-filter-btn {
+        padding: 8px 16px;
+        font-size: 14px;
+    }
+    
+    .order-details-page-menu-food-item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .order-details-page-menu-food-image {
+        width: 100%;
+        height: 160px;
+        margin-right: 0;
+        margin-bottom: 15px;
+    }
+    
+    .order-details-page-menu-food-title {
+        font-size: 17px;
+    }
+    
+    .order-details-page-menu-food-description {
+        font-size: 14px;
+    }
+    
+    .order-details-page-menu-food-price {
+        font-size: 18px;
+    }
+    
+    .order-details-page-menu-view-cart-btn {
+        width: calc(100% - 40px);
+        padding: 14px 20px;
+        font-size: 15px;
+        bottom: 15px;
+    }
+    
+    .order-details-page-menu-food-modal-title {
+        font-size: 20px;
+    }
+    
+    .order-details-page-menu-food-modal-description {
+        font-size: 15px;
+    }
+    
+    .order-details-page-menu-food-modal-image {
+        height: 200px;
+    }
+
+    .order-details-page-menu-share-container {
+        flex-wrap: wrap;
+        width: 180px;
+        justify-content: center;
+    }
+
+    .order-details-page-menu-share-option {
+        width: 32px;
+        height: 32px;
+    }
+
+    .order-details-page-menu-share-option svg {
+        width: 16px;
+        height: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .order-details-page-menu-store-title {
+        font-size: 22px;
+    }
+    
+    .order-details-page-menu-store-info {
+        font-size: 13px;
+        padding: 5px 10px;
+    }
+    
+    .order-details-page-menu-filter-btn {
+        padding: 7px 14px;
+        font-size: 13px;
+    }
+    
+    .order-details-page-menu-food-image {
+        height: 140px;
+    }
+    
+    .order-details-page-menu-view-cart-btn {
+        font-size: 14px;
+        padding: 12px 18px;
+    }
+    
+    .order-details-page-menu-food-modal-details {
+        padding: 20px;
+    }
+    
+    .order-details-page-menu-food-modal-title {
+        font-size: 18px;
+    }
+    
+    .order-details-page-menu-food-modal-description {
+        font-size: 14px;
+    }
+    
+    .order-details-page-menu-food-modal-info {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    
+    .order-details-page-menu-food-modal-price {
+        font-size: 22px;
+    }
+    
+    .order-details-page-menu-reset-cart-modal h2 {
+        font-size: 20px;
+    }
+    
+    .order-details-page-menu-reset-cart-modal p {
+        font-size: 15px;
+    }
+    
+    .order-details-page-menu-modal-actions button {
+        padding: 12px;
+        font-size: 15px;
+    }
+
+    .order-details-page-menu-deal-card {
+        height: 110px;
+        min-height: 110px;
+        padding: 1rem;
+    }
+
+    .order-details-page-menu-deal-icon {
+        font-size: 1.6rem;
+        margin-right: 1rem;
+        width: 44px;
+        height: 44px;
+    }
+
+    .order-details-page-menu-deal-title {
+        font-size: 1rem;
+    }
+
+    .order-details-page-menu-deal-description {
+        font-size: 0.82rem;
+    }
+}
