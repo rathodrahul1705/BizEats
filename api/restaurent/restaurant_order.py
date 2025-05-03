@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from decimal import Decimal, ROUND_UP
+import math
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
@@ -16,6 +17,7 @@ from django.db.models import Sum, Count
 from django.db.models.functions import Coalesce
 from api.models import RestaurantMaster, RestaurantCuisine, RestaurantDeliveryTiming, RestaurantDocuments, RestaurantOwnerDetail, RestaurantLocation, RestaurantMenu, UserDeliveryAddress
 from api.serializers import OrderPlacementSerializer, RestaurantMasterSerializer, RestaurantSerializerByStatus, RestaurantDetailSerializer, RestaurantMasterNewSerializer, RestaurantMenuSerializer, RestaurantListSerializer, UserDeliveryAddressSerializer
+from api.utils.utils import calculate_distance_and_cost
 
 @method_decorator(csrf_exempt, name='dispatch')
 class RestaurantCartAddOrRemove(APIView):
@@ -476,39 +478,47 @@ class CartWithRestaurantUserUpdate(APIView):
 class RestaurantOrderDetailsAPI(APIView):
     """
     Optimized POST-only API for restaurant order details
-    Requires JSON payload: {"restaurant_id": "BIZ23154878", "user_id": 1}
+    Requires JSON payload: {"restaurant_id": "BIZ23154878", "user_id": 1, "delivery_address_id": 12}
     """
+
     def post(self, request, *args, **kwargs):
         try:
             restaurant_id = request.data.get('restaurant_id')
             user_id = request.data.get('user_id')
-            
+            delivery_address_id = request.data.get('delivery_address_id')
+
             if not restaurant_id or not user_id:
                 return self._error_response(
                     "Both restaurant_id and user_id are required in JSON payload",
                     status.HTTP_400_BAD_REQUEST
                 )
 
-            # Single query to get restaurant with location
             restaurant = (RestaurantMaster.objects
-                         .filter(restaurant_id=restaurant_id)
-                         .select_related('restaurant_location')
-                         .first())
-            
+                          .filter(restaurant_id=restaurant_id)
+                          .select_related('restaurant_location')
+                          .first())
+
             if not restaurant:
                 return self._error_response("Restaurant not found", status.HTTP_404_NOT_FOUND)
 
-            # Get cart items in a single optimized query
             cart_items = (Cart.objects
-                         .filter(user_id=user_id, restaurant_id=restaurant_id)
-                         .exclude(cart_status=5)
-                         .select_related('item')
-                         .only('quantity', 'item__id', 'item__item_name', 'item__item_price'))
+                          .filter(user_id=user_id, restaurant_id=restaurant_id)
+                          .exclude(cart_status=5)
+                          .select_related('item')
+                          .only('quantity', 'item__id', 'item__item_name', 'item__item_price'))
 
-            # Build response data
+            location_data = calculate_distance_and_cost(restaurant_id, delivery_address_id)
+
+            if "error" in location_data:
+                return self._error_response(location_data["error"], status.HTTP_400_BAD_REQUEST)
+
             response_data = {
                 "status": "success",
                 "restaurant_details": self._build_restaurant_details(restaurant),
+                "restaurant_coordinates": location_data["restaurant_coordinates"],
+                "user_coordinates": location_data["user_coordinates"],
+                "distance_km": location_data["distance_km"],
+                "estimated_delivery_cost": location_data["estimated_delivery_cost"],
                 "order_summary": self._build_order_summary(cart_items)
             }
 
@@ -516,9 +526,8 @@ class RestaurantOrderDetailsAPI(APIView):
 
         except Exception as e:
             return self._error_response(
-                "An error occurred while processing your request",
-                status.HTTP_500_INTERNAL_SERVER_ERROR,
-                str(e)
+                "An error occurred while processing your request: " + str(e),
+                status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
     def _build_restaurant_details(self, restaurant):

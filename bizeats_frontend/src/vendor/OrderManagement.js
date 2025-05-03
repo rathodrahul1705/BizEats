@@ -431,7 +431,7 @@ const OrderManagement = ({ user }) => {
 
                   <div className="order-summary">
                     <div className="summary-row">
-                      <span>Subtotal</span>
+                      <span>Item Total</span>
                       <span>₹{order.subtotal}</span>
                     </div>
                     <div className="summary-row">

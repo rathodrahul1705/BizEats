@@ -97,7 +97,7 @@ def send_order_status_email(order):
         coupon_code = None
         coupon_code_text = "Discount (10%)"
     
-    discount_amount = order.coupon_discount if order.coupon_discount else discount
+    discount_amount = order.coupon_discount if order.coupon_discount else round(discount)
     email_content = get_order_email_content(order)
     subject = email_content["subject"]
     message_text = email_content["message"]
@@ -168,12 +168,8 @@ def send_order_status_email(order):
             <div class="section-title">Order Summary:</div>
             <table class="summary-table">
                 <tr>
-                    <td>Item Bill</td>
+                    <td>Item Total</td>
                     <td style="text-align: right;">₹{subtotal:.2f}</td>
-                </tr>
-                <tr>
-                    <td>Handling Fee</td>
-                    <td style="text-align: right;">₹{handling_fee:.2f}</td>
                 </tr>
                 <tr>
                     <td>Delivery Fee</td>

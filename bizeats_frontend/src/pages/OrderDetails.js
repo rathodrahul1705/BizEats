@@ -67,7 +67,7 @@ const OrderDetails = ({ user, setUser }) => {
     const currentHour = istTime.getUTCHours();
     
     // Shop is open between 9 AM (9) and 9 PM (21)
-    const open = currentHour >= 9 && currentHour < 22;
+    const open = currentHour >= 7 && currentHour < 22;
     setIsShopOpen(open);
   };
 

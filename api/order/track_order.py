@@ -114,7 +114,7 @@ class TrackOrder(APIView):
                     "subtotal": str(subtotal),
                     "total": str(order.total_amount),
                     "coupon_code": coupon_code,
-                    "coupon_discount": order.coupon_discount if order.coupon_discount else discount,
+                    "coupon_discount": order.coupon_discount if order.coupon_discount else round(discount),
                     "coupon_code_text": coupon_code_text,
                     "transaction_id": transaction_id,
                 }

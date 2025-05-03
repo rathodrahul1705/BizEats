@@ -44,12 +44,14 @@ const PaymentOption = ({ user }) => {
       const response = await fetchData(API_ENDPOINTS.ORDER.GET_ORDER_DETAILS, "POST", {
         user_id: user?.user_id || null,
         restaurant_id,
+        delivery_address_id
       });
 
       if (response.status === "success") {
-        const { restaurant_details, order_summary } = response;
+
+        const { restaurant_details, order_summary, distance_km, estimated_delivery_cost } = response;
         const itemTotal = order_summary?.total_order_amount || 0;
-        const deliveryFee = itemTotal > 100 ? 0 : 20;
+        const deliveryFee = itemTotal > 100 ? 0 : estimated_delivery_cost;
         const taxAmount = order_summary?.tax_amount || 0;
         
         // Calculate discount based on applied coupon or default 10%
@@ -70,6 +72,7 @@ const PaymentOption = ({ user }) => {
           number_of_items: order_summary?.number_of_items || 0,
           item_total: itemTotal,
           delivery_fee: deliveryFee,
+          distance_km: distance_km,
           tax_amount: taxAmount,
           discount,
           total_amount: totalPayable,
@@ -392,7 +395,7 @@ const PaymentOption = ({ user }) => {
             </div>
             <div className="payment-option-order-item">
               <span className="payment-option-item-icon">🏍️</span>
-              <span className="payment-option-item-label">Delivery Fee:</span>
+              <span className="payment-option-item-label">Delivery Fee | {restaurantOrderDetails?.distance_km} kms</span>
               <span className="payment-option-item-value">₹{restaurantOrderDetails.delivery_fee}</span>
             </div>
             {restaurantOrderDetails.tax_amount > 0 && (

@@ -622,7 +622,7 @@ const TrackOrder = ({ user, setUser }) => {
 
         <div className="order-pricing">
           <div className="pricing-line">
-            <span>Subtotal:</span>
+            <span>Item Total:</span>
             <span>₹{selectedOrder.subtotal}</span>
           </div>
           <div className="pricing-line">
