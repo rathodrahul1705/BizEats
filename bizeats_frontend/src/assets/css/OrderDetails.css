@@ -716,26 +716,6 @@
     color: white;
 }
 
-.order-details-page-menu-share-option.whatsapp {
-    background-color: #25D366;
-}
-
-.order-details-page-menu-share-option.facebook {
-    background-color: #1877F2;
-}
-
-.order-details-page-menu-share-option.twitter {
-    background-color: #1DA1F2;
-}
-
-.order-details-page-menu-share-option.instagram {
-    background: linear-gradient(45deg, #405DE6, #5851DB, #833AB4, #C13584, #E1306C, #FD1D1D);
-}
-
-.order-details-page-menu-share-option.email {
-    background-color: #EA4335;
-}
-
 .order-details-page-menu-share-option:hover {
     transform: scale(1.1);
 }
@@ -1028,7 +1008,7 @@
 
     .order-details-page-menu-share-container {
         flex-wrap: wrap;
-        width: 180px;
+        width: 220px;
         justify-content: center;
     }
 
@@ -1123,3 +1103,42 @@
         font-size: 0.82rem;
     }
 }
+
+/* Add to the existing CSS */
+.order-details-page-menu-store-header {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .order-details-page-menu-share-btn.header-share {
+    background: rgba(230, 92, 0, 0.1);
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+  }
+  
+  .order-details-page-menu-share-btn.header-share:hover {
+    background: rgba(230, 92, 0, 0.2);
+    transform: scale(1.1);
+  }
+  
+  .order-details-page-menu-share-container.restaurant-share {
+    position: absolute;
+    top: 146px;
+    right: 350px;
+    z-index: 100;
+    animation: order-details-page-menu-fadeIn 0.2s ease-out;
+  }
+  
+  @media (max-width: 768px) {
+    .order-details-page-menu-share-container.restaurant-share {
+      top: 125px;
+      right: 15px;
+    }
+  }
