@@ -5,14 +5,14 @@ from rest_framework.views import APIView
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 from api.emailer.email_notifications import send_otp_email, send_contact_email
-from api.serializers import ContactUsSerializer
+from api.serializers import ContactUsSerializer, OrderReviewSerializer
 from .models import ContactMessage, User, RestaurantMaster
 from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.views.generic import TemplateView
 from django.views.generic import View
 from django.shortcuts import render
-
+from django.utils.decorators import method_decorator
 import logging
 
 logger = logging.getLogger(__name__)
@@ -195,3 +195,16 @@ class UserProfileUpdate(APIView):
                 'contact_number': user.contact_number
             }
         }, status=status.HTTP_200_OK)
+
+@method_decorator(csrf_exempt, name='dispatch')
+class SubmitOrderReviewView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        data = request.data.copy()
+        data['user'] = request.user.id
+        serializer = OrderReviewSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"message": "Review submitted successfully", "data": serializer.data, "status":"success"}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

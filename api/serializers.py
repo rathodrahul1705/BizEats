@@ -2,7 +2,7 @@ import uuid
 from rest_framework import serializers
 from django.db.models import Avg
 from django.contrib.auth import get_user_model
-from .models import Order, RestaurantMaster, RestaurantOwnerDetail, RestaurantLocation, RestaurantCuisine, RestaurantDeliveryTiming, RestaurantDocuments, RestaurantMenu, UserDeliveryAddress, OrderLiveLocation
+from .models import Order, OrderReview, RestaurantMaster, RestaurantOwnerDetail, RestaurantLocation, RestaurantCuisine, RestaurantDeliveryTiming, RestaurantDocuments, RestaurantMenu, UserDeliveryAddress, OrderLiveLocation
 
 User = get_user_model()
 
@@ -286,3 +286,13 @@ class OrderLiveLocationSerializer(serializers.ModelSerializer):
     class Meta:
         model = OrderLiveLocation
         fields = ['order', 'latitude', 'longitude']
+
+class OrderReviewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OrderReview
+        fields = ['order_id', 'user', 'rating', 'review_text']
+
+    def validate_rating(self, value):
+        if value < 1 or value > 5:
+            raise serializers.ValidationError("Rating must be between 1 and 5.")
+        return value

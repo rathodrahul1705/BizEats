@@ -6,7 +6,7 @@ from django.utils.decorators import method_decorator
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, generics, permissions
-from api.models import Cart, Order, OrderStatusLog, RestaurantLocation, RestaurantMenu, User, UserDeliveryAddress, OrderLiveLocation, Payment, Coupon
+from api.models import Cart, Order, OrderReview, OrderStatusLog, RestaurantLocation, RestaurantMenu, User, UserDeliveryAddress, OrderLiveLocation, Payment, Coupon
 from math import radians, sin, cos, sqrt, atan2
 from django.db import transaction
 from django.db.models import Q 
@@ -99,6 +99,8 @@ class TrackOrder(APIView):
                     coupon_code = None
                     coupon_code_text = "Discount (10%)"
 
+                review_exists = OrderReview.objects.filter(order_id=order.order_number, user_id=user_id).exists()
+                
                 order_data = {
                     "order_number": order.order_number,
                     "delivery_fee": order.delivery_fee,
@@ -117,6 +119,7 @@ class TrackOrder(APIView):
                     "coupon_discount": order.coupon_discount if order.coupon_discount else round(discount),
                     "coupon_code_text": coupon_code_text,
                     "transaction_id": transaction_id,
+                    "review_present": review_exists,
                 }
 
                 data.append(order_data)

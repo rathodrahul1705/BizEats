@@ -548,3 +548,17 @@ class Coupon(models.Model):
 
     def __str__(self):
         return f"{self.is_active} {self.valid_from} {self.valid_to}"
+    
+class OrderReview(models.Model):
+    order_id = models.CharField(max_length=50, unique=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='order_reviews')
+    rating = models.PositiveSmallIntegerField()  # typically between 1 and 5
+    review_text = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "order-review"
+
+    def __str__(self):
+        return f"Review by {self.user} for {self.order_id}"

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { X, Clock, Bike, Maximize2, Minimize2 } from "lucide-react";
+import { X, Clock, Bike, Maximize2, Minimize2, Star, Check, X as XIcon } from "lucide-react";
 import { MapContainer, TileLayer, Marker, useMap, Popup } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -188,6 +188,12 @@ const TrackOrder = ({ user, setUser }) => {
   const [cancelTimer, setCancelTimer] = useState(120);
   const [canCancel, setCanCancel] = useState(true);
   const [isCancelling, setIsCancelling] = useState(false);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [rating, setRating] = useState(0);
+  const [reviewText, setReviewText] = useState("");
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+  const [showToast, setShowToast] = useState(false);
+  const toastTimeoutRef = useRef(null);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -195,6 +201,16 @@ const TrackOrder = ({ user, setUser }) => {
       setShowSignIn(true);
     }
   }, [user]);
+
+  // console.log("selectedOrder===",selectedOrder?.review_present)
+
+  useEffect(() => {
+    return () => {
+      if (toastTimeoutRef.current) {
+        clearTimeout(toastTimeoutRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (!selectedOrder) return;
@@ -232,7 +248,7 @@ const TrackOrder = ({ user, setUser }) => {
   
     return () => clearInterval(interval);
   }, [selectedOrder]);
-  
+
   const handleCancelOrder = async () => {
     if (!canCancel || isCancelling) return;
     
@@ -264,6 +280,39 @@ const TrackOrder = ({ user, setUser }) => {
     }
   };
 
+  const handleSubmitReview = async () => {
+    if (rating === 0) {
+      alert("Please select a rating");
+      return;
+    }
+
+    try {
+      setIsSubmittingReview(true);
+      const res = await fetchData(API_ENDPOINTS.REVIEWS.SUBMIT_REVIEW, "POST", {
+        order_id: selectedOrder.order_number,
+        restaurant_id: selectedOrder.restaurant_id,
+        user_id: user?.user_id,
+        rating: rating,
+        review_text: reviewText
+      });
+
+      if (res.status === "success") {
+        fetchOrders()
+        toastTimeoutRef.current = setTimeout(() => {
+          setShowToast(true);
+        }, 1000);
+      } else {
+        alert("Failed to submit review: " + (res.message || "Please try again later"));
+      }
+    } catch (err) {
+      console.error("Submit review error:", err);
+      alert("Failed to submit review. Please try again later.");
+    } finally {
+      setShowToast(false);
+      setIsSubmittingReview(false);
+    }
+  };
+
   const statusMap = {
     Pending: 0,
     Confirmed: 10,
@@ -273,6 +322,24 @@ const TrackOrder = ({ user, setUser }) => {
     Delivered: 100,
     Cancelled: 0,
     Refunded: 0,
+  };
+
+  const fetchOrders = async () => {
+    try {
+      setLoading(true);
+      const res = await fetchData(API_ENDPOINTS.TRACK.TRACK_ORDER, "POST", {
+        user_id: user?.user_id,
+        order_number: order_number
+      });
+      if (res.status === "success" && res.orders.length) {
+        setOrders(res.orders);
+        setSelectedOrder(res.orders[0]);
+      } else setNoOrders(true);
+    } catch {
+      setNoOrders(true);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -439,6 +506,65 @@ const TrackOrder = ({ user, setUser }) => {
 
   return (
     <div className="track-order-container">
+
+      {showToast && ( 
+        <div className="review-toast">
+          <Check size={20} className="toast-icon" />
+          <span>Thank you! Your review has been submitted.</span>
+        </div>
+      )}
+
+      {/* Review Modal */}
+      {selectedOrder?.review_present == false && (
+        <div className="review-modal-overlay">
+          <div className="review-modal">
+            <button 
+              className="review-modal-close" 
+              onClick={() => setShowReviewModal(false)}
+              disabled={isSubmittingReview}
+            >
+              <XIcon size={20} />
+            </button>
+            
+            <h3>Rate Your Order</h3>
+            <p>How was your order from {selectedOrder?.restaurant_name}?</p>
+            
+            <div className="rating-stars">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <Star
+                  key={star}
+                  size={32}
+                  className={`star ${star <= rating ? "filled" : ""}`}
+                  onClick={() => setRating(star)}
+                  fill={star <= rating ? "#ffc107" : "none"}
+                />
+              ))}
+            </div>
+            
+            <textarea
+              className="review-textarea"
+              placeholder="Share your experience"
+              value={reviewText}
+              onChange={(e) => setReviewText(e.target.value)}
+              disabled={isSubmittingReview}
+            />
+            
+            <button
+              className="submit-review-btn"
+              onClick={handleSubmitReview}
+              disabled={isSubmittingReview || rating === 0}
+            >
+              {isSubmittingReview ? (
+                <>
+                  <div className="review-spinner"></div>
+                  Submitting...
+                </>
+              ) : "Submit Review"}
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="track-header">
         <div className="restaurant-title-wrapper">
           <h2 className="order-summary-title">{selectedOrder?.restaurant_name}</h2>

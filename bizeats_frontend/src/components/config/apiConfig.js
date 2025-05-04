@@ -102,6 +102,10 @@ const API_ENDPOINTS = {
 
   PROFILE: {
     UPDATE: `${BASE_URL}/user-profile-update/`,
+  },
+  
+  REVIEWS: {
+    SUBMIT_REVIEW: `${BASE_URL}/order-review/update/`,
   }
 };
 
