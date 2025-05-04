@@ -2,7 +2,7 @@ import math
 from api.models import RestaurantMaster, UserDeliveryAddress
 
 
-def calculate_distance_and_cost(restaurant_id, delivery_address_id, cost_per_km=5):
+def calculate_distance_and_cost(restaurant_id, delivery_address_id, cost_per_km=10):
     """
     Calculates distance in km and estimated delivery cost between restaurant and user address.
     Returns a dictionary with coordinates, distance, and cost or error message.
