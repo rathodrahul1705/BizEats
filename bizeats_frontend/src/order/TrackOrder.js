@@ -526,7 +526,7 @@ const TrackOrder = ({ user, setUser }) => {
               <XIcon size={20} />
             </button>
             
-            <h3>Rate Your Food</h3>
+            <h3>Rate Your Food & Delivery</h3>
             <p>How was your order from {selectedOrder?.restaurant_name}?</p>
             
             <div className="rating-stars">
