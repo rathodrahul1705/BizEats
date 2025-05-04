@@ -68,20 +68,15 @@ const OrderDetails = ({ user, setUser }) => {
     }
   ]);
 
-  // Check if shop is open (9 AM to 9 PM IST)
   const checkShopTimings = () => {
     const now = new Date();
-    // Convert to IST (UTC+5:30)
-    const istOffset = 330 * 60 * 1000; // 5 hours 30 minutes in milliseconds
+    const istOffset = 330 * 60 * 1000;
     const istTime = new Date(now.getTime() + istOffset);
     const currentHour = istTime.getUTCHours();
-    
-    // Shop is open between 9 AM (9) and 9 PM (21)
-    const open = currentHour >= 7 && currentHour < 22;
+    const open = currentHour >= 9 && currentHour < 22;
     setIsShopOpen(open);
   };
 
-  // Initialize all categories as visible by default
   useEffect(() => {
     if (foodData.length > 0) {
       const initialVisibility = {};
@@ -95,7 +90,6 @@ const OrderDetails = ({ user, setUser }) => {
 
   useEffect(() => {
     checkShopTimings();
-    // Check every minute to update shop status
     const interval = setInterval(checkShopTimings, 60000);
     return () => clearInterval(interval);
   }, []);
@@ -226,7 +220,7 @@ const OrderDetails = ({ user, setUser }) => {
     const foodItem = foodData.find(item => item.id === id);
 
     if (!foodItem?.availability) {
-      return; // Don't proceed if item is out of stock
+      return;
     }
 
     if (currentRestaurantId && currentRestaurantId !== restaurant_id) {
@@ -303,7 +297,6 @@ const OrderDetails = ({ user, setUser }) => {
     setShowFoodModal(true);
   };
 
-  // Group food items by category and apply filter
   const groupedByCategory = filteredFood.reduce((acc, food) => {
     if (!acc[food.category]) acc[food.category] = [];
     acc[food.category].push(food);
@@ -338,12 +331,6 @@ const OrderDetails = ({ user, setUser }) => {
     window.open(url, '_blank', 'width=600,height=400');
   };
 
-  const shareViaEmail = () => {
-    const subject = `Check out ${storeDetails.name} on Food Delivery App`;
-    const body = `I found this great restaurant ${storeDetails.name} on Food Delivery App.\n\nCheck it out: ${window.location.origin}/order-details/${restaurant_id}`;
-    window.open(`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`);
-  };
-
   if (loading && filteredFood.length === 0) {
     return <StripeLoader />;
   }
@@ -358,11 +345,6 @@ const OrderDetails = ({ user, setUser }) => {
         >
           <Share2 size={18} />
         </button>
-        {!isShopOpen && (
-          <div className="order-details-page-menu-shop-closed-banner">
-            🚫 Shop Closed (Open 9AM-10PM)
-          </div>
-        )}
       </div>
 
       {showShareOptions && (
@@ -394,32 +376,31 @@ const OrderDetails = ({ user, setUser }) => {
               <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
             </svg>
           </button>
-          {/* <button 
-            className="order-details-page-menu-share-option email"
-            onClick={shareViaEmail}
-            title="Share via Email"
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="#EA4335">
-              <path d="M12 12.713l-11.985-9.713h23.97l-11.985 9.713zm0 2.574l-12-9.725v15.438h24v-15.438l-12 9.725z"/>
-            </svg>
-          </button> */}
         </div>
       )}
 
       <div className="order-details-page-menu-store-details-card">
-        <p className="order-details-page-menu-store-info">⏱ {storeDetails.deliveryTime}</p>
-        <p className="order-details-page-menu-store-info">📍 {storeDetails.location}</p>
-        <p className="order-details-page-menu-store-info">⭐ {storeDetails.rating} / 5</p>
-        {storeDetails.minOrder > 0 && (
-          <p className="order-details-page-menu-store-info">💰 Min. Order: ₹{storeDetails.minOrder}</p>
+        {!isShopOpen && (
+          <div className="order-details-page-menu-shop-closed-note">
+            <div className="order-details-page-menu-shop-closed-icon">⚠️</div>
+            <div className="order-details-page-menu-shop-closed-text">
+              Uh-oh! The outlet is not accepting orders at the moment. We're working to get them back online
+            </div>
+          </div>
         )}
+        <div className="order-details-header-subclass">
+          <p className="order-details-page-menu-store-info">⏱ {storeDetails.deliveryTime}</p>
+          <p className="order-details-page-menu-store-info">📍 {storeDetails.location}</p>
+          <p className="order-details-page-menu-store-info">⭐ {storeDetails.rating} / 5</p>
+          {storeDetails.minOrder > 0 && (
+            <p className="order-details-page-menu-store-info">💰 Min. Order: ₹{storeDetails.minOrder}</p>
+          )}
+        </div>
       </div>
 
-      {/* Add Deals Swiper Section */}
       <div className="order-details-page-menu-deals-section">
         <div className="order-details-page-menu-deals-header-wrapper">
           <h2 className="order-details-page-menu-deals-title">Deals for You</h2>
-
           <div className="order-details-page-menu-deals-swiper-wrapper">
             <Swiper
               slidesPerView={1}
@@ -507,7 +488,6 @@ const OrderDetails = ({ user, setUser }) => {
                           {food.title} {food.type === "Veg" ? "🥦" : "🍗"}
                         </h3>
                       </div>
-
                       <p 
                         className="order-details-page-menu-food-description"
                         onClick={() => openFoodModal(food)}
@@ -522,7 +502,6 @@ const OrderDetails = ({ user, setUser }) => {
                           </span>
                         )}
                       </p>
-
                       <p className="order-details-page-menu-food-price">₹{food.price}</p>
                       <div className="order-details-page-menu-cart-actions">
                         {cart[food.id] > 0 ? (
@@ -570,7 +549,6 @@ const OrderDetails = ({ user, setUser }) => {
         ))}
       </div>
 
-      {/* Show out of stock items at the bottom */}
       {foodData.filter(food => !food.availability).length > 0 ? (
           <div className="order-details-page-menu-out-of-stock-section">
             <h3 className="order-details-page-menu-out-of-stock-header">Currently Unavailable</h3>
@@ -644,7 +622,6 @@ const OrderDetails = ({ user, setUser }) => {
                     {selectedFood.title} {selectedFood.type === "Veg" ? "🥦" : "🍗"}
                   </h2>
                 </div>
-
                 <p className="order-details-page-menu-food-modal-description">{selectedFood.description}</p>
                 <div className="order-details-page-menu-food-modal-info">
                   <span>⏱ {selectedFood.deliveryTime}</span>

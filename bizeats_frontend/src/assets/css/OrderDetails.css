@@ -40,7 +40,7 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     border-left: 5px solid #e65c00;
     display: flex;
-    flex-wrap: wrap;
+    flex-direction: column;
     gap: 12px;
 }
 
@@ -61,6 +61,29 @@
     border: 1px solid #eee;
 }
 
+.order-details-page-menu-store-info {
+    font-size: 15px;
+    font-weight: 500;
+    color: #555;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 8px 14px;
+    border-radius: 20px;
+    white-space: nowrap;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    border: 1px solid #eee;
+}
+
+
+/* Store Info Items Container */
+.order-details-header-subclass {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
 /* Order Details Page Menu - Filter Container */
 .order-details-page-menu-filter-container {
     display: flex;
@@ -920,15 +943,16 @@
     }
 }
 
+/* Pulse Animation for Closed State */
 @keyframes order-details-page-menu-pulse {
     0% {
-        box-shadow: 0 0 0 0 rgba(230, 92, 0, 0.7);
+        box-shadow: 0 0 0 0 rgba(211, 47, 47, 0.4);
     }
     70% {
-        box-shadow: 0 0 0 8px rgba(230, 92, 0, 0);
+        box-shadow: 0 0 0 8px rgba(211, 47, 47, 0);
     }
     100% {
-        box-shadow: 0 0 0 0 rgba(230, 92, 0, 0);
+        box-shadow: 0 0 0 0 rgba(211, 47, 47, 0);
     }
 }
 
@@ -1142,3 +1166,68 @@
       right: 15px;
     }
   }
+
+/* Shop Closed Notification */
+.order-details-page-menu-shop-closed-note {
+    background-color: #fff8f8;
+    border: 1px solid #ffdddd;
+    border-radius: 8px;
+    padding: 12px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    width: 100%;
+    animation: order-details-page-menu-pulse 2s infinite;
+}
+
+.order-details-page-menu-shop-closed-icon {
+    font-size: 18px;
+    flex-shrink: 0;
+    margin-top: 2px;
+    color: #d32f2f;
+}
+
+.order-details-page-menu-shop-closed-text {
+    font-size: 14px;
+    color: #d32f2f;
+    font-weight: 500;
+    line-height: 1.4;
+}
+
+@media (max-width: 768px) {
+    .order-details-page-menu-store-details-card {
+        padding: 15px;
+        gap: 10px;
+    }
+    
+    .order-details-page-menu-shop-closed-note {
+        padding: 10px;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+    
+    .order-details-page-menu-shop-closed-icon {
+        margin-bottom: 5px;
+    }
+    
+    .order-details-page-menu-shop-closed-text {
+        font-size: 13px;
+    }
+    
+    .order-details-page-menu-store-info {
+        font-size: 14px;
+        padding: 6px 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .order-details-header-subclass {
+        gap: 8px;
+    }
+    
+    .order-details-page-menu-store-info {
+        font-size: 13px;
+        padding: 5px 10px;
+    }
+}
