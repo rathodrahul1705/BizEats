@@ -81,7 +81,7 @@
 /* Store Info Items Container */
 .order-details-header-subclass {
     display: flex;
-    flex-wrap: wrap;
+    /* flex-wrap: wrap; */
     gap: 12px;
 }
 /* Order Details Page Menu - Filter Container */
