@@ -100,6 +100,14 @@ class TrackOrder(APIView):
                     coupon_code_text = "Discount (10%)"
 
                 review_exists = OrderReview.objects.filter(order_id=order.order_number, user_id=user_id).exists()
+                order_status = order.get_status_display()
+
+                if review_exists == False and order_status == "Delivered":
+                    review_exists = False
+                elif review_exists == True and order_status == "Delivered":
+                    review_exists = True
+                else:
+                    review_exists = True
                 
                 order_data = {
                     "order_number": order.order_number,
