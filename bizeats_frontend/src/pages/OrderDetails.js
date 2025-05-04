@@ -384,7 +384,7 @@ const OrderDetails = ({ user, setUser }) => {
           <div className="order-details-page-menu-shop-closed-note">
             <div className="order-details-page-menu-shop-closed-icon">⚠️</div>
             <div className="order-details-page-menu-shop-closed-text">
-              Uh-oh! The outlet is not accepting orders at the moment. We're working to get them back online
+              Shop is currently closed. It will open from 9:00 AM to 10:00 PM
             </div>
           </div>
         )}
