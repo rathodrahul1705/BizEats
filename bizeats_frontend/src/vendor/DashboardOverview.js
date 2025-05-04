@@ -323,12 +323,12 @@ const DashboardOverview = ({ user, setUser }) => {
           >
             Overview
           </button>
-          <button 
+          {/* <button 
             className={`tab-button ${activeTab === "analytics" ? "active" : ""}`}
             onClick={() => setActiveTab("analytics")}
           >
             Analytics
-          </button>
+          </button> */}
           <button 
             className={`tab-button ${activeTab === "quick-actions" ? "active" : ""}`}
             onClick={() => setActiveTab("quick-actions")}
