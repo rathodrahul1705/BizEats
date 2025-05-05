@@ -47,16 +47,16 @@ const OrderDetails = ({ user, setUser }) => {
   const [deals, setDeals] = useState([
     {
       id: 1,
-      title: "Free Delivery",
-      description: "On orders above ₹200",
-      icon: "🏍️",
+      title: "HSC Result Days Special",
+      description: "Celebrate with a free pastry! 🧁",
+      icon: "🎉",
       color: "#fff"
     },
     {
       id: 2,
-      title: "Free Nimbu Pani",
-      description: "With every order",
-      icon: "🍋",
+      title: "Free Delivery",
+      description: "On orders above ₹200",
+      icon: "🏍️",
       color: "#fff"
     },
     {
@@ -67,6 +67,7 @@ const OrderDetails = ({ user, setUser }) => {
       color: "#fff"
     }
   ]);
+  
 
   const checkShopTimings = () => {
     const now = new Date();
