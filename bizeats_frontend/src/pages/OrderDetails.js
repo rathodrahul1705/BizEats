@@ -56,7 +56,7 @@ const OrderDetails = ({ user, setUser }) => {
       id: 2,
       title: "Free Nimbu Pani",
       description: "With every order",
-      icon: "🥛",
+      icon: "🍋",
       color: "#fff"
     },
     {
