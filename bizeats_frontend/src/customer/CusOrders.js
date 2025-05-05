@@ -53,15 +53,26 @@ const CusOrders = () => {
     }
   }, [user?.user_id]);
 
+  const renderStars = (rating) => {
+    const stars = [];
+    for (let i = 1; i <= 5; i++) {
+      stars.push(
+        <span
+          key={i}
+          className={`cus-orders__star ${i <= rating ? "cus-orders__star--filled" : ""}`}
+        >
+          {i <= rating ? "★" : "☆"}
+        </span>
+      );
+    }
+    return stars;
+  };
+
   return (
     <div className="cus-orders">
-      
-      {
-        orders.length > 0 ?(
-          <h3 className="cus-orders__title">Your Order History</h3>
-        ):
-        ""
-      }
+      {orders.length > 0 ? (
+        <h3 className="cus-orders__title">Your Order History</h3>
+      ) : ""}
       
       {loading ? (
         <StripeLoader />
@@ -113,16 +124,27 @@ const CusOrders = () => {
                 </div>
 
                 <div className="cus-orders__footer">
-                  <time className="cus-orders__date">
-                    {new Date(order.placed_on).toLocaleDateString('en-US', {
-                      year: 'numeric',
-                      month: 'short',
-                      day: 'numeric'
-                    })}
-                  </time>
-                  <div className="cus-orders__total">
-                    ₹{Number(order.total).toFixed(2)}
+                  <div className="cus-orders__footer-top">
+                    <time className="cus-orders__date">
+                      {new Date(order.placed_on).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric'
+                      })}
+                    </time>
+                    <div className="cus-orders__total">
+                      ₹{Number(order.total).toFixed(2)}
+                    </div>
                   </div>
+                  
+                  {order.rating !== null && (
+                    <div className="cus-orders__rating-section">
+                      <span className="cus-orders__rating-label">Your rating:</span>
+                      <div className="cus-orders__stars">
+                        {renderStars(order.rating)}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
               
@@ -133,14 +155,8 @@ const CusOrders = () => {
                 >
                   Track Your Order
                 </button>
-                {/* <button 
-                  className="cus-orders__action-link cus-orders__action-link--details"
-                  onClick={() => handleViewDetails(order)}
-                >
-                  View Order Details
-                </button> */}
 
-                {order.status === "Delivered" && (
+                {order.status === "Delivered" && order?.rating == null && (
                   <button 
                     className="cus-orders__action-link cus-orders__action-link--details"
                     onClick={() => handleTrackOrder(order.order_number)}
@@ -148,7 +164,6 @@ const CusOrders = () => {
                     Rate Order
                   </button>
                 )}
-
               </div>
             </li>
           ))}

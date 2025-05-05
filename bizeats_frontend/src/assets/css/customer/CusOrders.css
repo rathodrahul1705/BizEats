@@ -426,3 +426,28 @@
     padding: 0.85rem;
   }
 }
+
+.cus-orders__stars {
+  display: flex;
+  align-items: center;
+}
+
+.cus-orders__star {
+  color: #ccc;
+  font-size: 16px;
+  margin-right: 2px;
+}
+
+.cus-orders__star--filled {
+  color: #ffb400;
+}
+
+/* If you want to add hover effect for when users can rate */
+.cus-orders__stars--rateable .cus-orders__star {
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.cus-orders__stars--rateable .cus-orders__star:hover {
+  color: #ffb400;
+}

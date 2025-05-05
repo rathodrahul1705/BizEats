@@ -279,7 +279,13 @@ class OrderDetails(APIView):
             for order in orders:
                 # Get delivery address
                 delivery_address = UserDeliveryAddress.objects.filter(id=order.delivery_address_id).first()
-                
+                review_exists = OrderReview.objects.filter(order_id=order.order_number)
+
+                if review_exists.exists():
+                    rating = review_exists.first().rating  # or iterate
+                else:
+                    rating= None
+
                 if delivery_address:
                     address_parts = [
                         delivery_address.street_address,
@@ -331,6 +337,7 @@ class OrderDetails(APIView):
                     "items": item_details,
                     "subtotal": str(subtotal),
                     "total": str(order.total_amount),
+                    "rating":rating
                 }
 
                 data.append(order_data)
