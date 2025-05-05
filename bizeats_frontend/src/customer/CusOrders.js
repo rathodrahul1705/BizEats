@@ -139,6 +139,16 @@ const CusOrders = () => {
                 >
                   View Order Details
                 </button> */}
+
+                {order.status === "Delivered" && (
+                  <button 
+                    className="cus-orders__action-link cus-orders__action-link--details"
+                    onClick={() => handleTrackOrder(order.order_number)}
+                  >
+                    Rate Order
+                  </button>
+                )}
+
               </div>
             </li>
           ))}

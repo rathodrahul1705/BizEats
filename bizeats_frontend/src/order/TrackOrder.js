@@ -351,6 +351,7 @@ const TrackOrder = ({ user, setUser }) => {
           order_number: order_number
         });
         if (res.status === "success" && res.orders.length) {
+          setShowReviewModal(true)
           setOrders(res.orders);
           setSelectedOrder(res.orders[0]);
         } else setNoOrders(true);
@@ -515,7 +516,7 @@ const TrackOrder = ({ user, setUser }) => {
       )}
 
       {/* Review Modal */}
-      {selectedOrder?.review_present == false && (
+      {selectedOrder?.review_present == false && showReviewModal == true && (
         <div className="review-modal-overlay">
           <div className="review-modal">
             <button 
