@@ -54,20 +54,21 @@ const OrderDetails = ({ user, setUser }) => {
       color: "#fff"
     },
     {
-      id: 2,
-      title: "Free Nimbu Pani",
-      description: "With every order",
-      icon: "🍋",
-      color: "#fff"
-    },
-    {
       id: 3,
       title: "10% Off",
       description: "On every order",
       icon: "🤑",
       color: "#fff"
+    },
+    {
+      id: 4,
+      title: "Free Gulab Jamun 1 (PC)",
+      description: "Sweet treat on the house!",
+      icon: "🍮",
+      color: "#fff"
     }
   ]);
+  
 
   const checkShopTimings = () => {
     const now = new Date();
