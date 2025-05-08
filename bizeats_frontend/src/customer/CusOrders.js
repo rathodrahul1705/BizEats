@@ -116,7 +116,16 @@ const CusOrders = () => {
                   <div className="cus-orders__items">
                     {order.items.map((item, i) => (
                       <div key={i} className="cus-orders__item-row">
-                        <span className="cus-orders__item-name">{item.item_name}</span>
+                        {/* <span className="cus-orders__item-name">{item.item_name}</span> */}
+                        <span className="item-name">
+  {item.item_name}{" "}
+  {item.buy_one_get_one_free && (
+    <span style={{ color: "green", fontWeight: "bold" }}>
+      (Buy 1 Get 1 Free)
+    </span>
+  )}
+</span>
+
                         <span className="cus-orders__item-quantity">x{item.quantity}</span>
                       </div>
                     ))}

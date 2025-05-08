@@ -77,7 +77,8 @@ class TrackOrder(APIView):
                         "item_name": menu_item.item_name if menu_item else "Unknown",
                         "quantity": item.quantity,
                         "unit_price": str(price),
-                        "total_price": str(item_total)
+                        "total_price": str(item_total),
+                        "buy_one_get_one_free": item.buy_one_get_one_free
                     })
 
                 if order.coupon_id:
@@ -189,6 +190,7 @@ class RestaurantOrders(APIView):
                         "quantity": item.quantity,
                         "unit_price": str(price),
                         "total_price": str(item_total),
+                        "buy_one_get_one_free": item.buy_one_get_one_free,
                     })
 
                 order_data = {
@@ -326,6 +328,7 @@ class OrderDetails(APIView):
                         "quantity": item.quantity,
                         "unit_price": str(price),
                         "total_price": str(item_total),
+                        "buy_one_get_one_free": item.buy_one_get_one_free,
                     })
 
                 order_data = {

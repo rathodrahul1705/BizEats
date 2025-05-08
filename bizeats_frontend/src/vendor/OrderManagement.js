@@ -415,7 +415,16 @@ const OrderManagement = ({ user }) => {
                       {order.items.map((item, i) => (
                         <div key={i} className="item">
                           <div className="item-info">
-                            <span className="item-name">{item.item_name}</span>
+                            <span className="item-name">
+                              <span className="item-name">
+                                {item.item_name}{" "}
+                                {item.buy_one_get_one_free && (
+                                  <span style={{ color: "green", fontWeight: "bold" }}>
+                                    (Buy 1 Get 1 Free)
+                                  </span>
+                                )}
+                              </span>
+                            </span>
                             {item.special_instructions && (
                               <p className="special-instructions">Note: {item.special_instructions}</p>
                             )}

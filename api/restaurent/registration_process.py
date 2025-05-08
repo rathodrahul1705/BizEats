@@ -286,6 +286,7 @@ class RestaurantMenueList(APIView):
                 "preparation_time": item.preparation_time,
                 "serving_size": item.serving_size,
                 "availability": item.availability,
+                "buy_one_get_one_free": item.buy_one_get_one_free,
                 "food_type": item.food_type,
                 "stock_quantity": item.stock_quantity,
                 "cuisines": [cuisine.cuisine_name for cuisine in item.cuisines.all()],
@@ -346,6 +347,7 @@ class RestaurantMenueUpdate(APIView):
         spice_level = request.data.get('spice_level', menu_item.spice_level)
         preparation_time = request.data.get('preparation_time', menu_item.preparation_time)
         serving_size = request.data.get('serving_size', menu_item.serving_size)
+        buy_one_get_one_free = request.data.get('buy_one_get_one_free')
         availability = request.data.get('availability')
         stock_quantity = request.data.get('stock_quantity', menu_item.stock_quantity)
         food_type = request.data.get('food_type', menu_item.food_type)
@@ -380,6 +382,7 @@ class RestaurantMenueUpdate(APIView):
         menu_item.availability = availability
         menu_item.stock_quantity = stock_quantity
         menu_item.food_type = food_type
+        menu_item.buy_one_get_one_free = buy_one_get_one_free
 
         # Update cuisines
         if cuisines:

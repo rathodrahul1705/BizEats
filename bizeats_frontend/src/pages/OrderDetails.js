@@ -7,7 +7,8 @@ import {
   ArrowRight, 
   ChevronDown, 
   ChevronUp,
-  Share2
+  Share2,
+  Gift
 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import "../assets/css/OrderDetails.css";
@@ -56,7 +57,7 @@ const OrderDetails = ({ user, setUser }) => {
       id: 2,
       title: "Free Nimbu Pani",
       description: "With every order",
-      icon: "🍋",
+      icon: "",
       color: "#fff"
     },
     {
@@ -73,7 +74,7 @@ const OrderDetails = ({ user, setUser }) => {
     const istOffset = 330 * 60 * 1000;
     const istTime = new Date(now.getTime() + istOffset);
     const currentHour = istTime.getUTCHours();
-    const open = currentHour >= 9 && currentHour < 22;
+    const open = currentHour >= 7 && currentHour < 22;
     setIsShopOpen(open);
   };
 
@@ -175,6 +176,7 @@ const OrderDetails = ({ user, setUser }) => {
           type: item?.food_type,
           category: item.category,
           availability: item.availability,
+          buy_one_get_one_free: item.buy_one_get_one_free,
         }))
       );
     } catch (error) {
@@ -473,12 +475,20 @@ const OrderDetails = ({ user, setUser }) => {
               <ul className="order-details-page-menu-food-list">
                 {groupedByCategory[category].map((food) => (
                   <li key={food.id} className="order-details-page-menu-food-item">
-                    <img 
-                      src={food.image} 
-                      alt={food.title} 
-                      className="order-details-page-menu-food-image" 
-                      onClick={() => openFoodModal(food)}
-                    />
+                    <div className="order-details-page-menu-food-image-container">
+                      <img 
+                        src={food.image} 
+                        alt={food.title} 
+                        className="order-details-page-menu-food-image" 
+                        onClick={() => openFoodModal(food)}
+                      />
+                      {food.buy_one_get_one_free && (
+                        <div className="order-details-page-menu-bogo-tag">
+                          <Gift size={14} />
+                          <span>Buy 1 Get 1 Free</span>
+                        </div>
+                      )}
+                    </div>
                     <div className="order-details-page-menu-food-details">
                       <div className="order-details-page-menu-food-header">
                         <h3 
@@ -557,11 +567,19 @@ const OrderDetails = ({ user, setUser }) => {
                 .filter(food => !food.availability)
                 .map((food) => (
                   <li key={food.id} className="order-details-page-menu-food-item order-details-page-menu-food-item-out-of-stock">
-                    <img 
-                      src={food.image} 
-                      alt={food.title} 
-                      className="order-details-page-menu-food-image order-details-page-menu-food-image-out-of-stock" 
-                    />
+                    <div className="order-details-page-menu-food-image-container">
+                      <img 
+                        src={food.image} 
+                        alt={food.title} 
+                        className="order-details-page-menu-food-image order-details-page-menu-food-image-out-of-stock" 
+                      />
+                      {food.buy_one_get_one_free && (
+                        <div className="order-details-page-menu-bogo-tag">
+                          <Gift size={14} />
+                          <span>Buy 1 Get 1 Free</span>
+                        </div>
+                      )}
+                    </div>
                     <div className="order-details-page-menu-food-details">
                       <h3 className="order-details-page-menu-food-title">
                         {food.title} {food.type === "Veg" ? "🥦" : "🍗"}
@@ -611,11 +629,19 @@ const OrderDetails = ({ user, setUser }) => {
               <X size={24} />
             </button>
             <div className="order-details-page-menu-food-modal-content">
-              <img 
-                src={selectedFood.image} 
-                alt={selectedFood.title} 
-                className="order-details-page-menu-food-modal-image" 
-              />
+              <div className="order-details-page-menu-food-modal-image-container">
+                <img 
+                  src={selectedFood.image} 
+                  alt={selectedFood.title} 
+                  className="order-details-page-menu-food-modal-image" 
+                />
+                {selectedFood.buy_one_get_one_free && (
+                  <div className="order-details-page-menu-bogo-tag modal-bogo">
+                    <Gift size={16} />
+                    <span>Buy 1 Get 1 Free</span>
+                  </div>
+                )}
+              </div>
               <div className="order-details-page-menu-food-modal-details">
                 <div className="order-details-page-menu-food-modal-header">
                   <h2 className="order-details-page-menu-food-modal-title">

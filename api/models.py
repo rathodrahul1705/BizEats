@@ -222,6 +222,7 @@ class RestaurantMenu(models.Model):
     availability = models.BooleanField(default=True)
     stock_quantity = models.PositiveIntegerField(default=0)
     food_type = models.CharField(max_length=10, choices=FOOD_TYPE_CHOICES, default='Veg')
+    buy_one_get_one_free = models.BooleanField(null=True, blank=True, help_text="Is this item eligible for Buy One Get One Free?")
     created_at = models.DateTimeField(default=now)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -275,6 +276,7 @@ class Cart(models.Model):
         choices=CART_STATUS_CHOICES, 
         default=1
     )  # Status of the cart
+    buy_one_get_one_free = models.BooleanField(null=True, blank=True, help_text="Is this item eligible for Buy One Get One Free?")
     created_at = models.DateTimeField(default=now)
     updated_at = models.DateTimeField(auto_now=True)
 

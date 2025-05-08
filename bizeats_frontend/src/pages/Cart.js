@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { PlusCircle, MinusCircle, Trash2, CheckCircle, ArrowLeft, User, MapPin, ClipboardCheck } from "lucide-react";
+import { PlusCircle, MinusCircle, Trash2, CheckCircle, ArrowLeft, User, MapPin, ClipboardCheck, Gift } from "lucide-react";
 import "../assets/css/Cart.css";
 import SignIn from "../components/SignIn";
 import AddressSelection from "./AddressSelection";
@@ -63,6 +63,7 @@ const Cart = ({ user, setUser }) => {
           id: item.id,
           title: item.item_name,
           description: item.item_description,
+          buy_one_get_one_free: item.buy_one_get_one_free,
           image: item.item_image,
           quantity: item.quantity,
           price: parseFloat(item.item_price),
@@ -243,8 +244,21 @@ const Cart = ({ user, setUser }) => {
         <div className="cart-review-container">
           <ul className="cart-items-list">
             {cartItems.map((item) => (
-              <li key={item.id} className="cart-review-item">
-                <img src={item.image} alt={item.title} className="cart-review-image" />
+              <li key={item.id} className="cart-item-card">
+                {/* <img src={item.image} alt={item.title} className="cart-review-image" /> */}
+                <div className="order-details-page-menu-food-image-container">
+                      <img 
+                        src={item.image} 
+                        alt={item.title} 
+                        className="cart-item-image" 
+                      />
+                      {item.buy_one_get_one_free && (
+                        <div className="order-details-page-menu-bogo-tag">
+                          <Gift size={14} />
+                          <span>Buy 1 Get 1 Free</span>
+                        </div>
+                      )}
+                </div>
                 <div className="cart-review-details">
                   <h3 className="cart-review-title">{item.title}</h3>
                   <p className="cart-review-price">₹{item.price}</p>
@@ -286,7 +300,20 @@ const Cart = ({ user, setUser }) => {
           <ul className="cart-items-list">
             {cartItems.map((item) => (
               <li key={item.id} className="cart-item-card">
-                <img src={item.image} alt={item.title} className="cart-item-image" />
+                {/* <img src={item.image} alt={item.title} className="cart-item-image" /> */}
+                <div className="order-details-page-menu-food-image-container">
+                      <img 
+                        src={item.image} 
+                        alt={item.title} 
+                        className="cart-item-image" 
+                      />
+                      {item.buy_one_get_one_free && (
+                        <div className="order-details-page-menu-bogo-tag">
+                          <Gift size={14} />
+                          <span>Buy 1 Get 1 Free</span>
+                        </div>
+                      )}
+                </div>
                 <div className="cart-item-details">
                   <h3 className="cart-item-title">{item.title}</h3>
                   <p className="cart-item-price">₹{item.price}</p>

@@ -25,6 +25,7 @@ const MenuManagement = () => {
     stock_quantity: "",
     cuisines: [],
     food_type: "Veg",
+    buy_one_get_one_free: null,
   });
 
   const categories = ["Appetizer", "Main Course", "Breakfast", "Dessert", "Beverage"];
@@ -83,10 +84,12 @@ const MenuManagement = () => {
     e.preventDefault();
     try {
       const formDataToSend = new FormData();
-      Object.keys(formData).forEach((key) => {
+      Object.keys(formData).forEach((key) => {        
         if (key === "cuisines") {
           formData.cuisines.forEach((cuisine) => formDataToSend.append("cuisines[]", cuisine));
         } else if (key === "availability") {
+          formDataToSend.append(key, formData[key] ? "1" : "0");
+        }else if (key === "buy_one_get_one_free") {
           formDataToSend.append(key, formData[key] ? "1" : "0");
         } else {
           formDataToSend.append(key, formData[key]);
@@ -137,6 +140,8 @@ const MenuManagement = () => {
     }
   };
 
+  console.log("menuItems===",menuItems)
+  
   if (loading && menuItems.length === 0) {
     return <StripeLoader />;
   }
@@ -180,6 +185,7 @@ const MenuManagement = () => {
                 <th>Price</th>
                 <th>Category</th>
                 <th>Availability</th>
+                <th>BOGO</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -199,6 +205,11 @@ const MenuManagement = () => {
                   <td>
                     <span className={`vendor-menu-management-availability-badge ${item.availability ? 'vendor-menu-management-available' : 'vendor-menu-management-not-available'}`}>
                       {item.availability ? "Available" : "Out of Stock"}
+                    </span>
+                  </td>
+                  <td>
+                    <span className={`vendor-menu-management-availability-badge ${item.buy_one_get_one_free ? 'vendor-menu-management-available' : 'vendor-menu-management-not-available'}`}>
+                      {item.buy_one_get_one_free ? "B1G1F" : "Regular"}
                     </span>
                   </td>
                   <td>
@@ -431,6 +442,17 @@ const MenuManagement = () => {
                   onChange={handleChange}
                 />
                 <label htmlFor="availability">Available</label>
+              </div>
+
+              <div className="vendor-menu-management-form-group vendor-menu-management-checkbox-group">
+                <input
+                  type="checkbox"
+                  id="buy_one_get_one_free"
+                  name="buy_one_get_one_free"
+                  checked={formData.buy_one_get_one_free}
+                  onChange={handleChange}
+                />
+                <label htmlFor="availability">Buy One Get One Free</label>
               </div>
 
               <button type="submit" className="vendor-menu-management-submit-btn">

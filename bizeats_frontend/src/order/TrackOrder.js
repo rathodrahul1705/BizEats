@@ -739,8 +739,17 @@ const TrackOrder = ({ user, setUser }) => {
           {selectedOrder.items.map((item, val) => (
             <div className="item-line" key={val}>
               <div className="item-name-qty">
-                <span className="item-name">{item.item_name}</span>
-                <span className="item-qty">x{item.quantity}</span>
+              <span className="item-qty">{item.quantity} x</span>
+              <span className="item-name">
+                <span className="item-name">
+                  {item.item_name}{" "}
+                  {item.buy_one_get_one_free && (
+                    <span style={{ color: "green", fontWeight: "bold" }}>
+                      (Buy 1 Get 1 Free)
+                    </span>
+                  )}
+                </span>
+              </span>
               </div>
               <span className="item-total">₹{item.total_price}</span>
             </div>

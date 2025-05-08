@@ -216,7 +216,7 @@
 /* Order Details Page Menu - Food Item */
 .order-details-page-menu-food-item {
     display: flex;
-    align-items: flex-start;
+    /* align-items: flex-start; */
     background: #fff;
     padding: 15px;
     border-radius: 12px;
@@ -250,8 +250,8 @@
 
 /* Order Details Page Menu - Food Image */
 .order-details-page-menu-food-image {
-    width: 120px;
-    height: 100px;
+    width: 150px;
+    height: 120px;
     object-fit: cover;
     border-radius: 8px;
     margin-right: 15px;
@@ -989,7 +989,7 @@
     
     .order-details-page-menu-food-item {
         flex-direction: column;
-        align-items: flex-start;
+        /* align-items: flex-start; */
     }
     
     .order-details-page-menu-food-image {
@@ -1231,3 +1231,44 @@
         padding: 5px 10px;
     }
 }
+
+/* BOGO Tag Styles */
+.order-details-page-menu-bogo-tag {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background-color: #ff5722;
+    color: white;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: bold;
+    z-index: 1;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+  
+  .order-details-page-menu-food-image-container {
+    position: relative;
+    display: inline-block;
+  }
+  
+  /* Modal BOGO Tag */
+  .order-details-page-menu-food-modal-image-container {
+    position: relative;
+  }
+  
+  .order-details-page-menu-food-modal-bogo-tag {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    background-color: #ff5722;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: bold;
+    z-index: 1;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  }
+
+  

@@ -67,14 +67,19 @@ def send_order_status_email(order):
         menu_item = RestaurantMenu.objects.filter(id=item.item_id).first()
         price = item.item_price if item.item_price is not None else Decimal(0)
         item_total = price
+        buy_one_get_one_free = item.buy_one_get_one_free
         subtotal += item_total
 
         item_rows += f"""
             <tr>
-                <td style="padding: 10px 0;">{item.quantity} x {menu_item.item_name if menu_item else "Unknown Item"}</td>
+                <td style="padding: 10px 0;">
+                    {item.quantity} x {menu_item.item_name if menu_item else "Unknown Item"}
+                    {" <span style='color: green; font-weight: bold;'>(Buy 1 Get 1 Free)</span>" if buy_one_get_one_free else ""}
+                </td>
                 <td style="padding: 10px 0; text-align: right;">₹{item_total:.2f}</td>
             </tr>
         """
+
 
     handling_fee = Decimal("0.00")
 

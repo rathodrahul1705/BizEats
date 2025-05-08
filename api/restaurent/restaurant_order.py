@@ -101,6 +101,7 @@ class RestaurantCartAddOrRemove(APIView):
                     cart.quantity += quantity
                     cart.item_price += restaurant_menu.item_price
                     cart.description = restaurant_menu.description
+                    cart.buy_one_get_one_free = restaurant_menu.buy_one_get_one_free
                     cart.user_id = user_id
                     cart.save()
                     message = "Item quantity updated in cart"
@@ -112,6 +113,7 @@ class RestaurantCartAddOrRemove(APIView):
                         session_id=session_id,
                         item_price=restaurant_menu.item_price,
                         description=restaurant_menu.description,
+                        buy_one_get_one_free = restaurant_menu.buy_one_get_one_free,
                         restaurant_id=restaurant_id,
                         item_id=item_id,
                         quantity=quantity,
@@ -132,6 +134,7 @@ class RestaurantCartAddOrRemove(APIView):
                     cart.user_id = user_id
                     cart.item_price += restaurant_menu.item_price
                     cart.description = restaurant_menu.description
+                    restaurant_menu.buy_one_get_one_free
                     cart.save()
                     message = "Item quantity updated in cart"
                     
@@ -143,6 +146,7 @@ class RestaurantCartAddOrRemove(APIView):
                         restaurant_id=restaurant_id,
                         item_price=restaurant_menu.item_price,
                         description=restaurant_menu.description,
+                        buy_one_get_one_free = restaurant_menu.buy_one_get_one_free,
                         item_id=item_id,
                         quantity=quantity,
                     )
@@ -312,6 +316,7 @@ class CartWithRestaurantDetails(APIView):
                     "item_name": item.item.item_name,
                     "item_description": item.description,
                     "item_price": float(item.item_price),
+                    "buy_one_get_one_free": item.buy_one_get_one_free,
                     "quantity": item.quantity,
                     "item_image": request.build_absolute_uri(item.item.item_image.url) if item.item.item_image else None,
                 })
