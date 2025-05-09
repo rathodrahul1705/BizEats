@@ -75,7 +75,7 @@ const OrderDetails = ({ user, setUser }) => {
     const istOffset = 330 * 60 * 1000;
     const istTime = new Date(now.getTime() + istOffset);
     const currentHour = istTime.getUTCHours();
-    const open = currentHour >= 7 && currentHour < 22;
+    const open = currentHour >= 9 && currentHour < 22;
     setIsShopOpen(open);
   };
 
