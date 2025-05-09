@@ -44,22 +44,21 @@
   
   /* Add Coupon Button */
   .vendor-coupon-management-add-btn {
-    background-color: var(--vendor-coupon-primary-color);
-    color: var(--vendor-coupon-white);
-    padding: 10px 16px;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: 500;
-    transition: var(--vendor-coupon-transition);
     display: flex;
     align-items: center;
     gap: 8px;
+    padding: 8px 16px;
+    background-color: #FF6B35;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s;
   }
   
   .vendor-coupon-management-add-btn:hover {
-    background-color: var(--vendor-coupon-primary-hover);
+    background-color: #FF6B35
   }
   
   /* Modal Styles */
@@ -205,7 +204,7 @@
   }
   
   .vendor-coupon-management-save-btn {
-    background-color: var(--vendor-coupon-primary-color);
+    background-color: #FF6B35;
     color: var(--vendor-coupon-white);
     padding: 10px 16px;
     border: none;
@@ -217,7 +216,7 @@
   }
   
   .vendor-coupon-management-save-btn:hover {
-    background-color: var(--vendor-coupon-primary-hover);
+    background-color: #FF6B35;
   }
   
   .vendor-coupon-management-cancel-btn {

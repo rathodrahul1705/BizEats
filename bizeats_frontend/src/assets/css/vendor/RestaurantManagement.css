@@ -1,0 +1,277 @@
+/* Base Styles */
+.restaurant-management-container {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #333;
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  
+  .restaurant-management-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  
+  .restaurant-management-header h2 {
+    margin: 0;
+    font-size: 24px;
+    color: #2c3e50;
+  }
+  
+  .add-restaurant-button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background-color: #FF6B35;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s;
+  }
+  
+  .add-restaurant-button:hover {
+    background-color: #FF6B35;
+  }
+  
+  /* Filter Section */
+  .restaurant-filters {
+    margin-bottom: 20px;
+  }
+  
+  .search-box {
+    display: flex;
+    align-items: center;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 8px 12px;
+    margin-bottom: 15px;
+    width: 100%;
+    max-width: 400px;
+  }
+  
+  .search-box input {
+    flex: 1;
+    border: none;
+    outline: none;
+    padding: 0 10px;
+    font-size: 14px;
+  }
+  
+  .search-icon {
+    color: #999;
+  }
+  
+  .filter-toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: none;
+    border: none;
+    color: #666;
+    cursor: pointer;
+    font-size: 14px;
+    margin-left: 10px;
+  }
+  
+  .filter-toggle:hover {
+    color: #333;
+  }
+  
+  .filter-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    padding: 15px;
+    background-color: #f9f9f9;
+    border-radius: 4px;
+    margin-bottom: 15px;
+  }
+  
+  .filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  
+  .filter-group label {
+    font-size: 14px;
+    color: #666;
+  }
+  
+  .filter-group select {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    min-width: 200px;
+  }
+  
+  .reset-filters {
+    background: none;
+    border: none;
+    color: #2c7be5;
+    cursor: pointer;
+    font-size: 14px;
+    align-self: flex-end;
+  }
+  
+  .reset-filters:hover {
+    text-decoration: underline;
+  }
+  
+  /* Results Count */
+  .results-count {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 15px;
+  }
+  
+  /* Table */
+  .table-container {
+    overflow-x: auto;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+  }
+  
+  .restaurant-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .restaurant-table th,
+  .restaurant-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+  }
+  
+  .restaurant-table th {
+    background-color: #f5f7fa;
+    font-weight: 600;
+    color: #2c3e50;
+  }
+  
+  .restaurant-table tr:hover {
+    background-color: #f9f9f9;
+  }
+  
+  /* Images */
+  .restaurant-image {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 4px;
+  }
+  
+  /* Status Badges */
+  .status-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  
+  .status-success {
+    background-color: #d4edda;
+    color: #155724;
+  }
+  
+  .status-warning {
+    background-color: #fff3cd;
+    color: #856404;
+  }
+  
+  .status-danger {
+    background-color: #f8d7da;
+    color: #721c24;
+  }
+  
+  .status-secondary {
+    background-color: #d6d8d9;
+    color: #1b1e21;
+  }
+  
+  /* Action Buttons */
+  .action-buttons {
+    display: flex;
+    gap: 8px;
+  }
+  
+  .edit-button, .delete-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+  
+  .edit-button {
+    background-color: #ffeeba;
+    color: #856404;
+  }
+  
+  .edit-button:hover {
+    background-color: #ffdf7e;
+  }
+  
+  .delete-button {
+    background-color: #f5c6cb;
+    color: #721c24;
+  }
+  
+  .delete-button:hover {
+    background-color: #f1aeb5;
+  }
+  
+  /* Empty State */
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    text-align: center;
+    border: 1px dashed #ddd;
+    border-radius: 4px;
+    background-color: #f9f9f9;
+  }
+  
+  .empty-state h3 {
+    margin: 20px 0 10px;
+    color: #2c3e50;
+  }
+  
+  .empty-state p {
+    color: #666;
+    margin-bottom: 20px;
+  }
+  
+  /* Responsive */
+  @media (max-width: 768px) {
+    .restaurant-management-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 10px;
+    }
+    
+    .filter-options {
+      flex-direction: column;
+      gap: 10px;
+    }
+    
+    .restaurant-table th, 
+    .restaurant-table td {
+      padding: 8px 10px;
+      font-size: 14px;
+    }
+  }

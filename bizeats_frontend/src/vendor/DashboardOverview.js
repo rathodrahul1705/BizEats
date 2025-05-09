@@ -528,7 +528,7 @@ const DashboardOverview = ({ user, setUser }) => {
                     <div className="link-arrow">→</div>
                   </Link> */}
                   <Link 
-                    to={`/register-your-restaurent`} 
+                    to={`/vendor-dashboard/restaurant`} 
                     className="link-card"
                   >
                     <div className="link-icon">⚙️</div>
