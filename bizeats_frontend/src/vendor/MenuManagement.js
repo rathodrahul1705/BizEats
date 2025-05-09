@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Edit, Trash, PlusCircle, X, Menu } from "lucide-react";
+import { Edit, Trash, PlusCircle, X, Menu, Search, Filter } from "lucide-react";
 import "../assets/css/vendor/MenuManagement.css";
 import { useParams } from "react-router-dom";
 import API_ENDPOINTS from "../components/config/apiConfig";
@@ -9,6 +9,7 @@ import StripeLoader from "../loader/StripeLoader";
 const MenuManagement = () => {
   const { restaurant_id } = useParams();
   const [menuItems, setMenuItems] = useState([]);
+  const [filteredItems, setFilteredItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
@@ -25,8 +26,14 @@ const MenuManagement = () => {
     stock_quantity: "",
     cuisines: [],
     food_type: "Veg",
-    buy_one_get_one_free: null,
+    buy_one_get_one_free: false,
   });
+
+  // Filter states
+  const [searchTerm, setSearchTerm] = useState("");
+  const [availabilityFilter, setAvailabilityFilter] = useState("all");
+  const [bogoFilter, setBogoFilter] = useState("all");
+  const [showFilters, setShowFilters] = useState(false);
 
   const categories = ["Appetizer", "Main Course", "Breakfast", "Dessert", "Beverage"];
   const spiceLevels = ["Mild", "Medium", "Spicy", "Extra Spicy"];
@@ -37,6 +44,10 @@ const MenuManagement = () => {
   useEffect(() => {
     fetchMenuItems();
   }, [restaurant_id]);
+
+  useEffect(() => {
+    applyFilters();
+  }, [menuItems, searchTerm, availabilityFilter, bogoFilter]);
 
   const fetchMenuItems = async () => {
     try {
@@ -52,6 +63,35 @@ const MenuManagement = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const applyFilters = () => {
+    let filtered = [...menuItems];
+    
+    // Apply search filter
+    if (searchTerm) {
+      filtered = filtered.filter(item =>
+        item.item_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.category.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+    
+    // Apply availability filter
+    if (availabilityFilter !== "all") {
+      filtered = filtered.filter(item => 
+        availabilityFilter === "available" ? item.availability : !item.availability
+      );
+    }
+    
+    // Apply BOGO filter
+    if (bogoFilter !== "all") {
+      filtered = filtered.filter(item => 
+        bogoFilter === "bogo" ? item.buy_one_get_one_free : !item.buy_one_get_one_free
+      );
+    }
+    
+    setFilteredItems(filtered);
   };
 
   const handleChange = (e) => {
@@ -75,7 +115,8 @@ const MenuManagement = () => {
     setEditingItem(item.id);
     setFormData({ 
       ...item,
-      cuisines: item.cuisines || [], // Ensure cuisines is always an array
+      cuisines: item.cuisines || [],
+      buy_one_get_one_free: item.buy_one_get_one_free || false
     });
     setShowModal(true);
   };
@@ -89,7 +130,7 @@ const MenuManagement = () => {
           formData.cuisines.forEach((cuisine) => formDataToSend.append("cuisines[]", cuisine));
         } else if (key === "availability") {
           formDataToSend.append(key, formData[key] ? "1" : "0");
-        }else if (key === "buy_one_get_one_free") {
+        } else if (key === "buy_one_get_one_free") {
           formDataToSend.append(key, formData[key] ? "1" : "0");
         } else {
           formDataToSend.append(key, formData[key]);
@@ -140,11 +181,16 @@ const MenuManagement = () => {
     }
   };
 
-  console.log("menuItems===",menuItems)
-  
+  const resetFilters = () => {
+    setSearchTerm("");
+    setAvailabilityFilter("all");
+    setBogoFilter("all");
+  };
+
   if (loading && menuItems.length === 0) {
     return <StripeLoader />;
   }
+
   return (
     <div className="vendor-menu-management">
       <div className="vendor-menu-management-header">
@@ -166,6 +212,7 @@ const MenuManagement = () => {
               stock_quantity: "",
               cuisines: [],
               food_type: "Veg",
+              buy_one_get_one_free: false,
             });
             setShowModal(true);
           }}
@@ -175,7 +222,70 @@ const MenuManagement = () => {
         </button>
       </div>
 
-      {menuItems.length > 0 ? (
+      {/* Filter Section */}
+      <div className="vendor-menu-management-filters">
+        <div className="vendor-menu-management-search">
+          <Search size={18} className="vendor-menu-management-search-icon" />
+          <input
+            type="text"
+            placeholder="Search items..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="vendor-menu-management-search-input"
+          />
+          <button 
+            className="vendor-menu-management-filter-toggle"
+            onClick={() => setShowFilters(!showFilters)}
+          >
+            <Filter size={18} />
+            <span>Filters</span>
+          </button>
+        </div>
+
+        {showFilters && (
+          <div className="vendor-menu-management-filter-options">
+            <div className="vendor-menu-management-filter-group">
+              <label>Availability</label>
+              <select
+                value={availabilityFilter}
+                onChange={(e) => setAvailabilityFilter(e.target.value)}
+                className="vendor-menu-management-filter-select"
+              >
+                <option value="all">All</option>
+                <option value="available">Available</option>
+                <option value="out-of-stock">Out of Stock</option>
+              </select>
+            </div>
+
+            <div className="vendor-menu-management-filter-group">
+              <label>BOGO</label>
+              <select
+                value={bogoFilter}
+                onChange={(e) => setBogoFilter(e.target.value)}
+                className="vendor-menu-management-filter-select"
+              >
+                <option value="all">All</option>
+                <option value="bogo">BOGO Only</option>
+                <option value="regular">Regular Only</option>
+              </select>
+            </div>
+
+            <button 
+              className="vendor-menu-management-reset-filters"
+              onClick={resetFilters}
+            >
+              Reset Filters
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Results count */}
+      <div className="vendor-menu-management-results-count">
+        Showing {filteredItems.length} of {menuItems.length} items
+      </div>
+
+      {filteredItems.length > 0 ? (
         <div className="vendor-menu-management-table-container">
           <table className="vendor-menu-management-table">
             <thead>
@@ -190,7 +300,7 @@ const MenuManagement = () => {
               </tr>
             </thead>
             <tbody>
-              {menuItems.map((item) => (
+              {filteredItems.map((item) => (
                 <tr key={item.id}>
                   <td>
                     <img 
@@ -253,7 +363,15 @@ const MenuManagement = () => {
             <path d="M16 10a4 4 0 0 1-8 0"></path>
           </svg>
           <h3>No Menu Items Found</h3>
-          <p>Add your first menu item to get started</p>
+          <p>{menuItems.length === 0 ? "Add your first menu item to get started" : "No items match your filters"}</p>
+          {menuItems.length > 0 && (
+            <button 
+              className="vendor-menu-management-reset-filters"
+              onClick={resetFilters}
+            >
+              Reset Filters
+            </button>
+          )}
         </div>
       )}
 
