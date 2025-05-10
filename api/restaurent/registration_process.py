@@ -182,7 +182,7 @@ class RestaurantByUserAPIView(APIView):
 
             # Fetch all restaurants associated with the user
             active_restaurants = RestaurantMaster.objects.filter(user=user, restaurant_status=1)
-            live_restaurants = RestaurantMaster.objects.filter(user=user, restaurant_status=2)
+            live_restaurants = RestaurantMaster.objects.filter(user=user)
 
             data = {
                 "active_restaurants": RestaurantSerializerByStatus(active_restaurants, many=True).data,
@@ -432,7 +432,7 @@ class RestaurantMenueDelete(APIView):
 class RestaurantListAPI(APIView):
     def get(self, request):
         try:
-            live_restaurants = RestaurantMaster.objects.filter(restaurant_status=2)
+            live_restaurants = RestaurantMaster.objects.filter(restaurant_status__in=[2, 3])
             data = RestaurantSerializerByStatus(live_restaurants, many=True).data
             
             final_data = []
@@ -457,7 +457,8 @@ class RestaurantListAPI(APIView):
                     "restaurant_image": image_profie,
                     "restaurant_location": restaurant_location,
                     "item_cuisines": item_cuisines,
-                    "avg_price_range": round(avg_price_range)
+                    "avg_price_range": round(avg_price_range),
+                    "restaurant_status": restaurant['restaurant_status']
                 })
 
             return Response(final_data, status=status.HTTP_200_OK)
@@ -488,6 +489,7 @@ class RestaurantDetailMenuView(APIView):
             response_data = {
                 'time_required_to_reach_loc': time_required_to_reach_loc,
                 'restaurant_name': serializer.data['restaurant_name'],
+                'restaurant_status': serializer.data['restaurant_status'],
                 'Address': address,
                 'rating': 4.5,
                 'itemlist': serializer.data['menu_items']
@@ -498,3 +500,40 @@ class RestaurantDetailMenuView(APIView):
             return Response({"error": "Restaurant not found"}, status=404)
         except RestaurantLocation.DoesNotExist:
             return Response({"error": "Restaurant location not found"}, status=404)
+        
+class RestaurantStatusUpdate(APIView):
+    def patch(self, request, restaurant_id):
+        try:
+            new_status = int(request.data.get("status"))
+        except (TypeError, ValueError):
+            return Response(
+                {"detail": "Invalid or missing status value."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        valid_statuses = [0, 1, 2, 3, 4]
+        if new_status not in valid_statuses:
+            return Response(
+                {"detail": "Invalid status value."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        restaurant = get_object_or_404(RestaurantMaster, restaurant_id=restaurant_id)
+
+        if restaurant.user != request.user:
+            return Response(
+                {"detail": "You do not have permission to update this restaurant."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        restaurant.restaurant_status = new_status
+        restaurant.save()
+
+        return Response(
+            {
+                "detail": "Restaurant status updated successfully.",
+                "restaurant_id": restaurant_id,
+                "new_status": new_status
+            },
+            status=status.HTTP_200_OK
+        )

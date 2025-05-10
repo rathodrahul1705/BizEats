@@ -40,7 +40,7 @@ const OrderDetails = ({ user, setUser }) => {
   const [selectedFood, setSelectedFood] = useState(null);
   const [showFoodModal, setShowFoodModal] = useState(false);
   const [categoryVisibility, setCategoryVisibility] = useState({});
-  const [isShopOpen, setIsShopOpen] = useState(true);
+  const [isShopOpen, setIsShopOpen] = useState(false);
   const [showShareOptions, setShowShareOptions] = useState(false);
   const navigate = useNavigate();
   const sessionId = getOrCreateSessionId();
@@ -68,16 +68,6 @@ const OrderDetails = ({ user, setUser }) => {
       color: "#fff"
     }
   ]);
-  
-
-  const checkShopTimings = () => {
-    const now = new Date();
-    const istOffset = 330 * 60 * 1000;
-    const istTime = new Date(now.getTime() + istOffset);
-    const currentHour = istTime.getUTCHours();
-    const open = currentHour >= 9 && currentHour < 22;
-    setIsShopOpen(open);
-  };
 
   useEffect(() => {
     if (foodData.length > 0) {
@@ -89,12 +79,6 @@ const OrderDetails = ({ user, setUser }) => {
       setCategoryVisibility(initialVisibility);
     }
   }, [foodData]);
-
-  useEffect(() => {
-    checkShopTimings();
-    const interval = setInterval(checkShopTimings, 60000);
-    return () => clearInterval(interval);
-  }, []);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -159,6 +143,7 @@ const OrderDetails = ({ user, setUser }) => {
 
       setStoreDetails({
         name: response.restaurant_name,
+        restaurant_status: response.restaurant_status,
         deliveryTime: `${response.time_required_to_reach_loc} min`,
         location: response.Address,
         rating: response.rating,
@@ -334,6 +319,23 @@ const OrderDetails = ({ user, setUser }) => {
     window.open(url, '_blank', 'width=600,height=400');
   };
 
+  const checkShopTimings = () => {
+    const now = new Date();
+    const istOffset = 330 * 60 * 1000;
+    const istTime = new Date(now.getTime() + istOffset);
+    const currentHour = istTime.getUTCHours();
+    if(storeDetails?.restaurant_status != undefined){
+      const open = currentHour >= 9 && currentHour < 22 && storeDetails?.restaurant_status == 2;
+      setIsShopOpen(open);
+    }
+  };
+
+  useEffect(() => {
+    checkShopTimings();
+    const interval = setInterval(checkShopTimings, 60000);
+    return () => clearInterval(interval);
+  }, [storeDetails?.restaurant_status]);
+
   if (loading && filteredFood.length === 0) {
     return <StripeLoader />;
   }
@@ -387,7 +389,9 @@ const OrderDetails = ({ user, setUser }) => {
           <div className="order-details-page-menu-shop-closed-note">
             <div className="order-details-page-menu-shop-closed-icon">⚠️</div>
             <div className="order-details-page-menu-shop-closed-text">
-              Shop is currently closed. It will open from 9:00 AM to 10:00 PM
+              {storeDetails.restaurant_status !== 2
+                ? 'Shop is closed today'
+                : 'Shop is currently closed. It will open from 9:00 AM to 10:00 PM.'}
             </div>
           </div>
         )}

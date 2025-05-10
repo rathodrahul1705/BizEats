@@ -1,277 +1,448 @@
 /* Base Styles */
 .restaurant-management-container {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    color: #333;
-    padding: 20px;
-    max-width: 1200px;
-    margin: 0 auto;
-  }
-  
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #333;
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.restaurant-management-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.restaurant-management-header h2 {
+  margin: 0;
+  font-size: 24px;
+  color: #2c3e50;
+  font-weight: 600;
+}
+
+.add-restaurant-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background-color: #FF6B35;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.add-restaurant-button:hover {
+  background-color: #e05a2b;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.add-restaurant-button .cta-icon {
+  transition: transform 0.2s ease;
+}
+
+.add-restaurant-button:hover .cta-icon {
+  transform: translateX(2px);
+}
+
+/* Filter Section */
+.restaurant-filters {
+  margin-bottom: 20px;
+  background: #fff;
+  border-radius: 8px;
+  padding: 15px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.search-box {
+  display: flex;
+  align-items: center;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  padding: 8px 12px;
+  margin-bottom: 15px;
+  width: 100%;
+  max-width: 500px;
+  background: #fff;
+  transition: border-color 0.2s;
+}
+
+.search-box:hover {
+  border-color: #b0b0b0;
+}
+
+.search-box input {
+  flex: 1;
+  border: none;
+  outline: none;
+  padding: 0 10px;
+  font-size: 14px;
+  background: transparent;
+}
+
+.search-icon {
+  color: #999;
+}
+
+.filter-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 8px 12px;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.filter-toggle:hover {
+  background-color: #f5f5f5;
+  color: #333;
+}
+
+.filter-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  padding: 15px;
+  background-color: #f9f9f9;
+  border-radius: 6px;
+  margin-bottom: 15px;
+  border: 1px solid #eee;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 200px;
+}
+
+.filter-group label {
+  font-size: 14px;
+  color: #555;
+  font-weight: 500;
+}
+
+.filter-group select {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  background: #fff;
+  transition: border-color 0.2s;
+}
+
+.filter-group select:focus {
+  border-color: #FF6B35;
+  outline: none;
+}
+
+.reset-filters {
+  background: none;
+  border: none;
+  color: #2c7be5;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 8px 12px;
+  border-radius: 4px;
+  transition: all 0.2s;
+  align-self: flex-end;
+}
+
+.reset-filters:hover {
+  background-color: #f0f5ff;
+}
+
+/* Results Count */
+.results-count {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 15px;
+  padding: 0 5px;
+}
+
+/* Table */
+.table-container {
+  overflow-x: auto;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.restaurant-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.restaurant-table th,
+.restaurant-table td {
+  padding: 12px 15px;
+  text-align: left;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.restaurant-table th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+  color: #2c3e50;
+  position: sticky;
+  top: 0;
+}
+
+.restaurant-table tr.main-row:hover {
+  background-color: #f9f9f9;
+}
+
+/* Expand Toggle */
+.expand-toggle {
+  cursor: pointer;
+  text-align: center;
+  width: 40px;
+}
+
+.expand-toggle svg {
+  color: #666;
+  transition: transform 0.2s;
+}
+
+.expand-toggle:hover svg {
+  color: #333;
+}
+
+/* Images */
+.restaurant-image {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 4px;
+  margin-right: 10px;
+}
+
+.restaurant-name-cell {
+  display: flex;
+  align-items: center;
+}
+
+/* Status Select */
+.status-select {
+  padding: 6px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  appearance: none;
+  text-align: center;
+  min-width: 120px;
+}
+
+.status-select:hover {
+  opacity: 0.9;
+}
+
+.status-select:focus {
+  outline: none;
+}
+
+.status-success {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.status-warning {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.status-danger {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.status-secondary {
+  background-color: #d6d8d9;
+  color: #1b1e21;
+}
+
+.status-dark {
+  background-color: #d1d3d5;
+  color: #1a1a1a;
+}
+
+.status-default {
+  background-color: #e2e3e5;
+  color: #383d41;
+}
+
+.status-loading {
+  font-size: 12px;
+  color: #666;
+  font-style: italic;
+}
+
+/* Action Buttons */
+.action-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.edit-button, .delete-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.edit-button {
+  background-color: #e9f7ef;
+  color: #28a745;
+}
+
+.edit-button:hover {
+  background-color: #d4edda;
+  transform: translateY(-1px);
+}
+
+.delete-button {
+  background-color: #f8e8e8;
+  color: #dc3545;
+}
+
+.delete-button:hover {
+  background-color: #f5c6cb;
+  transform: translateY(-1px);
+}
+
+/* Expanded Row */
+.expanded-row {
+  background-color: #fafafa;
+}
+
+.expanded-row td {
+  padding: 0;
+}
+
+.expanded-content {
+  padding: 15px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.expanded-detail {
+  flex: 1;
+  min-width: 200px;
+}
+
+.expanded-detail h4 {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  color: #555;
+  font-weight: 600;
+}
+
+.expanded-detail p {
+  margin: 0;
+  font-size: 14px;
+  color: #333;
+}
+
+/* Empty State */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+  border: 1px dashed #ddd;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+  margin-top: 20px;
+}
+
+.empty-state svg {
+  color: #bbb;
+}
+
+.empty-state h3 {
+  margin: 20px 0 10px;
+  color: #2c3e50;
+  font-weight: 600;
+}
+
+.empty-state p {
+  color: #666;
+  margin-bottom: 20px;
+  max-width: 400px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
   .restaurant-management-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-  }
-  
-  .restaurant-management-header h2 {
-    margin: 0;
-    font-size: 24px;
-    color: #2c3e50;
-  }
-  
-  .add-restaurant-button {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 16px;
-    background-color: #FF6B35;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
-    transition: background-color 0.2s;
-  }
-  
-  .add-restaurant-button:hover {
-    background-color: #FF6B35;
-  }
-  
-  /* Filter Section */
-  .restaurant-filters {
-    margin-bottom: 20px;
-  }
-  
-  .search-box {
-    display: flex;
-    align-items: center;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    padding: 8px 12px;
-    margin-bottom: 15px;
-    width: 100%;
-    max-width: 400px;
-  }
-  
-  .search-box input {
-    flex: 1;
-    border: none;
-    outline: none;
-    padding: 0 10px;
-    font-size: 14px;
-  }
-  
-  .search-icon {
-    color: #999;
-  }
-  
-  .filter-toggle {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    background: none;
-    border: none;
-    color: #666;
-    cursor: pointer;
-    font-size: 14px;
-    margin-left: 10px;
-  }
-  
-  .filter-toggle:hover {
-    color: #333;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
   }
   
   .filter-options {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
-    padding: 15px;
-    background-color: #f9f9f9;
-    border-radius: 4px;
-    margin-bottom: 15px;
+    flex-direction: column;
+    gap: 15px;
   }
   
-  .filter-group {
-    display: flex;
+  .restaurant-table th, 
+  .restaurant-table td {
+    padding: 10px 12px;
+    font-size: 14px;
+  }
+
+  .expanded-content {
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .restaurant-name-cell {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .restaurant-image {
+    margin-right: 0;
+    margin-bottom: 5px;
+  }
+}
+
+@media (max-width: 480px) {
+  .restaurant-management-container {
+    padding: 15px;
+  }
+
+  .action-buttons {
     flex-direction: column;
     gap: 5px;
   }
-  
-  .filter-group label {
-    font-size: 14px;
-    color: #666;
-  }
-  
-  .filter-group select {
-    padding: 8px 12px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 14px;
-    min-width: 200px;
-  }
-  
-  .reset-filters {
-    background: none;
-    border: none;
-    color: #2c7be5;
-    cursor: pointer;
-    font-size: 14px;
-    align-self: flex-end;
-  }
-  
-  .reset-filters:hover {
-    text-decoration: underline;
-  }
-  
-  /* Results Count */
-  .results-count {
-    font-size: 14px;
-    color: #666;
-    margin-bottom: 15px;
-  }
-  
-  /* Table */
-  .table-container {
-    overflow-x: auto;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-  }
-  
-  .restaurant-table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-  
-  .restaurant-table th,
-  .restaurant-table td {
-    padding: 12px 15px;
-    text-align: left;
-    border-bottom: 1px solid #ddd;
-  }
-  
-  .restaurant-table th {
-    background-color: #f5f7fa;
-    font-weight: 600;
-    color: #2c3e50;
-  }
-  
-  .restaurant-table tr:hover {
-    background-color: #f9f9f9;
-  }
-  
-  /* Images */
-  .restaurant-image {
-    width: 60px;
-    height: 60px;
-    object-fit: cover;
-    border-radius: 4px;
-  }
-  
-  /* Status Badges */
-  .status-badge {
-    display: inline-block;
-    padding: 4px 8px;
-    border-radius: 12px;
-    font-size: 12px;
-    font-weight: 600;
-  }
-  
-  .status-success {
-    background-color: #d4edda;
-    color: #155724;
-  }
-  
-  .status-warning {
-    background-color: #fff3cd;
-    color: #856404;
-  }
-  
-  .status-danger {
-    background-color: #f8d7da;
-    color: #721c24;
-  }
-  
-  .status-secondary {
-    background-color: #d6d8d9;
-    color: #1b1e21;
-  }
-  
-  /* Action Buttons */
-  .action-buttons {
-    display: flex;
-    gap: 8px;
-  }
-  
+
   .edit-button, .delete-button {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-    border-radius: 4px;
-    border: none;
-    cursor: pointer;
-    transition: background-color 0.2s;
+    width: 28px;
+    height: 28px;
   }
-  
-  .edit-button {
-    background-color: #ffeeba;
-    color: #856404;
-  }
-  
-  .edit-button:hover {
-    background-color: #ffdf7e;
-  }
-  
-  .delete-button {
-    background-color: #f5c6cb;
-    color: #721c24;
-  }
-  
-  .delete-button:hover {
-    background-color: #f1aeb5;
-  }
-  
-  /* Empty State */
-  .empty-state {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 40px 20px;
-    text-align: center;
-    border: 1px dashed #ddd;
-    border-radius: 4px;
-    background-color: #f9f9f9;
-  }
-  
-  .empty-state h3 {
-    margin: 20px 0 10px;
-    color: #2c3e50;
-  }
-  
-  .empty-state p {
-    color: #666;
-    margin-bottom: 20px;
-  }
-  
-  /* Responsive */
-  @media (max-width: 768px) {
-    .restaurant-management-header {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 10px;
-    }
-    
-    .filter-options {
-      flex-direction: column;
-      gap: 10px;
-    }
-    
-    .restaurant-table th, 
-    .restaurant-table td {
-      padding: 8px 10px;
-      font-size: 14px;
-    }
-  }
+}

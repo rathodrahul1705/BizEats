@@ -42,7 +42,9 @@ const API_ENDPOINTS = {
     RES_MENUE_DELETE: (munuId,restaurant_id) => 
       munuId ? `${BASE_URL}/menue/delete/${munuId}/${restaurant_id}/` : `${BASE_URL}/api/restaurant/menue/delete/`,
 
-    RES_VENDOR_COUNT: `${BASE_URL}/order/vendor-dashboard-details/`
+    RES_VENDOR_COUNT: `${BASE_URL}/order/vendor-dashboard-details/`,
+
+    RES_STATUS_UPDATE: (restaurant_id) => `${BASE_URL}/restaurant/status-update/${restaurant_id}/`
 
   },
 

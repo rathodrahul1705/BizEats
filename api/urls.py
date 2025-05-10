@@ -4,7 +4,7 @@ from api.payment.payment import create_order, verify_payment
 from api.vendor.Coupon import CouponCreateView, CouponDeleteView, CouponDetailView, CouponListView, CouponUpdateView
 from .vendor.Vendor import GetVendorWiseCounts
 from .views import CustomTokenRefreshView, UserProfileUpdate, UserProfileView, UserRegistrationView, OTPVerificationView, UserLoginView, ContactUsView, ReactAppView, SubmitOrderReviewView
-from .restaurent.registration_process import RestaurantStoreStepOne, RestaurantStoreStepTwo, RestaurantStoreStepThree, RestaurantStoreStepFour, RestaurantByUserAPIView, RestaurantByRestauranrtAPIView, RestaurantMenueStore, RestaurantMenueList,RestaurantMenueDetails,RestaurantMenueUpdate,RestaurantMenueDelete, RestaurantListAPI, RestaurantDetailMenuView
+from .restaurent.registration_process import RestaurantStatusUpdate, RestaurantStoreStepOne, RestaurantStoreStepTwo, RestaurantStoreStepThree, RestaurantStoreStepFour, RestaurantByUserAPIView, RestaurantByRestauranrtAPIView, RestaurantMenueStore, RestaurantMenueList,RestaurantMenueDetails,RestaurantMenueUpdate,RestaurantMenueDelete, RestaurantListAPI, RestaurantDetailMenuView
 from django.conf import settings
 from django.conf.urls.static import static
 from .restaurent.restaurant_order import PlaceOrderAPI, RestaurantCartAddOrRemove, RestaurantCartList, CartWithRestaurantDetails,CartWithRestaurantDetailsClear, UserDeliveryAddressCreateView, UserDeliveryAddressUpdateView, UserDeliveryAddressListCreateView, CartWithRestaurantUserUpdate, RestaurantOrderDetailsAPI
@@ -46,6 +46,7 @@ urlpatterns = [
     path('api/restaurant/menue/details/<str:menu_id>/', RestaurantMenueDetails.as_view(), name='restaurant-menue-details'),
     path('api/restaurant/menue/update/<str:menu_id>/<str:restaurant_id>/', RestaurantMenueUpdate.as_view(), name='restaurant-menue-update'),
     path('api/restaurant/menue/delete/<str:menu_id>/<str:restaurant_id>/', RestaurantMenueDelete.as_view(), name='restaurant-menue-delete'),
+    path('api/restaurant/status-update/<str:restaurant_id>/', RestaurantStatusUpdate.as_view(), name='restaurant-status-update'),
 
     path('api/restaurant/live/list/', RestaurantListAPI.as_view(), name='restaurant-live-list'),
     path('api/restaurant/menu/list/<str:restaurant_id>/', RestaurantDetailMenuView.as_view(), name='restaurant-menu-detail'),
@@ -85,6 +86,7 @@ urlpatterns = [
     path('api/vendor/coupons/<int:pk>/update/', CouponUpdateView.as_view(), name='coupon-update'),  
     path('api/vendor/coupons/<int:pk>/delete/', CouponDeleteView.as_view(), name='coupon-delete'),
     path('api/order-review/update/', SubmitOrderReviewView.as_view(), name='submit-order-review'),
+
 
     re_path(r'^(?!media/).*$', ReactAppView.as_view(), name='react-app'),
 
