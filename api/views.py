@@ -211,11 +211,19 @@ class SubmitOrderReviewView(APIView):
 
 class FetchReviewView(APIView):
     def get(self, request, *args, **kwargs):
-        reviews = OrderReview.objects.filter(
+        # Get the latest review with non-empty text
+        first_review_with_text = OrderReview.objects.filter(
             review_text__isnull=False
         ).exclude(
             review_text__exact=''
-        ).order_by('-created_at')
+        ).order_by('-created_at').first()
+
+        # Get all reviews excluding the one we already included
+        other_reviews = OrderReview.objects.exclude(id=first_review_with_text.id if first_review_with_text else None).order_by('-created_at')
+
+        # Combine first non-empty review with the rest
+        combined_reviews = [first_review_with_text] if first_review_with_text else []
+        combined_reviews += list(other_reviews)
 
         reviews_data = [
             {
@@ -227,7 +235,7 @@ class FetchReviewView(APIView):
                 "created_at": review.created_at,
                 "updated_at": review.updated_at,
             }
-            for review in reviews
+            for review in combined_reviews if review is not None
         ]
 
         return Response(
