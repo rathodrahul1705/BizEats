@@ -6,7 +6,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 from api.emailer.email_notifications import send_otp_email, send_contact_email
 from api.serializers import ContactUsSerializer, OrderReviewSerializer
-from .models import ContactMessage, User, RestaurantMaster
+from .models import ContactMessage, OrderReview, User, RestaurantMaster
 from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.views.generic import TemplateView
@@ -208,3 +208,27 @@ class SubmitOrderReviewView(APIView):
             serializer.save()
             return Response({"message": "Review submitted successfully", "data": serializer.data, "status":"success"}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class FetchReviewView(APIView):
+    def get(self, request, *args, **kwargs):
+
+        reviews = OrderReview.objects.order_by('-created_at')
+        reviews_data = [
+            {
+                "id": review.id,
+                "rating": review.rating,
+                "user_id": review.user_id,
+                "name": review.user.full_name,
+                "comment": review.review_text,
+                "created_at": review.created_at,
+                "updated_at": review.updated_at,
+            }
+            for review in reviews
+        ]
+
+        return Response(
+            {
+                "reviews": reviews_data
+            },
+            status=status.HTTP_200_OK
+        )

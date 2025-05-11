@@ -2,9 +2,8 @@ import React, { useState, useEffect } from "react";
 import { ArrowRightCircle } from "lucide-react";
 import "../assets/css/FoodList.css";
 import { Link } from "react-router-dom";
-import { Navigation, Pagination, Autoplay } from "swiper/modules";
 import API_ENDPOINTS from "../components/config/apiConfig";
-import fetchData from "../components/services/apiService"
+import fetchData from "../components/services/apiService";
 import StripeLoader from "../loader/StripeLoader";
 
 const FoodGrid = () => {
@@ -12,16 +11,14 @@ const FoodGrid = () => {
   const [restaurants, setRestaurants] = useState([]);
 
   useEffect(() => {
-    setLoading(true)
-    // Fetch data from the API
     const fetchRestaurants = async () => {
+      setLoading(true);
       try {
         const response = await fetchData(API_ENDPOINTS.HOME.LIVE_RES_LIST, "GET", null);
         setRestaurants(response);
       } catch (error) {
         console.error("Error fetching restaurants:", error);
-      }
-      finally {
+      } finally {
         setLoading(false);
       }
     };
@@ -35,31 +32,59 @@ const FoodGrid = () => {
 
   return (
     <div className="food-grid-container">
-      <section className="food-section">
-        <h2 className="food-title">Order from nearby kitchens</h2>
-        <div className="food-card-wrapper">
-          {restaurants.map((food) => (
-            <Link to={`/order-details/${food.restaurant_id}`} className="food-card-wrapper-link" key={food.id}>
-              <div className="food-card">
-                <div className="food-card-inner">
-                  <img src={food.restaurant_image} alt={food.item_cuisines} className="food-image" />
-                  <p className="food-price">ITEM AT ₹{food.avg_price_range}</p> {/* Display price */}
+      <div className="food-grid-content">
+        <header className="food-grid-header">
+          <h2 className="food-grid-title">Order from nearby kitchens</h2>
+        </header>
+        
+        <div className="food-grid">
+          {restaurants.map((restaurant) => (
+            <Link 
+              to={`/order-details/${restaurant.restaurant_id}`} 
+              className="food-card" 
+              key={restaurant.restaurant_id}
+            >
+              <div className="food-card-media">
+                <img 
+                  src={restaurant.restaurant_image} 
+                  alt={restaurant.restaurant_name} 
+                  className="food-card-image"
+                  loading="lazy"
+                />
+                <div className="food-card-badge">
+                  <span className="food-card-price">₹{restaurant.avg_price_range}</span>
+                  <span className="food-card-rating">⭐ {restaurant.rating || '4.5'}</span>
                 </div>
-                
-                <button className="proceed-button">
+                <button className="food-card-action">
                   <ArrowRightCircle size={20} />
                 </button>
-                <div className="food-details">
-                  <p className="food-location">📍 {food.restaurant_location}</p>
-                  <p className="food-delivery">⏳ {"45"}</p>
-                  <p className="food-name">{food.item_cuisines}</p>
-                  <p className="food-brand">{food.restaurant_name}</p> {/* Display brand name */}
+              </div>
+              
+              <div className="food-card-content">
+                <h3 className="food-card-title">{restaurant.restaurant_name}</h3>
+                <p className="food-card-cuisine">{restaurant.item_cuisines}</p>
+                
+                <div className="food-card-meta">
+                  <span className="food-card-location">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                      <circle cx="12" cy="10" r="3"></circle>
+                    </svg>
+                    {restaurant.restaurant_location}
+                  </span>
+                  <span className="food-card-delivery">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                    45 min
+                  </span>
                 </div>
               </div>
             </Link>
           ))}
         </div>
-      </section>
+      </div>
     </div>
   );
 };

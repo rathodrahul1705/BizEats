@@ -50,6 +50,7 @@ const API_ENDPOINTS = {
 
   HOME: {
     LIVE_RES_LIST: `${BASE_URL}/restaurant/live/list/`,
+    CUSTOMER_REVIEW: `${BASE_URL}/customer-review/`,
   },
 
   ORDER: {
