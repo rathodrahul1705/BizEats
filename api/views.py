@@ -211,8 +211,12 @@ class SubmitOrderReviewView(APIView):
 
 class FetchReviewView(APIView):
     def get(self, request, *args, **kwargs):
+        reviews = OrderReview.objects.filter(
+            review_text__isnull=False
+        ).exclude(
+            review_text__exact=''
+        ).order_by('-created_at')
 
-        reviews = OrderReview.objects.order_by('-created_at')
         reviews_data = [
             {
                 "id": review.id,
