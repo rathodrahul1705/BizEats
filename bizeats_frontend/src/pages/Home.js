@@ -180,12 +180,12 @@ const Home = () => {
               alt="Home Food Thali"
               className="hero-thali-image"
             />
-            {/* <div className="floating-badge">
+            <div className="floating-badge">
               <div className="badge-content">
-                <span className="rating">4.9</span>
-                <span className="reviews">500+ Reviews</span>
+                <span className="rating">4.5</span>
+                <span className="reviews">10+ Reviews</span>
               </div>
-            </div> */}
+            </div>
           </div>
         </div>
       </section>

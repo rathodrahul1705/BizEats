@@ -25,7 +25,7 @@ const AboutUs = () => {
         <section className="aboutus__section">
           <h2>Our Mission</h2>
           <p>
-            To empower local food businesses by providing them a digital space to thrive, and to ensure customers receive quality meals from their favorite kitchens with speed and trust.
+            To empower local home chefs by providing a digital platform to grow, while ensuring customers receive high-quality meals from their favorite kitchens with speed and trust
           </p>
         </section>
 
