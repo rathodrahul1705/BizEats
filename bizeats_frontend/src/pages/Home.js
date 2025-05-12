@@ -28,6 +28,7 @@ const Home = () => {
   const [isBeginning, setIsBeginning] = useState(true);
   const [isEnd, setIsEnd] = useState(false);
   const [restaurantsReview, setRestaurantsReview] = useState([]);
+  const [resviewdetails, serReviewDetails] = useState([]);
 
   useEffect(() => {
     const fetchRestaurants = async () => {
@@ -52,6 +53,7 @@ const Home = () => {
       try {
         const response = await fetchData(API_ENDPOINTS.HOME.CUSTOMER_REVIEW, "GET", null);
         setRestaurantsReview(response['reviews']);
+        serReviewDetails(response);
       } catch (error) {
         console.error("Error fetching restaurants:", error);
       } finally {
@@ -182,8 +184,8 @@ const Home = () => {
             />
             <div className="floating-badge">
               <div className="badge-content">
-                <span className="rating">4.5</span>
-                <span className="reviews">10+ Reviews</span>
+                <span className="rating">{resviewdetails?.rating_ratio}</span>
+                <span className="reviews">{resviewdetails?.total_reviews} Reviews</span>
               </div>
             </div>
           </div>
