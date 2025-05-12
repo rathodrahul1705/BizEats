@@ -14,6 +14,7 @@ from django.views.generic import View
 from django.shortcuts import render
 from django.utils.decorators import method_decorator
 import logging
+from django.db.models import Avg, Count
 
 logger = logging.getLogger(__name__)
 
@@ -218,13 +219,16 @@ class FetchReviewView(APIView):
             review_text__exact=''
         ).order_by('-created_at').first()
 
-        # Get all reviews excluding the one we already included
-        other_reviews = OrderReview.objects.exclude(id=first_review_with_text.id if first_review_with_text else None).order_by('-created_at')
+        # Get all other reviews
+        other_reviews = OrderReview.objects.exclude(
+            id=first_review_with_text.id if first_review_with_text else None
+        ).order_by('-created_at')
 
-        # Combine first non-empty review with the rest
+        # Combine reviews
         combined_reviews = [first_review_with_text] if first_review_with_text else []
         combined_reviews += list(other_reviews)
 
+        # Serialize reviews
         reviews_data = [
             {
                 "id": review.id,
@@ -238,9 +242,18 @@ class FetchReviewView(APIView):
             for review in combined_reviews if review is not None
         ]
 
+        # Calculate count and average rating
+        review_stats = OrderReview.objects.aggregate(
+            total_reviews=Count('id'),
+            avg_rating=Avg('rating')
+        )
+
         return Response(
             {
+                "rating_ratio": round(review_stats['avg_rating'] or 0, 1),
+                "total_reviews": review_stats['total_reviews'],
                 "reviews": reviews_data
             },
             status=status.HTTP_200_OK
         )
+
