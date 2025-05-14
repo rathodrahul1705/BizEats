@@ -53,16 +53,16 @@ const OrderDetails = ({ user, setUser }) => {
   const [deals, setDeals] = useState([
     {
       id: 1,
-      title: "Free Delivery",
-      description: "On orders above ₹200",
-      icon: "🏍️",
+      title: "10% Off",
+      description: "On every order",
+      icon: "🤑",
       color: "#fff"
     },
     {
       id: 2,
-      title: "10% Off",
-      description: "On every order",
-      icon: "🤑",
+      title: "Free Delivery",
+      description: "On orders above ₹200",
+      icon: "🏍️",
       color: "#fff"
     },
     {
