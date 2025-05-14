@@ -59,19 +59,19 @@ const OrderDetails = ({ user, setUser }) => {
       color: "#fff"
     },
     {
-      id: 3,
+      id: 2,
       title: "10% Off",
       description: "On every order",
       icon: "🤑",
       color: "#fff"
     },
     {
-      id: 4,
-      title: "Free Gulab Jamun 1 (PC)",
-      description: "Sweet treat on the house!",
-      icon: "🍮",
-      color: "#fff"
-    }
+      id: 3,
+      title: "Free Packaging",
+      description: "Neat and secure packaging!",
+      icon: "📦",
+      color: "#fff",
+    }    
   ]);
 
   useEffect(() => {
