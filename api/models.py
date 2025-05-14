@@ -554,6 +554,7 @@ class Coupon(models.Model):
 class OrderReview(models.Model):
     order_id = models.CharField(max_length=50, unique=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='order_reviews')
+    restaurant_id = models.CharField(max_length=255, null=True, blank=True, default=None)
     rating = models.PositiveSmallIntegerField()  # typically between 1 and 5
     review_text = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)

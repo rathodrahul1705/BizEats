@@ -291,7 +291,7 @@ class OrderLiveLocationSerializer(serializers.ModelSerializer):
 class OrderReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = OrderReview
-        fields = ['order_id', 'user', 'rating', 'review_text']
+        fields = ['order_id', 'user', 'rating', 'review_text', 'restaurant_id']
 
     def validate_rating(self, value):
         if value < 1 or value > 5:

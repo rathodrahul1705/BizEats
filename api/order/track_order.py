@@ -112,6 +112,7 @@ class TrackOrder(APIView):
                 
                 order_data = {
                     "order_number": order.order_number,
+                    "restaurant_id": order.restaurant_id,
                     "delivery_fee": order.delivery_fee,
                     "restaurant_name": order.restaurant.restaurant_name,
                     "restaurant_contact": order.restaurant.owner_details.owner_contact,
