@@ -8,7 +8,11 @@ import {
   ChevronDown, 
   ChevronUp,
   Share2,
-  Gift
+  Gift,
+  Clock,
+  MapPin,
+  Star,
+  AlertCircle
 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import "../assets/css/OrderDetails.css";
@@ -42,6 +46,7 @@ const OrderDetails = ({ user, setUser }) => {
   const [categoryVisibility, setCategoryVisibility] = useState({});
   const [isShopOpen, setIsShopOpen] = useState(false);
   const [showShareOptions, setShowShareOptions] = useState(false);
+  const [currentTime, setCurrentTime] = useState(new Date());
   const navigate = useNavigate();
   const sessionId = getOrCreateSessionId();
 
@@ -79,6 +84,14 @@ const OrderDetails = ({ user, setUser }) => {
       setCategoryVisibility(initialVisibility);
     }
   }, [foodData]);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 60000); // Update every minute
+
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -148,6 +161,8 @@ const OrderDetails = ({ user, setUser }) => {
         location: response.Address,
         rating: response.rating,
         minOrder: response.min_order || 0,
+        openingTime: "09:00", // Assuming opening time
+        closingTime: "22:00", // Assuming closing time
       });
 
       setFoodData(
@@ -324,9 +339,21 @@ const OrderDetails = ({ user, setUser }) => {
     const istOffset = 330 * 60 * 1000;
     const istTime = new Date(now.getTime() + istOffset);
     const currentHour = istTime.getUTCHours();
-    if(storeDetails?.restaurant_status != undefined){
-      const open = currentHour >= 9 && currentHour < 22 && storeDetails?.restaurant_status == 2;
-      setIsShopOpen(open);
+    const currentMinutes = istTime.getUTCMinutes();
+    
+    if (storeDetails?.restaurant_status !== undefined) {
+      // Parse opening and closing times
+      const [openingHour, openingMinute] = storeDetails.openingTime.split(':').map(Number);
+      const [closingHour, closingMinute] = storeDetails.closingTime.split(':').map(Number);
+      
+      // Convert to 24-hour format for comparison
+      const isOpen = (
+        (currentHour > openingHour || (currentHour === openingHour && currentMinutes >= openingMinute)) &&
+        (currentHour < closingHour || (currentHour === closingHour && currentMinutes < closingMinute)) &&
+        storeDetails.restaurant_status === 2
+      );
+      
+      setIsShopOpen(isOpen);
     }
   };
 
@@ -334,7 +361,7 @@ const OrderDetails = ({ user, setUser }) => {
     checkShopTimings();
     const interval = setInterval(checkShopTimings, 60000);
     return () => clearInterval(interval);
-  }, [storeDetails?.restaurant_status]);
+  }, [storeDetails?.restaurant_status, storeDetails?.openingTime, storeDetails?.closingTime, currentTime]);
 
   if (loading && filteredFood.length === 0) {
     return <StripeLoader />;
@@ -385,22 +412,57 @@ const OrderDetails = ({ user, setUser }) => {
       )}
 
       <div className="order-details-page-menu-store-details-card">
-        {!isShopOpen && (
-          <div className="order-details-page-menu-shop-closed-note">
-            <div className="order-details-page-menu-shop-closed-icon">⚠️</div>
-            <div className="order-details-page-menu-shop-closed-text">
-              {storeDetails.restaurant_status !== 2
-                ? 'Shop is closed today'
-                : 'Shop is currently closed. It will open from 9:00 AM to 10:00 PM.'}
+        {isShopOpen ? (
+          <div className="order-details-page-menu-shop-status-banner open">
+            <div className="order-details-page-menu-shop-status-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+            </div>
+            <div className="order-details-page-menu-shop-status-content">
+              <h3 className="order-details-page-menu-shop-status-title">Open Now</h3>
+              <p className="order-details-page-menu-shop-status-hours">
+                Today's hours: {storeDetails.openingTime} - {storeDetails.closingTime}
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className="order-details-page-menu-shop-status-banner closed">
+            <div className="order-details-page-menu-shop-status-icon">
+              <AlertCircle size={24} />
+            </div>
+            <div className="order-details-page-menu-shop-status-content">
+              <h3 className="order-details-page-menu-shop-status-title">
+                {storeDetails.restaurant_status !== 2 ? 'Closed Today' : 'Currently Closed'}
+              </h3>
+              <p className="order-details-page-menu-shop-status-hours">
+                {storeDetails.restaurant_status !== 2 
+                  ? 'This restaurant is not open today' 
+                  : `Opens at ${storeDetails.openingTime}`}
+              </p>
             </div>
           </div>
         )}
+
         <div className="order-details-header-subclass">
-          <p className="order-details-page-menu-store-info">⏱ {storeDetails.deliveryTime}</p>
-          <p className="order-details-page-menu-store-info">📍 {storeDetails.location}</p>
-          <p className="order-details-page-menu-store-info">⭐ {storeDetails.rating} / 5</p>
+          <div className="order-details-page-menu-store-info">
+            <Clock size={16} />
+            <span>{storeDetails.deliveryTime}</span>
+          </div>
+          <div className="order-details-page-menu-store-info">
+            <MapPin size={16} />
+            <span>{storeDetails.location}</span>
+          </div>
+          <div className="order-details-page-menu-store-info">
+            <Star size={16} />
+            <span>{storeDetails.rating} / 5</span>
+          </div>
           {storeDetails.minOrder > 0 && (
-            <p className="order-details-page-menu-store-info">💰 Min. Order: ₹{storeDetails.minOrder}</p>
+            <div className="order-details-page-menu-store-info">
+              <span>💰</span>
+              <span>Min. Order: ₹{storeDetails.minOrder}</span>
+            </div>
           )}
         </div>
       </div>
@@ -685,6 +747,7 @@ const OrderDetails = ({ user, setUser }) => {
           </div>
         </div>
       )}
+
     </div>
   );
 };
