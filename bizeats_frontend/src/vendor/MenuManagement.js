@@ -35,7 +35,23 @@ const MenuManagement = () => {
   const [bogoFilter, setBogoFilter] = useState("all");
   const [showFilters, setShowFilters] = useState(false);
 
-  const categories = ["Appetizer", "Main Course", "Breakfast", "Dessert", "Beverage"];
+  const categories = [
+    "Appetizer",
+    "Main Course",
+    "Breakfast",
+    "Dessert",
+    "Beverage",
+    "Burger",
+    "Pizza",
+    "Wraps & Rolls",
+    "Sandwich",
+    "Salad",
+    "Combo Meal",
+    "Street Food",
+    "Rice & Biryani",
+    "Noodles & Pasta"
+  ];
+  
   const spiceLevels = ["Mild", "Medium", "Spicy", "Extra Spicy"];
   const cuisinesList = ["Indian", "Chinese", "Italian", "Mexican", "American"];
   const servingSizes = ["Small", "Medium", "Large"];

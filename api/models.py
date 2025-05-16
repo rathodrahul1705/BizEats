@@ -189,6 +189,16 @@ class RestaurantMenu(models.Model):
         ('Main Course', 'Main Course'),
         ('Dessert', 'Dessert'),
         ('Beverage', 'Beverage'),
+        ('Burger', 'Burger'),
+        ('Pizza', 'Pizza'),
+        ('Wraps & Rolls', 'Wraps & Rolls'),
+        ('Sandwich', 'Sandwich'),
+        ('Salad', 'Salad'),
+        ('Breakfast', 'Breakfast'),
+        ('Combo Meal', 'Combo Meal'),
+        ('Street Food', 'Street Food'),
+        ('Rice & Biryani', 'Rice & Biryani'),
+        ('Noodles & Pasta', 'Noodles & Pasta'),
     ]
     
     SPICE_LEVEL_CHOICES = [
@@ -213,7 +223,7 @@ class RestaurantMenu(models.Model):
     item_name = models.CharField(max_length=255)
     item_price = models.DecimalField(max_digits=6, decimal_places=2)
     description = models.TextField()
-    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES)
+    category = models.CharField(max_length=30, choices=CATEGORY_CHOICES)
     cuisines = models.ManyToManyField('RestaurantCuisine', related_name='menu_items')
     item_image = models.ImageField(upload_to='menu_images/', blank=True, null=True)
     spice_level = models.CharField(max_length=20, choices=SPICE_LEVEL_CHOICES)
