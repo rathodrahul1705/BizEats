@@ -4,6 +4,7 @@ import API_ENDPOINTS from "../components/config/apiConfig";
 import "../assets/css/vendor/OrderManagement.css";
 import { useParams } from "react-router-dom";
 import { FaPhone, FaMapMarkerAlt, FaCreditCard, FaUser, FaClock, FaMotorcycle } from "react-icons/fa";
+import StripeLoader from "../loader/StripeLoader";
 
 const statusOptions = [
   { id: 1, label: "Pending" },
@@ -216,6 +217,11 @@ const OrderManagement = ({ user }) => {
       default: return "#6B7280";
     }
   };
+
+  if (filteredOrders.length === 0) {
+    return <StripeLoader />;
+  }
+
 
   return (
     <div className="vendor-orders">
