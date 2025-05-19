@@ -199,6 +199,7 @@ class RestaurantMenu(models.Model):
         ('Street Food', 'Street Food'),
         ('Rice & Biryani', 'Rice & Biryani'),
         ('Noodles & Pasta', 'Noodles & Pasta'),
+        ('Rotis', 'Rotis'),
     ]
     
     SPICE_LEVEL_CHOICES = [
