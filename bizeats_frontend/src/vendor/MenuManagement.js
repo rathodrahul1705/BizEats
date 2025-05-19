@@ -49,7 +49,8 @@ const MenuManagement = () => {
     "Combo Meal",
     "Street Food",
     "Rice & Biryani",
-    "Noodles & Pasta"
+    "Noodles & Pasta",
+    "Rotis"
   ];
   
   const spiceLevels = ["Mild", "Medium", "Spicy", "Extra Spicy"];
