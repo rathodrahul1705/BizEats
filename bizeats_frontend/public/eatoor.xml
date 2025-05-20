@@ -71,4 +71,11 @@
     <priority>1.0</priority>
   </url>
 
+  <!-- Newly Added URL -->
+  <url>
+    <loc>https://www.eatoor.com/city/thane/eatoor-delights-kalwa-thane/EAT33233428</loc>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+
 </urlset>
