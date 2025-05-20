@@ -276,7 +276,7 @@ const Home = () => {
             >
               {foodItems.map((item, index) => (
                 <SwiperSlide key={index}>
-                  <Link to={`/order-details/${item?.restaurant_id}`} className="food-section-slider__item">
+                  <Link to={`/city/thane/eatoor-delights-kalwa-thane/EAT33233428`} className="food-section-slider__item">
                     <div className="food-section-slider__image-wrapper">
                       <img
                         src={item.image}
