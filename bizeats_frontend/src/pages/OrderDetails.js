@@ -161,7 +161,7 @@ const OrderDetails = ({ user, setUser }) => {
         location: response.Address,
         rating: response.rating,
         minOrder: response.min_order || 0,
-        openingTime: "09:00", // Assuming opening time
+        openingTime: "08:00", // Assuming opening time
         closingTime: "22:00", // Assuming closing time
       });
 
