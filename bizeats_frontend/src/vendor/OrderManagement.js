@@ -3,7 +3,7 @@ import fetchData from "../components/services/apiService";
 import API_ENDPOINTS from "../components/config/apiConfig";
 import "../assets/css/vendor/OrderManagement.css";
 import { useParams } from "react-router-dom";
-import { FaPhone, FaMapMarkerAlt, FaCreditCard, FaUser, FaClock, FaMotorcycle } from "react-icons/fa";
+import { FaPhone, FaMapMarkerAlt, FaCreditCard, FaUser, FaClock, FaMotorcycle, FaWhatsapp } from "react-icons/fa";
 import StripeLoader from "../loader/StripeLoader";
 
 const statusOptions = [
@@ -218,10 +218,36 @@ const OrderManagement = ({ user }) => {
     }
   };
 
+  const shareOnWhatsApp = (order) => {
+    const orderDetails = `
+*Order Details*:
+📋 *Order Number*: #${order.order_number}
+
+*Customer Details*:
+👤 *Name*: ${order.full_name || 'N/A'}
+📞 *Contact*: ${order.phone_number || 'N/A'}
+📍 *Address*: ${order.delivery_address || 'N/A'}
+
+*Payment Information*:
+💳 *Method*: ${order.payment_method ? order.payment_method.replace(/_/g, ' ') : 'N/A'}
+✅ *Status*: ${order.payment_status || 'N/A'}
+💰 *Amount*: ₹${order.total}
+
+*Timing*:
+📅 *Order Placed*: ${convertUTCtoIST(order.placed_on)}
+⏱️ *Estimated Delivery*: ${convertUTCtoIST(order.estimated_delivery)}
+
+*Status*: ${order.status.label}
+    `;
+
+    const encodedMessage = encodeURIComponent(orderDetails);
+    const whatsappUrl = `https://wa.me/?text=${encodedMessage}`;
+    window.open(whatsappUrl, '_blank');
+  };
+
   if (filteredOrders.length === 0) {
     return <StripeLoader />;
   }
-
 
   return (
     <div className="vendor-orders">
@@ -463,6 +489,15 @@ const OrderManagement = ({ user }) => {
                       <span>Total</span>
                       <span>₹{order.total}</span>
                     </div>
+                  </div>
+
+                  <div className="share-order-container">
+                    <button 
+                      className="share-order-btn"
+                      onClick={() => shareOnWhatsApp(order)}
+                    >
+                      <FaWhatsapp /> Share Order Details on WhatsApp
+                    </button>
                   </div>
                 </div>
               )}
