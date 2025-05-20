@@ -60,11 +60,11 @@ const PaymentOption = ({ user }) => {
           discount = appliedCoupon.discount_amount;
         } else {
 
-          if(itemTotal > 349){
+          // if(itemTotal > 349){
             discount = Math.round((itemTotal + deliveryFee + taxAmount) * 0.10);
-          }else{
-            discount = 0
-          }
+          // }else{
+            // discount = 0
+          // }
         }
         
         const totalPayable = itemTotal + deliveryFee + taxAmount - discount;
