@@ -15,6 +15,7 @@ from django.utils.decorators import method_decorator
 from django.shortcuts import get_object_or_404
 from api.serializers import RestaurantMasterSerializer, RestaurantSerializerByStatus, RestaurantDetailSerializer, RestaurantMasterNewSerializer, RestaurantMenuSerializer, RestaurantListSerializer
 from api.models import RestaurantMaster, RestaurantCuisine, RestaurantDeliveryTiming, RestaurantDocuments, RestaurantOwnerDetail, RestaurantLocation, RestaurantMenu
+from django.utils.text import slugify
 
 class RestaurantStoreStepOne(APIView):
     permission_classes = [IsAuthenticated]
@@ -434,37 +435,47 @@ class RestaurantListAPI(APIView):
         try:
             live_restaurants = RestaurantMaster.objects.filter(restaurant_status__in=[2, 3])
             data = RestaurantSerializerByStatus(live_restaurants, many=True).data
-            
+
             final_data = []
             for restaurant in data:
-
                 location = restaurant.get("location", {})
-                restaurant_location = ", ".join([
-                    location.get("area_sector_locality", ""),
-                    location.get("city", ""),
-                ]).strip(", ")
+                area = location.get("area_sector_locality", "")
+                city = location.get("city", "")
+                restaurant_name = restaurant.get("restaurant_name", "")
 
-                item_cuisines = ", ".join([c["cuisine_name"] for c in restaurant.get("cuisines", []) if c["cuisine_name"]])
+                restaurant_location = ", ".join(filter(None, [area, city]))
+
+                item_cuisines = ", ".join([
+                    c["cuisine_name"] for c in restaurant.get("cuisines", []) if c.get("cuisine_name")
+                ])
 
                 menu_items = restaurant.get("menu_items", [])
                 total_price = sum(float(item["item_price"]) for item in menu_items)
                 avg_price_range = round(total_price / len(menu_items), 2) if menu_items else 0
-                image_profie = request.build_absolute_uri(restaurant["profile_image"]) if restaurant["profile_image"] else None,
+
+                image_profile = request.build_absolute_uri(restaurant["profile_image"]) if restaurant.get("profile_image") else None
+
+                # Generate SEO-friendly slug
+                seo_slug = slugify(f"{restaurant_name} {area} {city}")
+                seo_city = slugify(f"{city}")
 
                 final_data.append({
-                    "restaurant_id": restaurant["restaurant_id"],
-                    "restaurant_name": restaurant["restaurant_name"],
-                    "restaurant_image": image_profie,
+                    "restaurant_id": restaurant.get("restaurant_id"),
+                    "restaurant_name": restaurant_name,
+                    "restaurant_slug": seo_slug,
+                    "restaurant_image": image_profile,
                     "restaurant_location": restaurant_location,
                     "item_cuisines": item_cuisines,
                     "avg_price_range": round(avg_price_range),
-                    "restaurant_status": restaurant['restaurant_status']
+                    "restaurant_city": seo_city,
+                    "restaurant_status": restaurant.get("restaurant_status")
                 })
 
             return Response(final_data, status=status.HTTP_200_OK)
 
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 class RestaurantDetailMenuView(APIView):
     def get(self, request, restaurant_id):

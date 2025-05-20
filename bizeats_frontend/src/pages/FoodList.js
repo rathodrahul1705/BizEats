@@ -29,7 +29,7 @@ const FoodGrid = () => {
   if (loading && restaurants.length === 0) {
     return <StripeLoader />;
   }
-
+  
   return (
     <div className="food-grid-container">
       <div className="food-grid-content">
@@ -40,7 +40,7 @@ const FoodGrid = () => {
         <div className="food-grid">
           {restaurants.map((restaurant) => (
             <Link 
-              to={`/order-details/${restaurant.restaurant_id}`} 
+              to={`/city/${restaurant?.restaurant_city}/${restaurant?.restaurant_slug}/${restaurant.restaurant_id}`} 
               className="food-card" 
               key={restaurant.restaurant_id}
             >

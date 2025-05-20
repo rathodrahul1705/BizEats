@@ -144,14 +144,6 @@ const Home = () => {
     //   link: "/signup",
     //   bgColor: "linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%)"
     // },
-    {
-      id: 3,
-      title: "Family Combo",
-      subtitle: "Special discount on meals for 4 people",
-      cta: "Explore",
-      link: "/order-details/AJA10010550",
-      bgColor: "linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)"
-    }
   ];
   
 
@@ -365,7 +357,7 @@ const Home = () => {
           >
             {restaurants.map((restaurant) => (
               <SwiperSlide key={restaurant.restaurant_id}>
-                <Link to={`/order-details/${restaurant.restaurant_id}`} className="food-card-wrapper-link">
+                <Link to={`/city/${restaurant?.restaurant_city}/${restaurant?.restaurant_slug}/${restaurant.restaurant_id}`}  className="food-card-wrapper-link">
                   <div className="food-card">
                     <div className="food-card-inner">
                       <img

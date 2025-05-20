@@ -70,14 +70,16 @@ const App = () => {
             <Route path="/offers" element={<Offers />} />
             <Route path="/food-list" element={<FoodList />} />
             <Route path="/cart" element={<Cart user={user} setUser={setUser} />} />
-            <Route path="/order-details" element={<OrderDetails />} />
-            <Route path="/order-details/:restaurant_id" element={<OrderDetails user={user} setUser={setUser} />} />
+            {/* <Route path="/order-details" element={<OrderDetails />} /> */}
+            {/* <Route path="/order-details/:restaurant_id" element={<OrderDetails user={user} setUser={setUser} />} /> */}
             <Route path="/payments/:restaurant_id" element={<PaymentOption user={user} setUser={setUser} />} />
             <Route path="/register-your-restaurent" element={<RestHome setUser={setUser} setIsRestaurantRegister={setIsRestaurantRegister} />} />
             <Route path="/payment/success" element={<PaymentSuccess />} />
             <Route path="/payment/failed" element={<PaymentFailed />} />
             <Route path="/order-confirmation" element={<OrderConfirmation />} />
             <Route path="/check-location" element={<LocationChecker />} />
+
+            <Route path="/city/:city/:slug/:restaurant_id" element={<OrderDetails user={user} setUser={setUser} />} />
 
             {/* Private Routes */}
             <Route path="/track-order" element={
