@@ -371,12 +371,12 @@ const OrderDetails = ({ user, setUser }) => {
     <div className="order-details-page-menu-container">
       <div className="order-details-page-menu-store-header">
         <h1 className="order-details-page-menu-store-title">{storeDetails.name}</h1>
-        <button 
+        {/* <button 
           className="order-details-page-menu-share-btn header-share"
           onClick={toggleShareOptions}
         >
           <Share2 size={18} />
-        </button>
+        </button> */}
       </div>
 
       {showShareOptions && (
