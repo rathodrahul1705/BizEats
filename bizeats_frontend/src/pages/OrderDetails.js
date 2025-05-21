@@ -61,7 +61,7 @@ const OrderDetails = ({ user, setUser }) => {
     {
       id: 2,
       title: "Free Delivery",
-      description: "On orders above ₹200",
+      description: "On orders above ₹399",
       icon: "🏍️",
       color: "#fff"
     },
