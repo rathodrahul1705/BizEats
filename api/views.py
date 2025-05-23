@@ -257,3 +257,8 @@ class FetchReviewView(APIView):
             status=status.HTTP_200_OK
         )
 
+
+class FetchUserList(APIView):
+    def get(self, request, *args, **kwargs):
+        users = User.objects.all().values('id', 'email', 'full_name', 'contact_number', 'is_active')
+        return Response({"users": list(users)}, status=status.HTTP_200_OK)

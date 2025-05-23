@@ -1,0 +1,632 @@
+/* Customer Management CSS */
+:root {
+    --primary-color: #4F46E5;
+    --primary-hover: #4338CA;
+    --secondary-color: #10B981;
+    --background-light: #F8F9FA;
+    --text-dark: #2D3748;
+    --text-light: #4A5568;
+    --border-color: #E2E8F0;
+    --success-color: #10B981;
+    --danger-color: #EF4444;
+    --warning-color: #F59E0B;
+    --info-color: #3B82F6;
+    --white: #FFFFFF;
+    --gray-light: #EDF2F7;
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+    --radius-sm: 0.25rem;
+    --radius-md: 0.5rem;
+    --radius-lg: 0.75rem;
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  /* Base Styles */
+  .customer-management {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    line-height: 1.5;
+    color: var(--text-dark);
+    background-color: var(--background-light);
+    min-height: 100vh;
+    padding: 1.5rem;
+  }
+  
+  /* Header Styles */
+  .customer-management-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+  
+  .customer-management-header h2 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin: 0;
+  }
+  
+  /* Filter Section */
+  .customer-management-filters {
+    margin-bottom: 1.5rem;
+    background-color: var(--white);
+    padding: 1rem;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+  }
+  
+  .customer-management-search {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    position: relative;
+    margin-bottom: 1rem;
+  }
+  
+  .customer-management-search-icon {
+    position: absolute;
+    left: 0.875rem;
+    color: var(--text-light);
+  }
+  
+  .customer-management-search-input {
+    width: 100%;
+    padding: 0.625rem 1.25rem 0.625rem 2.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    font-size: 0.9375rem;
+    transition: var(--transition);
+    background-color: var(--white);
+  }
+  
+  .customer-management-search-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+  }
+  
+  .customer-management-filter-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background-color: var(--gray-light);
+    color: var(--text-dark);
+    border: none;
+    border-radius: var(--radius-md);
+    padding: 0.625rem 1rem;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: var(--transition);
+  }
+  
+  .customer-management-filter-toggle:hover {
+    background-color: #e2e8f0;
+  }
+  
+  .customer-management-filter-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+    padding: 1rem 0;
+    border-top: 1px solid var(--border-color);
+    margin-top: 1rem;
+  }
+  
+  .customer-management-filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .customer-management-filter-group label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-dark);
+  }
+  
+  .customer-management-filter-select {
+    padding: 0.5rem 0.875rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    font-size: 0.875rem;
+    background-color: var(--white);
+    transition: var(--transition);
+  }
+  
+  .customer-management-filter-select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+  }
+  
+  .customer-management-reset-filters {
+    align-self: flex-end;
+    background: none;
+    border: none;
+    color: var(--primary-color);
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+    padding: 0.5rem 0;
+  }
+  
+  .customer-management-reset-filters:hover {
+    color: var(--primary-hover);
+    text-decoration: underline;
+  }
+  
+  .customer-management-results-count {
+    font-size: 0.875rem;
+    color: var(--text-light);
+    margin-bottom: 1rem;
+  }
+  
+  /* Button Styles */
+  .customer-management-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-weight: 500;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: var(--transition);
+    border: none;
+    outline: none;
+  }
+  
+  .customer-management-add-customer {
+    background-color: #f44336;
+    color: var(--white);
+    padding: 0.625rem 1.25rem;
+    font-size: 0.9375rem;
+    box-shadow: var(--shadow-sm);
+  }
+  
+  .customer-management-add-customer:hover {
+    background-color: var(--primary-hover);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+  }
+  
+  /* Table Container */
+  .customer-management-table-container {
+    width: 100%;
+    overflow-x: auto;
+    background-color: var(--white);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 2rem;
+  }
+  
+  /* Table Styles */
+  .customer-management-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    min-width: 800px;
+  }
+  
+  .customer-management-table th,
+  .customer-management-table td {
+    padding: 1rem 1.25rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+  }
+  
+  .customer-management-table th {
+    background-color: var(--gray-light);
+    color: var(--text-dark);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    position: sticky;
+    top: 0;
+  }
+  
+  .customer-management-table tr:last-child td {
+    border-bottom: none;
+  }
+  
+  .customer-management-table tr:hover td {
+    background-color: rgba(79, 70, 229, 0.03);
+  }
+  
+  /* Status Badge */
+  .customer-management-status-badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: capitalize;
+  }
+  
+  .customer-management-status-badge.active {
+    background-color: rgba(16, 185, 129, 0.1);
+    color: var(--success-color);
+  }
+  
+  .customer-management-status-badge.inactive {
+    background-color: rgba(245, 158, 11, 0.1);
+    color: var(--warning-color);
+  }
+  
+  .customer-management-status-badge.banned {
+    background-color: rgba(239, 68, 68, 0.1);
+    color: var(--danger-color);
+  }
+  
+  /* Action Buttons */
+  .customer-management-action-buttons {
+    display: flex;
+    gap: 0.5rem;
+  }
+  
+  .customer-management-edit,
+  .customer-management-delete {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: var(--radius-sm);
+    transition: var(--transition);
+    border: none;
+    cursor: pointer;
+  }
+  
+  .customer-management-edit {
+    background-color: var(--info-color);
+    color: var(--white);
+  }
+  
+  .customer-management-edit:hover {
+    background-color: #2563EB;
+    transform: scale(1.05);
+  }
+  
+  .customer-management-delete {
+    background-color: var(--danger-color);
+    color: var(--white);
+  }
+  
+  .customer-management-delete:hover {
+    background-color: #DC2626;
+    transform: scale(1.05);
+  }
+  
+  /* Empty State */
+  .customer-management-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1rem;
+    text-align: center;
+    background-color: var(--white);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    margin-top: 1rem;
+  }
+  
+  .customer-management-empty-state svg {
+    width: 4rem;
+    height: 4rem;
+    margin-bottom: 1rem;
+    color: var(--border-color);
+  }
+  
+  .customer-management-empty-state h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 0.5rem;
+  }
+  
+  .customer-management-empty-state p {
+    color: var(--text-light);
+    margin-bottom: 1.5rem;
+  }
+  
+  /* Modal Styles */
+  .customer-management-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    display: flex;
+    justify-content: flex-end;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+  }
+  
+  .customer-management-show {
+    opacity: 1;
+    visibility: visible;
+  }
+  
+  .customer-management-modal-content {
+    background-color: var(--white);
+    width: 100%;
+    max-width: 450px;
+    height: 100vh;
+    overflow-y: auto;
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+    padding: 1.5rem;
+    box-shadow: -4px 0 15px rgba(0, 0, 0, 0.1);
+  }
+  
+  .customer-management-show .customer-management-modal-content {
+    transform: translateX(0);
+  }
+  
+  .customer-management-modal-content h3 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 1.5rem;
+    padding-right: 2rem;
+  }
+  
+  .customer-management-close-modal {
+    position: absolute;
+    top: 1.5rem;
+    right: 1.5rem;
+    background: none;
+    border: none;
+    color: var(--text-light);
+    cursor: pointer;
+    transition: var(--transition);
+    z-index: 10;
+  }
+  
+  .customer-management-close-modal:hover {
+    color: var(--text-dark);
+    transform: rotate(90deg);
+  }
+  
+  /* Form Styles */
+  .customer-management-form-group {
+    margin-bottom: 1.25rem;
+  }
+  
+  .customer-management-form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: var(--text-dark);
+    font-size: 0.875rem;
+  }
+  
+  .customer-management-form-control {
+    width: 100%;
+    padding: 0.625rem 0.875rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    font-size: 0.9375rem;
+    transition: var(--transition);
+    background-color: var(--white);
+  }
+  
+  .customer-management-form-control:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+  }
+  
+  textarea.customer-management-form-control {
+    min-height: 6rem;
+    resize: vertical;
+  }
+  
+  select.customer-management-form-control {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%234A5568' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 16px 12px;
+  }
+  
+  select[multiple].customer-management-form-control {
+    background-image: none;
+    height: auto;
+    padding: 0.5rem;
+  }
+  
+  select[multiple].customer-management-form-control option {
+    padding: 0.5rem;
+  }
+  
+  .customer-management-form-text {
+    display: block;
+    margin-top: 0.25rem;
+    font-size: 0.75rem;
+    color: var(--text-light);
+  }
+  
+  /* Submit Button */
+  .customer-management-submit-btn {
+    width: 100%;
+    padding: 0.75rem;
+    background-color: var(--primary-color);
+    color: var(--white);
+    border: none;
+    border-radius: var(--radius-sm);
+    font-weight: 500;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: var(--transition);
+    margin-top: 0.5rem;
+    box-shadow: var(--shadow-sm);
+  }
+  
+  .customer-management-submit-btn:hover {
+    background-color: var(--primary-hover);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+  }
+  
+  /* Responsive Styles */
+  @media (max-width: 768px) {
+    .customer-management {
+      padding: 1rem;
+    }
+  
+    .customer-management-header {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  
+    .customer-management-filter-options {
+      grid-template-columns: 1fr;
+    }
+  
+    .customer-management-modal-content {
+      max-width: 100%;
+      padding: 1.25rem;
+    }
+  
+    .customer-management-form-group {
+      margin-bottom: 1rem;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .customer-management-table th,
+    .customer-management-table td {
+      padding: 0.75rem;
+      font-size: 0.8125rem;
+    }
+  
+    .customer-management-modal-content {
+      padding: 1rem;
+    }
+  
+    .customer-management-modal-content h3 {
+      font-size: 1.25rem;
+      margin-bottom: 1rem;
+    }
+  
+    .customer-management-form-control {
+      font-size: 0.875rem;
+      padding: 0.5rem 0.75rem;
+    }
+    
+    .customer-management-action-buttons {
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+    
+    .customer-management-edit,
+    .customer-management-delete {
+      width: 1.75rem;
+      height: 1.75rem;
+    }
+  }
+  
+  /* Modern Scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: var(--gray-light);
+    border-radius: 10px;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 10px;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-hover);
+  }
+  
+  /* Animation for empty state */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  .customer-management-empty-state {
+    animation: fadeIn 0.5s ease-out forwards;
+  }
+  
+  /* Focus styles for accessibility */
+  .customer-management-button:focus-visible,
+  .customer-management-edit:focus-visible,
+  .customer-management-delete:focus-visible,
+  .customer-management-close-modal:focus-visible,
+  .customer-management-submit-btn:focus-visible,
+  .customer-management-search-input:focus-visible,
+  .customer-management-filter-select:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+  }
+  
+  /* Pagination Styles */
+.customer-management-pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+  padding: 1rem 0;
+}
+
+.customer-management-pagination-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+  background-color: var(--white);
+  color: var(--text-dark);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.customer-management-pagination-button:hover:not(:disabled) {
+  background-color: var(--gray-light);
+}
+
+.customer-management-pagination-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.customer-management-pagination-button.active {
+  background-color: var(--primary-color);
+  color: var(--white);
+  border-color: var(--primary-color);
+}
+
+/* Responsive Pagination */
+@media (max-width: 768px) {
+  .customer-management-pagination {
+    gap: 0.25rem;
+  }
+  
+  .customer-management-pagination-button {
+    width: 2rem;
+    height: 2rem;
+    font-size: 0.875rem;
+  }
+}

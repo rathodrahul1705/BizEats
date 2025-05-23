@@ -538,6 +538,29 @@ const DashboardOverview = ({ user, setUser }) => {
                     </div>
                     <div className="link-arrow">→</div>
                   </Link>
+                  <Link 
+                    to={`/vendor-dashboard/customer`} 
+                    className="link-card"
+                  >
+                    <div className="link-icon">👤</div>
+                    <div className="link-content">
+                      <h4>Customer Management</h4>
+                      <p>Manage your customer details</p>
+                    </div>
+                    <div className="link-arrow">→</div>
+                  </Link>
+
+                  {/* <Link 
+                    to={`/vendor-dashboard/restaurant`} 
+                    className="link-card"
+                  >
+                    <div className="link-icon">:🛒</div>
+                    <div className="link-content">
+                      <h4>Cart Management</h4>
+                      <p>Manage your Cart details</p>
+                    </div>
+                    <div className="link-arrow">→</div>
+                  </Link> */}
                 </div>
               </div>
             )}

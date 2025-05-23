@@ -109,7 +109,13 @@ const API_ENDPOINTS = {
   
   REVIEWS: {
     SUBMIT_REVIEW: `${BASE_URL}/order-review/update/`,
+  },
+
+  USER: {
+    USER_LIST: `${BASE_URL}/user/user_list/`,
   }
+
+
 };
 
 export default API_ENDPOINTS;
