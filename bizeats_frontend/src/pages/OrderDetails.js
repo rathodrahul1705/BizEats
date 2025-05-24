@@ -28,7 +28,7 @@ import 'swiper/css/navigation';
 
 const OrderDetails = ({ user, setUser }) => {
   const [loading, setLoading] = useState(true);
-  const { restaurant_id } = useParams();
+  const { city, slug, restaurant_id, offer } = useParams();
   const [cart, setCart] = useState({});
   const [filter, setFilter] = useState("all");
   const [storeDetails, setStoreDetails] = useState({
@@ -38,6 +38,12 @@ const OrderDetails = ({ user, setUser }) => {
     rating: 0,
     minOrder: 0,
   });
+
+  console.log("city",city)
+  console.log("slug",slug)
+  console.log("restaurant_id",restaurant_id)
+  console.log("offer",offer)
+
   const [foodData, setFoodData] = useState([]);
   const [showResetCartModal, setShowResetCartModal] = useState(false);
   const [pendingItem, setPendingItem] = useState(null);
@@ -148,42 +154,46 @@ const OrderDetails = ({ user, setUser }) => {
 
   const fetchDataOrderList = async () => {
     try {
-      const response = await fetchData(
-        API_ENDPOINTS.ORDER.RES_MENU_LIST_BY_RES_ID(restaurant_id),
-        "GET",
-        null
-      );
-
+      const url = API_ENDPOINTS.ORDER.RES_MENU_LIST_BY_RES_ID(restaurant_id, offer);
+      const response = await fetchData(url, "GET", null);
+  
+      if (!response || typeof response !== "object") {
+        throw new Error("Invalid response format");
+      }
+  
       setStoreDetails({
-        name: response.restaurant_name,
-        restaurant_status: response.restaurant_status,
-        deliveryTime: `${response.time_required_to_reach_loc} min`,
-        location: response.Address,
-        rating: response.rating,
-        minOrder: response.min_order || 0,
-        openingTime: "08:00", // Assuming opening time
-        closingTime: "22:00", // Assuming closing time
+        name: response.restaurant_name || "Unnamed Restaurant",
+        restaurant_status: response.restaurant_status ?? "Unknown",
+        deliveryTime: `${response.time_required_to_reach_loc || 0} min`,
+        location: response.Address || "Location not available",
+        rating: response.rating ?? 0,
+        minOrder: response.min_order ?? 0,
+        openingTime: response.opening_time || "08:00", // Replace with real field if available
+        closingTime: response.closing_time || "22:00", // Replace with real field if available
       });
-
+  
+      const items = Array.isArray(response.itemlist) ? response.itemlist : [];
+  
       setFoodData(
-        response.itemlist.map((item) => ({
+        items.map((item) => ({
           id: item.id,
-          title: item.item_name,
-          description: item.description,
-          image: item.item_image,
-          price: parseFloat(item.item_price),
-          deliveryTime: `${response.time_required_to_reach_loc} min`,
-          location: response.Address,
-          type: item?.food_type,
-          category: item.category,
-          availability: item.availability,
-          buy_one_get_one_free: item.buy_one_get_one_free,
+          title: item.item_name || "Untitled",
+          description: item.description || "",
+          image: item.item_image || "",
+          price: parseFloat(item.item_price) || 0,
+          deliveryTime: `${response.time_required_to_reach_loc || 0} min`,
+          location: response.Address || "",
+          type: item.food_type || "Unknown",
+          category: item.category || "Uncategorized",
+          availability: item.availability ?? true,
+          buy_one_get_one_free: item.buy_one_get_one_free ?? false,
         }))
       );
     } catch (error) {
-      console.error("Error fetching data:", error);
+      console.error("Error fetching order list data:", error.message || error);
     }
   };
+  
 
   useEffect(() => {
     fetchDataOrderList();

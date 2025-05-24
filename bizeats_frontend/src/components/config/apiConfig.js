@@ -55,8 +55,18 @@ const API_ENDPOINTS = {
 
   ORDER: {
 
-    RES_MENU_LIST_BY_RES_ID: (restaurant_id) => 
-      restaurant_id ? `${BASE_URL}/restaurant/menu/list/${restaurant_id}/` : `${BASE_URL}/restaurant/menu/list/`,
+    // RES_MENU_LIST_BY_RES_ID: (restaurant_id,offer) => 
+    //   restaurant_id ? `${BASE_URL}/restaurant/menu/list/${restaurant_id}/${offer}/` : `${BASE_URL}/restaurant/menu/list/`,
+
+    RES_MENU_LIST_BY_RES_ID: (restaurant_id, offer) => {
+      if (restaurant_id && offer) {
+        return `${BASE_URL}/restaurant/menu/list/${restaurant_id}/${offer}/`;
+      } else if (restaurant_id) {
+        return `${BASE_URL}/restaurant/menu/list/${restaurant_id}/`;
+      } else {
+        return `${BASE_URL}/restaurant/menu/list/`;
+      }
+    },    
 
     ADD_TO_CART: `${BASE_URL}/restaurant/cart/add/`,
     GET_CART_DETAILS: `${BASE_URL}/restaurant/cart/list/`,

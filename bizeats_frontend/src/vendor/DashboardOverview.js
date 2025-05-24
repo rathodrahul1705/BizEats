@@ -550,8 +550,8 @@ const DashboardOverview = ({ user, setUser }) => {
                     <div className="link-arrow">→</div>
                   </Link>
 
-                  {/* <Link 
-                    to={`/vendor-dashboard/restaurant`} 
+                  <Link 
+                    to={`/vendor-dashboard/cart/management`} 
                     className="link-card"
                   >
                     <div className="link-icon">:🛒</div>
@@ -560,7 +560,7 @@ const DashboardOverview = ({ user, setUser }) => {
                       <p>Manage your Cart details</p>
                     </div>
                     <div className="link-arrow">→</div>
-                  </Link> */}
+                  </Link>
                 </div>
               </div>
             )}

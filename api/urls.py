@@ -49,7 +49,17 @@ urlpatterns = [
     path('api/restaurant/status-update/<str:restaurant_id>/', RestaurantStatusUpdate.as_view(), name='restaurant-status-update'),
 
     path('api/restaurant/live/list/', RestaurantListAPI.as_view(), name='restaurant-live-list'),
-    path('api/restaurant/menu/list/<str:restaurant_id>/', RestaurantDetailMenuView.as_view(), name='restaurant-menu-detail'),
+    
+    path(
+        'api/restaurant/menu/list/<str:restaurant_id>/<str:offer>/',
+        RestaurantDetailMenuView.as_view(),
+        name='restaurant-menu-detail-with-offer'
+    ),
+    path(
+        'api/restaurant/menu/list/<str:restaurant_id>/',
+        RestaurantDetailMenuView.as_view(),
+        name='restaurant-menu-detail'
+    ),
 
     path('api/restaurant/cart/add/', RestaurantCartAddOrRemove.as_view(), name='restaurant-cart-add'),
     path('api/restaurant/cart/list/', RestaurantCartList.as_view(), name='restaurant-cart-list'),

@@ -14,6 +14,7 @@ import RestaurantRegistration from './restaurent/RestaurantRegistration';
 import DashboardOverview from './vendor/DashboardOverview';
 import MenuManagement from './vendor/MenuManagement';
 import CustomerManagement from './vendor/CustomerManagement';
+import CartManagement from './vendor/CartManagement';
 import RestaurantManagement from './vendor/RestaurantManagement';
 import OrderManagement from './vendor/OrderManagement';
 import CouponManagement from './vendor/CouponManagement';
@@ -82,6 +83,8 @@ const App = () => {
 
             <Route path="/city/:city/:slug/:restaurant_id" element={<OrderDetails user={user} setUser={setUser} />} />
 
+            <Route path="/city/:city/:slug/:restaurant_id/:offer" element={<OrderDetails user={user} setUser={setUser} />} />
+
             {/* Private Routes */}
             <Route path="/track-order" element={
               // <PrivateRoute user={user}>
@@ -133,6 +136,12 @@ const App = () => {
             <Route path="/vendor-dashboard/customer" element={
               <VendorPrivateRoute user={user} is_restaurant_register={is_restaurant_register}>
                   <CustomerManagement user={user} setUser={setUser} />
+              </VendorPrivateRoute>
+            } />
+
+            <Route path="/vendor-dashboard/cart/management" element={
+              <VendorPrivateRoute user={user} is_restaurant_register={is_restaurant_register}>
+                  <CartManagement user={user} setUser={setUser} />
               </VendorPrivateRoute>
             } />
 

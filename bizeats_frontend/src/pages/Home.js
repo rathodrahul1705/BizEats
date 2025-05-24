@@ -130,23 +130,22 @@ const Home = () => {
   const banners = [
     {
       id: 1,
+      title: "Buy 1 Get 1 Free",
+      subtitle: "Enjoy a free item on your first order – limited time offer!",
+      cta: "Order Now",
+      link: "/city/thane/eatoor-delights-kalwa-thane/EAT33233428/buy-one-get-one-free",
+      bgColor: "linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%)"
+    },
+    {
+      id: 2,
       title: "Weekend Special",
       subtitle: "Enjoy 10% off on every order",
       cta: "Order Now",
       link: "/food-list",
       bgColor: "linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%)"
-    },
-    // {
-    //   id: 2,
-    //   title: "New User Offer",
-    //   subtitle: "Get ₹100 off on your first order",
-    //   cta: "Sign Up",
-    //   link: "/signup",
-    //   bgColor: "linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%)"
-    // },
+    },    
   ];
   
-
   if (loading && restaurants.length === 0) {
     return <StripeLoader />;
   }

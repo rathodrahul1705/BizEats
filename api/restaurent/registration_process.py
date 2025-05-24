@@ -478,35 +478,54 @@ class RestaurantListAPI(APIView):
 
 
 class RestaurantDetailMenuView(APIView):
-    def get(self, request, restaurant_id):
+    def get(self, request, restaurant_id, offer=None):
         try:
             restaurant = RestaurantMaster.objects.get(restaurant_id=restaurant_id)
             serializer = RestaurantMasterSerializer(restaurant)
-            
-            restaurant_location = RestaurantLocation.objects.get(restaurant=restaurant)
+            restaurant_data = serializer.data.copy()
 
+            # Get restaurant location
+            restaurant_location = RestaurantLocation.objects.get(restaurant=restaurant)
             address_parts = [
                 restaurant_location.area_sector_locality,
                 restaurant_location.city
             ]
             address = ", ".join(filter(None, address_parts))
 
-            time_required_to_reach_loc = 45  # This could be dynamic based on user location
-            
-            for item in serializer.data['menu_items']:
-                if item["item_image"]:
+            # Estimate delivery time (placeholder logic)
+            time_required_to_reach_loc = 45
+
+            # Prepare item list and filter by offer if provided
+            items = restaurant_data.get('menu_items', [])
+            processed_items = []
+
+            for item in items:
+                # Attach absolute image URL if image exists
+                if item.get("item_image"):
                     item["item_image"] = request.build_absolute_uri(default_storage.url(item["item_image"]))
-                    
+
+                # Apply offer filtering logic
+                if offer:
+                    if offer == "buy-one-get-one-free" and item.get("buy_one_get_one_free"):
+                        processed_items.append(item)
+                    # Add more offer types here as needed
+                else:
+                    processed_items.append(item)
+
             response_data = {
                 'time_required_to_reach_loc': time_required_to_reach_loc,
-                'restaurant_name': serializer.data['restaurant_name'],
-                'restaurant_status': serializer.data['restaurant_status'],
+                'restaurant_name': restaurant_data.get('restaurant_name'),
+                'restaurant_status': restaurant_data.get('restaurant_status'),
                 'Address': address,
-                'rating': 4.5,
-                'itemlist': serializer.data['menu_items']
+                'rating': 4.5,  # Static or compute dynamically
+                'min_order': restaurant_data.get('min_order', 0),
+                'opening_time': restaurant_data.get('opening_time', "08:00"),
+                'closing_time': restaurant_data.get('closing_time', "22:00"),
+                'itemlist': processed_items
             }
-            
+
             return Response(response_data)
+
         except RestaurantMaster.DoesNotExist:
             return Response({"error": "Restaurant not found"}, status=404)
         except RestaurantLocation.DoesNotExist:
