@@ -8,6 +8,7 @@
     border-top: 1px solid #ddd;
     z-index: 1000;
     box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+    margin-bottom: 0px;
   }
   
   .sticky-order__content {
@@ -314,6 +315,9 @@
   
   /* Responsive Design */
   @media (max-width: 768px) {
+    .sticky-order {
+      margin-bottom: 60px;
+    }
     .sticky-order__content {
       flex-direction: column;
       align-items: flex-start;
