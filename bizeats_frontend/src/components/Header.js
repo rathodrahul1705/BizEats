@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { Home, ShoppingCart, LogIn, User, LogOut, Store, Briefcase, Package } from "lucide-react";
+import { Home, ShoppingCart, LogIn, User, LogOut, Briefcase } from "lucide-react";
 import SignIn from "./SignIn";
 import "../assets/css/Header.css";
 
@@ -13,40 +13,52 @@ const Header = ({ user, setUser }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const dropdownRef = useRef(null);
-  const headerRef = useRef(null);
+  const accountButtonRef = useRef(null);
 
+  // Handle cart count updates
   useEffect(() => {
     const updateCartCount = () => {
       setCartCount(localStorage.getItem("cart_count") || 0);
     };
-
     window.addEventListener("storage", updateCartCount);
-
-    const handleResize = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
-
-    window.addEventListener("resize", handleResize);
-
-    return () => {
-      window.removeEventListener("storage", updateCartCount);
-      window.removeEventListener("resize", handleResize);
-    };
+    return () => window.removeEventListener("storage", updateCartCount);
   }, []);
 
+  // Handle mobile detection
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  // Handle clicks outside dropdown
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+      if (dropdownRef.current && 
+          !dropdownRef.current.contains(event.target) &&
+          (!accountButtonRef.current || !accountButtonRef.current.contains(event.target))) {
         setShowDropdown(false);
       }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
 
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
     };
   }, []);
+
+  // Handle body scroll when dropdown is open
+  useEffect(() => {
+    if (showDropdown && isMobile) {
+      document.body.classList.add('body-no-scroll');
+    } else {
+      document.body.classList.remove('body-no-scroll');
+    }
+    return () => document.body.classList.remove('body-no-scroll');
+  }, [showDropdown, isMobile]);
 
   const handleLogout = () => {
     setUser(null);
@@ -64,23 +76,30 @@ const Header = ({ user, setUser }) => {
     navigate("/");
   };
 
-  // Check if current route is active
-  const isActive = (path) => {
-    return location.pathname === path;
+  const isActive = (path) => location.pathname === path;
+
+  const handleDropdownAction = (path) => {
+    setShowDropdown(false);
+    if (path === 'logout') {
+      handleLogout();
+    } else {
+      navigate(path);
+    }
+  };
+
+  const toggleDropdown = (e) => {
+    e.stopPropagation();
+    setShowDropdown(!showDropdown);
   };
 
   return (
     <>
       {!isMobile ? (
         // Desktop Header
-        <header className="header" ref={headerRef}>
+        <header className="header">
           <div className="header__container">
             <Link to="/" className="header__logo">
-              <img
-                src="/eatoorweb.svg"
-                alt="EATOOR Logo"
-                className="header__logo-image"
-              />
+              <img src="/eatoorweb.svg" alt="EATOOR Logo" className="header__logo-image" />
             </Link>
 
             <nav className="header__nav">
@@ -98,36 +117,26 @@ const Header = ({ user, setUser }) => {
                     <span className="header__cart-count">{cartCount}</span>
                   </Link>
                 </li>
-
                 <li className="header__auth-item">
                   {user ? (
                     <div className="header__user-menu" ref={dropdownRef}>
-                      <div
-                        className="header__user-info"
-                        onClick={() => setShowDropdown(!showDropdown)}
-                      >
+                      <div className="header__user-info" onClick={toggleDropdown}>
                         <User size={20} className="header__icon" />
                         <span className="header__username">{user.full_name}</span>
                       </div>
-
                       {showDropdown && (
                         <div className="header__dropdown">
                           <Link to="/profile" className="header__dropdown-item">
                             <User size={16} className="header__dropdown-icon" /> 
                             <span>Profile</span>
                           </Link>
-
                           {is_restaurant_register === "true" && (
                             <Link to="/vendor-dashboard" className="header__dropdown-item">
                               <Briefcase size={16} className="header__dropdown-icon" /> 
                               <span>Business</span>
                             </Link>
                           )}
-
-                          <button 
-                            onClick={handleLogout} 
-                            className="header__dropdown-item header__dropdown-item--logout"
-                          >
+                          <button onClick={handleLogout} className="header__dropdown-item header__dropdown-item--logout">
                             <LogOut size={16} className="header__dropdown-icon" /> 
                             <span>Logout</span>
                           </button>
@@ -135,10 +144,7 @@ const Header = ({ user, setUser }) => {
                       )}
                     </div>
                   ) : (
-                    <button 
-                      onClick={() => setShowSignIn(true)} 
-                      className="header__signin-btn"
-                    >
+                    <button onClick={() => setShowSignIn(true)} className="header__signin-btn">
                       <LogIn size={20} className="header__icon" />
                       <span className="header__signin-text">Sign In</span>
                     </button>
@@ -147,87 +153,89 @@ const Header = ({ user, setUser }) => {
               </ul>
             </nav>
           </div>
-
-          {showSignIn && (
-            <SignIn
-              onClose={() => setShowSignIn(false)}
-              setUser={(userData) => {
-                setUser(userData);
-                setShowSignIn(false);
-                setShowDropdown(false);
-              }}
-            />
-          )}
         </header>
       ) : (
         // Mobile Bottom Navigation
-        <nav className="mobile-bottom-nav">
-          <Link to="/" className={`mobile-bottom-nav__item ${isActive('/') ? 'active' : ''}`}>
-            <Home size={20} className="mobile-bottom-nav__icon" />
-            <span className="mobile-bottom-nav__label">Home</span>
-          </Link>
+        <>
+          {showDropdown && (
+            <div className="mobile-bottom-nav__overlay" onClick={() => setShowDropdown(false)} />
+          )}
           
-          <Link to="/cart" className={`mobile-bottom-nav__item ${isActive('/cart') ? 'active' : ''}`}>
-            <div className="mobile-bottom-nav__cart-wrapper">
-              <ShoppingCart size={20} className="mobile-bottom-nav__icon" />
-              {cartCount > 0 && (
-                <span className="mobile-bottom-nav__cart-count">{cartCount}</span>
-              )}
-            </div>
-            <span className="mobile-bottom-nav__label">Cart</span>
-          </Link>
-          
-          {user ? (
-            <div 
-              className={`mobile-bottom-nav__item ${showDropdown ? 'active' : ''}`}
-              onClick={() => setShowDropdown(!showDropdown)}
-              ref={dropdownRef}
+          <nav className="mobile-bottom-nav">
+            <Link 
+              to="/" 
+              className={`mobile-bottom-nav__item ${isActive('/') ? 'active' : ''}`}
+              onClick={() => setShowDropdown(false)}
             >
-              <User size={20} className="mobile-bottom-nav__icon" />
-              <span className="mobile-bottom-nav__label">Account</span>
+              <Home size={20} className="mobile-bottom-nav__icon" />
+              <span className="mobile-bottom-nav__label">Home</span>
+            </Link>
+            
+            <Link 
+              to="/cart" 
+              className={`mobile-bottom-nav__item ${isActive('/cart') ? 'active' : ''}`}
+              onClick={() => setShowDropdown(false)}
+            >
+              <div className="mobile-bottom-nav__cart-wrapper">
+                <ShoppingCart size={20} className="mobile-bottom-nav__icon" />
+                {cartCount > 0 && <span className="mobile-bottom-nav__cart-count">{cartCount}</span>}
+              </div>
+              <span className="mobile-bottom-nav__label">Cart</span>
+            </Link>
+            
+            {user ? (
+              <div 
+                ref={accountButtonRef}
+                className={`mobile-bottom-nav__item ${showDropdown ? 'active' : ''}`}
+                onClick={toggleDropdown}
+              >
+                <User size={20} className="mobile-bottom-nav__icon" />
+                <span className="mobile-bottom-nav__label">Account</span>
+              </div>
+            ) : (
+              <button 
+                className="mobile-bottom-nav__item"
+                onClick={() => {
+                  setShowSignIn(true);
+                  setShowDropdown(false);
+                }}
+              >
+                <LogIn size={20} className="mobile-bottom-nav__icon" />
+                <span className="mobile-bottom-nav__label">Sign In</span>
+              </button>
+            )}
+          </nav>
+
+          {showDropdown && (
+            <div className="mobile-bottom-nav__dropdown" ref={dropdownRef}>
+              <div 
+                className="mobile-bottom-nav__dropdown-item"
+                onClick={() => handleDropdownAction('/profile')}
+              >
+                <User size={16} className="mobile-bottom-nav__dropdown-icon" />
+                <span>Profile</span>
+              </div>
               
-              {showDropdown && (
-                <div className="mobile-bottom-nav__dropdown">
-                  <Link 
-                    to="/profile" 
-                    className="mobile-bottom-nav__dropdown-item"
-                    onClick={() => setShowDropdown(false)}
-                  >
-                    <User size={16} className="mobile-bottom-nav__dropdown-icon" />
-                    Profile
-                  </Link>
-                  
-                  {is_restaurant_register === "true" && (
-                    <Link 
-                      to="/vendor-dashboard" 
-                      className="mobile-bottom-nav__dropdown-item"
-                      onClick={() => setShowDropdown(false)}
-                    >
-                      <Briefcase size={16} className="mobile-bottom-nav__dropdown-icon" />
-                      Business
-                    </Link>
-                  )}
-                  
-                  <button 
-                    onClick={handleLogout} 
-                    className="mobile-bottom-nav__dropdown-item mobile-bottom-nav__dropdown-item--logout"
-                  >
-                    <LogOut size={16} className="mobile-bottom-nav__dropdown-icon" />
-                    Logout
-                  </button>
+              {is_restaurant_register === "true" && (
+                <div 
+                  className="mobile-bottom-nav__dropdown-item"
+                  onClick={() => handleDropdownAction('/vendor-dashboard')}
+                >
+                  <Briefcase size={16} className="mobile-bottom-nav__dropdown-icon" />
+                  <span>Business</span>
                 </div>
               )}
+              
+              <div 
+                className="mobile-bottom-nav__dropdown-item mobile-bottom-nav__dropdown-item--logout"
+                onClick={() => handleDropdownAction('logout')}
+              >
+                <LogOut size={16} className="mobile-bottom-nav__dropdown-icon" />
+                <span>Logout</span>
+              </div>
             </div>
-          ) : (
-            <button 
-              className="mobile-bottom-nav__item"
-              onClick={() => setShowSignIn(true)}
-            >
-              <LogIn size={20} className="mobile-bottom-nav__icon" />
-              <span className="mobile-bottom-nav__label">Sign In</span>
-            </button>
           )}
-        </nav>
+        </>
       )}
       
       <div className="header__spacer"></div>
