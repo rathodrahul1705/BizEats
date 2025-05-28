@@ -606,3 +606,56 @@ select[multiple].vendor-menu-management-form-control option {
   outline: 2px solid var(--primary-color);
   outline-offset: 2px;
 }
+
+/* Time input styling */
+.vendor-menu-management-form-control[type="time"] {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  width: 100%;
+  background-color: #fff;
+  transition: border-color 0.3s;
+}
+
+.vendor-menu-management-form-control[type="time"]:focus {
+  border-color: #4a90e2;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+}
+
+/* Time input wrapper for better alignment */
+.vendor-menu-management-time-inputs {
+  display: flex;
+  gap: 15px;
+}
+
+.vendor-menu-management-time-inputs .vendor-menu-management-form-group {
+  flex: 1;
+}
+
+/* Custom time picker appearance */
+.vendor-menu-management-form-control[type="time"]::-webkit-calendar-picker-indicator {
+  background: none;
+  display: none;
+}
+
+.vendor-menu-management-time-wrapper {
+  position: relative;
+}
+
+.vendor-menu-management-time-wrapper::after {
+  content: "⌚";
+  position: absolute;
+  right: 10px;
+  top: 35px;
+  pointer-events: none;
+  color: #666;
+}
+
+@media (max-width: 768px) {
+  .vendor-menu-management-time-inputs {
+    flex-direction: column;
+    gap: 10px;
+  }
+}

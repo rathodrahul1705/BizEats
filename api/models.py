@@ -234,6 +234,8 @@ class RestaurantMenu(models.Model):
     stock_quantity = models.PositiveIntegerField(default=0)
     food_type = models.CharField(max_length=10, choices=FOOD_TYPE_CHOICES, default='Veg')
     buy_one_get_one_free = models.BooleanField(null=True, blank=True, help_text="Is this item eligible for Buy One Get One Free?")
+    start_time = models.TimeField(null=True, blank=True, verbose_name="Available From")
+    end_time = models.TimeField(null=True, blank=True, verbose_name="Available Until")
     created_at = models.DateTimeField(default=now)
     updated_at = models.DateTimeField(auto_now=True)
 

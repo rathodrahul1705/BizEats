@@ -221,6 +221,8 @@ class RestaurantMenueStore(APIView):
         serving_size = request.data.get('serving_size')
         availability = request.data.get('availability') == 'true'  # Convert to boolean
         stock_quantity = request.data.get('stock_quantity')
+        start_time = request.data.get('start_time')
+        end_time = request.data.get('end_time')
         food_type = request.data.get('food_type')
         cuisines = request.data.get('cuisines', '').split(',')  # Split cuisines by comma
 
@@ -248,6 +250,8 @@ class RestaurantMenueStore(APIView):
             serving_size=serving_size,
             availability=availability,
             stock_quantity=stock_quantity,
+            start_time=start_time,
+            end_time=end_time,
             food_type=food_type,
             item_image=image_path  # Save the relative image path
         )
@@ -290,6 +294,8 @@ class RestaurantMenueList(APIView):
                 "buy_one_get_one_free": item.buy_one_get_one_free,
                 "food_type": item.food_type,
                 "stock_quantity": item.stock_quantity,
+                "start_time": item.start_time,
+                "end_time": item.end_time,
                 "cuisines": [cuisine.cuisine_name for cuisine in item.cuisines.all()],
                 "item_image": request.build_absolute_uri(item.item_image.url) if item.item_image else None,
                 "created_at": item.created_at,
@@ -353,6 +359,8 @@ class RestaurantMenueUpdate(APIView):
         stock_quantity = request.data.get('stock_quantity', menu_item.stock_quantity)
         food_type = request.data.get('food_type', menu_item.food_type)
         cuisines = request.data.get('cuisines', '').split(',')  # Split cuisines by comma
+        start_time = request.data.get('start_time', '')
+        end_time = request.data.get('end_time', '')
 
         # Handle image update
         item_image = request.FILES.get('item_image')
@@ -384,6 +392,8 @@ class RestaurantMenueUpdate(APIView):
         menu_item.stock_quantity = stock_quantity
         menu_item.food_type = food_type
         menu_item.buy_one_get_one_free = buy_one_get_one_free
+        menu_item.start_time = start_time
+        menu_item.end_time = end_time
 
         # Update cuisines
         if cuisines:

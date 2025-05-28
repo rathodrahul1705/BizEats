@@ -237,6 +237,7 @@ const RestaurantRegistration = ({user, setUser}) => {
   
       const payload = {
         restaurant_name: restaurantName,
+        restaurant_status: 2,
         owner_details: {
           owner_name: ownerDetails.fullName,
           owner_email_address: ownerDetails.email,

@@ -26,6 +26,26 @@ import 'swiper/css';
 import 'swiper/css/free-mode';
 import 'swiper/css/navigation';
 
+const checkItemTimingStatus = (item) => {
+  if (!item.start_time || !item.end_time) return null;
+
+  const now = new Date();
+  const istOffset = 330 * 60 * 1000; // IST offset in milliseconds
+  const istTime = new Date(now.getTime() + istOffset);
+  
+  // Convert current time to HH:MM format in IST
+  const currentHours = istTime.getUTCHours().toString().padStart(2, '0');
+  const currentMinutes = istTime.getUTCMinutes().toString().padStart(2, '0');
+  const currentTimeStr = `${currentHours}:${currentMinutes}`;
+  
+  if (currentTimeStr < item.start_time) {
+    return { status: 'upcoming', time: item.start_time };
+  } else if (currentTimeStr > item.end_time) {
+    return { status: 'ended', time: item.end_time };
+  }
+  return null;
+};
+
 const OrderDetails = ({ user, setUser }) => {
   const [loading, setLoading] = useState(true);
   const { city, slug, restaurant_id, offer } = useParams();
@@ -38,11 +58,6 @@ const OrderDetails = ({ user, setUser }) => {
     rating: 0,
     minOrder: 0,
   });
-
-  console.log("city",city)
-  console.log("slug",slug)
-  console.log("restaurant_id",restaurant_id)
-  console.log("offer",offer)
 
   const [foodData, setFoodData] = useState([]);
   const [showResetCartModal, setShowResetCartModal] = useState(false);
@@ -168,8 +183,8 @@ const OrderDetails = ({ user, setUser }) => {
         location: response.Address || "Location not available",
         rating: response.rating ?? 0,
         minOrder: response.min_order ?? 0,
-        openingTime: response.opening_time || "08:00", // Replace with real field if available
-        closingTime: response.closing_time || "22:00", // Replace with real field if available
+        openingTime: response.opening_time || "08:00",
+        closingTime: response.closing_time || "22:00",
       });
   
       const items = Array.isArray(response.itemlist) ? response.itemlist : [];
@@ -187,6 +202,8 @@ const OrderDetails = ({ user, setUser }) => {
           category: item.category || "Uncategorized",
           availability: item.availability ?? true,
           buy_one_get_one_free: item.buy_one_get_one_free ?? false,
+          start_time: item.start_time,
+          end_time: item.end_time,
         }))
       );
     } catch (error) {
@@ -233,6 +250,12 @@ const OrderDetails = ({ user, setUser }) => {
     const foodItem = foodData.find(item => item.id === id);
 
     if (!foodItem?.availability) {
+      return;
+    }
+
+    // Check if item is available based on timing
+    const timingStatus = checkItemTimingStatus(foodItem);
+    if (timingStatus?.status === 'upcoming' || timingStatus?.status === 'ended') {
       return;
     }
 
@@ -301,11 +324,32 @@ const OrderDetails = ({ user, setUser }) => {
   }, [cart]);
 
   const filteredFood = foodData.filter(
-    (food) => (filter === "all" || food.type === filter) && food.availability
+    (food) => {
+      const timingStatus = checkItemTimingStatus(food);
+      return (filter === "all" || food.type === filter) && 
+             food.availability && 
+             (!timingStatus || (timingStatus.status !== 'upcoming' && timingStatus.status !== 'ended'))
+    }
+  );
+
+  const upcomingFood = foodData.filter(
+    (food) => {
+      const timingStatus = checkItemTimingStatus(food);
+      return food.availability && timingStatus?.status === 'upcoming';
+    }
+  );
+
+  const endedFood = foodData.filter(
+    (food) => {
+      const timingStatus = checkItemTimingStatus(food);
+      return food.availability && timingStatus?.status === 'ended';
+    }
   );
 
   const openFoodModal = (food) => {
     if (!food.availability || !isShopOpen) return;
+    const timingStatus = checkItemTimingStatus(food);
+    if (timingStatus?.status === 'upcoming' || timingStatus?.status === 'ended') return;
     setSelectedFood(food);
     setShowFoodModal(true);
   };
@@ -376,17 +420,11 @@ const OrderDetails = ({ user, setUser }) => {
   if (loading && filteredFood.length === 0) {
     return <StripeLoader />;
   }
-
+  
   return (
     <div className="order-details-page-menu-container">
       <div className="order-details-page-menu-store-header">
         <h1 className="order-details-page-menu-store-title">{storeDetails.name}</h1>
-        {/* <button 
-          className="order-details-page-menu-share-btn header-share"
-          onClick={toggleShareOptions}
-        >
-          <Share2 size={18} />
-        </button> */}
       </div>
 
       {showShareOptions && (
@@ -550,91 +588,186 @@ const OrderDetails = ({ user, setUser }) => {
             </div>
             {categoryVisibility[category] && (
               <ul className="order-details-page-menu-food-list">
-                {groupedByCategory[category].map((food) => (
-                  <li key={food.id} className="order-details-page-menu-food-item">
-                    <div className="order-details-page-menu-food-image-container">
-                      <img 
-                        src={food.image} 
-                        alt={food.title} 
-                        className="order-details-page-menu-food-image" 
-                        onClick={() => openFoodModal(food)}
-                      />
-                      {food.buy_one_get_one_free && (
-                        <div className="order-details-page-menu-bogo-tag">
-                          <Gift size={14} />
-                          <span>Buy 1 Get 1 Free</span>
+                {groupedByCategory[category].map((food) => {
+                  const timingStatus = checkItemTimingStatus(food);
+                  return (
+                    <li key={food.id} className="order-details-page-menu-food-item">
+                      <div className="order-details-page-menu-food-image-container">
+                        <img 
+                          src={food.image} 
+                          alt={food.title} 
+                          className="order-details-page-menu-food-image" 
+                          onClick={() => openFoodModal(food)}
+                        />
+                        {food.buy_one_get_one_free && (
+                          <div className="order-details-page-menu-bogo-tag">
+                            <Gift size={14} />
+                            <span>Buy 1 Get 1 Free</span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="order-details-page-menu-food-details">
+                        <div className="order-details-page-menu-food-header">
+                          <h3 
+                            className="order-details-page-menu-food-title"
+                            onClick={() => openFoodModal(food)}
+                          >
+                            {food.title} {food.type === "Veg" ? "🥦" : "🍗"}
+                          </h3>
                         </div>
-                      )}
-                    </div>
-                    <div className="order-details-page-menu-food-details">
-                      <div className="order-details-page-menu-food-header">
-                        <h3 
-                          className="order-details-page-menu-food-title"
+                        <p 
+                          className="order-details-page-menu-food-description"
                           onClick={() => openFoodModal(food)}
                         >
-                          {food.title} {food.type === "Veg" ? "🥦" : "🍗"}
-                        </h3>
-                      </div>
-                      <p 
-                        className="order-details-page-menu-food-description"
-                        onClick={() => openFoodModal(food)}
-                      >
-                        {food.description.length > 100 
-                          ? `${food.description.substring(0, 100)}...` 
-                          : food.description}
-                        {food.description.length > 100 && (
-                          <span className="order-details-page-menu-read-more">
-                            <span>Read more</span>
-                            <ArrowRight size={16} />
-                          </span>
-                        )}
-                      </p>
-                      <p className="order-details-page-menu-food-price">₹{food.price}</p>
-                      <div className="order-details-page-menu-cart-actions">
-                        {cart[food.id] > 0 ? (
-                          <>
+                          {food.description.length > 100 
+                            ? `${food.description.substring(0, 100)}...` 
+                            : food.description}
+                          {food.description.length > 100 && (
+                            <span className="order-details-page-menu-read-more">
+                              <span>Read more</span>
+                              <ArrowRight size={16} />
+                            </span>
+                          )}
+                        </p>
+                        <p className="order-details-page-menu-food-price">₹{food.price}</p>
+                        <div className="order-details-page-menu-cart-actions">
+                          {cart[food.id] > 0 ? (
+                            <>
+                              <button
+                                className="order-details-page-menu-cart-btn"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  removeFromCart(food.id);
+                                }}
+                              >
+                                <MinusCircle size={20} />
+                              </button>
+                              <span className="order-details-page-menu-cart-quantity">{cart[food.id] || 0}</span>
+                              <button
+                                className="order-details-page-menu-cart-btn"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  addToCart(food.id);
+                                }}
+                                disabled={!isShopOpen}
+                              >
+                                <PlusCircle size={20} />
+                              </button>
+                            </>
+                          ) : (
                             <button
-                              className="order-details-page-menu-cart-btn"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                removeFromCart(food.id);
-                              }}
-                            >
-                              <MinusCircle size={20} />
-                            </button>
-                            <span className="order-details-page-menu-cart-quantity">{cart[food.id] || 0}</span>
-                            <button
-                              className="order-details-page-menu-cart-btn"
+                              className="order-details-page-menu-add-to-cart-btn"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 addToCart(food.id);
                               }}
-                              disabled={!isShopOpen}
+                              disabled={!isShopOpen || timingStatus?.status === 'upcoming' || timingStatus?.status === 'ended'}
                             >
-                              <PlusCircle size={20} />
+                              Add
                             </button>
-                          </>
-                        ) : (
-                          <button
-                            className="order-details-page-menu-add-to-cart-btn"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              addToCart(food.id);
-                            }}
-                            disabled={!isShopOpen}
-                          >
-                            Add
-                          </button>
-                        )}
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  </li>
-                ))}
+                    </li>
+                  )
+                })}
               </ul>
             )}
           </div>
         ))}
       </div>
+
+      {upcomingFood.length > 0 && (
+        <div className="order-details-page-menu-out-of-stock-section">
+          <h3 className="order-details-page-menu-out-of-stock-header">Coming Soon</h3>
+          <ul className="order-details-page-menu-food-list">
+            {upcomingFood.map((food) => {
+              const timingStatus = checkItemTimingStatus(food);
+              return (
+                <li key={food.id} className="order-details-page-menu-food-item order-details-page-menu-food-item-out-of-stock">
+                  <div className="order-details-page-menu-food-image-container">
+                    <img 
+                      src={food.image} 
+                      alt={food.title} 
+                      className="order-details-page-menu-food-image order-details-page-menu-food-image-out-of-stock" 
+                    />
+                    {food.buy_one_get_one_free && (
+                      <div className="order-details-page-menu-bogo-tag">
+                        <Gift size={14} />
+                        <span>Buy 1 Get 1 Free</span>
+                      </div>
+                    )}
+                    {timingStatus?.status === 'upcoming' && (
+                      <div className="order-details-page-menu-timing-tag upcoming">
+                        <Clock size={12} />
+                        <span>Available from {food.start_time}</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="order-details-page-menu-food-details">
+                    <h3 className="order-details-page-menu-food-title">
+                      {food.title} {food.type === "Veg" ? "🥦" : "🍗"}
+                    </h3>
+                    <p className="order-details-page-menu-food-description">
+                      {food.description.length > 100 
+                        ? `${food.description.substring(0, 100)}...` 
+                        : food.description}
+                    </p>
+                    <p className="order-details-page-menu-food-price">₹{food.price}</p>
+                    <div className="order-details-page-menu-out-of-stock-badge">Available from {food.start_time}</div>
+                  </div>
+                </li>
+              )
+            })}
+          </ul>
+        </div>
+      )}
+
+      {endedFood.length > 0 && (
+        <div className="order-details-page-menu-out-of-stock-section">
+          <h3 className="order-details-page-menu-out-of-stock-header">Recently Ended</h3>
+          <ul className="order-details-page-menu-food-list">
+            {endedFood.map((food) => {
+              const timingStatus = checkItemTimingStatus(food);
+              return (
+                <li key={food.id} className="order-details-page-menu-food-item order-details-page-menu-food-item-out-of-stock">
+                  <div className="order-details-page-menu-food-image-container">
+                    <img 
+                      src={food.image} 
+                      alt={food.title} 
+                      className="order-details-page-menu-food-image order-details-page-menu-food-image-out-of-stock" 
+                    />
+                    {food.buy_one_get_one_free && (
+                      <div className="order-details-page-menu-bogo-tag">
+                        <Gift size={14} />
+                        <span>Buy 1 Get 1 Free</span>
+                      </div>
+                    )}
+                    {timingStatus?.status === 'ended' && (
+                      <div className="order-details-page-menu-timing-tag ended">
+                        <Clock size={12} />
+                        <span>Available until {food.end_time}</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="order-details-page-menu-food-details">
+                    <h3 className="order-details-page-menu-food-title">
+                      {food.title} {food.type === "Veg" ? "🥦" : "🍗"}
+                    </h3>
+                    <p className="order-details-page-menu-food-description">
+                      {food.description.length > 100 
+                        ? `${food.description.substring(0, 100)}...` 
+                        : food.description}
+                    </p>
+                    <p className="order-details-page-menu-food-price">₹{food.price}</p>
+                    <div className="order-details-page-menu-out-of-stock-badge">Available until {food.end_time}</div>
+                  </div>
+                </li>
+              )
+            })}
+          </ul>
+        </div>
+      )}
 
       {foodData.filter(food => !food.availability).length > 0 ? (
           <div className="order-details-page-menu-out-of-stock-section">
@@ -730,6 +863,14 @@ const OrderDetails = ({ user, setUser }) => {
                   <span>⏱ {selectedFood.deliveryTime}</span>
                   <span className="order-details-page-menu-food-modal-price">₹{selectedFood.price}</span>
                 </div>
+                {selectedFood.start_time && selectedFood.end_time && (
+                  <div className="order-details-page-menu-food-modal-timing">
+                    <Clock size={16} />
+                    <span>
+                      Available from {selectedFood.start_time} to {selectedFood.end_time}
+                    </span>
+                  </div>
+                )}
                 <div className="order-details-page-menu-food-modal-actions">
                   <button
                     className="order-details-page-menu-food-modal-cart-btn"
@@ -757,7 +898,6 @@ const OrderDetails = ({ user, setUser }) => {
           </div>
         </div>
       )}
-
     </div>
   );
 };

@@ -27,6 +27,8 @@ const MenuManagement = () => {
     cuisines: [],
     food_type: "Veg",
     buy_one_get_one_free: false,
+    start_time: "",
+    end_time: "",
   });
 
   // Filter states
@@ -313,6 +315,8 @@ const MenuManagement = () => {
                 <th>Category</th>
                 <th>Availability</th>
                 <th>BOGO</th>
+                <th>Start Time</th>
+                <th>End Time</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -339,6 +343,8 @@ const MenuManagement = () => {
                       {item.buy_one_get_one_free ? "B1G1F" : "Regular"}
                     </span>
                   </td>
+                  <td>{item.start_time || "-"}</td>
+                  <td>{item.end_time || "-"}</td>
                   <td>
                     <div className="vendor-menu-management-action-buttons">
                       <button 
@@ -357,6 +363,7 @@ const MenuManagement = () => {
                       </button>
                     </div>
                   </td>
+                  
                 </tr>
               ))}
             </tbody>
@@ -588,6 +595,34 @@ const MenuManagement = () => {
                   onChange={handleChange}
                 />
                 <label htmlFor="availability">Buy One Get One Free</label>
+              </div>
+
+              <div className="vendor-menu-management-time-inputs">
+                <div className="vendor-menu-management-form-group">
+                  <label>Available From</label>
+                  <div className="vendor-menu-management-time-wrapper">
+                    <input
+                      type="time"
+                      className="vendor-menu-management-form-control"
+                      name="start_time"
+                      value={formData.start_time}
+                      onChange={handleChange}
+                    />
+                  </div>
+                </div>
+
+                <div className="vendor-menu-management-form-group">
+                  <label>Available Until</label>
+                  <div className="vendor-menu-management-time-wrapper">
+                    <input
+                      type="time"
+                      className="vendor-menu-management-form-control"
+                      name="end_time"
+                      value={formData.end_time}
+                      onChange={handleChange}
+                    />
+                  </div>
+                </div>
               </div>
 
               <button type="submit" className="vendor-menu-management-submit-btn">
