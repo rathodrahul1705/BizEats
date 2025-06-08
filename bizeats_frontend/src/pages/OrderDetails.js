@@ -25,6 +25,7 @@ import { FreeMode, Navigation } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/free-mode';
 import 'swiper/css/navigation';
+import FSSAILogo from '../assets/img/fssai_logo.png';
 
 const checkItemTimingStatus = (item) => {
   if (!item.start_time || !item.end_time) return null;
@@ -179,6 +180,7 @@ const OrderDetails = ({ user, setUser }) => {
       setStoreDetails({
         name: response.restaurant_name || "Unnamed Restaurant",
         restaurant_status: response.restaurant_status ?? "Unknown",
+        fssai_number: response.fssai_number ?? "FSSAI not available",
         deliveryTime: `${response.time_required_to_reach_loc || 0} min`,
         location: response.Address || "Location not available",
         rating: response.rating ?? 0,
@@ -818,6 +820,14 @@ const OrderDetails = ({ user, setUser }) => {
           View Cart ({totalItems}) • ₹{totalAmount.toFixed(2)}
         </button>
       )}
+
+      {/* FSSAI License Section */}
+      <div className="order-details-page-menu-fssai-license">
+        <div className="fssai-logo-container">
+          <img src={FSSAILogo} alt="FSSAI Logo" className="fssai-logo" />
+        </div>
+        <p>License No. {storeDetails?.fssai_number}</p>
+      </div>
 
       {showResetCartModal && (
         <div className="order-details-page-menu-reset-cart-modal-overlay">

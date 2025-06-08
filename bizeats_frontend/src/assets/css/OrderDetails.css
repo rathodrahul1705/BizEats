@@ -1371,3 +1371,55 @@
       font-size: 12px;
     }
   }
+
+  /* FSSAI License Section */
+.order-details-page-menu-fssai-license {
+    text-align: center;
+    padding: 16px;
+    margin: 20px 0;
+    font-size: 12px;
+    color: #666;
+    border-top: 1px solid #eee;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    margin-top: 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .order-details-page-menu-fssai-license p {
+    margin: 8px 0 0;
+    font-weight: 500;
+  }
+  
+  .fssai-logo-container {
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    border-radius: 50%;
+    padding: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+  
+  .fssai-logo {
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+  }
+  
+  @media (max-width: 768px) {
+    .order-details-page-menu-fssai-license {
+      padding: 12px;
+      font-size: 11px;
+      margin: 15px 0;
+    }
+    
+    .fssai-logo-container {
+      width: 50px;
+      height: 50px;
+    }
+  }

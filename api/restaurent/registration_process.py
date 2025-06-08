@@ -493,9 +493,11 @@ class RestaurantDetailMenuView(APIView):
             restaurant = RestaurantMaster.objects.get(restaurant_id=restaurant_id)
             serializer = RestaurantMasterSerializer(restaurant)
             restaurant_data = serializer.data.copy()
-
+                    
             # Get restaurant location
             restaurant_location = RestaurantLocation.objects.get(restaurant=restaurant)
+            restaurant_document = RestaurantDocuments.objects.get(restaurant=restaurant)
+
             address_parts = [
                 restaurant_location.area_sector_locality,
                 restaurant_location.city
@@ -531,7 +533,8 @@ class RestaurantDetailMenuView(APIView):
                 'min_order': restaurant_data.get('min_order', 0),
                 'opening_time': restaurant_data.get('opening_time', "08:00"),
                 'closing_time': restaurant_data.get('closing_time', "22:00"),
-                'itemlist': processed_items
+                'itemlist': processed_items,
+                'fssai_number':restaurant_document.fssai_number
             }
 
             return Response(response_data)
