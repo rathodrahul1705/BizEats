@@ -1,28 +1,22 @@
 import React, { useState, useEffect } from "react";
-import { Edit, Trash, PlusCircle, X, Search, Filter, ChevronLeft, ChevronRight } from "lucide-react";
-import "../assets/css/vendor/CartManagement.css";
+import { Trash, Search, Filter, ChevronLeft, ChevronRight, ShoppingCart, User, Store, Clock, ChevronDown, ChevronUp, RefreshCw } from "lucide-react";
 import { useParams } from "react-router-dom";
 import API_ENDPOINTS from "../components/config/apiConfig";
 import fetchData from "../components/services/apiService";
 import StripeLoader from "../loader/StripeLoader";
+import "../assets/css/vendor/CartManagement.css";
 
-const CustomerManagement = () => {
+const CartManagement = () => {
   const { restaurant_id } = useParams();
-  const [customers, setCustomers] = useState([]);
-  const [filteredCustomers, setFilteredCustomers] = useState([]);
+  const [carts, setCarts] = useState([]);
+  const [filteredCarts, setFilteredCarts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showModal, setShowModal] = useState(false);
-  const [editingCustomer, setEditingCustomer] = useState(null);
-  const [formData, setFormData] = useState({
-    full_name: "",
-    email: "",
-    contact_number: "",
-    is_active: true
-  });
-
+  const [expandedRows, setExpandedRows] = useState({});
+  
   // Filter states
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [customerFilter, setCustomerFilter] = useState("all");
   const [showFilters, setShowFilters] = useState(false);
 
   // Pagination states
@@ -30,192 +24,160 @@ const CustomerManagement = () => {
   const [itemsPerPage] = useState(10);
 
   useEffect(() => {
-    fetchCustomers();
+    fetchCarts();
   }, [restaurant_id]);
 
   useEffect(() => {
     applyFilters();
-  }, [customers, searchTerm, statusFilter]);
+  }, [carts, searchTerm, statusFilter, customerFilter]);
 
-  const fetchCustomers = async () => {
+  const fetchCarts = async () => {
     try {
+      setLoading(true);
       const response = await fetchData(
-        API_ENDPOINTS.USER.USER_LIST,
+        API_ENDPOINTS.USER.CART_LIST,
         "GET",
         null,
         localStorage.getItem("access")
       );
-      
-      const customersWithDefaults = (response.users || []).map(customer => ({
-        full_name: customer.full_name || '',
-        email: customer.email || '',
-        contact_number: customer.contact_number || '',
-        is_active: customer.is_active !== undefined ? customer.is_active : true,
-        id: customer.id
-      }));
-      
-      setCustomers(customersWithDefaults);
+      setCarts(response?.carts || []);
     } catch (error) {
-      console.error("Error fetching customers:", error);
+      console.error("Error fetching carts:", error);
     } finally {
       setLoading(false);
     }
   };
 
   const applyFilters = () => {
-    let filtered = [...customers];
+    let filtered = [...carts];
     
+    // Search filter
     if (searchTerm) {
-      filtered = filtered.filter(customer => {
-        const name = customer.full_name || '';
-        const email = customer.email || '';
-        const phone = customer.contact_number || '';
-        
-        return (
-          name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          phone.toLowerCase().includes(searchTerm.toLowerCase())
-        );
+      filtered = filtered.filter(cart => {
+        const searchText = [
+          cart.user?.name || '',
+          cart.item?.name || '',
+          cart.order_number || '',
+          cart.cart_status || ''
+        ].join(' ').toLowerCase();
+        return searchText.includes(searchTerm.toLowerCase());
       });
     }
     
+    // Status filter
     if (statusFilter !== "all") {
-      filtered = filtered.filter(customer => 
-        statusFilter === "active" ? customer.is_active : !customer.is_active
+      filtered = filtered.filter(cart => 
+        statusFilter === "completed" 
+          ? cart.cart_status === "Payment Completed"
+          : cart.cart_status !== "Payment Completed"
       );
     }
     
-    setFilteredCustomers(filtered);
+    // Customer filter
+    if (customerFilter !== "all") {
+      filtered = filtered.filter(cart => 
+        customerFilter === "registered" 
+          ? cart.user?.id !== null
+          : cart.user?.id === null
+      );
+    }
+    
+    setFilteredCarts(filtered);
     setCurrentPage(1);
+    setExpandedRows({});
   };
 
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    }));
-  };
-
-  const handleEdit = (customer) => {
-    setEditingCustomer(customer.id);
-    setFormData({ 
-      full_name: customer.full_name,
-      email: customer.email,
-      contact_number: customer.contact_number,
-      is_active: customer.is_active
-    });
-    setShowModal(true);
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const endpoint = editingCustomer
-        ? API_ENDPOINTS.USER.USER_UPDATE(editingCustomer)
-        : API_ENDPOINTS.USER.USER_CREATE;
-
-      const method = editingCustomer ? "PUT" : "POST";
-
-      const response = await fetchData(
-        endpoint,
-        method,
-        formData,
-        localStorage.getItem("access")
-      );
-
-      if (!response) throw new Error(`Failed to ${editingCustomer ? "update" : "add"} customer.`);
-      setShowModal(false);
-      fetchCustomers();
-    } catch (error) {
-      console.error("Error:", error);
-      alert("Something went wrong!");
-    }
-  };
-
-  const handleDelete = async (customerId) => {
-    if (!window.confirm("Are you sure you want to delete this customer?")) return;
+  const handleDelete = async (cartId) => {
+    if (!window.confirm("Are you sure you want to delete this cart item?")) return;
     
     try {
-      const response = await fetchData(
-        API_ENDPOINTS.USER.USER_DELETE(customerId),
+      await fetchData(
+        API_ENDPOINTS.CART.DELETE(cartId),
         "DELETE",
         null,
         localStorage.getItem("access")
       );
-      if (response) {
-        fetchCustomers();
-      } else {
-        throw new Error("Failed to delete customer.");
-      }
+      fetchCarts();
     } catch (error) {
       console.error("Error:", error);
-      fetchCustomers();
+      fetchCarts();
     }
   };
 
   const resetFilters = () => {
     setSearchTerm("");
     setStatusFilter("all");
+    setCustomerFilter("all");
+  };
+
+  const toggleRowExpand = (cartId) => {
+    setExpandedRows(prev => ({
+      ...prev,
+      [cartId]: !prev[cartId]
+    }));
   };
 
   // Pagination logic
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = filteredCustomers.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.ceil(filteredCustomers.length / itemsPerPage);
+  const currentItems = filteredCarts.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredCarts.length / itemsPerPage);
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
-  if (loading && customers.length === 0) {
+  const formatDate = (dateString) => {
+    const options = { 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    };
+    return new Date(dateString).toLocaleDateString(undefined, options);
+  };
+
+  const getStatusClass = (status) => {
+    switch(status) {
+      case "Payment Completed": return "completed";
+      case "Proceeded for Checkout": return "processing";
+      case "Item Added": return "pending";
+      default: return "default";
+    }
+  };
+
+  if (loading && carts.length === 0) {
     return <StripeLoader />;
   }
 
   return (
     <div className="cart-management">
-      <div className="cart-management-header">
-        <div className="cart-management-header-left">
-          <h2>Customer Management</h2>
-          <div className="cart-management-results-count">
-            {filteredCustomers.length} {filteredCustomers.length === 1 ? 'customer' : 'customers'}
+      <div className="cart-container">
+        {/* Header */}
+        <header className="cart-header">
+          <div className="header-content">
+            <h1>Cart Management</h1>
+            <p>{filteredCarts.length} {filteredCarts.length === 1 ? 'item' : 'items'} found</p>
           </div>
-        </div>
-        <div className="cart-management-header-right">
-          <button
-            className="cart-management-button cart-management-add-btn"
-            onClick={() => {
-              setEditingCustomer(null);
-              setFormData({
-                full_name: "",
-                email: "",
-                contact_number: "",
-                is_active: true
-              });
-              setShowModal(true);
-            }}
-          >
-            <PlusCircle size={18} />
-            <span>Add Customer</span>
+          <button className="refresh-btn" onClick={fetchCarts}>
+            <RefreshCw size={18} />
+            <span>Refresh</span>
           </button>
-        </div>
-      </div>
+        </header>
 
-      <div className="cart-management-content">
         {/* Filter Section */}
-        <div className="cart-management-filters">
-          <div className="cart-management-search-filter-container">
-            <div className="cart-management-search">
-              <Search size={18} className="cart-management-search-icon" />
+        <section className="filter-section">
+          <div className="search-filter-container">
+            <div className="search-box">
+              <Search className="search-icon" />
               <input
                 type="text"
-                placeholder="Search customers..."
+                placeholder="Search carts..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="cart-management-search-input"
               />
             </div>
             <button 
-              className={`cart-management-filter-toggle ${showFilters ? 'active' : ''}`}
+              className={`filter-btn ${showFilters ? 'active' : ''}`}
               onClick={() => setShowFilters(!showFilters)}
             >
               <Filter size={18} />
@@ -224,71 +186,117 @@ const CustomerManagement = () => {
           </div>
 
           {showFilters && (
-            <div className="cart-management-filter-options">
-              <div className="cart-management-filter-group">
+            <div className="filter-options">
+              <div className="filter-group">
                 <label>Status</label>
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="cart-management-filter-select"
                 >
-                  <option value="all">All Status</option>
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
+                  <option value="all">All Statuses</option>
+                  <option value="completed">Payment Completed</option>
+                  <option value="pending">Pending</option>
                 </select>
               </div>
-
-              <button 
-                className="cart-management-reset-filters"
-                onClick={resetFilters}
-              >
-                Reset All
+              
+              <div className="filter-group">
+                <label>Customer Type</label>
+                <select
+                  value={customerFilter}
+                  onChange={(e) => setCustomerFilter(e.target.value)}
+                >
+                  <option value="all">All Customers</option>
+                  <option value="registered">Registered Users</option>
+                  <option value="guest">Guest Users</option>
+                </select>
+              </div>
+              
+              <button className="reset-filters" onClick={resetFilters}>
+                Reset All Filters
               </button>
             </div>
           )}
-        </div>
+        </section>
 
-        {filteredCustomers.length > 0 ? (
-          <>
-            <div className="cart-management-table-container">
-              <table className="cart-management-table">
+        {/* Cart Items */}
+        {filteredCarts.length > 0 ? (
+          <div className="cart-content">
+            {/* Desktop Table */}
+            <div className="desktop-view">
+              <table>
                 <thead>
                   <tr>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Phone</th>
+                    <th>Customer</th>
+                    <th>Item</th>
+                    <th>Restaurant</th>
+                    <th>Qty</th>
+                    <th>Price</th>
                     <th>Status</th>
+                    <th>Date</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {currentItems.map((customer) => (
-                    <tr key={customer.id}>
-                      <td>{customer.full_name}</td>
-                      <td>{customer.email}</td>
-                      <td>{customer.contact_number}</td>
+                  {currentItems.map((cart) => (
+                    <tr key={`${cart.id}-${cart.updated_at}`}>
                       <td>
-                        <span className={`cart-management-status-badge ${customer.is_active ? 'active' : 'inactive'}`}>
-                          {customer.is_active ? 'Active' : 'Inactive'}
-                        </span>
+                        <div className="user-info">
+                          <div className={`avatar ${cart.user?.id ? 'registered' : 'guest'}`}>
+                            <User size={16} />
+                          </div>
+                          <div>
+                            <div className="name">{cart.user?.name || 'Guest'}</div>
+                            <div className="email">{cart.user?.email || cart.item.session_id}</div>
+                          </div>
+                        </div>
                       </td>
                       <td>
-                        <div className="cart-management-action-buttons">
-                          <button 
-                            className="cart-management-edit" 
-                            onClick={() => handleEdit(customer)}
-                            aria-label="Edit customer"
-                          >
-                            <Edit size={16} />
-                          </button>
-                          <button 
-                            className="cart-management-delete" 
-                            onClick={() => handleDelete(customer.id)}
-                            aria-label="Delete customer"
-                          >
-                            <Trash size={16} />
-                          </button>
+                        <div className="item-name">{cart.item?.name}</div>
+                        <div className="item-desc">{cart.item?.description || 'No description'}</div>
+                      </td>
+                      <td>
+                        <div className="restaurant-info">
+                          <div className="avatar">
+                            <Store size={16} />
+                          </div>
+                          <div>
+                            <div className="name">{cart.restaurant?.name}</div>
+                            <div className="id">{cart.restaurant?.id}</div>
+                          </div>
                         </div>
+                      </td>
+                      <td>
+                        <div className="quantity">{cart.quantity}</div>
+                        {cart.buy_one_get_one_free && (
+                          <span className="tag bogo">BOGO</span>
+                        )}
+                      </td>
+                      <td>
+                        <div className="price">₹{(cart.item?.price * cart.quantity).toFixed(2)}</div>
+                        <div className="unit-price">₹{parseFloat(cart.item?.price || 0).toFixed(2)} each</div>
+                      </td>
+                      <td>
+                        <span className={`status ${getStatusClass(cart.cart_status)}`}>
+                          {cart.cart_status}
+                        </span>
+                        {cart.order_number && (
+                          <div className="order-number">{cart.order_number}</div>
+                        )}
+                      </td>
+                      <td>
+                        <div className="date">
+                          <Clock size={14} />
+                          {formatDate(cart.created_at)}
+                        </div>
+                      </td>
+                      <td>
+                        <button
+                          onClick={() => handleDelete(cart.id)}
+                          className="delete-btn"
+                          title="Delete"
+                        >
+                          <Trash size={16} />
+                        </button>
                       </td>
                     </tr>
                   ))}
@@ -296,144 +304,144 @@ const CustomerManagement = () => {
               </table>
             </div>
 
-            {/* Pagination Controls */}
-            <div className="cart-management-pagination">
-              <button
-                onClick={() => paginate(currentPage - 1)}
-                disabled={currentPage === 1}
-                className="cart-management-pagination-button"
-              >
-                <ChevronLeft size={16} />
-              </button>
-
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((number) => (
-                <button
-                  key={number}
-                  onClick={() => paginate(number)}
-                  className={`cart-management-pagination-button ${currentPage === number ? 'active' : ''}`}
+            {/* Mobile List */}
+            <div className="mobile-view">
+              {currentItems.map((cart) => (
+                <div 
+                  key={`mobile-${cart.id}`} 
+                  className={`cart-item ${expandedRows[cart.id] ? 'expanded' : ''}`}
                 >
-                  {number}
-                </button>
+                  <div 
+                    className="item-header"
+                    onClick={() => toggleRowExpand(cart.id)}
+                  >
+                    <div className="user-info">
+                      <div className={`avatar ${cart.user?.id ? 'registered' : 'guest'}`}>
+                        <User size={16} />
+                      </div>
+                      <div>
+                        <div className="name">{cart.user?.name || 'Guest'}</div>
+                        <div className="item">{cart.item?.name}</div>
+                      </div>
+                    </div>
+                    <div className="status-container">
+                      <span className={`status ${getStatusClass(cart.cart_status)}`}>
+                        {cart.cart_status.split(' ')[0]}
+                      </span>
+                      {expandedRows[cart.id] ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                    </div>
+                  </div>
+                  
+                  {expandedRows[cart.id] && (
+                    <div className="item-details">
+                      <div className="detail-row">
+                        <span>Item:</span>
+                        <span>{cart.item?.name}</span>
+                      </div>
+                      <div className="detail-row">
+                        <span>Description:</span>
+                        <span>{cart.item?.description || 'No description'}</span>
+                      </div>
+                      <div className="detail-row">
+                        <span>Restaurant:</span>
+                        <span>{cart.restaurant?.name}</span>
+                      </div>
+                      <div className="detail-row">
+                        <span>Quantity:</span>
+                        <span>
+                          {cart.quantity}
+                          {cart.buy_one_get_one_free && <span className="tag bogo">BOGO</span>}
+                        </span>
+                      </div>
+                      <div className="detail-row">
+                        <span>Price:</span>
+                        <span>
+                          ₹{(cart.item?.price * cart.quantity).toFixed(2)}
+                          <small> (₹{parseFloat(cart.item?.price || 0).toFixed(2)} each)</small>
+                        </span>
+                      </div>
+                      <div className="detail-row">
+                        <span>Order #:</span>
+                        <span>{cart.order_number || 'N/A'}</span>
+                      </div>
+                      <div className="detail-row">
+                        <span>Date:</span>
+                        <span className="date">
+                          <Clock size={14} />
+                          {formatDate(cart.created_at)}
+                        </span>
+                      </div>
+                      <div className="actions">
+                        <button
+                          onClick={() => handleDelete(cart.id)}
+                          className="delete-btn"
+                        >
+                          <Trash size={16} />
+                          <span>Delete</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
               ))}
-
-              <button
-                onClick={() => paginate(currentPage + 1)}
-                disabled={currentPage === totalPages || totalPages === 0}
-                className="cart-management-pagination-button"
-              >
-                <ChevronRight size={16} />
-              </button>
             </div>
-          </>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="pagination">
+                <div className="pagination-info">
+                  Showing {indexOfFirstItem + 1} to{' '}
+                  {Math.min(indexOfLastItem, filteredCarts.length)} of {filteredCarts.length} items
+                </div>
+                <div className="pagination-controls">
+                  <button
+                    onClick={() => paginate(currentPage - 1)}
+                    disabled={currentPage === 1}
+                  >
+                    <ChevronLeft size={16} />
+                  </button>
+                  
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((number) => (
+                    <button
+                      key={number}
+                      onClick={() => paginate(number)}
+                      className={currentPage === number ? 'active' : ''}
+                    >
+                      {number}
+                    </button>
+                  ))}
+                  
+                  <button
+                    onClick={() => paginate(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                  >
+                    <ChevronRight size={16} />
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         ) : (
-          <div className="cart-management-empty-state">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="64"
-              height="64"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-              <circle cx="12" cy="7" r="4"></circle>
-            </svg>
-            <h3>No Customers Found</h3>
-            <p>{customers.length === 0 ? "Add your first customer" : "No customers match your filters"}</p>
-            {customers.length > 0 && (
-              <button 
-                className="cart-management-reset-filters"
-                onClick={resetFilters}
-              >
-                Reset Filters
+          <div className="empty-state">
+            <div className="empty-icon">
+              <ShoppingCart size={40} />
+            </div>
+            <h3>No cart items found</h3>
+            <p>
+              {carts.length === 0 
+                ? "Your restaurant doesn't have any cart items yet." 
+                : "No cart items match your current filters."}
+            </p>
+            {carts.length > 0 && (
+              <button onClick={resetFilters}>
+                Reset all filters
               </button>
             )}
           </div>
         )}
       </div>
-
-      {showModal && (
-        <div className="cart-management-modal-overlay cart-management-show">
-          <div className="cart-management-modal-content">
-            <button className="cart-management-close-modal" onClick={() => setShowModal(false)}>
-              <X size={24} />
-            </button>
-            <h3>{editingCustomer ? "Edit Customer" : "Add New Customer"}</h3>
-            <form onSubmit={handleSubmit}>
-              <div className="cart-management-form-group">
-                <label>Full Name</label>
-                <input
-                  type="text"
-                  className="cart-management-form-control"
-                  name="full_name"
-                  placeholder="Customer Name"
-                  value={formData.full_name}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-
-              <div className="cart-management-form-group">
-                <label>Email</label>
-                <input
-                  type="email"
-                  className="cart-management-form-control"
-                  name="email"
-                  placeholder="Email Address"
-                  value={formData.email}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-
-              <div className="cart-management-form-group">
-                <label>Phone Number</label>
-                <input
-                  type="tel"
-                  className="cart-management-form-control"
-                  name="contact_number"
-                  placeholder="Phone Number"
-                  value={formData.contact_number}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-
-              <div className="cart-management-form-group cart-management-checkbox-group">
-                <input
-                  type="checkbox"
-                  id="is_active"
-                  name="is_active"
-                  checked={formData.is_active}
-                  onChange={handleChange}
-                />
-                <label htmlFor="is_active">Active</label>
-              </div>
-
-              <div className="cart-management-form-actions">
-                <button 
-                  type="button" 
-                  className="cart-management-cancel-btn"
-                  onClick={() => setShowModal(false)}
-                >
-                  Cancel
-                </button>
-                <button 
-                  type="submit" 
-                  className="cart-management-submit-btn"
-                >
-                  {editingCustomer ? "Update Customer" : "Add Customer"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
 
-export default CustomerManagement;
+export default CartManagement;

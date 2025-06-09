@@ -3,7 +3,7 @@ from django.urls import path, re_path, include
 from api.payment.payment import create_order, verify_payment
 from api.vendor.Coupon import CouponCreateView, CouponDeleteView, CouponDetailView, CouponListView, CouponUpdateView
 from .vendor.Vendor import GetVendorWiseCounts
-from .views import CustomTokenRefreshView, FetchReviewView, FetchUserList, UserProfileUpdate, UserProfileView, UserRegistrationView, OTPVerificationView, UserLoginView, ContactUsView, ReactAppView, SubmitOrderReviewView
+from .views import CustomTokenRefreshView, FetchReviewView, FetchUserList, FetchCartList, UserProfileUpdate, UserProfileView, UserRegistrationView, OTPVerificationView, UserLoginView, ContactUsView, ReactAppView, SubmitOrderReviewView
 from .restaurent.registration_process import RestaurantStatusUpdate, RestaurantStoreStepOne, RestaurantStoreStepTwo, RestaurantStoreStepThree, RestaurantStoreStepFour, RestaurantByUserAPIView, RestaurantByRestauranrtAPIView, RestaurantMenueStore, RestaurantMenueList,RestaurantMenueDetails,RestaurantMenueUpdate,RestaurantMenueDelete, RestaurantListAPI, RestaurantDetailMenuView
 from django.conf import settings
 from django.conf.urls.static import static
@@ -98,6 +98,7 @@ urlpatterns = [
     path('api/order-review/update/', SubmitOrderReviewView.as_view(), name='submit-order-review'),
     path('api/customer-review/', FetchReviewView.as_view(), name='fetch-review'),
     path('api/user/user_list/', FetchUserList.as_view(), name='user-list'),
+    path('api/cart/cart_list/', FetchCartList.as_view(), name='cart-list'),
     
     re_path(r'^(?!media/).*$', ReactAppView.as_view(), name='react-app'),
 

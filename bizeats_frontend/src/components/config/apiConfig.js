@@ -123,6 +123,7 @@ const API_ENDPOINTS = {
 
   USER: {
     USER_LIST: `${BASE_URL}/user/user_list/`,
+    CART_LIST: `${BASE_URL}/cart/cart_list/`,
   }
 
 

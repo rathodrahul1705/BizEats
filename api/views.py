@@ -6,7 +6,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 from api.emailer.email_notifications import send_otp_email, send_contact_email
 from api.serializers import ContactUsSerializer, OrderReviewSerializer
-from .models import ContactMessage, OrderReview, User, RestaurantMaster
+from .models import Cart, ContactMessage, OrderReview, User, RestaurantMaster
 from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.views.generic import TemplateView
@@ -262,3 +262,36 @@ class FetchUserList(APIView):
     def get(self, request, *args, **kwargs):
         users = User.objects.all().values('id', 'email', 'full_name', 'contact_number', 'is_active')
         return Response({"users": list(users)}, status=status.HTTP_200_OK)
+
+class FetchCartList(APIView):
+    def get(self, request, *args, **kwargs):
+        carts = Cart.objects.select_related('user', 'restaurant', 'item').order_by('-created_at')
+        cart_data = []
+
+        for cart in carts:
+            cart_data.append({
+                "user": {
+                    "id": cart.user.id if cart.user else None,
+                    "name": cart.user.full_name if cart.user else "Guest",
+                    "email": cart.user.email if cart.user else None,
+                },
+                "restaurant": {
+                    "id": cart.restaurant.restaurant_id,
+                    "name": cart.restaurant.restaurant_name
+                },
+                "item": {
+                    "id": cart.item.id,
+                    "session_id": cart.session_id,
+                    "name": cart.item.item_name,
+                    "price": str(cart.item_price) if cart.item_price else None,
+                    "description": cart.description
+                },
+                "quantity": cart.quantity,
+                "cart_status": dict(Cart.CART_STATUS_CHOICES).get(cart.cart_status, "Unknown"),
+                "order_number": cart.order_number,
+                "buy_one_get_one_free": cart.buy_one_get_one_free,
+                "created_at": cart.created_at,
+                "updated_at": cart.updated_at
+            })
+
+        return Response({"carts": cart_data}, status=status.HTTP_200_OK)
