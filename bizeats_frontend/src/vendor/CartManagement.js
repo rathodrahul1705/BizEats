@@ -272,8 +272,8 @@ const CartManagement = () => {
                         )}
                       </td>
                       <td>
-                        <div className="price">₹{(cart.item?.price * cart.quantity).toFixed(2)}</div>
-                        <div className="unit-price">₹{parseFloat(cart.item?.price || 0).toFixed(2)} each</div>
+                        {/* <div className="price">₹{(cart.item?.price * cart.quantity).toFixed(2)}</div> */}
+                        <div className="unit-price">₹{parseFloat(cart.item?.price || 0).toFixed(2)}</div>
                       </td>
                       <td>
                         <span className={`status ${getStatusClass(cart.cart_status)}`}>
