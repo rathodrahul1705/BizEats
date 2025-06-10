@@ -280,7 +280,7 @@ const CartManagement = () => {
                           {cart.cart_status}
                         </span>
                         {cart.order_number && (
-                          <div className="order-number">{cart.order_number}</div>
+                          <div className="order-number-num">{cart.order_number}</div>
                         )}
                       </td>
                       <td>
