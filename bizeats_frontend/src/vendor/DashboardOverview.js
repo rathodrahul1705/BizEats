@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, use } from "react";
 import { Link } from "react-router-dom";
 import { Bar, Line } from "react-chartjs-2";
 import {
@@ -31,6 +31,7 @@ ChartJS.register(
 );
 
 const DashboardOverview = ({ user, setUser }) => {
+
   const [selectedRestaurant, setSelectedRestaurant] = useState(null);
   const [restaurantsList, setRestaurantsList] = useState([]);
   const [dashboardData, setDashboardData] = useState({
@@ -527,6 +528,11 @@ const DashboardOverview = ({ user, setUser }) => {
                     </div>
                     <div className="link-arrow">→</div>
                   </Link> */}
+                  {
+
+                    user?.user_id == 2 ?
+                    <>
+                  
                   <Link 
                     to={`/vendor-dashboard/restaurant`} 
                     className="link-card"
@@ -561,6 +567,10 @@ const DashboardOverview = ({ user, setUser }) => {
                     </div>
                     <div className="link-arrow">→</div>
                   </Link>
+
+                    </>
+                    :""
+                  }
                 </div>
               </div>
             )}
