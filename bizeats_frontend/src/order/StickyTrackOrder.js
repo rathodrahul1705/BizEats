@@ -9,8 +9,6 @@ const StickyTrackOrder = ({ user }) => {
   const [activeOrders, setActiveOrders] = useState([]);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [showTrackPopup, setShowTrackPopup] = useState(false);
-
-  console.log("user===",user)
   
   useEffect(() => {
     const fetchActiveOrders = async () => {
