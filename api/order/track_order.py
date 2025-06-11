@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from decimal import Decimal
+import json
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
@@ -13,9 +14,13 @@ from django.db.models import Q
 from django.db.models import Sum, Count
 from django.db.models.functions import Coalesce
 from api.serializers import OrderPlacementSerializer, OrderLiveLocationSerializer
-from api.emailer.email_notifications import send_order_status_email
+from api.emailer.email_notifications import get_invoice_html, get_order_full_details, send_order_status_email
 from decouple import config
 from django.utils import timezone
+from xhtml2pdf import pisa
+from io import BytesIO
+import os
+from django.conf import settings
 
 @method_decorator(csrf_exempt, name='dispatch')
 class TrackOrder(APIView):
@@ -224,6 +229,45 @@ class RestaurantOrders(APIView):
                 {"status": "error", "message": str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
+        
+def generate_invoice_pdf(order):
+    # 1. Get full order details via function
+    response = get_order_full_details(order)
+
+    # 2. Extract data from JsonResponse safely
+    if isinstance(response, JsonResponse):
+        response_data = response.json() if hasattr(response, 'json') else response.content
+        if isinstance(response_data, bytes):
+            response_data = json.loads(response_data)
+    else:
+        raise ValueError("Expected JsonResponse from get_order_full_details()")
+
+    if response_data.get("status") != "success":
+        raise ValueError("Failed to get full order details")
+
+    order_details = response_data["data"]
+
+    # 3. Get HTML from the separate HTML generator function
+    html = get_invoice_html(order_details)
+
+    # 4. Convert HTML to PDF
+    result = BytesIO()
+    pdf = pisa.CreatePDF(BytesIO(html.encode("utf-8")), dest=result)
+
+    # 5. Save PDF to media/invoices/
+    if not pdf.err:
+        invoice_dir = os.path.join(settings.MEDIA_ROOT, "order_invoices")
+        os.makedirs(invoice_dir, exist_ok=True)
+        filename = f"invoice_{order.order_number}.pdf"
+        file_path = os.path.join(invoice_dir, filename)
+        with open(file_path, "wb") as f:
+            f.write(result.getvalue())
+        return {
+            "filename": filename,
+            "full_path": file_path
+        }
+
+    return None
 
 class OrderStatusUpdate(APIView):
     def post(self, request, *args, **kwargs):
@@ -238,8 +282,13 @@ class OrderStatusUpdate(APIView):
                 }, status=status.HTTP_400_BAD_REQUEST)
 
             order = Order.objects.get(order_number=order_number)
+
+            invoice_path = None
+            if new_status == 6:
+                invoice_path = generate_invoice_pdf(order)   
+                order.invoice_path = f"order_invoices/{invoice_path['filename']}"
             order.status = int(new_status)
-            order.save()
+            order.save()          
 
             # Send email via common function
             send_order_status_email(order)

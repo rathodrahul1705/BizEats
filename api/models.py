@@ -392,6 +392,7 @@ class Order(models.Model):
     special_requests = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(default=now)
     updated_at = models.DateTimeField(auto_now=True)
+    invoice_path = models.ImageField(upload_to='order_invoices/', blank=True, null=True)
     coupon = models.ForeignKey('Coupon', on_delete=models.SET_NULL, null=True, blank=True, related_name='orders')
     coupon_discount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, help_text="Discount amount from coupon")
 
