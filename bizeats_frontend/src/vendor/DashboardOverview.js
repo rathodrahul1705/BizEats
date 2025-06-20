@@ -528,10 +528,7 @@ const DashboardOverview = ({ user, setUser }) => {
                     </div>
                     <div className="link-arrow">→</div>
                   </Link> */}
-                  {
-
-                    user?.user_id == 2 ?
-                    <>
+                  
                   
                   <Link 
                     to={`/vendor-dashboard/restaurant`} 
@@ -544,6 +541,12 @@ const DashboardOverview = ({ user, setUser }) => {
                     </div>
                     <div className="link-arrow">→</div>
                   </Link>
+
+                  {
+
+                  user?.user_id == 2 ?
+                  <>
+
                   <Link 
                     to={`/vendor-dashboard/customer`} 
                     className="link-card"
