@@ -486,55 +486,88 @@ class RestaurantListAPI(APIView):
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-
 class RestaurantDetailMenuView(APIView):
     def get(self, request, restaurant_id, offer=None):
         try:
             restaurant = RestaurantMaster.objects.get(restaurant_id=restaurant_id)
             serializer = RestaurantMasterSerializer(restaurant)
             restaurant_data = serializer.data.copy()
-                    
-            # Get restaurant location
+
+            # -----------------------#
+            #  Restaurant meta data  #
+            # -----------------------#
             restaurant_location = RestaurantLocation.objects.get(restaurant=restaurant)
             restaurant_document = RestaurantDocuments.objects.get(restaurant=restaurant)
 
+            # Build short address
             address_parts = [
                 restaurant_location.area_sector_locality,
-                restaurant_location.city
+                restaurant_location.city,
             ]
             address = ", ".join(filter(None, address_parts))
 
-            # Estimate delivery time (placeholder logic)
-            time_required_to_reach_loc = 45
+            # ---------------------------------------- #
+            #  NEW: Fetch delivery timing information  #
+            # ---------------------------------------- #
+            delivery_timings_qs = (
+                RestaurantDeliveryTiming.objects
+                .filter(restaurant=restaurant)
+                .order_by("day")  # optional, keeps days grouped
+            )
 
-            # Prepare item list and filter by offer if provided
-            items = restaurant_data.get('menu_items', [])
+            delivery_timings = [
+                {
+                    "day": timing.day,
+                    "open": timing.open,
+                    "start_time": (
+                        timing.start_time.strftime("%H:%M") if timing.start_time else None
+                    ),
+                    "end_time": (
+                        timing.end_time.strftime("%H:%M") if timing.end_time else None
+                    ),
+                }
+                for timing in delivery_timings_qs
+            ]
+
+            # ---------------------------------------- #
+            #  Menu-item processing (existing logic)   #
+            # ---------------------------------------- #
+            time_required_to_reach_loc = 45  # placeholder ETA
+
+            items = restaurant_data.get("menu_items", [])
             processed_items = []
 
             for item in items:
-                # Attach absolute image URL if image exists
+                # Make image URL absolute
                 if item.get("item_image"):
-                    item["item_image"] = request.build_absolute_uri(default_storage.url(item["item_image"]))
+                    item["item_image"] = request.build_absolute_uri(
+                        default_storage.url(item["item_image"])
+                    )
 
-                # Apply offer filtering logic
+                # Offer filter
                 if offer:
                     if offer == "buy-one-get-one-free" and item.get("buy_one_get_one_free"):
                         processed_items.append(item)
-                    # Add more offer types here as needed
+                    # Add other offer types here
                 else:
                     processed_items.append(item)
 
+            # ------------------- #
+            #  Build the response #
+            # ------------------- #
             response_data = {
-                'time_required_to_reach_loc': time_required_to_reach_loc,
-                'restaurant_name': restaurant_data.get('restaurant_name'),
-                'restaurant_status': restaurant_data.get('restaurant_status'),
-                'Address': address,
-                'rating': 4.5,  # Static or compute dynamically
-                'min_order': restaurant_data.get('min_order', 0),
-                'opening_time': restaurant_data.get('opening_time', "08:00"),
-                'closing_time': restaurant_data.get('closing_time', "22:00"),
-                'itemlist': processed_items,
-                'fssai_number':restaurant_document.fssai_number
+                "time_required_to_reach_loc": time_required_to_reach_loc,
+                "restaurant_name": restaurant_data.get("restaurant_name"),
+                "restaurant_status": restaurant_data.get("restaurant_status"),
+                "Address": address,
+                "rating": 4.5,  # static or compute dynamically
+                "min_order": restaurant_data.get("min_order", 0),
+                "opening_time": restaurant_data.get("opening_time", "08:00"),
+                "closing_time": restaurant_data.get("closing_time", "22:00"),
+                "itemlist": processed_items,
+                "fssai_number": restaurant_document.fssai_number,
+                # >>> new key <<<
+                "delivery_timings": delivery_timings,
             }
 
             return Response(response_data)
