@@ -730,7 +730,7 @@
 .testimonials-section {
   padding: 6rem 0;
   background: #fff;
-  text-align: center;
+  /* text-align: center; */
 }
 
 .testimonials-container {
@@ -977,6 +977,7 @@
   
   .testimonials-section {
     padding: 4rem 0;
+    text-align: center;
   }
   
   .cta-section {
