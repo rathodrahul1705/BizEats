@@ -142,7 +142,7 @@
 
 /* Content Card Styles */
 .split_card__content_card {
-  padding: 16px;
+  padding: 10px;
   flex: 1;
   transition: all 0.3s ease;
 }
@@ -188,7 +188,6 @@
   justify-content: space-between;
   align-items: center;
   padding-top: 5px;
-  margin-top: 5px;
 }
 
 .split_card__location{
@@ -373,7 +372,7 @@
   }
   
   .split_card__content_card {
-    padding: 12px;
+    padding: 10px;
   }
   
   .split_card__title {
