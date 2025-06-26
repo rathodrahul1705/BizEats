@@ -142,7 +142,7 @@
 
 /* Content Card Styles */
 .split_card__content_card {
-  padding: 10px;
+  padding: 8px;
   flex: 1;
   transition: all 0.3s ease;
 }
