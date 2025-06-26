@@ -457,7 +457,7 @@ class RestaurantListAPI(APIView):
 
                 item_cuisines = ", ".join([
                     c["cuisine_name"] for c in restaurant.get("cuisines", []) if c.get("cuisine_name")
-                ])
+                ][:2])
 
                 menu_items = restaurant.get("menu_items", [])
                 total_price = sum(float(item["item_price"]) for item in menu_items)
