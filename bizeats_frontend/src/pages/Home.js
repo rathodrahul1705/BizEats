@@ -7,7 +7,7 @@ import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 import "swiper/css/effect-fade";
-import { Navigation, Pagination, Autoplay, EffectFade } from "swiper/modules";
+import { Navigation, Pagination, Autoplay, EffectFade, FreeMode } from "swiper/modules";
 import API_ENDPOINTS from "../components/config/apiConfig";
 import fetchData from "../components/services/apiService";
 import StripeLoader from "../loader/StripeLoader";
@@ -29,6 +29,16 @@ const Home = () => {
   const [isEnd, setIsEnd] = useState(false);
   const [restaurantsReview, setRestaurantsReview] = useState([]);
   const [resviewdetails, serReviewDetails] = useState([]);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     const fetchRestaurants = async () => {
@@ -45,7 +55,6 @@ const Home = () => {
 
     fetchRestaurants();
   }, []);
-
 
   useEffect(() => {
     const fetchReview = async () => {
@@ -64,7 +73,6 @@ const Home = () => {
     fetchReview();
   }, []);
 
-  
   const handlePrev = () => {
     if (swiperRef.current && !isBeginning) {
       swiperRef.current.swiper.slidePrev();
@@ -149,6 +157,68 @@ const Home = () => {
   if (loading && restaurants.length === 0) {
     return <StripeLoader />;
   }
+
+  const renderRestaurantCard = (restaurant) => (
+    <div className="split_card__container" key={restaurant.restaurant_id}>
+      {/* Image Card */}
+      <Link 
+        to={`/city/${restaurant?.restaurant_city}/${restaurant?.restaurant_slug}/${restaurant.restaurant_id}`} 
+        className="split_card__image_card"
+      >
+        <div className="split_card__image_wrapper">
+          <img 
+            src={restaurant.restaurant_image} 
+            alt={restaurant.restaurant_name} 
+            className="split_card__image"
+            loading="lazy"
+          />
+          <div className="split_card__badges">
+            <span className="split_card__price_badge">
+              ₹{restaurant.avg_price_range} for two
+            </span>
+            {restaurant.rating && (
+              <span className="split_card__rating_badge">
+                ⭐ {restaurant.rating}
+              </span>
+            )}
+          </div>
+          <button className="split_card__action_btn">
+            <ArrowRightCircle size={20} />
+          </button>
+        </div>
+      </Link>
+
+      {/* Content Card */}
+      <div className="split_card__content_card">
+        <Link 
+          to={`/city/${restaurant?.restaurant_city}/${restaurant?.restaurant_slug}/${restaurant.restaurant_id}`} 
+          className="split_card__content_link"
+        >
+          <h3 className="split_card__title">{restaurant.restaurant_name}</h3>
+
+          <span className="split_card__delivery_time">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+              {restaurant.delivery_time || '45 min'}
+            </span>
+            
+          <p className="split_card__cuisine">{restaurant.item_cuisines}</p>
+          
+          <div className="split_card__footer">
+            <span className="split_card__location">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                <circle cx="12" cy="10" r="3"></circle>
+              </svg>
+              {restaurant.restaurant_location}
+            </span>
+          </div>
+        </Link>
+      </div>
+    </div>
+  );
 
   return (
     <div className="home-container">
@@ -334,57 +404,70 @@ const Home = () => {
       <section className="food-slider-section">
         <div className="section-container">
           <div className="section-header">
-            <h2 className="section-heading">Discover the Best Home Kitchens Around You</h2>
-            <Link to="/food-list" className="view-all-link">
-              View All <ChevronRight size={18} />
-            </Link>
+            <h2 className="section-heading">Top Home Kitchens Near You</h2>
+            {!isMobile && (
+              <Link to="/food-list" className="view-all-link">
+                View All <ChevronRight size={18} />
+              </Link>
+            )}
           </div>
-          <Swiper
-            modules={[Navigation, Pagination, Autoplay]}
-            spaceBetween={20}
-            slidesPerView={3.5}
-            navigation
-            loop={false}
-            autoplay={{ delay: 5000, disableOnInteraction: true }}
-            breakpoints={{
-              320: { slidesPerView: 1.2 },
-              640: { slidesPerView: 2.2 },
-              768: { slidesPerView: 2.5 },
-              1024: { slidesPerView: 3.5 },
-              1280: { slidesPerView: 4 },
-            }}
-          >
-            {restaurants.map((restaurant) => (
-              <SwiperSlide key={restaurant.restaurant_id}>
-                <Link to={`/city/${restaurant?.restaurant_city}/${restaurant?.restaurant_slug}/${restaurant.restaurant_id}`}  className="food-card-wrapper-link">
-                  <div className="food-card">
-                    <div className="food-card-inner">
-                      <img
-                        src={restaurant.restaurant_image}
-                        alt={restaurant.restaurant_name}
-                        className="food-image"
-                        loading="lazy"
-                      />
-                      <div className="food-badge">
-                        <span className="food-price">₹{restaurant.avg_price_range}</span>
-                        <span className="food-rating">⭐ {restaurant.rating || '4.5'}</span>
-                      </div>
-                    </div>
-                    <div className="food-details">
-                      <div className="food-info">
-                        <p className="food-brand">{restaurant.restaurant_name}</p>
-                        <p className="food-cuisine">{restaurant.item_cuisines}</p>
-                      </div>
-                      <div className="food-meta">
-                        <p className="food-location">📍 {restaurant.restaurant_location}</p>
-                        <p className="food-delivery">⏳ 45 min</p>
-                      </div>
-                    </div>
-                  </div>
-                </Link>
-              </SwiperSlide>
-            ))}
-          </Swiper>
+          
+          <div className="split_view__swiper_wrapper">
+            <Swiper
+              slidesPerView={isMobile ? 1.5 : 'auto'}
+              spaceBetween={isMobile ? 16 : 24}
+              freeMode={true}
+              pagination={isMobile ? {
+                clickable: true,
+                el: '.split_view__pagination',
+                type: 'bullets',
+              } : false}
+              navigation={!isMobile ? {
+                nextEl: '.split_view__nav_next',
+                prevEl: '.split_view__nav_prev',
+              } : false}
+              modules={isMobile ? [FreeMode, Pagination] : [Navigation, FreeMode]}
+              className="split_view__swiper"
+              breakpoints={{
+                375: {
+                  slidesPerView: 1.8,
+                },
+                480: {
+                  slidesPerView: 2.2,
+                },
+                640: {
+                  slidesPerView: 2.5,
+                },
+                768: {
+                  slidesPerView: 3,
+                  spaceBetween: 20
+                },
+                1024: {
+                  slidesPerView: 4,
+                  spaceBetween: 24
+                }
+              }}
+            >
+              {restaurants.map((restaurant) => (
+                <SwiperSlide key={restaurant.restaurant_id} style={!isMobile ? { width: '300px' } : {}}>
+                  {renderRestaurantCard(restaurant)}
+                </SwiperSlide>
+              ))}
+            </Swiper>
+            
+            {isMobile && <div className="split_view__pagination"></div>}
+            
+            {!isMobile && (
+              <>
+                <button className="split_view__nav split_view__nav_prev">
+                  <ChevronLeft size={24} />
+                </button>
+                <button className="split_view__nav split_view__nav_next">
+                  <ChevronRight size={24} />
+                </button>
+              </>
+            )}
+          </div>
         </div>
       </section>
 
@@ -447,9 +530,6 @@ const Home = () => {
               <Link to="/food-list">
                 <button className="cta-primary">Order Now</button>
               </Link>
-              {/* <Link to="/become-chef">
-                <button className="cta-secondary">Become a Chef</button>
-              </Link> */}
             </div>
           </div>
         </div>
