@@ -5,22 +5,28 @@ import "../assets/css/restaurent/ExistingRestaurant.css";
 
 const ExistingRestaurant = ({ onClose, restaurantsList }) => {
   const [activeTab, setActiveTab] = useState("active");
-  const navigate = useNavigate(); // React Router navigation
+  const [isClosing, setIsClosing] = useState(false);
+  const navigate = useNavigate();
 
-  // Extract active and live restaurants from the response
   const activeRestaurants = restaurantsList?.active_restaurants || [];
   const liveRestaurants = restaurantsList?.live_restaurants || [];
 
-  // Navigate to restaurant registration page
   const handleNavigate = (restaurant_id) => {
     navigate(`/register-restaurant/${restaurant_id}`);
   };
 
+  const handleClose = () => {
+    setIsClosing(true);
+    setTimeout(() => {
+      onClose();
+    }, 300); // Match this with your CSS animation duration
+  };
+
   return (
-    <div className="existing-restaurant-modal">
-      <div className="modal-overlay" onClick={onClose}></div>
+    <div className={`existing-restaurant-modal ${isClosing ? "closing" : ""}`}>
+      <div className="modal-overlay" onClick={handleClose}></div>
       <div className="modal-content">
-        <button className="close-button" onClick={onClose}>
+        <button className="close-button" onClick={handleClose}>
           <X size={24} />
         </button>
         <h2>Your restaurant applications</h2>
@@ -50,7 +56,6 @@ const ExistingRestaurant = ({ onClose, restaurantsList }) => {
                     <p><strong>Restaurant ID:</strong> {restaurant.restaurant_id}</p>
                     <p><strong>Status:</strong> <span className="status in-progress">Active</span></p>
 
-                    {/* Show location details if available */}
                     {restaurant.location ? (
                       <div className="location-details">
                         <p><strong>Shop No / Building:</strong> {restaurant.location.shop_no_building}</p>
@@ -88,7 +93,6 @@ const ExistingRestaurant = ({ onClose, restaurantsList }) => {
                     <p><strong>Restaurant ID:</strong> {restaurant.restaurant_id}</p>
                     <p><strong>Status:</strong> <span className="status completed">Live</span></p>
 
-                    {/* Show location details if available */}
                     {restaurant.location ? (
                       <div className="location-details">
                         <p><strong>Shop No / Building:</strong> {restaurant.location.shop_no_building}</p>

@@ -1,6 +1,6 @@
-/* General Styles */
-.rest-home {
-  font-family: "Arial", sans-serif;
+/* Base Styles */
+.rest-home-container {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
@@ -10,292 +10,199 @@
 /* Header Section */
 .rest-header {
   text-align: center;
-  padding: 50px 20px;
+  padding: 40px 20px;
+  margin-bottom: 40px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
 }
 
-.rest-title {
-  font-size: 2.5rem;
-  font-weight: bold;
-  margin-bottom: 12px;
+.welcome-message {
+  font-size: 2rem;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+.welcome-message span {
+  color: #e65c00;
+}
+
+.main-heading {
+  font-size: 2rem;
+  margin-bottom: 10px;
+  font-weight: 600;
   color: #222;
 }
 
-.rest-subtitle {
-  font-size: 1.2rem;
+.sub-heading {
+  font-size: 1.1rem;
+  color: #666;
   margin-bottom: 30px;
-  color: #555;
 }
 
-/* Centered CTA Button */
-.rest-cta {
-  background: #e65c00;
-  color: white;
-  border: none;
-  padding: 14px 32px;
-  font-size: 1.2rem;
-  font-weight: bold;
-  border-radius: 8px;
-  cursor: pointer;
+/* Buttons */
+.action-buttons {
   display: flex;
-  align-items: center;
+  gap: 15px;
   justify-content: center;
-  gap: 12px;
-  margin: 0 auto; /* Center button */
-  transition: transform 0.2s ease, background 0.3s ease;
-  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
-  width: 280px;
-  margin: 0 10px;
+  flex-wrap: wrap;
 }
 
-.rest-cta:hover {
-  
-  transform: scale(1.05);
+.primary-button, .secondary-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  font-size: 1rem;
 }
 
-.button-group{
-  display: flex;
-  max-width: 600px;
-  margin: auto;
+.primary-button {
+  background-color: #e65c00;
+  color: white;
 }
-/* Steps Section */
-.rest-steps {
-  padding: 40px 20px;
-  background: #fff;
-  border-radius: 12px;
-  margin-top: 30px;
-  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
-  text-align: center;
+
+.primary-button:hover {
+  background-color: #cc4e00;
+  transform: translateY(-2px);
 }
-.secondary{
-  background: transparent;
+
+.secondary-button {
+  background-color: white;
   color: #e65c00;
   border: 1px solid #e65c00;
 }
 
-.steps-heading {
-  font-size: 1.8rem;
-  margin-bottom: 20px;
-  color: #222;
+.secondary-button:hover {
+  background-color: #fff5f0;
 }
 
-.steps-list {
+/* Requirements Section */
+.requirements-section {
+  padding: 40px 20px;
+  margin-bottom: 40px;
+  text-align: center;
+}
+
+.requirements-section h2 {
+  font-size: 1.8rem;
+  margin-bottom: 15px;
+  font-weight: 600;
+}
+
+.section-description {
+  color: #666;
+  margin-bottom: 30px;
+  font-size: 1.1rem;
+}
+
+.requirements-list {
   list-style: none;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  max-width: 700px;
+  max-width: 600px;
   margin: 0 auto;
+  text-align: left;
 }
 
-.step-item {
+.requirements-list li {
+  padding: 12px 0;
+  border-bottom: 1px solid #eee;
   display: flex;
   align-items: center;
-  background: #f9f9f9;
-  padding: 14px 18px;
-  border-radius: 10px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  transition: transform 0.2s ease;
+  gap: 10px;
 }
 
-.step-item:hover {
-  transform: scale(1.02);
-}
-
-.step-icon {
-  color: #4caf50;
-  margin-right: 12px;
-}
-
-.step-text {
-  flex: 1;
-  font-size: 1.1rem;
-  color: #333;
-}
-
-.step-link {
-  font-size: 0.9rem;
+.check-icon {
   color: #e65c00;
-  text-decoration: none;
-  font-weight: bold;
-  transition: color 0.3s ease;
 }
 
-.step-link:hover {
-  color: #cc4e00;
-  text-decoration: underline;
-}
-
-/* About Section */
-.rest-about {
-  text-align: center;
+/* Benefits Section */
+.benefits-section {
   padding: 40px 20px;
+  margin-bottom: 40px;
+  text-align: center;
 }
 
-.about-heading {
+.benefits-section h2 {
   font-size: 1.8rem;
-  margin-bottom: 10px;
-  color: #222;
+  margin-bottom: 15px;
+  font-weight: 600;
 }
 
-.about-text {
-  font-size: 1.1rem;
-  max-width: 750px;
-  margin: 0 auto;
-  line-height: 1.6;
-  color: #555;
-}
-
-/* Contact Section */
-.rest-contact {
-  text-align: center;
-  padding: 40px 20px;
-  background: #fff;
-  border-radius: 12px;
+.benefits-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
   margin-top: 30px;
-  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
 }
 
-.contact-heading {
-  font-size: 1.8rem;
+.benefit-card {
+  padding: 25px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  text-align: left;
+}
+
+.benefit-card h3 {
+  font-size: 1.2rem;
   margin-bottom: 10px;
   color: #222;
 }
 
-.contact-text {
-  font-size: 1.1rem;
-  max-width: 650px;
-  margin: 0 auto 20px;
-  line-height: 1.6;
-  color: #555;
+.benefit-card p {
+  color: #666;
+  font-size: 0.95rem;
 }
 
-.contact-button {
-  background: linear-gradient(135deg, #e65c00, #ff7e29);
-  color: white;
-  border: none;
-  padding: 12px 26px;
-  font-size: 1rem;
+/* Final CTA */
+.final-cta {
+  text-align: center;
+  padding: 50px 20px;
+  background-color: #f9f9f9;
   border-radius: 8px;
-  cursor: pointer;
-  transition: transform 0.2s ease, background 0.3s ease;
-  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 40px;
 }
 
-.contact-button:hover {
-  background: linear-gradient(135deg, #cc4e00, #e67322);
-  transform: scale(1.05);
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-  .rest-title {
-    font-size: 2rem;
-  }
-
-  .rest-cta {
-    width: 100%;
-    max-width: 420px;
-  }
-
-  .steps-list {
-    max-width: 100%;
-  }
-
-  .step-item {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 5px;
-    padding: 16px;
-  }
-
-  .rest-contact,
-  .rest-about,
-  .rest-steps {
-    padding: 30px 15px;
-  }
-
-  .step-text {
-    font-size: 1rem;
-  }
-  .rest-header{
-    padding: 40px 0;
-  }
-  .rest-cta{
-    font-size: 14px;
-    padding: 10px;
-  }
-}
-@media (max-width: 480px) {
-  .rest-cta{
-    font-size: 12px;
-    padding: 10px;
-    gap: 0;
-  }
-  .rest-cta svg{
-    display: none;
-  }
-}
-
-/* User Welcome Message */
-.user-welcome {
-  font-size: 1.4rem;
-  font-weight: bold;
-  color: #4caf50;
-  text-align: center;
+.final-cta h2 {
+  font-size: 1.8rem;
   margin-bottom: 20px;
-  animation: fadeIn 0.8s ease-in-out;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
+  font-weight: 600;
 }
 
-/* Emoji Animation */
-.user-welcome::after {
-  content: "👋";
-  display: inline-block;
-  animation: wave 1s infinite;
-}
-
-/* Register Restaurant Title */
-.rest-title {
-  font-size: 2.4rem;
-  font-weight: bold;
-  text-align: center;
-  color: #222;
-  margin-bottom: 12px;
-}
-
-/* Fade In Animation */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Hand Wave Animation */
-@keyframes wave {
-  0%, 100% {
-    transform: rotate(0deg);
-  }
-  50% {
-    transform: rotate(15deg);
-  }
-}
-
-/* Responsive Adjustments */
+/* Responsive Styles */
 @media (max-width: 768px) {
-  .user-welcome {
+  .welcome-message, .main-heading {
     font-size: 1.2rem;
   }
+  
+  .sub-heading {
+    font-size: 1rem;
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .primary-button, .secondary-button {
+    width: 100%;
+    max-width: 300px;
+    justify-content: center;
+  }
+  
+  .benefits-grid {
+    grid-template-columns: 1fr;
+  }
+}
 
-  .rest-title {
-    font-size: 2rem;
+@media (max-width: 480px) {
+  .rest-header {
+    padding: 30px 15px;
+  }
+  
+  .requirements-section, .benefits-section, .final-cta {
+    padding: 30px 15px;
   }
 }

@@ -518,7 +518,7 @@ const Home = () => {
                         </svg>
                       ))}
                     </div>
-                    <p className="testimonial-text">"{testimonial.comment}"</p>
+                    "{testimonial.comment.split(' ').slice(0, 20).join(' ')}{testimonial.comment.split(' ').length > 20 ? '...' : ''}"
                     <p className="testimonial-author">- {testimonial.name}</p>
                   </div>
                 </SwiperSlide>
@@ -537,6 +537,9 @@ const Home = () => {
             <div className="cta-buttons">
               <Link to="/food-list">
                 <button className="cta-primary">Order Now</button>
+              </Link>
+              <Link to="/register-your-homechef">
+                <button className="cta-primary">Partner With Us</button>
               </Link>
             </div>
           </div>

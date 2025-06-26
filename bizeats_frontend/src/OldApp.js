@@ -32,7 +32,7 @@ const PrivateRoute = ({ children, user }) => user ? children : <Navigate to="/" 
 
 const VendorPrivateRoute = ({ children, user, is_restaurant_register }) => {
   if (!user) return <Navigate to="/" />;
-  if (!is_restaurant_register) return <Navigate to="/register-your-restaurent" />;
+  if (!is_restaurant_register) return <Navigate to="/register-your-homechef" />;
   return children;
 };
 
@@ -150,7 +150,7 @@ const App = () => {
               <Route path="/order-details" element={<OrderDetails />} />
               <Route path="/order-details/:restaurant_id" element={<OrderDetails user={user} setUser={setUser} />} />
               <Route path="/payments/:restaurant_id" element={<PaymentOption user={user} setUser={setUser} />} />
-              <Route path="/register-your-restaurent" element={<RestHome setUser={setUser} setIsRestaurantRegister={setIsRestaurantRegister} />} />
+              <Route path="/register-your-homechef" element={<RestHome setUser={setUser} setIsRestaurantRegister={setIsRestaurantRegister} />} />
               <Route path="/payment/success" element={<PaymentSuccess />} />
               <Route path="/payment/failed" element={<PaymentFailed />} />
               <Route path="/order-confirmation" element={<OrderConfirmation />} />

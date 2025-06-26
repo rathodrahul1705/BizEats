@@ -1,47 +1,48 @@
-import React, { useState, useEffect, useRef } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { ArrowRight, CheckCircle } from "lucide-react";
 import SignIn from "../components/SignIn";
-import ExistingRestaurant from "./ExistingRestaurant"; // Import the modal
+import ExistingRestaurant from "./ExistingRestaurant";
 import "../assets/css/restaurent/RestHome.css";
 import API_ENDPOINTS from "../components/config/apiConfig";
-import fetchData from "../components/services/apiService"
+import fetchData from "../components/services/apiService";
 
 const RestHome = ({ setUser }) => {
   const navigate = useNavigate();
   const [showSignIn, setShowSignIn] = useState(false);
-  const [showExistingRestaurant, setShowExistingRestaurant] = useState(false); // State for modal visibility
-  const [restaurantsList, setrestaurantsList] = useState([]);
+  const [showExistingRestaurant, setShowExistingRestaurant] = useState(false);
+  const [restaurantsList, setRestaurantsList] = useState([]);
 
   const user = localStorage.getItem("user")
     ? JSON.parse(localStorage.getItem("user"))
     : null;
 
-
-    const handleGetStarted = () => {
+  const handleGetStarted = () => {
     if (user) {
       navigate("/register-restaurant");
     } else {
       setShowSignIn(true);
     }
   };
-  
 
   const handleViewExistingApplication = () => {
-    setShowExistingRestaurant(true); // Open the modal
+    setShowExistingRestaurant(true);
   };
 
   useEffect(() => {
     if (!user?.user_id) return;
 
     const fetchRestaurants = async () => {
-
       try {
-        const response = await fetchData(API_ENDPOINTS.RESTAURANT.BY_USER(user?.user_id), "GET", null, localStorage.getItem("access"));
-        setrestaurantsList(response);
+        const response = await fetchData(
+          API_ENDPOINTS.RESTAURANT.BY_USER(user?.user_id),
+          "GET",
+          null,
+          localStorage.getItem("access")
+        );
+        setRestaurantsList(response);
       } catch (error) {
         console.error("Error fetching restaurants:", error);
-      } finally {
       }
     };
 
@@ -49,78 +50,93 @@ const RestHome = ({ setUser }) => {
   }, [user?.user_id]);
 
   return (
-    <div className="rest-home">
+    <div className="rest-home-container">
       {/* Header Section */}
       <header className="rest-header">
         {user ? (
-          <p className="user-welcome">Welcome, {user.full_name} 👋</p>
+          <h1 className="welcome-message">
+            Welcome back, <span>{user.full_name}</span>
+          </h1>
         ) : (
-          <h1 className="rest-title">Register Your Restaurant & Grow Your Business</h1>
+          <h1 className="main-heading">Register Your HomeChef</h1>
         )}
-        <p className="rest-subtitle">Join the largest food network in just 10 minutes</p>
+        <p className="sub-heading">
+          Join our platform and reach thousands of customers
+        </p>
 
-        <div className="button-group">
-          <button className="rest-cta" onClick={handleGetStarted}>
-            Register Restaurant
-            <ArrowRight size={20} className="cta-icon" />
+        <div className="action-buttons">
+          <button className="primary-button" onClick={handleGetStarted}>
+            Register HomeChef
+            <ArrowRight size={18} />
           </button>
-          {
-            user && (restaurantsList?.active_restaurants?.length > 0 || restaurantsList?.live_restaurants?.length > 0) ? (
-
-              <button
-              className="rest-cta secondary"
+          {user && (restaurantsList?.active_restaurants?.length > 0 ||
+                   restaurantsList?.live_restaurants?.length > 0) && (
+            <button 
+              className="secondary-button" 
               onClick={handleViewExistingApplication}
-              >
-              View Application
-              <ArrowRight size={20} className="cta-icon" />
-              </button>
-
-            ) :""
-          }
+            >
+              View Applications
+              <ArrowRight size={18} />
+            </button>
+          )}
         </div>
       </header>
 
-      {/* Steps Section */}
-      <section className="rest-steps">
-        <h2 className="steps-heading">How to Register?</h2>
-        <ul className="steps-list">
+      {/* Requirements Section */}
+      <section className="requirements-section">
+        <h2>What you'll need</h2>
+        <p className="section-description">
+          Have these documents ready for a smooth registration process
+        </p>
+        <ul className="requirements-list">
           {[
             "PAN Card",
             "GST Number (if applicable)",
             "FSSAI License",
             "Menu & Profile Food Image",
             "Bank Account Details",
-          ].map((step, index) => (
-            <li key={index} className="step-item">
-              <CheckCircle size={24} className="step-icon" />
-              <span className="step-text">{step}</span>
+          ].map((item, index) => (
+            <li key={index}>
+              <CheckCircle size={20} className="check-icon" />
+              {item}
             </li>
           ))}
         </ul>
       </section>
 
-      {/* About Section */}
-      <section className="rest-about">
-        <h2 className="about-heading">Why Register With Us?</h2>
-        <p className="about-text">
-          Join thousands of restaurants that have grown their business with our platform. Get more
-          customers, increase your visibility, and streamline your operations.
-        </p>
+      {/* Benefits Section */}
+      <section className="benefits-section">
+        <h2>Why join our platform?</h2>
+        <div className="benefits-grid">
+          <div className="benefit-card">
+            <h3>More Customers</h3>
+            <p>Get discovered by thousands of hungry customers in your area</p>
+          </div>
+          <div className="benefit-card">
+            <h3>Easy Management</h3>
+            <p>Simple tools to manage your menu, orders, and payments</p>
+          </div>
+          <div className="benefit-card">
+            <h3>Quick Setup</h3>
+            <p>Get started in minutes with our straightforward onboarding</p>
+          </div>
+          <div className="benefit-card">
+            <h3>24/7 Support</h3>
+            <p>Our team is always ready to help you with any questions</p>
+          </div>
+        </div>
       </section>
 
-      {/* Contact Section */}
-      <section className="rest-contact">
-        <h2 className="contact-heading">Need Help?</h2>
-        <p className="contact-text">
-          Our support team is available 24/7 to assist you. Reach out to us anytime.
-        </p>
-        <Link to={`/contact-us`}>
-          <button className="contact-button">Contact Us</button>
-        </Link>
-       
+      {/* Final CTA */}
+      <section className="final-cta">
+        <h2>Ready to get started?</h2>
+        <button className="primary-button" onClick={handleGetStarted}>
+          Register Your HomeChef Now
+          <ArrowRight size={18} />
+        </button>
       </section>
 
-      {/* Sign-In Popup */}
+      {/* Modals */}
       {showSignIn && (
         <SignIn
           onClose={() => setShowSignIn(false)}
@@ -132,9 +148,11 @@ const RestHome = ({ setUser }) => {
         />
       )}
 
-      {/* Existing Restaurant Modal */}
       {showExistingRestaurant && (
-        <ExistingRestaurant onClose={() => setShowExistingRestaurant(false)} restaurantsList={restaurantsList}/>
+        <ExistingRestaurant
+          onClose={() => setShowExistingRestaurant(false)}
+          restaurantsList={restaurantsList}
+        />
       )}
     </div>
   );

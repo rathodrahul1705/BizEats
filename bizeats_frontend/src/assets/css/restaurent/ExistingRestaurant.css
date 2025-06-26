@@ -9,6 +9,7 @@
   display: flex;
   justify-content: flex-end;
   align-items: center;
+  pointer-events: none;
 }
 
 /* Overlay Styles */
@@ -18,9 +19,20 @@
   right: 0;
   bottom: 0;
   left: 0;
-  background-color: rgba(0, 0, 0, 0.6); /* Dark semi-transparent background */
-  backdrop-filter: blur(5px); /* Blur effect for the background */
+  background-color: #e65c00;
+  backdrop-filter: blur(5px);
   z-index: 1001;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: auto;
+}
+
+.existing-restaurant-modal:not(.closing) .modal-overlay {
+  opacity: 1;
+}
+
+.existing-restaurant-modal.closing .modal-overlay {
+  opacity: 0;
 }
 
 /* Modal Content */
@@ -33,16 +45,17 @@
   z-index: 1002;
   padding: 24px;
   overflow-y: auto;
-  animation: slideIn 0.3s ease-in-out; /* Slide-in animation */
+  transform: translateX(100%);
+  transition: transform 0.3s ease;
+  pointer-events: auto;
 }
 
-@keyframes slideIn {
-  from {
-    transform: translateX(100%);
-  }
-  to {
-    transform: translateX(0);
-  }
+.existing-restaurant-modal:not(.closing) .modal-content {
+  transform: translateX(0);
+}
+
+.existing-restaurant-modal.closing .modal-content {
+  transform: translateX(100%);
 }
 
 /* Close Button */
@@ -91,12 +104,12 @@
 }
 
 .existing-restaurant-modal .tab-button.active {
-  color: #007bff;
-  border-bottom: 2px solid #007bff;
+  color: #e65c00;;
+  border-bottom: 2px solid #e65c00;;
 }
 
 .existing-restaurant-modal .tab-button:hover {
-  color: #007bff;
+  color: #e65c00;;
 }
 
 /* Card Container */
@@ -137,11 +150,11 @@
 }
 
 .existing-restaurant-modal .card .status.in-progress {
-  color: #ffa500; /* Orange for In Progress */
+  color: #ffa500;
 }
 
 .existing-restaurant-modal .card .status.completed {
-  color: #28a745; /* Green for Completed */
+  color: #28a745;
 }
 
 /* Card Button Styles */
@@ -161,11 +174,11 @@
 }
 
 .existing-restaurant-modal .card-button.continue {
-  background-color: #e65c00; /* Blue for Continue */
+  background-color: #e65c00;
 }
 
 .existing-restaurant-modal .card-button.edit {
-  background-color: #6c757d; /* Gray for Edit */
+  background-color: #e65c00;
 }
 
 .existing-restaurant-modal .card-button:hover {
