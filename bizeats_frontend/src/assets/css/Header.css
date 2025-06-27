@@ -1,37 +1,24 @@
-/* ===== Base Styles ===== */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: 'Poppins', sans-serif;
-  -webkit-tap-highlight-color: transparent;
-}
-
-/* ===== Header Container ===== */
+/* Base Styles */
 .header {
   position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  background: white;
-  box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
-  z-index: 100;
+  right: 0;
+  background-color: #fff;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  padding: 0.5rem 0;
 }
 
 .header__container {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 20px;
-  max-width: 1400px;
+  max-width: 1200px;
   margin: 0 auto;
+  padding: 0 1rem;
 }
 
-.header__spacer {
-  height: 70px; /* Adjust based on your header height */
-}
-
-/* ===== Logo Styles ===== */
 .header__logo {
   display: flex;
   align-items: center;
@@ -39,62 +26,87 @@
 
 .header__logo-image {
   height: 40px;
-  width: auto;
-  object-fit: contain;
 }
 
-/* ===== Navigation Styles ===== */
 .header__nav-list {
   display: flex;
   list-style: none;
-  gap: 15px;
+  margin: 0;
+  padding: 0;
   align-items: center;
 }
 
-.header__nav-link,
-.header__user-info,
-.header__signin-btn {
+.header__nav-item {
+  margin-left: 1.5rem;
+  position: relative;
+}
+
+.header__nav-link {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  border-radius: 6px;
-  font-weight: 600;
-  color: #333;
   text-decoration: none;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  transition: all 0.2s ease;
+  color: #333;
+  font-weight: 500;
+  transition: color 0.3s;
+  position: relative;
 }
 
-.header__nav-link:hover,
-.header__signin-btn:hover {
-  background: #e65c00;
-  color: white;
+.header__nav-link:hover {
+  color: #e65c00;
+}
+
+.header__nav-link.active {
+  color: #e65c00;
 }
 
 .header__icon {
-  flex-shrink: 0;
+  margin-right: 0.5rem;
 }
 
-/* ===== Cart Count Badge ===== */
+.header__nav-text {
+  font-size: 1rem;
+}
+
 .header__cart-count {
+  position: absolute;
+  top: -8px;
+  right: -12px;
   background-color: #e65c00;
   color: white;
-  font-size: 12px;
-  font-weight: bold;
   border-radius: 50%;
-  padding: 2px 6px;
-  margin-left: 5px;
-  display: inline-flex;
-  justify-content: center;
-  align-items: center;
-  min-width: 20px;
+  width: 20px;
   height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: bold;
 }
 
-/* ===== User Menu Styles ===== */
+.header__auth-item {
+  margin-left: 1.5rem;
+}
+
+.header__signin-btn {
+  display: flex;
+  align-items: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+  color: #333;
+  padding: 0.5rem 0;
+  transition: color 0.3s;
+}
+
+.header__signin-btn:hover {
+  color: #e65c00;
+}
+
+.header__signin-text {
+  margin-left: 0.5rem;
+}
+
 .header__user-menu {
   position: relative;
 }
@@ -102,40 +114,39 @@
 .header__user-info {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  border-radius: 6px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  padding: 0.5rem 0;
 }
 
 .header__user-info:hover {
-  background: #e65c00;
-  color: white;
+  color: #e65c00;
+}
+
+.header__username {
+  margin-left: 0.5rem;
+  font-weight: 500;
 }
 
 .header__dropdown {
   position: absolute;
   top: 100%;
   right: 0;
-  background: white;
+  background-color: white;
   border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   min-width: 180px;
+  z-index: 1001;
   overflow: hidden;
-  z-index: 110;
-  margin-top: 5px;
 }
 
 .header__dropdown-item {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 12px 16px;
-  color: #333;
+  padding: 0.75rem 1rem;
   text-decoration: none;
-  font-size: 14px;
-  transition: all 0.2s ease;
+  color: #333;
+  font-size: 0.9rem;
+  transition: background-color 0.2s;
   border: none;
   background: none;
   width: 100%;
@@ -144,32 +155,38 @@
 }
 
 .header__dropdown-item:hover {
-  background: #f5f5f5;
-}
-
-.header__dropdown-item--logout {
-  color: #ff4d4f;
+  background-color: #f8f9fa;
 }
 
 .header__dropdown-icon {
-  flex-shrink: 0;
+  margin-right: 0.75rem;
 }
 
-/* ===== Mobile Bottom Navigation ===== */
+.header__dropdown-item--logout {
+  color: #e65c00;
+}
+
+.header__dropdown-item--logout:hover {
+  background-color: #fff5f5;
+}
+
+.header__spacer {
+  height: 70px;
+}
+
+/* Mobile Bottom Navigation */
 .mobile-bottom-nav {
   position: fixed;
   bottom: 0;
   left: 0;
-  width: 100%;
+  right: 0;
+  background-color: #fff;
   display: flex;
   justify-content: space-around;
   align-items: center;
-  background: white;
+  padding: 0.5rem 0;
   box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
-  z-index: 100;
-  padding: 8px 0 12px;
-  /* Add safe area inset for notch devices */
-  padding-bottom: calc(12px + env(safe-area-inset-bottom));
+  z-index: 1000;
 }
 
 .mobile-bottom-nav__item {
@@ -179,153 +196,101 @@
   justify-content: center;
   text-decoration: none;
   color: #666;
-  font-size: 12px;
-  padding: 8px 12px;
+  padding: 0.5rem;
+  font-size: 0.8rem;
+  flex: 1;
   position: relative;
   border: none;
-  background: transparent;
+  background: none;
   cursor: pointer;
-  flex: 1;
-  transition: all 0.2s ease;
 }
 
 .mobile-bottom-nav__item.active {
   color: #e65c00;
-  transform: translateY(-5px);
 }
 
 .mobile-bottom-nav__icon {
-  margin-bottom: 4px;
-  transition: all 0.2s ease;
-}
-
-.mobile-bottom-nav__item.active .mobile-bottom-nav__icon {
-  transform: scale(1.1);
+  margin-bottom: 0.25rem;
 }
 
 .mobile-bottom-nav__label {
-  font-size: 10px;
+  font-size: 0.7rem;
   font-weight: 500;
-  transition: all 0.2s ease;
-}
-
-.mobile-bottom-nav__item.active .mobile-bottom-nav__label {
-  font-weight: 600;
 }
 
 .mobile-bottom-nav__cart-wrapper {
   position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .mobile-bottom-nav__cart-count {
   position: absolute;
-  top: -8px;
+  top: -5px;
   right: -8px;
   background-color: #e65c00;
   color: white;
-  font-size: 10px;
-  font-weight: bold;
   border-radius: 50%;
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
+  font-size: 0.6rem;
+  font-weight: bold;
+}
+
+.mobile-bottom-nav__overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 999;
 }
 
 .mobile-bottom-nav__dropdown {
   position: fixed;
-  bottom: calc(60px + env(safe-area-inset-bottom));
-  left: 50%;
-  transform: translate(-50%, 100%);
-  width: 92%; /* Smaller width with side margins */
-  max-width: 300px; /* Maximum width for larger phones */
-  background: white;
-  border-radius: 16px 16px 0 0;
-  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
-  padding: 8px 0;
-  z-index: 110;
-  animation: slideUp 0.25s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
-  max-height: 40vh; /* More compact height */
-  overflow-y: auto;
-  will-change: transform; /* For smoother animation */
-}
-
-@keyframes slideUp {
-  from {
-    transform: translate(-50%, 100%);
-  }
-  to {
-    transform: translate(-50%, 0);
-  }
+  bottom: 60px;
+  left: 0;
+  right: 0;
+  background-color: white;
+  border-radius: 12px 12px 0 0;
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1001;
+  padding: 1rem 0;
+  transform: translateY(0);
+  transition: transform 0.3s ease;
 }
 
 .mobile-bottom-nav__dropdown-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
-  color: #333;
+  padding: 1rem 1.5rem;
   text-decoration: none;
-  font-size: 14px;
-  border: none;
-  background: none;
-  width: 100%;
-  text-align: left;
-  cursor: pointer;
-  transition: background-color 0.15s ease;
+  color: #333;
+  font-size: 1rem;
+  border-bottom: 1px solid #f0f0f0;
 }
 
-.mobile-bottom-nav__dropdown-item:hover {
-  background: #f8f8f8;
-}
-
-.mobile-bottom-nav__dropdown-item--logout {
-  color: #ff4d4f;
+.mobile-bottom-nav__dropdown-item:last-child {
+  border-bottom: none;
 }
 
 .mobile-bottom-nav__dropdown-icon {
-  flex-shrink: 0;
-  width: 18px;
-  text-align: center;
+  margin-right: 1rem;
 }
 
-/* Overlay for dropdown */
-.mobile-bottom-nav__overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.4);
-  z-index: 105;
-  animation: fadeIn 0.2s ease forwards;
+.mobile-bottom-nav__dropdown-item--logout {
+  color: #e65c00;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-/* ===== Responsive Styles ===== */
+/* Responsive Adjustments */
 @media (max-width: 768px) {
-  .header {
-    display: none;
-  }
-  
   .header__spacer {
     height: 0;
   }
   
-  .mobile-bottom-nav {
-    display: flex;
-  }
-
-  /* Prevent body scrolling when dropdown is open */
-  body.no-scroll {
+  body.body-no-scroll {
     overflow: hidden;
     position: fixed;
     width: 100%;
@@ -333,68 +298,16 @@
   }
 }
 
-@media (min-width: 769px) {
-  .mobile-bottom-nav {
-    display: none;
+/* Animation for mobile dropdown */
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
   }
 }
 
-@media (max-width: 480px) {
-  .mobile-bottom-nav__dropdown {
-    width: 96%; /* Slightly wider on small phones */
-    max-height: 45vh;
-    padding: 6px 0;
-  }
-  
-  .mobile-bottom-nav__dropdown-item {
-    padding: 10px 14px;
-    font-size: 13px;
-  }
-}
-
-/* iPhone 5/SE specific styles */
-@media (max-width: 320px) {
-  .mobile-bottom-nav__label {
-    font-size: 8px;
-  }
-  
-  .mobile-bottom-nav__icon {
-    width: 18px;
-    height: 18px;
-  }
-}
-
-/* For very small screens */
-@media (max-width: 350px) {
-  .mobile-bottom-nav__dropdown {
-    max-height: 50vh; /* Allow more height on very small screens */
-  }
-  
-  .mobile-bottom-nav__dropdown-item {
-    padding: 8px 12px;
-    font-size: 12px;
-  }
-}
-
-/* Hide scrollbar but allow scrolling */
-.mobile-bottom-nav__dropdown::-webkit-scrollbar {
-  display: none;
-}
-
-
-/* Smooth transitions for all interactive elements */
-a, button, .header__dropdown-item, .mobile-bottom-nav__item {
-  transition: all 0.2s ease;
-}
-
-/* Hide scrollbar but allow scrolling */
-.mobile-bottom-nav__dropdown::-webkit-scrollbar {
-  display: none;
-}
-
-/* Add this to your body element when dropdown is open */
-.body-no-scroll {
-  overflow: hidden;
-  position: fixed;
-  width: 100%;
+.mobile-bottom-nav__dropdown {
+  animation: slideUp 0.3s ease forwards;
 }

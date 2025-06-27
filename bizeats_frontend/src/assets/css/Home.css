@@ -244,11 +244,12 @@
   background: #fff;
   color: #333;
   border: none;
-  padding: 0.8rem 1.8rem;
+  padding: 0.5rem 0.8rem;
   border-radius: 50px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
+  margin-bottom: 10px;
 }
 
 .banner-cta:hover {
