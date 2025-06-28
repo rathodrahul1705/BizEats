@@ -29,20 +29,20 @@ const ExistingRestaurant = ({ onClose, restaurantsList }) => {
         <button className="close-button" onClick={handleClose}>
           <X size={24} />
         </button>
-        <h2>Your restaurant applications</h2>
+        <h2>Your applications</h2>
 
         <div className="tab-navigation">
           <button 
             className={`tab-button ${activeTab === "active" ? "active" : ""}`} 
             onClick={() => setActiveTab("active")}
           >
-            Active Restaurants
+            Active Home Kitchen
           </button>
           <button 
             className={`tab-button ${activeTab === "live" ? "active" : ""}`} 
             onClick={() => setActiveTab("live")}
           >
-            Live Restaurants
+            Live Home Kitchen
           </button>
         </div>
 
@@ -77,7 +77,7 @@ const ExistingRestaurant = ({ onClose, restaurantsList }) => {
                   </div>
                 ))
               ) : (
-                <p>No active restaurants found.</p>
+                <p>No active home kitchen found.</p>
               )}
             </div>
           </div>
