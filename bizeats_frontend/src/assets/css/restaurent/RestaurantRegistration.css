@@ -1,186 +1,347 @@
+/* Base Styles */
+:root {
+  --primary-color: #FF6600;
+  --primary-hover: #E55A00;
+  --secondary-color: #6C757D;
+  --light-gray: #F8F9FA;
+  --medium-gray: #E9ECEF;
+  --dark-gray: #495057;
+  --white: #FFFFFF;
+  --black: #212529;
+  --success-color: #28A745;
+  --error-color: #DC3545;
+  --border-radius: 8px;
+  --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --transition: all 0.3s ease;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  line-height: 1.6;
+  color: var(--black);
+  background-color: var(--light-gray);
+}
+
 /* Main Container */
 .registration-container {
   display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  gap: 40px;
-  padding: 30px;
-  background: #f8f9fa;
+  min-height: 100vh;
+  padding: 20px;
+  gap: 30px;
+  max-width: 1400px;
+  margin: 0 auto;
 }
 
 /* Sidebar */
 .sidebar {
-  width: 320px;
-  background: #fff;
-  padding: 20px;
-  border-radius: 12px;
-  box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.1);
+  width: 280px;
+  background: var(--white);
+  padding: 25px;
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
   position: sticky;
-  top: 50px;
+  top: 20px;
+  height: fit-content;
 }
 
 .sidebar-title {
-  font-size: 22px;
-  font-weight: bold;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--black);
+  margin-bottom: 25px;
   text-align: center;
-  color: #222;
-  margin-bottom: 20px;
 }
 
 .step-list {
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 8px;
   position: relative;
-}
-
-.step-list::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 0px;
-  right: 0;
-  margin: auto;
-  width: 4px;
-  height: 100%;
-  background: #ccc;
-  border-radius: 2px;
 }
 
 .step-wrapper {
   display: flex;
   align-items: center;
   position: relative;
+  z-index: 1;
 }
 
 .step-item {
   display: flex;
   align-items: center;
-  font-size: 16px;
+  font-size: 0.95rem;
   font-weight: 500;
-  padding: 12px;
-  border-radius: 8px;
-  background: #f1f1f1;
+  padding: 12px 15px;
+  border-radius: var(--border-radius);
+  background: var(--light-gray);
   width: 100%;
-  transition: 0.3s;
+  transition: var(--transition);
   cursor: pointer;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  border: 1px solid var(--medium-gray);
 }
 
-.step-item:hover {
-  background: #e3e3e3;
+.step-item:hover:not(.completed) {
+  background: var(--medium-gray);
 }
 
 .step-item.completed {
-  background: #ff6600;
-  color: white;
-  font-weight: bold;
+  background: #e65c00;
+  color: var(--white);
+  font-weight: 500;
+  border-color: #e65c00;
+}
+
+.step-item.active {
+  background: var(--white);
+  border: 1px solid var(--primary-color);
+  color: var(--primary-color);
+  font-weight: 600;
+  text-align: center;
 }
 
 .step-icon {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  background: #ddd;
-  color: #555;
+  background: var(--white);
+  color: var(--dark-gray);
   display: flex;
   align-items: center;
   justify-content: center;
   margin-right: 12px;
-  border: 2px solid transparent;
-  transition: 0.3s;
+  border: 2px solid var(--medium-gray);
+  transition: var(--transition);
+  flex-shrink: 0;
 }
 
 .completed .step-icon {
-  background: white;
-  border: 2px solid #ff6600;
-  color: #ff6600;
+  background: var(--white);
+  border-color: var(--white);
+  color: var(--primary-color);
 }
 
-/* Form Section */
+.active .step-icon {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+.step-line {
+  position: absolute;
+  left: 25px;
+  height: 20px;
+  width: 2px;
+  background: var(--medium-gray);
+  z-index: 0;
+}
+
+.step-line.completed-line {
+  background: var(--primary-color);
+}
+
+/* Restaurant ID */
+.restaurant-id-container {
+  background: var(--light-gray);
+  padding: 12px;
+  border-radius: var(--border-radius);
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.restaurant-id {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--primary-color);
+  background: var(--white);
+  padding: 8px 12px;
+  border-radius: 20px;
+  display: inline-block;
+}
+
+/* Form Container */
 .form-container {
   flex: 1;
-  width: 600px;
-  max-width: 600px;
+  background: var(--white);
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
+  padding: 30px;
   display: flex;
   flex-direction: column;
 }
 
-/* Section-wise cards */
-.info-card {
-  background: white;
-  padding: 20px;
-  border-radius: 12px;
-  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+.form-header {
   display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-bottom: 20px; /* Adds space between cards */
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid var(--medium-gray);
+}
+
+.form-header h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--black);
+}
+
+.step-indicator {
+  font-size: 0.9rem;
+  color: var(--secondary-color);
+  background: var(--light-gray);
+  padding: 5px 12px;
+  border-radius: 20px;
+}
+
+.form-content {
+  flex: 1;
+}
+
+/* Info Cards */
+.info-card {
+  background: var(--white);
+  padding: 20px;
+  border-radius: var(--border-radius);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  margin-bottom: 25px;
+  border: 1px solid var(--medium-gray);
 }
 
 .info-card h3 {
-  font-size: 18px;
-  font-weight: bold;
-  color: #333;
-  margin-bottom: 10px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--black);
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-/* Input fields */
+.info-card h3 svg {
+  color: var(--primary-color);
+}
+
+.note {
+  font-size: 0.85rem;
+  color: var(--secondary-color);
+  margin-bottom: 15px;
+  line-height: 1.5;
+}
+
+/* Input Groups */
 .input-group {
   display: flex;
   flex-direction: column;
-  gap: 15px;  /* Adds space between each input field */
-  margin-bottom: 15px; /* Adds extra spacing between input groups */
+  gap: 15px;
+  margin-bottom: 15px;
 }
 
-h2 {
-  font-size: 20px;
-  color: #444;
-  margin-bottom: 10px;
+.input-hint {
+  font-size: 0.8rem;
+  color: var(--secondary-color);
+  margin-top: -10px;
 }
 
-input {
-  padding: 12px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  /* width: 100%; */
-  font-size: 14px;
+input, select {
+  width: 100%;
+  padding: 12px 15px;
+  border: 1px solid var(--medium-gray);
+  border-radius: var(--border-radius);
+  font-size: 0.95rem;
+  transition: var(--transition);
+  background: var(--white);
 }
 
-/* Profile Image Upload */
-.profile-upload {
+input:focus, select:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(255, 102, 0, 0.2);
+}
+
+select {
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px;
+}
+
+/* File Upload */
+.file-upload-container {
+  margin-top: 15px;
+}
+
+.file-upload-label {
+  display: block;
+  cursor: pointer;
+}
+
+.file-upload-input {
+  display: none;
+}
+
+.upload-content {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
+  justify-content: center;
+  padding: 25px;
+  border: 2px dashed var(--medium-gray);
+  border-radius: var(--border-radius);
+  transition: var(--transition);
+  text-align: center;
+  background: var(--light-gray);
 }
 
-.upload-box {
-  width: 150px;
-  height: 150px;
-  /* border: 2px dashed #ff6600; */
+.file-upload-label:hover .upload-content {
+  border-color: var(--primary-color);
+  background: rgba(255, 102, 0, 0.05);
+}
+
+.upload-icon {
+  width: 48px;
+  height: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-  border-radius: 8px;
-  transition: 0.3s;
+  margin-bottom: 10px;
 }
 
-.upload-box:hover {
-  background: #fff5e6;
+.upload-preview {
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: var(--border-radius);
+  margin-bottom: 10px;
 }
 
-.upload-box img {
-  max-width: 100%;
-  max-height: 100%;
-  border-radius: 8px;
+.upload-hint {
+  font-size: 0.8rem;
+  color: var(--secondary-color);
+  margin-top: 5px;
 }
 
-.upload-box input {
-  display: none;
+.file-icon {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.change-file {
+  color: var(--primary-color);
+  font-size: 0.85rem;
+  margin-top: 5px;
+  font-weight: 500;
 }
 
 /* Cuisine Selection */
@@ -188,573 +349,428 @@ input {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
+  margin-bottom: 10px;
 }
 
 .cuisine-btn {
-  padding: 8px 15px;
-  background: #eee;
-  border: 1px solid #ccc;
-  border-radius: 6px;
+  padding: 8px 16px;
+  background: var(--light-gray);
+  border: 1px solid var(--medium-gray);
+  border-radius: 20px;
   cursor: pointer;
-  transition: all 0.3s ease;
-  font-size: 14px;
+  transition: var(--transition);
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .cuisine-btn.selected {
-  background: #ff6600;
-  color: white;
-  border-color: #ff6600;
+  background: var(--primary-color);
+  color: var(--white);
+  border-color: var(--primary-color);
 }
 
-/* Delivery Timings */
-.delivery-timings {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.day-selection {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  /* justify-content: space-between; */
-}
-
-.day-selection label {
-  display: flex;
-  align-items: center;
-  width: 100px;
-}
-
-.day-selection input[type="checkbox"] {
-  margin-right: 8px;
-}
-
-
-.day-checkbox {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.timing-inputs input {
-  margin: 0 5px;
-  padding: 5px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
-
-.timing-inputs span {
-  margin: 0 5px;
-}
-
-/* Navigation Buttons */
-.form-navigation {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 20px;
-}
-
-.prev-btn, .next-btn, .submit-btn {
-  padding: 10px 15px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: 0.3s;
-}
-
-.next-btn {
-  background: #ff6600;
-  color: white;
-}
-
-.prev-btn {
-  background: #ddd;
-}
-
-.submit-btn {
-  background: #ff6600;
-  color: white;
-}
-
-.submit-btn:disabled {
-  background: #ccc;
+.cuisine-btn:disabled {
+  opacity: 0.6;
   cursor: not-allowed;
 }
 
-.next-btn:hover {
-  background: #e55a00;
+.checkmark {
+  font-size: 0.9rem;
 }
 
-.prev-btn:hover {
-  background: #ccc;
-}
-
-.submit-btn:hover {
-  background: #e55a00;
-}
-
-/* Note Styling */
-.note {
-  font-size: 12px;
-  color: #555;
-  background: #fff3cd;
-  padding: 8px;
-  border-left: 4px solid #ffcc00;
+.selected-cuisines {
+  font-size: 0.9rem;
+  color: var(--secondary-color);
   margin-top: 5px;
 }
 
-
-/* RestaurantRegistration.css */
-
-/* Container for each information card */
-.info-card {
-  background-color: #f9f9f9;
-  padding: 20px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  margin-bottom: 20px;
+.selected-cuisines span {
+  font-weight: 500;
+  color: var(--black);
 }
 
-/* Container for each day's selection */
-.day-selection {
-  display: flex;
-  align-items: center;
-  margin-bottom: 15px;
-}
-
-/* Label for each day */
-.day-selection label {
-  display: flex;
-  align-items: center;
-  font-size: 16px;
-  cursor: pointer;
-}
-
-/* Custom checkbox styling */
-.day-selection input[type="checkbox"] {
-  appearance: none;
-  width: 20px;
-  height: 20px;
-  border: 2px solid #007bff;
-  border-radius: 4px;
-  margin-right: 10px;
-  cursor: pointer;
-  position: relative;
-}
-
-.day-selection input[type="checkbox"]:checked {
-  background-color: #007bff;
-}
-
-.day-selection input[type="checkbox"]:checked::after {
-  content: '✓';
-  color: #fff;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 14px;
-}
-
-/* Container for time inputs */
-.timing-inputs {
-  display: flex;
-  align-items: center;
-  margin-left: 20px;
-}
-
-/* Styling for time input fields */
-.timing-inputs input[type="time"] {
-  width: 120px; /* Adjusted width */
-  padding: 5px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  margin: 0 5px;
-  font-size: 14px;
-}
-
-
-.timing-inputs span {
-  margin: 0 5px;
-  font-size: 16px;
-}
-
-/* Step 3 - Documents Styling */
-
-/* PAN, GST, FSSAI, and Bank Details Cards */
-.documents-section .info-card {
-  background: white;
-  padding: 20px;
-  border-radius: 12px;
-  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
-  display: flex;
-  flex-direction: column;
+/* Delivery Timings */
+.timings-grid {
+  display: grid;
+  grid-template-columns: 1fr;
   gap: 12px;
-  margin-bottom: 20px;
+  margin-top: 15px;
 }
 
-.documents-section h3 {
-  font-size: 18px;
-  font-weight: bold;
-  color: #333;
-  margin-bottom: 10px;
-}
-
-/* Input Fields */
-.documents-section .input-group {
+.timing-row {
   display: flex;
-  flex-direction: column;
-  gap: 15px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--medium-gray);
 }
 
-.documents-section input,
-.documents-section select {
-  padding: 12px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  width: 100%;
-  font-size: 14px;
-}
-
-/* File Upload Styling */
-.file-upload {
+.day-label {
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  width: 80px;
+}
+
+.day-label input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--primary-color);
+}
+
+.day-name {
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.time-inputs {
+  display: flex;
   align-items: center;
   gap: 10px;
 }
 
-.upload-box {
-  width: 150px;
-  height: 150px;
-  /* border: 2px dashed #ff6600; */
+.time-input {
+  padding: 8px 12px;
+  border: 1px solid var(--medium-gray);
+  border-radius: var(--border-radius);
+  font-size: 0.9rem;
+  width: 100px;
+}
+
+.time-separator {
+  font-size: 0.9rem;
+  color: var(--secondary-color);
+}
+
+.time-closed {
+  font-size: 0.9rem;
+  color: var(--secondary-color);
+  font-style: italic;
+}
+
+/* Checkbox */
+.checkbox-container {
   display: flex;
   align-items: center;
-  justify-content: center;
+  position: relative;
+  padding-left: 30px;
   cursor: pointer;
-  border-radius: 8px;
-  transition: 0.3s;
+  user-select: none;
+  font-size: 0.95rem;
+  margin-top: 15px;
 }
 
-.upload-box:hover {
-  background: #fff5e6;
+.checkbox-container input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
 }
 
-.upload-box input {
+.checkmark {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 20px;
+  width: 20px;
+  background-color: var(--white);
+  border: 1px solid var(--medium-gray);
+  border-radius: 4px;
+}
+
+.checkbox-container:hover input ~ .checkmark {
+  background-color: var(--light-gray);
+}
+
+.checkbox-container input:checked ~ .checkmark {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.checkmark:after {
+  content: "";
+  position: absolute;
   display: none;
 }
 
-/* GST Selection */
-.gst-selection {
-  display: flex;
-  gap: 15px;
+.checkbox-container input:checked ~ .checkmark:after {
+  display: block;
 }
 
-.gst-selection label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 14px;
+.checkbox-container .checkmark:after {
+  left: 7px;
+  top: 3px;
+  width: 5px;
+  height: 10px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
 }
 
-/* Bank Details */
-.documents-section select {
-  padding: 12px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  font-size: 14px;
+.checkbox-text {
+  margin-left: 10px;
 }
 
-/* Navigation Buttons */
-.documents-section .form-navigation {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 20px;
-}
-
-.documents-section .prev-btn,
-.documents-section .next-btn,
-.documents-section .submit-btn {
-  padding: 10px 15px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: 0.3s;
-}
-
-.documents-section .next-btn {
-  background: #ff6600;
-  color: white;
-}
-
-.documents-section .prev-btn {
-  background: #ddd;
-}
-
-.documents-section .submit-btn {
-  background: #ff6600;
-  color: white;
-}
-
-.documents-section .submit-btn:disabled {
-  background: #ccc;
-  cursor: not-allowed;
-}
-
-.documents-section .next-btn:hover {
-  background: #e55a00;
-}
-
-.documents-section .prev-btn:hover {
-  background: #ccc;
-}
-
-.documents-section .submit-btn:hover {
-  background: #e55a00;
-}
-
-/* Step 4: Partner Contract */
-.contract-section {
-  background: #fff;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
-  text-align: left;
-  margin-bottom: 20px;
-}
-
-.contract-section h3 {
-  font-size: 20px;
-  font-weight: bold;
-  margin-bottom: 10px;
-}
-
-.contract-section .note {
-  font-size: 14px;
-  color: #666;
-  margin-bottom: 15px;
-}
-
-.file-upload {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 15px;
-  border: 2px dashed #007bff;
-  border-radius: 5px;
-  background-color: #f9f9f9;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  width: 100%;
-  text-align: center;
-}
-
-.file-upload:hover {
-  border-color: #0056b3;
-  background-color: #eef5ff;
-}
-
-.upload-box {
-  font-size: 16px;
-  color: #007bff;
-  font-weight: 600;
-  cursor: pointer;
-  text-align: center;
-}
-
-.upload-box input {
-  display: none;
-}
-
-.file-name {
-  margin-top: 10px;
-  font-size: 14px;
-  color: green;
-  font-weight: 500;
-}
-
-/* Agreement Checkbox Section */
-.agreement-section {
-  display: flex;
-  align-items: center;
-  margin-top: 20px;
-}
-
-.agreement-section input {
-  margin-right: 10px;
-  transform: scale(1.3);
-  cursor: pointer;
-}
-
-.agreement-section label {
-  font-size: 14px;
-  color: #333;
-}
-
-/* Navigation Buttons */
+/* Form Navigation */
 .form-navigation {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid var(--medium-gray);
+  gap: 15px;
 }
 
-.prev-btn,
-.next-btn,
-.submit-btn {
-  padding: 12px 18px;
-  font-size: 16px;
-  font-weight: bold;
-  border: none;
+.prev-btn, .next-btn {
+  padding: 12px 24px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  border-radius: var(--border-radius);
   cursor: pointer;
-  border-radius: 5px;
-  transition: background 0.3s ease;
-  min-width: 120px;
-  text-align: center;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .prev-btn {
-  background-color: #ccc;
-  color: #333;
+  background: var(--white);
+  color: var(--black);
+  border: 1px solid var(--medium-gray);
 }
 
+.prev-btn:hover {
+  background: var(--light-gray);
+}
+
+.registaration-submit-btn{
+  padding: 12px 24px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  justify-content: center;
+  background: #e65c00;
+  color: var(--white);
+  border: 1px solid #e65c00;
+}
 .next-btn {
-  background-color: #ff6600;
-  color: white;
-}
-
-.submit-btn {
-  background-color: #ff6600;
-  color: white;
-  max-width: 120px;
-  margin-bottom: 10px;
-}
-
-.submit-btn:disabled {
-  background-color: #ccc;
-  cursor: not-allowed;
+  background: #e65c00;
+  color: var(--white);
+  border: 1px solid #e65c00;
 }
 
 .next-btn:hover {
-  background-color: #ff6600;
+  background: var(--primary-hover);
+  border-color: var(--primary-hover);
 }
 
-.submit-btn:hover {
-  background-color: #ff6600;
+.next-btn.submitting {
+  opacity: 0.8;
+  cursor: not-allowed;
 }
 
-/* Ensuring proper button alignment */
-.button-container {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
+.next-btn:disabled {
+  background: var(--medium-gray);
+  border-color: var(--medium-gray);
+  color: var(--secondary-color);
+  cursor: not-allowed;
 }
 
-.restaurant-id-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 10vh; /* Full height of the viewport */
+.step-progress {
+  flex: 1;
+  height: 6px;
+  background: var(--light-gray);
+  border-radius: 3px;
+  overflow: hidden;
 }
 
-.restaurant-id {
-  background-color: #f8f9fa; /* Light gray background */
-  color: #333; /* Dark text for contrast */
-  font-weight: bold;
-  padding: 10px 15px;
-  border-radius: 8px;
-  font-size: 14px;
-  border: 1px solid #ddd; /* Subtle border */
+.progress-bar {
+  height: 100%;
+  background: var(--primary-color);
+  transition: width 0.3s ease;
 }
 
+/* Spinner */
+.spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: var(--white);
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Success Popup */
 .success-popup-overlay {
   position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
+  right: 0;
+  bottom: 0;
   background: rgba(0, 0, 0, 0.5);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1000;
+  padding: 20px;
 }
 
 .success-popup {
-  background: white;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  background: var(--white);
+  padding: 30px;
+  border-radius: var(--border-radius);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
   text-align: center;
+  max-width: 450px;
+  width: 100%;
+}
+
+.success-icon {
+  margin-bottom: 20px;
 }
 
 .success-popup h3 {
-  margin-bottom: 10px;
-  font-size: 24px;
-  color: #4CAF50;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--success-color);
+  margin-bottom: 15px;
 }
 
 .success-popup p {
-  margin-bottom: 20px;
-  font-size: 16px;
-  color: #333;
+  font-size: 1rem;
+  color: var(--dark-gray);
+  margin-bottom: 25px;
+  line-height: 1.6;
 }
 
-.success-popup button {
-  padding: 10px 20px;
-  background: #ff6600;
-  color: white;
+.success-close-btn {
+  padding: 12px 24px;
+  background: var(--primary-color);
+  color: var(--white);
   border: none;
-  border-radius: 4px;
+  border-radius: var(--border-radius);
+  font-size: 1rem;
+  font-weight: 500;
   cursor: pointer;
+  transition: var(--transition);
 }
 
-.success-popup button:hover {
-  background: #ff6600;
+.success-close-btn:hover {
+  background: var(--primary-hover);
 }
 
-.form-navigation .prev-btn,.form-navigation .next-btn,.form-navigation .submit-btn{
-  display: flex;
-  align-items: center;
+/* Responsive Styles */
+@media (max-width: 1024px) {
+  .registration-container {
+    flex-direction: column;
+    padding: 15px;
+  }
+  
+  .sidebar {
+    width: 100%;
+    position: static;
+    margin-bottom: 20px;
+  }
+  
+  .form-container {
+    width: 100%;
+    padding: 20px;
+  }
 }
-.form-navigation .prev-btn svg,.form-navigation .next-btn svg{
-  margin-left: 5px;
+
+@media (max-width: 768px) {
+  .sidebar {
+    padding: 15px;
+  }
+  
+  .form-container {
+    padding: 15px;
+  }
+  
+  .info-card {
+    padding: 15px;
+  }
+  
+  .timings-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .form-navigation {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .prev-btn, .next-btn {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .step-progress {
+    width: 100%;
+    order: -1;
+  }
 }
-@media (max-width: 767px) {
-  .registration-container{
-    gap: 0;
-    padding: 20px 15px;
+
+@media (max-width: 480px) {
+  .registration-container {
+    padding: 10px;
   }
-  .sidebar{
-    width: 50px;
-    padding: 0;
-    box-shadow: none;
-    background: transparent;
-    position: sticky;
-    top: 20px;
+  
+  .sidebar-title {
+    font-size: 1.1rem;
+    margin-bottom: 15px;
   }
-  .sidebar .sidebar-title{
-    display: none;
+  
+  .step-item {
+    padding: 10px;
+    font-size: 0.9rem;
   }
-  .form-container{
-    width: calc(100% - 70px);
-    padding-left: 15px;
+  
+  .step-icon {
+    width: 30px;
+    height: 30px;
+    margin-right: 8px;
   }
-  .sidebar .step-text{
-    display: none;
+  
+  .form-header h2 {
+    font-size: 1.2rem;
   }
-  .sidebar .step-icon{
-    margin: 0;
+  
+  .step-indicator {
+    font-size: 0.8rem;
   }
-  .sidebar .step-item{padding: 5px;}
-  .form-container .info-card{
-    padding: 20px 15px;
+  
+  .info-card h3 {
+    font-size: 1rem;
   }
-  .info-card h3{
-    font-size: 16px;
+  
+  input, select {
+    padding: 10px 12px;
+    font-size: 0.9rem;
+  }
+  
+  .cuisine-btn {
+    padding: 6px 12px;
+    font-size: 0.85rem;
+  }
+  
+  .time-input {
+    width: 80px;
+    padding: 6px 10px;
   }
 }
