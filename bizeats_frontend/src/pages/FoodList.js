@@ -25,8 +25,11 @@ const FoodGrid = () => {
   const [restaurants, setRestaurants] = useState([]);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const foodSwiperRef = useRef(null);
-  const [isBeginning, setIsBeginning] = useState(true);
-  const [isEnd, setIsEnd] = useState(false);
+  const restaurantsSwiperRef = useRef(null);
+  const [isFoodBeginning, setIsFoodBeginning] = useState(true);
+  const [isFoodEnd, setIsFoodEnd] = useState(false);
+  const [isRestaurantsBeginning, setIsRestaurantsBeginning] = useState(true);
+  const [isRestaurantsEnd, setIsRestaurantsEnd] = useState(false);
 
   useEffect(() => {
     const handleResize = () => {
@@ -96,21 +99,38 @@ const FoodGrid = () => {
     }
   ];
 
-  const handlePrev = () => {
+  const handleFoodPrev = () => {
     if (foodSwiperRef.current) {
       foodSwiperRef.current.swiper.slidePrev();
     }
   };
 
-  const handleNext = () => {
+  const handleFoodNext = () => {
     if (foodSwiperRef.current) {
       foodSwiperRef.current.swiper.slideNext();
     }
   };
 
-  const updateNavigationState = (swiper) => {
-    setIsBeginning(swiper.isBeginning);
-    setIsEnd(swiper.isEnd);
+  const handleRestaurantsPrev = () => {
+    if (restaurantsSwiperRef.current) {
+      restaurantsSwiperRef.current.swiper.slidePrev();
+    }
+  };
+
+  const handleRestaurantsNext = () => {
+    if (restaurantsSwiperRef.current) {
+      restaurantsSwiperRef.current.swiper.slideNext();
+    }
+  };
+
+  const updateFoodNavigationState = (swiper) => {
+    setIsFoodBeginning(swiper.isBeginning);
+    setIsFoodEnd(swiper.isEnd);
+  };
+
+  const updateRestaurantsNavigationState = (swiper) => {
+    setIsRestaurantsBeginning(swiper.isBeginning);
+    setIsRestaurantsEnd(swiper.isEnd);
   };
 
   const renderCard = (restaurant) => (
@@ -191,16 +211,16 @@ const FoodGrid = () => {
               <h2 className="food-categories-heading">What's on your mind</h2>
               <div className="food-categories-controls">
                 <button 
-                  onClick={handlePrev} 
-                  className={`food-categories-arrow ${isBeginning ? 'disabled' : ''}`}
-                  disabled={isBeginning}
+                  onClick={handleFoodPrev} 
+                  className={`food-categories-arrow ${isFoodBeginning ? 'disabled' : ''}`}
+                  disabled={isFoodBeginning}
                 >
                   <ChevronLeft size={24} />
                 </button>
                 <button 
-                  onClick={handleNext} 
-                  className={`food-categories-arrow ${isEnd ? 'disabled' : ''}`}
-                  disabled={isEnd}
+                  onClick={handleFoodNext} 
+                  className={`food-categories-arrow ${isFoodEnd ? 'disabled' : ''}`}
+                  disabled={isFoodEnd}
                 >
                   <ChevronRight size={24} />
                 </button>
@@ -213,8 +233,8 @@ const FoodGrid = () => {
                 modules={[Navigation]}
                 spaceBetween={20}
                 slidesPerView={6}
-                onSlideChange={updateNavigationState}
-                onSwiper={updateNavigationState}
+                onSlideChange={updateFoodNavigationState}
+                onSwiper={updateFoodNavigationState}
                 breakpoints={{
                   1024: { slidesPerView: 5 },
                   768: { slidesPerView: 4 },
@@ -294,61 +314,58 @@ const FoodGrid = () => {
       )}
 
       {/* Restaurants Grid Section */}
-      <div className="split_view__container">
-        <div className="split_view__inner">
-          <header className="split_view__header">
-            <h2 className="split_view__heading">Order from nearby kitchens</h2>
+      <section className="restaurants-section">
+        <div className="restaurants-container">
+          <div className="restaurants-header">
+            <h2 className="restaurants-heading">Order from nearby kitchens</h2>
             {!isMobile && (
-              <div className="split_view__header_nav">
-                <button className="split_view__nav split_view__nav_prev">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                  </svg>
+              <div className="restaurants-controls">
+                <button 
+                  onClick={handleRestaurantsPrev} 
+                  className={`restaurants-arrow ${isRestaurantsBeginning ? 'disabled' : ''}`}
+                  disabled={isRestaurantsBeginning}
+                >
+                  <ChevronLeft size={24} />
                 </button>
-                <button className="split_view__nav split_view__nav_next">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
+                <button 
+                  onClick={handleRestaurantsNext} 
+                  className={`restaurants-arrow ${isRestaurantsEnd ? 'disabled' : ''}`}
+                  disabled={isRestaurantsEnd}
+                >
+                  <ChevronRight size={24} />
                 </button>
               </div>
             )}
-          </header>
-          
-          <div className="split_view__swiper_wrapper">
+          </div>
+
+          <div className="restaurants-wrapper">
             <Swiper
-              slidesPerView={isMobile ? 1.5 : 'auto'}
-              spaceBetween={isMobile ? 16 : 24}
+              ref={restaurantsSwiperRef}
+              modules={[Navigation, FreeMode]}
+              spaceBetween={24}
+              slidesPerView={4}
               freeMode={true}
-              pagination={isMobile ? {
-                clickable: true,
-                el: '.split_view__pagination',
-                type: 'bullets',
-              } : false}
-              navigation={!isMobile ? {
-                nextEl: '.split_view__nav_next',
-                prevEl: '.split_view__nav_prev',
-              } : false}
-              modules={isMobile ? [FreeMode, Pagination] : [Navigation, FreeMode]}
-              className="split_view__swiper"
+              onSlideChange={updateRestaurantsNavigationState}
+              onSwiper={updateRestaurantsNavigationState}
               breakpoints={{
-                375: { slidesPerView: 1.8 },
-                480: { slidesPerView: 2.2 },
-                640: { slidesPerView: 2.5 },
-                768: { slidesPerView: 3, spaceBetween: 20 },
-                1024: { slidesPerView: 4, spaceBetween: 24 }
+                320: { slidesPerView: 1.2, spaceBetween: 16 },
+                375: { slidesPerView: 1.5, spaceBetween: 16 },
+                480: { slidesPerView: 1.8, spaceBetween: 16 },
+                640: { slidesPerView: 2.2, spaceBetween: 16 },
+                768: { slidesPerView: 2.5, spaceBetween: 20 },
+                1024: { slidesPerView: 3.5, spaceBetween: 24 },
+                1200: { slidesPerView: 4, spaceBetween: 24 }
               }}
             >
               {restaurants.map((restaurant) => (
-                <SwiperSlide key={restaurant.restaurant_id} style={!isMobile ? { width: '300px' } : {}}>
+                <SwiperSlide key={restaurant.restaurant_id}>
                   {renderCard(restaurant)}
                 </SwiperSlide>
               ))}
             </Swiper>
-            
-            {isMobile && <div className="split_view__pagination"></div>}
           </div>
         </div>
-      </div>
+      </section>
     </div>
   );
 };
