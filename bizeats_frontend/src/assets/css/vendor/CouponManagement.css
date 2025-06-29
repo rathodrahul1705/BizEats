@@ -21,7 +21,7 @@
   .vendor-coupon-management {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 20px;
+    padding: 40px;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     color: var(--vendor-coupon-text-color);
     line-height: 1.6;

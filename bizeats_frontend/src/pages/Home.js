@@ -24,9 +24,12 @@ import HomePageKokamSarbat from "../assets/img/homa_page_kokam_sarbat.jpg";
 const Home = () => {
   const [loading, setLoading] = useState(true);
   const [restaurants, setRestaurants] = useState([]);
-  const swiperRef = useRef(null);
-  const [isBeginning, setIsBeginning] = useState(true);
-  const [isEnd, setIsEnd] = useState(false);
+  const foodSwiperRef = useRef(null);
+  const restaurantsSwiperRef = useRef(null);
+  const [isFoodBeginning, setIsFoodBeginning] = useState(true);
+  const [isFoodEnd, setIsFoodEnd] = useState(false);
+  const [isRestaurantBeginning, setIsRestaurantBeginning] = useState(true);
+  const [isRestaurantEnd, setIsRestaurantEnd] = useState(false);
   const [restaurantsReview, setRestaurantsReview] = useState([]);
   const [resviewdetails, serReviewDetails] = useState([]);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -73,23 +76,38 @@ const Home = () => {
     fetchReview();
   }, []);
 
-  const handlePrev = () => {
-    if (swiperRef.current && !isBeginning) {
-      swiperRef.current.swiper.slidePrev();
+  const handleFoodPrev = () => {
+    if (foodSwiperRef.current && foodSwiperRef.current.swiper && !isFoodBeginning) {
+      foodSwiperRef.current.swiper.slidePrev();
     }
   };
 
-  const handleNext = () => {
-    if (swiperRef.current && !isEnd) {
-      swiperRef.current.swiper.slideNext();
+  const handleFoodNext = () => {
+    if (foodSwiperRef.current && foodSwiperRef.current.swiper && !isFoodEnd) {
+      foodSwiperRef.current.swiper.slideNext();
     }
   };
 
-  const updateNavigationState = () => {
-    if (swiperRef.current) {
-      setIsBeginning(swiperRef.current.swiper.isBeginning);
-      setIsEnd(swiperRef.current.swiper.isEnd);
+  const handleRestaurantsPrev = () => {
+    if (restaurantsSwiperRef.current && restaurantsSwiperRef.current.swiper && !isRestaurantBeginning) {
+      restaurantsSwiperRef.current.swiper.slidePrev();
     }
+  };
+
+  const handleRestaurantsNext = () => {
+    if (restaurantsSwiperRef.current && restaurantsSwiperRef.current.swiper && !isRestaurantEnd) {
+      restaurantsSwiperRef.current.swiper.slideNext();
+    }
+  };
+
+  const updateFoodNavigationState = (swiper) => {
+    setIsFoodBeginning(swiper.isBeginning);
+    setIsFoodEnd(swiper.isEnd);
+  };
+
+  const updateRestaurantsNavigationState = (swiper) => {
+    setIsRestaurantBeginning(swiper.isBeginning);
+    setIsRestaurantEnd(swiper.isEnd);
   };
 
   const foodItems = [
@@ -156,7 +174,7 @@ const Home = () => {
   
   if (loading && restaurants.length === 0) {
     return <StripeLoader />;
-  }
+  }  
 
   const renderRestaurantCard = (restaurant) => (
     <div className="split_card__container" key={restaurant.restaurant_id}>
@@ -282,16 +300,16 @@ const Home = () => {
             <h2 className="section-heading">Popular Food Categories</h2>
             <div className="slider-controls">
               <button 
-                onClick={handlePrev} 
-                className={`slider-arrow ${isBeginning ? 'disabled' : ''}`}
-                disabled={isBeginning}
+                onClick={handleFoodPrev} 
+                className={`slider-arrow ${isFoodBeginning ? 'disabled' : ''}`}
+                disabled={isFoodBeginning}
               >
                 <ChevronLeft size={24} />
               </button>
               <button 
-                onClick={handleNext} 
-                className={`slider-arrow ${isEnd ? 'disabled' : ''}`}
-                disabled={isEnd}
+                onClick={handleFoodNext} 
+                className={`slider-arrow ${isFoodEnd ? 'disabled' : ''}`}
+                disabled={isFoodEnd}
               >
                 <ChevronRight size={24} />
               </button>
@@ -300,12 +318,12 @@ const Home = () => {
 
           <div className="food-section-slider__wrapper">
             <Swiper
-              ref={swiperRef}
+              ref={foodSwiperRef}
               modules={[Navigation]}
               spaceBetween={20}
               slidesPerView={4}
-              onSlideChange={updateNavigationState}
-              onSwiper={updateNavigationState}
+              onSlideChange={updateFoodNavigationState}
+              onSwiper={updateFoodNavigationState}
               touchEventsTarget="container"
               allowTouchMove={true}
               simulateTouch={true}
@@ -401,16 +419,16 @@ const Home = () => {
             {!isMobile && (
               <div className="slider-controls">
                 <button 
-                  onClick={() => document.querySelector('.split_view__nav_prev').click()}
-                  className={`slider-arrow ${isBeginning ? 'disabled' : ''}`}
-                  disabled={isBeginning}
+                  onClick={handleRestaurantsPrev}
+                  className={`slider-arrow ${isRestaurantBeginning ? 'disabled' : ''}`}
+                  disabled={isRestaurantBeginning}
                 >
                   <ChevronLeft size={24} />
                 </button>
                 <button 
-                  onClick={() => document.querySelector('.split_view__nav_next').click()}
-                  className={`slider-arrow ${isEnd ? 'disabled' : ''}`}
-                  disabled={isEnd}
+                  onClick={handleRestaurantsNext}
+                  className={`slider-arrow ${isRestaurantEnd ? 'disabled' : ''}`}
+                  disabled={isRestaurantEnd}
                 >
                   <ChevronRight size={24} />
                 </button>
@@ -420,28 +438,25 @@ const Home = () => {
           
           <div className="split_view__swiper_wrapper">
             <Swiper
-              slidesPerView={isMobile ? 1.5 : 'auto'}
+              ref={restaurantsSwiperRef}
+              slidesPerView={isMobile ? 1.5 : 3}
               spaceBetween={isMobile ? 16 : 24}
               freeMode={true}
-              pagination={isMobile ? {
-                clickable: true,
-                el: '.split_view__pagination',
-                type: 'bullets',
-              } : false}
-              navigation={!isMobile ? {
-                nextEl: '.split_view__nav_next',
-                prevEl: '.split_view__nav_prev',
-              } : false}
-              modules={isMobile ? [FreeMode, Pagination] : [Navigation, FreeMode]}
-              className="split_view__swiper"
-              onSlideChange={updateNavigationState}
-              onSwiper={updateNavigationState}
+              pagination={isMobile ? { clickable: true } : false}
+              navigation={false}
+              modules={isMobile ? [FreeMode, Pagination] : [FreeMode, Navigation]}
+              onSlideChange={updateRestaurantsNavigationState}
+              onSwiper={updateRestaurantsNavigationState}
               breakpoints={{
+                320: {
+                  slidesPerView: 1.2,
+                  spaceBetween: 10,
+                },
                 375: {
-                  slidesPerView: 1.8,
+                  slidesPerView: 1.5,
                 },
                 480: {
-                  slidesPerView: 2.2,
+                  slidesPerView: 2,
                 },
                 640: {
                   slidesPerView: 2.5,
@@ -453,28 +468,21 @@ const Home = () => {
                 1024: {
                   slidesPerView: 4,
                   spaceBetween: 24
+                },
+                1280: {
+                  slidesPerView: 5,
+                  spaceBetween: 24
                 }
               }}
             >
               {restaurants.map((restaurant) => (
-                <SwiperSlide key={restaurant.restaurant_id} style={!isMobile ? { width: '300px' } : {}}>
+                <SwiperSlide key={restaurant.restaurant_id}>
                   {renderRestaurantCard(restaurant)}
                 </SwiperSlide>
               ))}
             </Swiper>
             
-            {isMobile && <div className="split_view__pagination"></div>}
-            
-            {!isMobile && (
-              <>
-                <button className="split_view__nav split_view__nav_prev" style={{ display: 'none' }}>
-                  <ChevronLeft size={24} />
-                </button>
-                <button className="split_view__nav split_view__nav_next" style={{ display: 'none' }}>
-                  <ChevronRight size={24} />
-                </button>
-              </>
-            )}
+            {isMobile && <div className="swiper-pagination"></div>}
           </div>
         </div>
       </section>

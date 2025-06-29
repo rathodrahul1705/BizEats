@@ -31,7 +31,7 @@
     color: var(--text-dark);
     background-color: var(--background-light);
     min-height: 100vh;
-    padding: 1.5rem;
+    padding: 40px;
   }
   
   /* Header Styles */
@@ -182,7 +182,7 @@
   }
   
   .customer-management-add-customer {
-    background-color: #f44336;
+    background-color: #e65c00;
     color: var(--white);
     padding: 0.625rem 1.25rem;
     font-size: 0.9375rem;
@@ -190,7 +190,7 @@
   }
   
   .customer-management-add-customer:hover {
-    background-color: var(--primary-hover);
+    background-color: #e65c00;
     transform: translateY(-1px);
     box-shadow: var(--shadow-md);
   }

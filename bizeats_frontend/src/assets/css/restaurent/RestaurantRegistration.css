@@ -32,7 +32,7 @@ body {
 .registration-container {
   display: flex;
   min-height: 100vh;
-  padding: 20px;
+  padding: 40px;
   gap: 30px;
   max-width: 1400px;
   margin: 0 auto;
@@ -130,8 +130,8 @@ body {
 }
 
 .active .step-icon {
-  border-color: var(--primary-color);
-  color: var(--primary-color);
+  border-color: #ef4444;
+  color: #ef4444;
 }
 
 .step-line {
