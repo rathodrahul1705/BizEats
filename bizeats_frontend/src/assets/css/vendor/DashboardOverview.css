@@ -38,7 +38,7 @@ body {
   background-color: var(--bg-color);
   min-height: 100vh;
   color: var(--text-color);
-  padding: 24px;
+  padding: 40px;
 }
 
 /* Dashboard Overview - Main Section */

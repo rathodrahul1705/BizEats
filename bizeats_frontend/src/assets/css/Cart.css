@@ -61,7 +61,7 @@
   align-items: center;
   justify-content: center;
   margin: 24px 0;
-  gap: 4px;
+  gap: 6px;
 }
 
 .cart-step {
@@ -547,7 +547,7 @@
 
 @media (max-width: 480px) {
   .cart-step-indicator {
-    gap: 2px;
+    gap: 6px;
   }
 
   .cart-item-header{

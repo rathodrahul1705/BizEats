@@ -90,7 +90,7 @@ class RestaurantMasterSerializer(serializers.ModelSerializer):
         restaurant_master = RestaurantMaster.objects.create(
             restaurant_name=validated_data['restaurant_name'],
             restaurant_id=restaurant_id,
-            restaurant_status=2,  # Default 'Active' status
+            restaurant_status=1,  # Default 'Active' status
             user=user  # Authenticated user
         )
 
