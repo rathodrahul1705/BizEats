@@ -213,6 +213,7 @@
   align-items: flex-start;
   gap: 8px;
   margin-bottom: 8px;
+  /* margin-top: 25px; */
 }
 
 .cart-item-title {
@@ -512,6 +513,10 @@
   .cart-page-container {
     padding: 16px;
   }
+
+  .cart-item-header{
+    margin-top: 25px;
+  }
   
   .cart-page-title {
     font-size: 24px;
@@ -543,6 +548,10 @@
 @media (max-width: 480px) {
   .cart-step-indicator {
     gap: 2px;
+  }
+
+  .cart-item-header{
+    margin-top: 25px;
   }
   
   .step-icon {
