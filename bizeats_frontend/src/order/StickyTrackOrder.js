@@ -1,16 +1,23 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom'; // Add useLocation
 import { FaMotorcycle, FaBoxOpen, FaTimes } from 'react-icons/fa';
 import "../assets/css/order/StickyTrackOrder.css";
 import API_ENDPOINTS from "../components/config/apiConfig";
 
 const StickyTrackOrder = ({ user }) => {
   const navigate = useNavigate();
+  const location = useLocation(); // Get current location
   const [activeOrders, setActiveOrders] = useState([]);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [showTrackPopup, setShowTrackPopup] = useState(false);
   
+  // Check if current path is OrderDetails
+  const isOrderDetailsPage = location.pathname.includes('/track-order/');
+  
   useEffect(() => {
+    // Don't fetch if on OrderDetails page
+    if (isOrderDetailsPage) return;
+
     const fetchActiveOrders = async () => {
       try {
         const response = await fetch(API_ENDPOINTS.TRACK.GET_ACTTIVE_ORDER, {
@@ -43,13 +50,15 @@ const StickyTrackOrder = ({ user }) => {
     };
 
     fetchActiveOrders();
-  }, [user?.user_id]);
+  }, [user?.user_id, isOrderDetailsPage]); // Add isOrderDetailsPage to dependencies
 
-  if (!activeOrders || activeOrders.length === 0) return null;
+  // Return null if on OrderDetails page or no active orders
+  if (isOrderDetailsPage || !activeOrders || activeOrders.length === 0) return null;
 
   const latestOrder = activeOrders[0];
   const displayOrder = selectedOrder || latestOrder;
 
+  // Rest of your component remains the same...
   const handleTrackClick = () => {
     if (activeOrders.length > 1) {
       setShowTrackPopup(true);

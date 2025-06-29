@@ -168,7 +168,9 @@
     height: 1px;
     background: linear-gradient(to right, transparent, #ddd, transparent);
 }
-
+.sticky-order{
+    display: none;
+}
 /* Order Details Page Menu - Category Section */
 .order-details-page-menu-category-section {
     background: #fff;
@@ -451,7 +453,7 @@
     transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
     z-index: 100;
     white-space: nowrap;
-    margin-bottom: 50px;
+    /* margin-bottom: 50px; */
 }
 
 .order-details-page-menu-view-cart-btn:hover {
@@ -961,7 +963,7 @@
 @media (max-width: 768px) {
 
     .order-details-page-menu-view-cart-btn{
-        margin-bottom: 120px;
+        margin-bottom: 70px;
     }
     .order-details-page-menu-container {
         padding: 15px;
@@ -1074,7 +1076,7 @@
     .order-details-page-menu-view-cart-btn {
         font-size: 14px;
         padding: 12px 18px;
-        margin-bottom: 120px;
+        margin-bottom: 70px;
     }
     
     .order-details-page-menu-food-modal-details {

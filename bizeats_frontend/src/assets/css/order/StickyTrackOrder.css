@@ -316,7 +316,7 @@
   /* Responsive Design */
   @media (max-width: 768px) {
     .sticky-order {
-      margin-bottom: 60px;
+      margin-bottom: 70px;
     }
     .sticky-order__content {
       flex-direction: column;
@@ -349,6 +349,9 @@
 
   /* Responsive tweaks */
 @media (max-width: 600px) {
+  .sticky-order {
+    margin-bottom: 70px;
+  }
     .sticky-order__content {
       flex-direction: row;
       align-items: flex-start;
