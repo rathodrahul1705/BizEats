@@ -16,6 +16,7 @@ from django.shortcuts import get_object_or_404
 from api.serializers import RestaurantMasterSerializer, RestaurantSerializerByStatus, RestaurantDetailSerializer, RestaurantMasterNewSerializer, RestaurantMenuSerializer, RestaurantListSerializer
 from api.models import RestaurantMaster, RestaurantCuisine, RestaurantDeliveryTiming, RestaurantDocuments, RestaurantOwnerDetail, RestaurantLocation, RestaurantMenu
 from django.utils.text import slugify
+from datetime import datetime
 
 class RestaurantStoreStepOne(APIView):
     permission_classes = [IsAuthenticated]
@@ -489,51 +490,59 @@ class RestaurantListAPI(APIView):
 class RestaurantDetailMenuView(APIView):
     def get(self, request, restaurant_id, offer=None):
         try:
+            # Fetch restaurant and serialize
             restaurant = RestaurantMaster.objects.get(restaurant_id=restaurant_id)
             serializer = RestaurantMasterSerializer(restaurant)
             restaurant_data = serializer.data.copy()
 
-            # -----------------------#
-            #  Restaurant meta data  #
-            # -----------------------#
+            # Fetch metadata
             restaurant_location = RestaurantLocation.objects.get(restaurant=restaurant)
             restaurant_document = RestaurantDocuments.objects.get(restaurant=restaurant)
 
-            # Build short address
+            # Build a short address
             address_parts = [
                 restaurant_location.area_sector_locality,
                 restaurant_location.city,
             ]
-            address = ", ".join(filter(None, address_parts))
+            address = ", ".join(filter(None, address_parts)) or ""
 
-            # ---------------------------------------- #
-            #  NEW: Fetch delivery timing information  #
-            # ---------------------------------------- #
-            delivery_timings_qs = (
-                RestaurantDeliveryTiming.objects
-                .filter(restaurant=restaurant)
-                .order_by("day")  # optional, keeps days grouped
+            # Get current day and time
+            current_day = datetime.now().strftime("%A")
+            current_time = datetime.now().time()
+
+            # Fetch today's delivery timings
+            delivery_timings_qs = RestaurantDeliveryTiming.objects.filter(
+                restaurant=restaurant, day=current_day
             )
 
-            delivery_timings = [
-                {
+            delivery_timings = []
+            is_open = False
+            today_start_time = None
+            today_end_time = None
+
+            for timing in delivery_timings_qs:
+                start = timing.start_time
+                end = timing.end_time
+
+                delivery_timings.append({
                     "day": timing.day,
                     "open": timing.open,
-                    "start_time": (
-                        timing.start_time.strftime("%H:%M") if timing.start_time else None
-                    ),
-                    "end_time": (
-                        timing.end_time.strftime("%H:%M") if timing.end_time else None
-                    ),
-                }
-                for timing in delivery_timings_qs
-            ]
+                    "start_time": start.strftime("%H:%M") if start else None,
+                    "end_time": end.strftime("%H:%M") if end else None,
+                })
 
-            # ---------------------------------------- #
-            #  Menu-item processing (existing logic)   #
-            # ---------------------------------------- #
-            time_required_to_reach_loc = 45  # placeholder ETA
+                # Use first valid open timing for current status
+                if timing.open and start and end:
+                    today_start_time = start
+                    today_end_time = end
+                    if start <= current_time <= end:
+                        is_open = True
+                    break
 
+            # Placeholder ETA (could be calculated dynamically)
+            time_required_to_reach_loc = 45
+
+            # Process menu items
             items = restaurant_data.get("menu_items", [])
             processed_items = []
 
@@ -544,29 +553,25 @@ class RestaurantDetailMenuView(APIView):
                         default_storage.url(item["item_image"])
                     )
 
-                # Offer filter
+                # Apply offer filter if needed
                 if offer:
                     if offer == "buy-one-get-one-free" and item.get("buy_one_get_one_free"):
                         processed_items.append(item)
-                    # Add other offer types here
                 else:
                     processed_items.append(item)
 
-            # ------------------- #
-            #  Build the response #
-            # ------------------- #
+            # Build response
             response_data = {
                 "time_required_to_reach_loc": time_required_to_reach_loc,
                 "restaurant_name": restaurant_data.get("restaurant_name"),
                 "restaurant_status": restaurant_data.get("restaurant_status"),
                 "Address": address,
-                "rating": 4.5,  # static or compute dynamically
+                "rating": 4.5,  # static or replace with dynamic rating
                 "min_order": restaurant_data.get("min_order", 0),
-                "opening_time": restaurant_data.get("opening_time", "08:00"),
-                "closing_time": restaurant_data.get("closing_time", "22:00"),
+                "opening_time": today_start_time.strftime("%H:%M") if today_start_time else None,
+                "closing_time": today_end_time.strftime("%H:%M") if today_end_time else None,
                 "itemlist": processed_items,
                 "fssai_number": restaurant_document.fssai_number,
-                # >>> new key <<<
                 "delivery_timings": delivery_timings,
             }
 
@@ -576,6 +581,8 @@ class RestaurantDetailMenuView(APIView):
             return Response({"error": "Restaurant not found"}, status=404)
         except RestaurantLocation.DoesNotExist:
             return Response({"error": "Restaurant location not found"}, status=404)
+        except RestaurantDocuments.DoesNotExist:
+            return Response({"error": "Restaurant documents not found"}, status=404)
         
 class RestaurantStatusUpdate(APIView):
     def patch(self, request, restaurant_id):

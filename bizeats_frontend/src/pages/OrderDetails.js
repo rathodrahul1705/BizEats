@@ -176,7 +176,9 @@ const OrderDetails = ({ user, setUser }) => {
       if (!response || typeof response !== "object") {
         throw new Error("Invalid response format");
       }
-  
+      
+      console.log("isShopOpen==",isShopOpen)
+
       setStoreDetails({
         name: response.restaurant_name || "Unnamed Restaurant",
         restaurant_status: response.restaurant_status ?? "Unknown",
@@ -185,8 +187,8 @@ const OrderDetails = ({ user, setUser }) => {
         location: response.Address || "Location not available",
         rating: response.rating ?? 0,
         minOrder: response.min_order ?? 0,
-        openingTime: response.opening_time || "08:00",
-        closingTime: response.closing_time || "22:00",
+        openingTime: response.opening_time,
+        closingTime: response.closing_time,
       });
   
       const items = Array.isArray(response.itemlist) ? response.itemlist : [];
@@ -397,19 +399,26 @@ const OrderDetails = ({ user, setUser }) => {
     const currentHour = istTime.getUTCHours();
     const currentMinutes = istTime.getUTCMinutes();
     
-    if (storeDetails?.restaurant_status !== undefined) {
-      // Parse opening and closing times
-      const [openingHour, openingMinute] = storeDetails.openingTime.split(':').map(Number);
-      const [closingHour, closingMinute] = storeDetails.closingTime.split(':').map(Number);
-      
-      // Convert to 24-hour format for comparison
-      const isOpen = (
-        (currentHour > openingHour || (currentHour === openingHour && currentMinutes >= openingMinute)) &&
-        (currentHour < closingHour || (currentHour === closingHour && currentMinutes < closingMinute)) &&
-        storeDetails.restaurant_status === 2
-      );
-      
-      setIsShopOpen(isOpen);
+    if (storeDetails?.restaurant_status !== undefined && 
+      storeDetails.openingTime && 
+      storeDetails.closingTime) {
+      try {
+        const [openingHour, openingMinute] = storeDetails.openingTime.split(':').map(Number);
+        const [closingHour, closingMinute] = storeDetails.closingTime.split(':').map(Number);
+        
+        const isOpen = (
+          (currentHour > openingHour || (currentHour === openingHour && currentMinutes >= openingMinute)) &&
+          (currentHour < closingHour || (currentHour === closingHour && currentMinutes < closingMinute)) &&
+          storeDetails.restaurant_status === 2
+        );
+        
+        setIsShopOpen(isOpen);
+      } catch (e) {
+        console.error('Error parsing time:', e);
+        setIsShopOpen(false);
+      }
+    } else {
+      setIsShopOpen(false);
     }
   };
 
@@ -488,8 +497,8 @@ const OrderDetails = ({ user, setUser }) => {
               </h3>
               <p className="order-details-page-menu-shop-status-hours">
                 {storeDetails.restaurant_status !== 2 
-                  ? 'This restaurant is not open today' 
-                  : `Opens at ${storeDetails.openingTime}`}
+                  ? 'This home kitchen is not open today' 
+                  : `The home kitchen will open tomorrow`}
               </p>
             </div>
           </div>
