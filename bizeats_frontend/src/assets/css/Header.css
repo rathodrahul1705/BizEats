@@ -105,6 +105,9 @@
 
 .header__signin-text {
   margin-left: 0.5rem;
+  font-size: 1rem;
+  color: #000;
+  font-weight: 500;
 }
 
 .header__user-menu {
