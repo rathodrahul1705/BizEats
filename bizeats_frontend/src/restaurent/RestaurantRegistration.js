@@ -3,7 +3,7 @@ import { ArrowRight, Utensils, ClipboardList, FileCheck, FileSignature, CheckCir
 import "../assets/css/restaurent/RestaurantRegistration.css";
 import API_ENDPOINTS from "../components/config/apiConfig";
 import fetchData from "../components/services/apiService";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 
 const steps = [
   { id: 1, name: "Restaurant Info", icon: <Utensils size={22} /> },
@@ -13,6 +13,7 @@ const steps = [
 ];
 
 const RestaurantRegistration = ({ user, setUser }) => {
+  const navigate = useNavigate();
   const { restaurant_id } = useParams();
   const [step, setStep] = useState(1);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
@@ -366,6 +367,10 @@ const RestaurantRegistration = ({ user, setUser }) => {
     }
   };
 
+  const handleClose = () => {
+    navigate('/vendor-dashboard/restaurant');
+  };
+
   // Success Popup Component
   const SuccessPopup = ({ onClose }) => {
     return (
@@ -376,8 +381,8 @@ const RestaurantRegistration = ({ user, setUser }) => {
           </div>
           <h3>Registration Complete!</h3>
           <p>Your restaurant registration has been submitted successfully. Our team will review your application and get back to you shortly.</p>
-          <button className="success-close-btn" onClick={onClose}>
-            Close
+          <button className="success-close-btn" onClick={handleClose}>
+            Ok
           </button>
         </div>
       </div>

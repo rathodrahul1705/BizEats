@@ -223,7 +223,7 @@ const RestaurantManagement = ({ user }) => {
               <tr>
                 <th></th>
                 <th>Name</th>
-                <th>Address</th>
+                {/* <th>Address</th> */}
                 <th>Status</th>
                 <th>Actions</th>
               </tr>
@@ -245,7 +245,7 @@ const RestaurantManagement = ({ user }) => {
                         <span>{restaurant.restaurant_name}</span>
                       </div>
                     </td>
-                    <td>{formatAddress(restaurant.location)}</td>
+                    {/* <td>{formatAddress(restaurant.location)}</td> */}
                     <td>
                       {updatingStatus[restaurant.restaurant_id] ? (
                         <span className="status-loading">Updating...</span>
