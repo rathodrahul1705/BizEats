@@ -484,7 +484,7 @@ select[multiple].vendor-menu-management-form-control option {
 .vendor-menu-management-submit-btn {
   width: 100%;
   padding: 0.75rem;
-  background-color: var(--primary-color);
+  background-color: #e65c00;
   color: var(--white);
   border: none;
   border-radius: var(--radius-sm);
