@@ -488,7 +488,7 @@
   width: 90%;
   max-width: 400px;
   padding: 24px;
-  position: relative;
+  /* position: relative; */
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
 }
 
