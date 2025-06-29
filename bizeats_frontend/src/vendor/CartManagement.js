@@ -1,5 +1,9 @@
-import React, { useState, useEffect } from "react";
-import { Trash, Search, Filter, ChevronLeft, ChevronRight, ShoppingCart, User, Store, Clock, ChevronDown, ChevronUp, RefreshCw } from "lucide-react";
+import React, { useState, useEffect, useMemo } from "react";
+import { 
+  Trash, Search, Filter, ChevronLeft, ChevronRight, 
+  ShoppingCart, User, Store, Clock, ChevronDown, 
+  ChevronUp, RefreshCw, X, Check, AlertCircle 
+} from "lucide-react";
 import { useParams } from "react-router-dom";
 import API_ENDPOINTS from "../components/config/apiConfig";
 import fetchData from "../components/services/apiService";
@@ -9,7 +13,6 @@ import "../assets/css/vendor/CartManagement.css";
 const CartManagement = () => {
   const { restaurant_id } = useParams();
   const [carts, setCarts] = useState([]);
-  const [filteredCarts, setFilteredCarts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expandedRows, setExpandedRows] = useState({});
   
@@ -18,18 +21,16 @@ const CartManagement = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [customerFilter, setCustomerFilter] = useState("all");
   const [showFilters, setShowFilters] = useState(false);
+  const [sortConfig, setSortConfig] = useState({ key: "created_at", direction: "desc" });
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(25);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
+  // Fetch carts on component mount
   useEffect(() => {
     fetchCarts();
   }, [restaurant_id]);
-
-  useEffect(() => {
-    applyFilters();
-  }, [carts, searchTerm, statusFilter, customerFilter]);
 
   const fetchCarts = async () => {
     try {
@@ -48,7 +49,8 @@ const CartManagement = () => {
     }
   };
 
-  const applyFilters = () => {
+  // Apply sorting, filtering and pagination
+  const filteredCarts = useMemo(() => {
     let filtered = [...carts];
     
     // Search filter
@@ -58,7 +60,8 @@ const CartManagement = () => {
           cart.user?.name || '',
           cart.item?.name || '',
           cart.order_number || '',
-          cart.cart_status || ''
+          cart.cart_status || '',
+          cart.restaurant?.name || ''
         ].join(' ').toLowerCase();
         return searchText.includes(searchTerm.toLowerCase());
       });
@@ -82,9 +85,62 @@ const CartManagement = () => {
       );
     }
     
-    setFilteredCarts(filtered);
+    // Sorting
+    if (sortConfig.key) {
+      filtered.sort((a, b) => {
+        let aValue, bValue;
+        
+        // Handle nested properties
+        if (sortConfig.key.includes('.')) {
+          const keys = sortConfig.key.split('.');
+          aValue = keys.reduce((obj, key) => obj?.[key], a);
+          bValue = keys.reduce((obj, key) => obj?.[key], b);
+        } else {
+          aValue = a[sortConfig.key];
+          bValue = b[sortConfig.key];
+        }
+        
+        // Handle dates
+        if (sortConfig.key === 'created_at' || sortConfig.key === 'updated_at') {
+          aValue = new Date(aValue).getTime();
+          bValue = new Date(bValue).getTime();
+        }
+        
+        // Handle numbers
+        if (sortConfig.key === 'quantity' || sortConfig.key === 'item.price') {
+          aValue = parseFloat(aValue);
+          bValue = parseFloat(bValue);
+        }
+        
+        if (aValue < bValue) {
+          return sortConfig.direction === 'asc' ? -1 : 1;
+        }
+        if (aValue > bValue) {
+          return sortConfig.direction === 'asc' ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+    
+    return filtered;
+  }, [carts, searchTerm, statusFilter, customerFilter, sortConfig]);
+
+  // Pagination logic
+  const paginatedCarts = useMemo(() => {
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    return filteredCarts.slice(indexOfFirstItem, indexOfLastItem);
+  }, [filteredCarts, currentPage, itemsPerPage]);
+
+  const totalPages = Math.ceil(filteredCarts.length / itemsPerPage);
+
+  const handleSort = (key) => {
+    let direction = 'asc';
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
     setCurrentPage(1);
-    setExpandedRows({});
   };
 
   const handleDelete = async (cartId) => {
@@ -108,6 +164,8 @@ const CartManagement = () => {
     setSearchTerm("");
     setStatusFilter("all");
     setCustomerFilter("all");
+    setSortConfig({ key: "created_at", direction: "desc" });
+    setCurrentPage(1);
   };
 
   const toggleRowExpand = (cartId) => {
@@ -116,14 +174,6 @@ const CartManagement = () => {
       [cartId]: !prev[cartId]
     }));
   };
-
-  // Pagination logic
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = filteredCarts.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.ceil(filteredCarts.length / itemsPerPage);
-
-  const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   const formatDate = (dateString) => {
     const options = { 
@@ -134,6 +184,15 @@ const CartManagement = () => {
       minute: '2-digit'
     };
     return new Date(dateString).toLocaleDateString(undefined, options);
+  };
+
+  const getStatusIcon = (status) => {
+    switch(status) {
+      case "Payment Completed": return <Check size={14} />;
+      case "Proceeded for Checkout": return <RefreshCw size={14} />;
+      case "Item Added": return <AlertCircle size={14} />;
+      default: return null;
+    }
   };
 
   const getStatusClass = (status) => {
@@ -156,12 +215,31 @@ const CartManagement = () => {
         <header className="cart-header">
           <div className="header-content">
             <h1>Cart Management</h1>
-            <p>{filteredCarts.length} {filteredCarts.length === 1 ? 'item' : 'items'} found</p>
+            <div className="header-stats">
+              <div className="stat-item">
+                <span className="stat-value">{filteredCarts.length}</span>
+                <span className="stat-label">Total Items</span>
+              </div>
+              <div className="stat-item">
+                <span className="stat-value">
+                  {filteredCarts.filter(c => c.cart_status === "Payment Completed").length}
+                </span>
+                <span className="stat-label">Completed</span>
+              </div>
+              <div className="stat-item">
+                <span className="stat-value">
+                  {filteredCarts.filter(c => c.user?.id).length}
+                </span>
+                <span className="stat-label">Registered Users</span>
+              </div>
+            </div>
           </div>
-          <button className="refresh-btn" onClick={fetchCarts}>
-            <RefreshCw size={18} />
-            <span>Refresh</span>
-          </button>
+          <div className="header-actions">
+            <button className="refresh-btn" onClick={fetchCarts}>
+              <RefreshCw size={18} />
+              <span>Refresh</span>
+            </button>
+          </div>
         </header>
 
         {/* Filter Section */}
@@ -171,18 +249,33 @@ const CartManagement = () => {
               <Search className="search-icon" />
               <input
                 type="text"
-                placeholder="Search carts..."
+                placeholder="Search by customer, item, order #..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
+              {searchTerm && (
+                <button 
+                  className="clear-search"
+                  onClick={() => setSearchTerm("")}
+                >
+                  <X size={16} />
+                </button>
+              )}
             </div>
-            <button 
-              className={`filter-btn ${showFilters ? 'active' : ''}`}
-              onClick={() => setShowFilters(!showFilters)}
-            >
-              <Filter size={18} />
-              <span>Filters</span>
-            </button>
+            <div className="filter-buttons">
+              <button 
+                className={`filter-btn ${showFilters ? 'active' : ''}`}
+                onClick={() => setShowFilters(!showFilters)}
+              >
+                <Filter size={18} />
+                <span>Filters</span>
+              </button>
+              {(searchTerm || statusFilter !== "all" || customerFilter !== "all") && (
+                <button className="reset-filters-btn" onClick={resetFilters}>
+                  <span>Reset All</span>
+                </button>
+              )}
+            </div>
           </div>
 
           {showFilters && (
@@ -210,10 +303,6 @@ const CartManagement = () => {
                   <option value="guest">Guest Users</option>
                 </select>
               </div>
-              
-              <button className="reset-filters" onClick={resetFilters}>
-                Reset All Filters
-              </button>
             </div>
           )}
         </section>
@@ -223,90 +312,160 @@ const CartManagement = () => {
           <div className="cart-content">
             {/* Desktop Table */}
             <div className="desktop-view">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Customer</th>
-                    <th>Item</th>
-                    <th>Restaurant</th>
-                    <th>Qty</th>
-                    <th>Price</th>
-                    <th>Status</th>
-                    <th>Date</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {currentItems.map((cart) => (
-                    <tr key={`${cart.id}-${cart.updated_at}`}>
-                      <td>
-                        <div className="user-info">
-                          <div className={`avatar ${cart.user?.id ? 'registered' : 'guest'}`}>
-                            <User size={16} />
-                          </div>
-                          <div>
-                            <div className="name">{cart.user?.name || 'Guest'}</div>
-                            <div className="email">{cart.user?.email || cart.item.session_id}</div>
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        <div className="item-name">{cart.item?.name}</div>
-                        <div className="item-desc">{cart.item?.description || 'No description'}</div>
-                      </td>
-                      <td>
-                        <div className="restaurant-info">
-                          <div className="avatar">
-                            <Store size={16} />
-                          </div>
-                          <div>
-                            <div className="name">{cart.restaurant?.name}</div>
-                            <div className="id">{cart.restaurant?.id}</div>
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        <div className="quantity">{cart.quantity}</div>
-                        {cart.buy_one_get_one_free && (
-                          <span className="tag bogo">BOGO</span>
+              <div className="table-responsive">
+                <table>
+                  <thead>
+                    <tr>
+                      <th 
+                        className={sortConfig.key === 'user.name' ? 'active' : ''}
+                        onClick={() => handleSort('user.name')}
+                      >
+                        Customer {sortConfig.key === 'user.name' && (
+                          <span>{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
                         )}
-                      </td>
-                      <td>
-                        {/* <div className="price">₹{(cart.item?.price * cart.quantity).toFixed(2)}</div> */}
-                        <div className="unit-price">₹{parseFloat(cart.item?.price || 0).toFixed(2)}</div>
-                      </td>
-                      <td>
-                        <span className={`status ${getStatusClass(cart.cart_status)}`}>
-                          {cart.cart_status}
-                        </span>
-                        {cart.order_number && (
-                          <div className="order-number-num">{cart.order_number}</div>
+                      </th>
+                      <th 
+                        className={sortConfig.key === 'item.name' ? 'active' : ''}
+                        onClick={() => handleSort('item.name')}
+                      >
+                        Item {sortConfig.key === 'item.name' && (
+                          <span>{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
                         )}
-                      </td>
-                      <td>
-                        <div className="date">
-                          <Clock size={14} />
-                          {formatDate(cart.created_at)}
-                        </div>
-                      </td>
-                      <td>
-                        <button
-                          onClick={() => handleDelete(cart.id)}
-                          className="delete-btn"
-                          title="Delete"
-                        >
-                          <Trash size={16} />
-                        </button>
-                      </td>
+                      </th>
+                      <th 
+                        className={sortConfig.key === 'restaurant.name' ? 'active' : ''}
+                        onClick={() => handleSort('restaurant.name')}
+                      >
+                        Restaurant {sortConfig.key === 'restaurant.name' && (
+                          <span>{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
+                        )}
+                      </th>
+                      <th 
+                        className={sortConfig.key === 'quantity' ? 'active' : ''}
+                        onClick={() => handleSort('quantity')}
+                      >
+                        Qty {sortConfig.key === 'quantity' && (
+                          <span>{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
+                        )}
+                      </th>
+                      <th 
+                        className={sortConfig.key === 'item.price' ? 'active' : ''}
+                        onClick={() => handleSort('item.price')}
+                      >
+                        Price {sortConfig.key === 'item.price' && (
+                          <span>{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
+                        )}
+                      </th>
+                      <th 
+                        className={sortConfig.key === 'cart_status' ? 'active' : ''}
+                        onClick={() => handleSort('cart_status')}
+                      >
+                        Status {sortConfig.key === 'cart_status' && (
+                          <span>{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
+                        )}
+                      </th>
+                      <th 
+                        className={sortConfig.key === 'created_at' ? 'active' : ''}
+                        onClick={() => handleSort('created_at')}
+                      >
+                        Date {sortConfig.key === 'created_at' && (
+                          <span>{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
+                        )}
+                      </th>
+                      <th>Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {paginatedCarts.map((cart) => (
+                      <React.Fragment key={`${cart.id}-${cart.updated_at}`}>
+                        <tr>
+                          <td>
+                            <div className="user-info">
+                              <div className={`avatar ${cart.user?.id ? 'registered' : 'guest'}`}>
+                                <User size={16} />
+                              </div>
+                              <div>
+                                <div className="name">{cart.user?.name || 'Guest'}</div>
+                                <div className="email">{cart.user?.email || cart.item.session_id}</div>
+                              </div>
+                            </div>
+                          </td>
+                          <td>
+                            <div className="item-name">{cart.item?.name}</div>
+                            <div className="item-desc">{cart.item?.description || 'No description'}</div>
+                          </td>
+                          <td>
+                            <div className="restaurant-info">
+                              <div className="avatar">
+                                <Store size={16} />
+                              </div>
+                              <div>
+                                <div className="name">{cart.restaurant?.name}</div>
+                                <div className="id">{cart.restaurant?.id}</div>
+                              </div>
+                            </div>
+                          </td>
+                          <td>
+                            <div className="quantity">{cart.quantity}</div>
+                            {cart.buy_one_get_one_free && (
+                              <span className="tag bogo">BOGO</span>
+                            )}
+                          </td>
+                          <td>
+                            <div className="price">₹{(cart.item?.price * cart.quantity).toFixed(2)}</div>
+                            <div className="unit-price">₹{parseFloat(cart.item?.price || 0).toFixed(2)} each</div>
+                          </td>
+                          <td>
+                            <div className={`status ${getStatusClass(cart.cart_status)}`}>
+                              {getStatusIcon(cart.cart_status)}
+                              <span>{cart.cart_status}</span>
+                            </div>
+                            {cart.order_number && (
+                              <div className="order-number">Order #{cart.order_number}</div>
+                            )}
+                          </td>
+                          <td>
+                            <div className="date">
+                              <Clock size={14} />
+                              {formatDate(cart.created_at)}
+                            </div>
+                          </td>
+                          <td>
+                            <button
+                              onClick={() => handleDelete(cart.id)}
+                              className="delete-btn"
+                              title="Delete"
+                            >
+                              <Trash size={16} />
+                            </button>
+                          </td>
+                        </tr>
+                        {expandedRows[cart.id] && (
+                          <tr className="expanded-row">
+                            <td colSpan="8">
+                              <div className="expanded-content">
+                                <div className="expanded-section">
+                                  <h4>Item Details</h4>
+                                  <p>{cart.item?.description || 'No additional details available'}</p>
+                                </div>
+                                <div className="expanded-section">
+                                  <h4>Customer Information</h4>
+                                  <p>{cart.user?.phone || 'No contact information'}</p>
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </React.Fragment>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
 
             {/* Mobile List */}
             <div className="mobile-view">
-              {currentItems.map((cart) => (
+              {paginatedCarts.map((cart) => (
                 <div 
                   key={`mobile-${cart.id}`} 
                   className={`cart-item ${expandedRows[cart.id] ? 'expanded' : ''}`}
@@ -326,6 +485,7 @@ const CartManagement = () => {
                     </div>
                     <div className="status-container">
                       <span className={`status ${getStatusClass(cart.cart_status)}`}>
+                        {getStatusIcon(cart.cart_status)}
                         {cart.cart_status.split(' ')[0]}
                       </span>
                       {expandedRows[cart.id] ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
@@ -387,53 +547,96 @@ const CartManagement = () => {
             </div>
 
             {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="pagination">
-                <div className="pagination-info">
-                  Showing {indexOfFirstItem + 1} to{' '}
-                  {Math.min(indexOfLastItem, filteredCarts.length)} of {filteredCarts.length} items
-                </div>
-                <div className="pagination-controls">
-                  <button
-                    onClick={() => paginate(currentPage - 1)}
-                    disabled={currentPage === 1}
-                  >
-                    <ChevronLeft size={16} />
-                  </button>
-                  
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((number) => (
-                    <button
-                      key={number}
-                      onClick={() => paginate(number)}
-                      className={currentPage === number ? 'active' : ''}
-                    >
-                      {number}
-                    </button>
-                  ))}
-                  
-                  <button
-                    onClick={() => paginate(currentPage + 1)}
-                    disabled={currentPage === totalPages}
-                  >
-                    <ChevronRight size={16} />
-                  </button>
-                </div>
+            <div className="pagination-container">
+              <div className="pagination-info">
+                Showing <strong>{Math.min((currentPage - 1) * itemsPerPage + 1, filteredCarts.length)}</strong> to{' '}
+                <strong>{Math.min(currentPage * itemsPerPage, filteredCarts.length)}</strong> of{' '}
+                <strong>{filteredCarts.length}</strong> items
               </div>
-            )}
+              
+              <div className="pagination-controls">
+                <select
+                  value={itemsPerPage}
+                  onChange={(e) => {
+                    setItemsPerPage(Number(e.target.value));
+                    setCurrentPage(1);
+                  }}
+                  className="items-per-page"
+                >
+                  {[10, 25, 50, 100].map(size => (
+                    <option key={size} value={size}>
+                      Show {size}
+                    </option>
+                  ))}
+                </select>
+                
+                <button
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                  className="pagination-btn"
+                >
+                  <ChevronLeft size={18} />
+                </button>
+                
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let pageNum;
+                  if (totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 3) {
+                    pageNum = i + 1;
+                  } else if (currentPage >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i;
+                  } else {
+                    pageNum = currentPage - 2 + i;
+                  }
+                  
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => setCurrentPage(pageNum)}
+                      className={`pagination-btn ${currentPage === pageNum ? 'active' : ''}`}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
+                
+                {totalPages > 5 && currentPage < totalPages - 2 && (
+                  <span className="pagination-ellipsis">...</span>
+                )}
+                
+                {totalPages > 5 && currentPage < totalPages - 2 && (
+                  <button
+                    onClick={() => setCurrentPage(totalPages)}
+                    className={`pagination-btn ${currentPage === totalPages ? 'active' : ''}`}
+                  >
+                    {totalPages}
+                  </button>
+                )}
+                
+                <button
+                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                  className="pagination-btn"
+                >
+                  <ChevronRight size={18} />
+                </button>
+              </div>
+            </div>
           </div>
         ) : (
           <div className="empty-state">
             <div className="empty-icon">
-              <ShoppingCart size={40} />
+              <ShoppingCart size={48} />
             </div>
             <h3>No cart items found</h3>
             <p>
               {carts.length === 0 
-                ? "Your restaurant doesn't have any cart items yet." 
-                : "No cart items match your current filters."}
+                ? "There are no cart items in the system yet." 
+                : "No cart items match your current search and filters."}
             </p>
             {carts.length > 0 && (
-              <button onClick={resetFilters}>
+              <button onClick={resetFilters} className="primary-btn">
                 Reset all filters
               </button>
             )}

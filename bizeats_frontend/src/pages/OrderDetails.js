@@ -177,8 +177,6 @@ const OrderDetails = ({ user, setUser }) => {
         throw new Error("Invalid response format");
       }
       
-      console.log("isShopOpen==",isShopOpen)
-
       setStoreDetails({
         name: response.restaurant_name || "Unnamed Restaurant",
         restaurant_status: response.restaurant_status ?? "Unknown",
@@ -189,6 +187,7 @@ const OrderDetails = ({ user, setUser }) => {
         minOrder: response.min_order ?? 0,
         openingTime: response.opening_time,
         closingTime: response.closing_time,
+        currentKitchenStatus: response.restaurant_current_status?.is_open,
       });
   
       const items = Array.isArray(response.itemlist) ? response.itemlist : [];
@@ -393,33 +392,7 @@ const OrderDetails = ({ user, setUser }) => {
   };
 
   const checkShopTimings = () => {
-    const now = new Date();
-    const istOffset = 330 * 60 * 1000;
-    const istTime = new Date(now.getTime() + istOffset);
-    const currentHour = istTime.getUTCHours();
-    const currentMinutes = istTime.getUTCMinutes();
-    
-    if (storeDetails?.restaurant_status !== undefined && 
-      storeDetails.openingTime && 
-      storeDetails.closingTime) {
-      try {
-        const [openingHour, openingMinute] = storeDetails.openingTime.split(':').map(Number);
-        const [closingHour, closingMinute] = storeDetails.closingTime.split(':').map(Number);
-        
-        const isOpen = (
-          (currentHour > openingHour || (currentHour === openingHour && currentMinutes >= openingMinute)) &&
-          (currentHour < closingHour || (currentHour === closingHour && currentMinutes < closingMinute)) &&
-          storeDetails.restaurant_status === 2
-        );
-        
-        setIsShopOpen(isOpen);
-      } catch (e) {
-        console.error('Error parsing time:', e);
-        setIsShopOpen(false);
-      }
-    } else {
-      setIsShopOpen(false);
-    }
+      setIsShopOpen(storeDetails?.currentKitchenStatus)
   };
 
   useEffect(() => {

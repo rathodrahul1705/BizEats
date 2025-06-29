@@ -490,27 +490,36 @@ class RestaurantListAPI(APIView):
 class RestaurantDetailMenuView(APIView):
     def get(self, request, restaurant_id, offer=None):
         try:
-            # Fetch restaurant and serialize
+
+            restaurantStatuses = {
+                0: {"label": "Inactive", "color": "danger"},
+                1: {"label": "Pending Approval", "color": "warning"},
+                2: {"label": "Active", "color": "success"},
+                3: {"label": "Closed", "color": "dark"},
+                4: {"label": "Suspended", "color": "secondary"},
+            }
+
+            # Fetch and serialize restaurant
             restaurant = RestaurantMaster.objects.get(restaurant_id=restaurant_id)
             serializer = RestaurantMasterSerializer(restaurant)
             restaurant_data = serializer.data.copy()
 
-            # Fetch metadata
+            restaurant_status_value = restaurant_data.get("restaurant_status", 0)
+            status_meta = restaurantStatuses.get(restaurant_status_value, {
+                "label": "Unknown", "color": "secondary"
+            })
+
             restaurant_location = RestaurantLocation.objects.get(restaurant=restaurant)
             restaurant_document = RestaurantDocuments.objects.get(restaurant=restaurant)
 
-            # Build a short address
-            address_parts = [
+            address = ", ".join(filter(None, [
                 restaurant_location.area_sector_locality,
-                restaurant_location.city,
-            ]
-            address = ", ".join(filter(None, address_parts)) or ""
+                restaurant_location.city
+            ]))
 
-            # Get current day and time
             current_day = datetime.now().strftime("%A")
             current_time = datetime.now().time()
 
-            # Fetch today's delivery timings
             delivery_timings_qs = RestaurantDeliveryTiming.objects.filter(
                 restaurant=restaurant, day=current_day
             )
@@ -523,7 +532,6 @@ class RestaurantDetailMenuView(APIView):
             for timing in delivery_timings_qs:
                 start = timing.start_time
                 end = timing.end_time
-
                 delivery_timings.append({
                     "day": timing.day,
                     "open": timing.open,
@@ -531,42 +539,44 @@ class RestaurantDetailMenuView(APIView):
                     "end_time": end.strftime("%H:%M") if end else None,
                 })
 
-                # Use first valid open timing for current status
-                if timing.open and start and end:
-                    today_start_time = start
-                    today_end_time = end
+                if timing.open and start and end and not is_open and restaurant_status_value == 2:
                     if start <= current_time <= end:
                         is_open = True
-                    break
+                        today_start_time = start
+                        today_end_time = end
 
-            # Placeholder ETA (could be calculated dynamically)
+            if restaurant_status_value != 2:
+                is_open = False
+
             time_required_to_reach_loc = 45
 
-            # Process menu items
             items = restaurant_data.get("menu_items", [])
             processed_items = []
 
             for item in items:
-                # Make image URL absolute
                 if item.get("item_image"):
                     item["item_image"] = request.build_absolute_uri(
                         default_storage.url(item["item_image"])
                     )
 
-                # Apply offer filter if needed
                 if offer:
                     if offer == "buy-one-get-one-free" and item.get("buy_one_get_one_free"):
                         processed_items.append(item)
                 else:
                     processed_items.append(item)
 
-            # Build response
             response_data = {
                 "time_required_to_reach_loc": time_required_to_reach_loc,
                 "restaurant_name": restaurant_data.get("restaurant_name"),
-                "restaurant_status": restaurant_data.get("restaurant_status"),
+                "restaurant_status": restaurant_status_value,
+                "restaurant_current_status": {
+                    "value": restaurant_status_value,
+                    "label": status_meta["label"],
+                    "color": status_meta["color"],
+                    "is_open": is_open
+                },
                 "Address": address,
-                "rating": 4.5,  # static or replace with dynamic rating
+                "rating": 4.5,
                 "min_order": restaurant_data.get("min_order", 0),
                 "opening_time": today_start_time.strftime("%H:%M") if today_start_time else None,
                 "closing_time": today_end_time.strftime("%H:%M") if today_end_time else None,
