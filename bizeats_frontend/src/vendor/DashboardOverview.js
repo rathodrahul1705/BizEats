@@ -471,7 +471,7 @@ const DashboardOverview = ({ user, setUser }) => {
             {activeTab === "quick-actions" && selectedRestaurant && (
               <div className="quick-actions-content">
                 <h3>Quick Actions</h3>
-                <p className="subtitle">Manage your restaurant operations</p>
+                <p className="subtitle">Manage your home Kitchen operations</p>
                 <div className="links-grid">
                   <Link 
                     to={`/vendor-dashboard/menu/${selectedRestaurant.restaurant_id}`} 
@@ -480,7 +480,7 @@ const DashboardOverview = ({ user, setUser }) => {
                     <div className="link-icon">🍽️</div>
                     <div className="link-content">
                       <h4>Menu Management</h4>
-                      <p>Update your restaurant menu items</p>
+                      <p>Update your home kitchen menu items</p>
                     </div>
                     <div className="link-arrow">→</div>
                   </Link>
@@ -490,7 +490,7 @@ const DashboardOverview = ({ user, setUser }) => {
                   >
                     <div className="link-icon">🏷️</div>
                     <div className="link-content">
-                      <h4>Coupon Management</h4>
+                      <h4>Offer Management</h4>
                       <p>Manage your coupon details</p>
                     </div>
                     <div className="link-arrow">→</div>
@@ -528,15 +528,13 @@ const DashboardOverview = ({ user, setUser }) => {
                     </div>
                     <div className="link-arrow">→</div>
                   </Link> */}
-                  
-                  
                   <Link 
                     to={`/vendor-dashboard/restaurant`} 
                     className="link-card"
                   >
                     <div className="link-icon">⚙️</div>
                     <div className="link-content">
-                      <h4>Restaurant Settings</h4>
+                      <h4>Home Kitchen Settings</h4>
                       <p>Manage your restaurant details</p>
                     </div>
                     <div className="link-arrow">→</div>
