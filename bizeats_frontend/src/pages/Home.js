@@ -20,6 +20,8 @@ import HomePageChickenBiryani from "../assets/img/home_page_chicken_biryani.avif
 import HomePageEggBiryani from "../assets/img/home_page_egg_biryani.jpg";
 import HomePageGulabJamun from "../assets/img/home_page_gulab_jamun.jpg";
 import HomePageKokamSarbat from "../assets/img/homa_page_kokam_sarbat.jpg";
+import HomePageChickeThali from "../assets/img/banjara_chicken_thali.png";
+import HomePageMasalaChaas from "../assets/img/masala_chaas.png";
 
 const Home = () => {
   const [loading, setLoading] = useState(true);
@@ -128,7 +130,7 @@ const Home = () => {
       image: HomePageChickenBiryani,
       restaurant_id: restaurants[0]?.restaurant_id,
       category: "Biryani",
-      price: "₹220",
+      price: "₹100",
       rating: 4.8,
       time: "30-45 min",
       offer: "20% OFF"
@@ -138,10 +140,9 @@ const Home = () => {
       image: HomePageGulabJamun,
       restaurant_id: restaurants[0]?.restaurant_id,
       category: "Desserts",
-      price: "₹60",
+      price: "₹10",
       rating: 4.5,
       time: "15-20 min",
-      offer: "Buy 1 Get 1"
     },
     {
       name: "Upma",
@@ -186,7 +187,7 @@ const Home = () => {
       image: HomePageEggBiryani,
       restaurant_id: restaurants[0]?.restaurant_id,
       category: "Biryani",
-      price: "₹180",
+      price: "₹100",
       rating: 4.6,
       time: "30-45 min"
     },
@@ -196,9 +197,26 @@ const Home = () => {
       restaurant_id: restaurants[0]?.restaurant_id,
       category: "Beverages",
       price: "₹40",
-      rating: 4.7,
+      rating: 4.6,
       time: "10-15 min",
-      offer: "Free with meal"
+    },
+    {
+      name: "Masala Chaas",
+      image: HomePageMasalaChaas,
+      restaurant_id: restaurants[0]?.restaurant_id,
+      category: "Beverages",
+      price: "₹15",
+      rating: 4.6,
+      time: "10-15 min",
+    },
+    {
+      name: "Thalis",
+      image: HomePageChickeThali,
+      restaurant_id: restaurants[0]?.restaurant_id,
+      category: "Thalis",
+      price: "₹100",
+      rating: 4.6,
+      time: "30-45 min",
     }
   ];
 
@@ -390,7 +408,7 @@ const Home = () => {
                 onClick={() => setActiveCategory(category.name)}
               >
                 <span className="category-pill__emoji">{category.icon}</span>
-                <span className="category-pill__name">{category.name}</span>
+                <span className="category-pill__name"><strong>{category.name}</strong></span>
               </button>
             ))}
           </div>
@@ -421,7 +439,7 @@ const Home = () => {
           </div>
 
           <div className="food-items-grid">
-            {filteredFoodItems.slice(0, 8).map((item, index) => (
+            {filteredFoodItems.slice(0, 10).map((item, index) => (
               <div className="food-item-card" key={index}>
                 <div className="food-item-card__image-wrapper">
                   <img
