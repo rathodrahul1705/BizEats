@@ -455,7 +455,7 @@ const OrderDetails = ({ user, setUser }) => {
             <div className="order-details-page-menu-shop-status-content">
               <h3 className="order-details-page-menu-shop-status-title">Open Now</h3>
               <p className="order-details-page-menu-shop-status-hours">
-                Today's hours: {storeDetails.openingTime} - {storeDetails.closingTime}
+                Today's hours: {storeDetails.openingTime} AM - {storeDetails.closingTime} PM
               </p>
             </div>
           </div>
@@ -470,7 +470,7 @@ const OrderDetails = ({ user, setUser }) => {
               </h3>
               <p className="order-details-page-menu-shop-status-hours">
                 {storeDetails.restaurant_status == 2 && storeDetails.openingTime != null
-                  ? `This home kitchen will open at ${storeDetails.openingTime}`
+                  ? `This home kitchen will open at ${storeDetails.openingTime} AM`
                   : `The home kitchen will open tomorrow`}
               </p>
             </div>
