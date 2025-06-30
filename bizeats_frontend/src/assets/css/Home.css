@@ -808,7 +808,6 @@
 /* Restaurants Section */
 .restaurants-section {
   padding: var(--space-3xl) 0;
-  background: var(--bg-light);
 }
 
 .restaurants-slider {
