@@ -392,7 +392,6 @@ const CartManagement = () => {
                           </td>
                           <td>
                             <div className="item-name">{cart.item?.name}</div>
-                            <div className="item-desc">{cart.item?.description || 'No description'}</div>
                           </td>
                           <td>
                             <div className="restaurant-info">
@@ -421,7 +420,7 @@ const CartManagement = () => {
                               <span>{cart.cart_status}</span>
                             </div>
                             {cart.order_number && (
-                              <div className="order-number">Order #{cart.order_number}</div>
+                              <div className="order-number">#{cart.order_number}</div>
                             )}
                           </td>
                           <td>
@@ -446,7 +445,6 @@ const CartManagement = () => {
                               <div className="expanded-content">
                                 <div className="expanded-section">
                                   <h4>Item Details</h4>
-                                  <p>{cart.item?.description || 'No additional details available'}</p>
                                 </div>
                                 <div className="expanded-section">
                                   <h4>Customer Information</h4>
@@ -497,10 +495,6 @@ const CartManagement = () => {
                       <div className="detail-row">
                         <span>Item:</span>
                         <span>{cart.item?.name}</span>
-                      </div>
-                      <div className="detail-row">
-                        <span>Description:</span>
-                        <span>{cart.item?.description || 'No description'}</span>
                       </div>
                       <div className="detail-row">
                         <span>Restaurant:</span>

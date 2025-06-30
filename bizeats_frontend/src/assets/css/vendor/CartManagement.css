@@ -308,7 +308,7 @@
 }
 
 .desktop-view td {
-  padding: 1.25rem;
+  padding: 1rem;
   border-top: 1px solid var(--border);
   vertical-align: top;
 }
