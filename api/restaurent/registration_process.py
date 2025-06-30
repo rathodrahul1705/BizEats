@@ -519,7 +519,7 @@ class RestaurantDetailMenuView(APIView):
 
             current_day = datetime.now().strftime("%A")
             current_time = datetime.now().time()
-
+            
             delivery_timings_qs = RestaurantDeliveryTiming.objects.filter(
                 restaurant=restaurant, day=current_day
             )
@@ -540,8 +540,12 @@ class RestaurantDetailMenuView(APIView):
                 })
 
                 if timing.open and start and end and not is_open and restaurant_status_value == 2:
+
                     if start <= current_time <= end:
                         is_open = True
+                        today_start_time = start
+                        today_end_time = end
+                    else:
                         today_start_time = start
                         today_end_time = end
 
