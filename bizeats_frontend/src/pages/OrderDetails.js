@@ -469,8 +469,8 @@ const OrderDetails = ({ user, setUser }) => {
                 {storeDetails.restaurant_status !== 2 ? 'Closed Today' : 'Currently Closed'}
               </h3>
               <p className="order-details-page-menu-shop-status-hours">
-                {storeDetails.restaurant_status !== 2 
-                  ? 'This home kitchen is not open today' 
+                {storeDetails.restaurant_status == 2 && storeDetails.openingTime != null
+                  ? `This home kitchen will open at ${storeDetails.openingTime}`
                   : `The home kitchen will open tomorrow`}
               </p>
             </div>
