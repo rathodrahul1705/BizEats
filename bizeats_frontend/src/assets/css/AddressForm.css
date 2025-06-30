@@ -134,7 +134,7 @@
   }
   
   .address-input:focus {
-    border-color: #007bff;
+    border-color: #e65c00;
   }
   
   /* Select Styling */
@@ -147,7 +147,7 @@
   }
   
   select.address-input:focus {
-    border-color: #007bff;
+    border-color: #e65c00;
   }
   
   /* Error Message */
@@ -166,7 +166,7 @@
   /* Submit Button */
   .submit-btn {
     padding: 10px 12px;
-    background-color: #007bff;
+    background-color: #e65c00;
     color: #fff;
     border: none;
     border-radius: 6px;
@@ -177,11 +177,11 @@
   }
   
   .submit-btn:hover {
-    background-color: #0056b3;
+    background-color: #e65c00;
   }
   
   .submit-btn:disabled {
-    background-color: #7aaef7;
+    background-color: #e65c00;
     cursor: not-allowed;
   }
   
