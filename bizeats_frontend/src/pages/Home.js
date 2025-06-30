@@ -341,7 +341,7 @@ const Home = () => {
                 <span>Home Chefs</span>
               </div>
               <div className="hero-stat">
-                <strong>4.5</strong>
+                <strong>{resviewdetails?.rating_ratio}</strong>
                 <span>Average Rating</span>
               </div>
             </div>
@@ -402,7 +402,7 @@ const Home = () => {
         <div className="section-container">
           <div className="section-header">
             <h2 className="section-heading">Popular Near You</h2>
-            <div className="slider-controls">
+            {/* <div className="slider-controls">
               <button 
                 onClick={handleFoodPrev} 
                 className={`slider-arrow ${isFoodBeginning ? 'disabled' : ''}`}
@@ -417,7 +417,7 @@ const Home = () => {
               >
                 <ChevronRight size={24} />
               </button>
-            </div>
+            </div> */}
           </div>
 
           <div className="food-items-grid">
