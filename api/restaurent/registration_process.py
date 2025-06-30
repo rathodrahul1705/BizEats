@@ -17,6 +17,7 @@ from api.serializers import RestaurantMasterSerializer, RestaurantSerializerBySt
 from api.models import RestaurantMaster, RestaurantCuisine, RestaurantDeliveryTiming, RestaurantDocuments, RestaurantOwnerDetail, RestaurantLocation, RestaurantMenu
 from django.utils.text import slugify
 from datetime import datetime
+import pytz
 
 class RestaurantStoreStepOne(APIView):
     permission_classes = [IsAuthenticated]
@@ -490,7 +491,6 @@ class RestaurantListAPI(APIView):
 class RestaurantDetailMenuView(APIView):
     def get(self, request, restaurant_id, offer=None):
         try:
-
             restaurantStatuses = {
                 0: {"label": "Inactive", "color": "danger"},
                 1: {"label": "Pending Approval", "color": "warning"},
@@ -517,8 +517,11 @@ class RestaurantDetailMenuView(APIView):
                 restaurant_location.city
             ]))
 
-            current_day = datetime.now().strftime("%A")
-            current_time = datetime.now().time()
+            # Get current time in IST (UTC+5:30)
+            ist = pytz.timezone('Asia/Kolkata')
+            current_datetime = datetime.now(ist)
+            current_day = current_datetime.strftime("%A")
+            current_time = current_datetime.time()
             
             delivery_timings_qs = RestaurantDeliveryTiming.objects.filter(
                 restaurant=restaurant, day=current_day
@@ -539,15 +542,23 @@ class RestaurantDetailMenuView(APIView):
                     "end_time": end.strftime("%H:%M") if end else None,
                 })
 
-                if timing.open and start and end and not is_open and restaurant_status_value == 2:
-
-                    if start <= current_time <= end:
+                if timing.open and start and end and restaurant_status_value == 2:
+                    # Convert time objects to datetime for comparison
+                    start_datetime = datetime.combine(current_datetime.date(), start)
+                    end_datetime = datetime.combine(current_datetime.date(), end)
+                    
+                    # Handle cases where end time crosses midnight (e.g., 23:00 to 01:00)
+                    if end < start:
+                        end_datetime += timedelta(days=1)
+                    
+                    current_datetime_no_tz = datetime.combine(current_datetime.date(), current_time)
+                    
+                    if start_datetime <= current_datetime_no_tz <= end_datetime:
                         is_open = True
-                        today_start_time = start
-                        today_end_time = end
-                    else:
-                        today_start_time = start
-                        today_end_time = end
+                    
+                    # Set today's timings (regardless of whether currently open)
+                    today_start_time = start
+                    today_end_time = end
 
             if restaurant_status_value != 2:
                 is_open = False
