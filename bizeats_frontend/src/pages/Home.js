@@ -408,7 +408,7 @@ const Home = () => {
                 onClick={() => setActiveCategory(category.name)}
               >
                 <span className="category-pill__emoji">{category.icon}</span>
-                <span className="category-pill__name"><strong>{category.name}</strong></span>
+                <h4 className="category-pill__name">{category.name}</h4>
               </button>
             ))}
           </div>

@@ -1174,6 +1174,17 @@
     gap: var(--space-xl);
   }
 
+  .food-item-card__name {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: var(--space-sm);
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
   .how-it-works-section {
     padding: var(--space-3xl) 0;
     background: white;
@@ -1223,6 +1234,17 @@
     padding: var(--space-2xl) 0;
   }
   
+  .food-item-card__name {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: var(--space-sm);
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
   .how-it-works-section {
     padding: var(--space-3xl) 0;
     background: white;
@@ -1327,6 +1349,17 @@
     font-size: var(--text-3xl);
   }
   
+  .food-item-card__name {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: var(--space-sm);
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
   .how-it-works-section {
     padding: var(--space-3xl) 0;
     background: white;
@@ -1387,6 +1420,17 @@
 @media (max-width: 480px) {
   .hero-section {
     padding: var(--space-xl) 0;
+  }
+
+  .food-item-card__name {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: var(--space-sm);
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
   
   .how-it-works-section {

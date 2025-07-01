@@ -1,5 +1,7 @@
 from django.urls import path, re_path, include
 
+from api.delivery import porter_views, porter_webhook
+from api.delivery.porter_admin import admin_porter_orders
 from api.payment.payment import create_order, verify_payment
 from api.vendor.Coupon import CouponCreateView, CouponDeleteView, CouponDetailView, CouponListView, CouponUpdateView
 from .vendor.Vendor import GetVendorWiseCounts
@@ -99,6 +101,15 @@ urlpatterns = [
     path('api/customer-review/', FetchReviewView.as_view(), name='fetch-review'),
     path('api/user/user_list/', FetchUserList.as_view(), name='user-list'),
     path('api/cart/cart_list/', FetchCartList.as_view(), name='cart-list'),
+
+    # porter api service
+    path('api/porter/locations/', porter_views.porter_locations),
+    path('api/porter/fare-estimate/', porter_views.porter_fare_estimate),
+    path('api/porter/create-booking/', porter_views.porter_create_booking),
+    path('api/porter/track-booking/<str:booking_id>/', porter_views.porter_track_booking),
+    path('api/porter/cancel-booking/<str:booking_id>/', porter_views.porter_cancel_booking),
+    path('api/porter/webhook/', porter_webhook.porter_webhook),
+    path('api/porter-orders/', admin_porter_orders),
     
     re_path(r'^(?!media/).*$', ReactAppView.as_view(), name='react-app'),
 

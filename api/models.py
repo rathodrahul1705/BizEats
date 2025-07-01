@@ -579,3 +579,18 @@ class OrderReview(models.Model):
 
     def __str__(self):
         return f"Review by {self.user} for {self.order_id}"
+    
+class PorterOrder(models.Model):
+    booking_id = models.CharField(max_length=255, unique=True)
+    status = models.CharField(max_length=50)
+    pickup_address = models.TextField()
+    drop_address = models.TextField()
+    vehicle_type = models.CharField(max_length=50)
+    fare_estimate = models.JSONField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "porter-order"
+
+    def __str__(self):
+        return f"Booking {self.booking_id} - {self.status}"

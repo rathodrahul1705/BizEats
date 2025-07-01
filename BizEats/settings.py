@@ -76,6 +76,9 @@ DATABASES = {
 RAZORPAY_API_KEY = config('RAZORPAY_API_KEY')
 RAZORPAY_API_SECRET = config('RAZORPAY_API_SECRET')
 
+PORTER_API_KEY = config('PORTER_API_KEY')
+PORTER_BASE_URL = config('PORTER_BASE_URL')
+
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = config('EMAIL_HOST')  # e.g., 'smtp.hostinger.com'
 EMAIL_PORT = config('EMAIL_PORT', cast=int)  # usually 587
