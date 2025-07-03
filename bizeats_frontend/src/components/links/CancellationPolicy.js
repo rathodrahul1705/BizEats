@@ -20,7 +20,7 @@ const CancellationPolicy = () => {
         <section>
           <h2>2. How to Cancel</h2>
           <p>
-            To cancel an order, You can contact our support team immediately via email: <a href="mailto:conect@eatoor.com">conect@eatoor.com</a>.
+            To cancel an order, You can contact our support team immediately via email: <a href="mailto:contact@eatoor.com">contact@eatoor.com</a>.
           </p>
         </section>
 
@@ -53,7 +53,7 @@ const CancellationPolicy = () => {
         <section>
           <h2>6. Need Help?</h2>
           <p>
-            For any issues or clarification, reach out to us at <strong>cntact@eatoor.com</strong> or call <strong>+91 8108662484</strong>.
+            For any issues or clarification, reach out to us at <strong>contact@eatoor.com</strong> or call <strong>+91 8108662484</strong>.
           </p>
         </section>
       </div>
