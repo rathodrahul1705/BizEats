@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { 
   PlusCircle, 
   MinusCircle, 
@@ -12,21 +12,24 @@ import {
   Clock,
   MapPin,
   Star,
-  AlertCircle
+  AlertCircle,
+  Loader2
 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import "../assets/css/OrderDetails.css";
 import API_ENDPOINTS from "../components/config/apiConfig";
 import fetchData from "../components/services/apiService";
 import { getOrCreateSessionId } from "../components/helper/Helper";
-import StripeLoader from "../loader/StripeLoader";
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { FreeMode, Navigation } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/free-mode';
 import 'swiper/css/navigation';
 import FSSAILogo from '../assets/img/fssai_logo.png';
+import MenuItemSkeleton from "./skeleton/MenuItemSkeleton"
+import RestaurantHeaderSkeleton from "./skeleton/RestaurantHeaderSkeleton"
 
+// Helper function to check item timing status
 const checkItemTimingStatus = (item) => {
   if (!item.start_time || !item.end_time) return null;
 
@@ -34,7 +37,6 @@ const checkItemTimingStatus = (item) => {
   const istOffset = 330 * 60 * 1000; // IST offset in milliseconds
   const istTime = new Date(now.getTime() + istOffset);
   
-  // Convert current time to HH:MM format in IST
   const currentHours = istTime.getUTCHours().toString().padStart(2, '0');
   const currentMinutes = istTime.getUTCMinutes().toString().padStart(2, '0');
   const currentTimeStr = `${currentHours}:${currentMinutes}`;
@@ -48,7 +50,11 @@ const checkItemTimingStatus = (item) => {
 };
 
 const OrderDetails = ({ user, setUser }) => {
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState({
+    initial: true,
+    cart: false,
+    menu: false
+  });
   const { city, slug, restaurant_id, offer } = useParams();
   const [cart, setCart] = useState({});
   const [filter, setFilter] = useState("all");
@@ -72,7 +78,7 @@ const OrderDetails = ({ user, setUser }) => {
   const navigate = useNavigate();
   const sessionId = getOrCreateSessionId();
 
-  const [deals, setDeals] = useState([
+  const deals = useMemo(() => [
     {
       id: 1,
       title: "10% Off",
@@ -94,8 +100,9 @@ const OrderDetails = ({ user, setUser }) => {
       icon: "📦",
       color: "#fff",
     }    
-  ]);
+  ], []);
 
+  // Initialize category visibility
   useEffect(() => {
     if (foodData.length > 0) {
       const initialVisibility = {};
@@ -107,14 +114,15 @@ const OrderDetails = ({ user, setUser }) => {
     }
   }, [foodData]);
 
+  // Update current time every minute
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(new Date());
-    }, 60000); // Update every minute
-
+    }, 60000);
     return () => clearInterval(timer);
   }, []);
 
+  // Event listeners for modals
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape' && showFoodModal) {
@@ -140,9 +148,10 @@ const OrderDetails = ({ user, setUser }) => {
     };
   }, [showFoodModal, showShareOptions]);
 
-  const fetchCartDetails = async () => {
+  // Fetch cart details
+  const fetchCartDetails = useCallback(async () => {
     try {
-      setLoading(true);
+      setLoading(prev => ({ ...prev, cart: true }));
       const response = await fetchData(
         API_ENDPOINTS.ORDER.GET_CART_DETAILS,
         "POST",
@@ -158,18 +167,18 @@ const OrderDetails = ({ user, setUser }) => {
           updatedCart[item.item_id] = item.quantity;
         });
         setCart(updatedCart);
-      } else {
-        console.error("Error fetching cart details:", response.message);
       }
     } catch (error) {
       console.error("Error fetching cart details:", error);
     } finally {
-      setLoading(false);
+      setLoading(prev => ({ ...prev, cart: false }));
     }
-  };
+  }, [sessionId, user]);
 
-  const fetchDataOrderList = async () => {
+  // Fetch menu data
+  const fetchDataOrderList = useCallback(async () => {
     try {
+      setLoading(prev => ({ ...prev, menu: true }));
       const url = API_ENDPOINTS.ORDER.RES_MENU_LIST_BY_RES_ID(restaurant_id, offer);
       const response = await fetchData(url, "GET", null);
   
@@ -211,16 +220,19 @@ const OrderDetails = ({ user, setUser }) => {
       );
     } catch (error) {
       console.error("Error fetching order list data:", error.message || error);
+    } finally {
+      setLoading(prev => ({ ...prev, menu: false, initial: false }));
     }
-  };
-  
+  }, [restaurant_id, offer]);
 
+  // Initial data fetch
   useEffect(() => {
     fetchDataOrderList();
     fetchCartDetails();
-  }, [restaurant_id]);
+  }, [fetchDataOrderList, fetchCartDetails]);
 
-  const addItem = async (id) => {
+  // Add item to cart
+  const addItem = useCallback(async (id) => {
     if (!isShopOpen) return;
     
     try {
@@ -244,23 +256,19 @@ const OrderDetails = ({ user, setUser }) => {
     } catch (error) {
       console.error("Error adding item to cart:", error);
     }
-  };
+  }, [isShopOpen, sessionId, user, restaurant_id, fetchCartDetails]);
 
-  const addToCart = async (id) => {
+  // Add to cart with validation
+  const addToCart = useCallback(async (id) => {
     if (!isShopOpen) return;
     
     const currentRestaurantId = localStorage.getItem("current_order_restaurant_id");
     const foodItem = foodData.find(item => item.id === id);
 
-    if (!foodItem?.availability) {
-      return;
-    }
+    if (!foodItem?.availability) return;
 
-    // Check if item is available based on timing
     const timingStatus = checkItemTimingStatus(foodItem);
-    if (timingStatus?.status === 'upcoming' || timingStatus?.status === 'ended') {
-      return;
-    }
+    if (timingStatus?.status === 'upcoming' || timingStatus?.status === 'ended') return;
 
     if (currentRestaurantId && currentRestaurantId !== restaurant_id) {
       setShowResetCartModal(true);
@@ -268,9 +276,10 @@ const OrderDetails = ({ user, setUser }) => {
       return;
     }
     await addItem(id);
-  };
+  }, [isShopOpen, foodData, restaurant_id, addItem]);
 
-  const handleFreshStart = async () => {
+  // Handle cart reset
+  const handleFreshStart = useCallback(async () => {
     try {
       await fetchData(API_ENDPOINTS.ORDER.CLEAR_CART, "POST", {
         user_id: user?.user_id || null,
@@ -283,9 +292,10 @@ const OrderDetails = ({ user, setUser }) => {
     }
     setShowResetCartModal(false);
     setPendingItem(null);
-  };
+  }, [sessionId, user, pendingItem, addItem]);
 
-  const removeFromCart = async (id) => {
+  // Remove from cart
+  const removeFromCart = useCallback(async (id) => {
     try {
       const response = await fetchData(
         API_ENDPOINTS.ORDER.ADD_TO_CART,
@@ -305,112 +315,163 @@ const OrderDetails = ({ user, setUser }) => {
     } catch (error) {
       console.error("Error removing item from cart:", error);
     }
-  };
+  }, [sessionId, user, restaurant_id, fetchCartDetails]);
 
-  const totalItems = Object.values(cart).reduce((sum, quantity) => sum + quantity, 0);
-  const totalAmount = foodData.reduce((sum, food) => {
-    return sum + (food.price * (cart[food.id] || 0));
-  }, 0);
+  // Calculate cart totals
+  const { totalItems, totalAmount } = useMemo(() => {
+    const items = Object.values(cart).reduce((sum, quantity) => sum + quantity, 0);
+    const amount = foodData.reduce((sum, food) => {
+      return sum + (food.price * (cart[food.id] || 0));
+    }, 0);
+    return { totalItems: items, totalAmount: amount };
+  }, [cart, foodData]);
 
-  const updateCartCount = (count) => {
-    localStorage.setItem("cart_count", count);
-    window.dispatchEvent(new Event("storage"));
-  };
-
+  // Update cart count in local storage
   useEffect(() => {
+    const updateCartCount = (count) => {
+      localStorage.setItem("cart_count", count);
+      window.dispatchEvent(new Event("storage"));
+    };
+
     if (totalItems) {
       updateCartCount(totalItems);
     } else {
       updateCartCount(totalItems);
       localStorage.removeItem("cart_count", totalItems);
     }
-  }, [cart]);
+  }, [totalItems]);
 
-  const filteredFood = foodData.filter(
-    (food) => {
+  // Filter food items
+  const { filteredFood, upcomingFood, endedFood, unavailableFood } = useMemo(() => {
+    const filtered = foodData.filter((food) => {
       const timingStatus = checkItemTimingStatus(food);
       return (filter === "all" || food.type === filter) && 
              food.availability && 
              (!timingStatus || (timingStatus.status !== 'upcoming' && timingStatus.status !== 'ended'))
-    }
-  );
+    });
 
-  const upcomingFood = foodData.filter(
-    (food) => {
+    const upcoming = foodData.filter((food) => {
       const timingStatus = checkItemTimingStatus(food);
       return food.availability && timingStatus?.status === 'upcoming';
-    }
-  );
+    });
 
-  const endedFood = foodData.filter(
-    (food) => {
+    const ended = foodData.filter((food) => {
       const timingStatus = checkItemTimingStatus(food);
       return food.availability && timingStatus?.status === 'ended';
-    }
-  );
+    });
 
-  const openFoodModal = (food) => {
-    if (!food.availability || !isShopOpen) return;
-    const timingStatus = checkItemTimingStatus(food);
-    if (timingStatus?.status === 'upcoming' || timingStatus?.status === 'ended') return;
-    setSelectedFood(food);
-    setShowFoodModal(true);
-  };
+    const unavailable = foodData.filter(food => !food.availability);
 
-  const groupedByCategory = filteredFood.reduce((acc, food) => {
-    if (!acc[food.category]) acc[food.category] = [];
-    acc[food.category].push(food);
-    return acc;
-  }, {});
+    return { filteredFood: filtered, upcomingFood: upcoming, endedFood: ended, unavailableFood: unavailable };
+  }, [foodData, filter]);
 
-  const toggleCategoryVisibility = (category) => {
+  // Group by category
+  const groupedByCategory = useMemo(() => {
+    return filteredFood.reduce((acc, food) => {
+      if (!acc[food.category]) acc[food.category] = [];
+      acc[food.category].push(food);
+      return acc;
+    }, {});
+  }, [filteredFood]);
+
+  // Toggle category visibility
+  const toggleCategoryVisibility = useCallback((category) => {
     setCategoryVisibility((prev) => ({
       ...prev,
       [category]: !prev[category],
     }));
-  };
+  }, []);
 
-  const toggleShareOptions = (e) => {
+  // Toggle share options
+  const toggleShareOptions = useCallback((e) => {
     e.stopPropagation();
-    setShowShareOptions(!showShareOptions);
-  };
+    setShowShareOptions(prev => !prev);
+  }, []);
 
-  const shareOnWhatsApp = () => {
+  // Share functions
+  const shareOnWhatsApp = useCallback(() => {
     const message = `Check out ${storeDetails.name} on Food Delivery App - ${window.location.origin}/order-details/${restaurant_id}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
-  };
+  }, [storeDetails.name, restaurant_id]);
 
-  const shareOnFacebook = () => {
+  const shareOnFacebook = useCallback(() => {
     const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.origin + '/order-details/' + restaurant_id)}&quote=Check out ${storeDetails.name} on Food Delivery App`;
     window.open(url, '_blank', 'width=600,height=400');
-  };
+  }, [storeDetails.name, restaurant_id]);
 
-  const shareOnTwitter = () => {
+  const shareOnTwitter = useCallback(() => {
     const text = `Check out ${storeDetails.name} on Food Delivery App`;
     const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(window.location.origin + '/order-details/' + restaurant_id)}`;
     window.open(url, '_blank', 'width=600,height=400');
-  };
+  }, [storeDetails.name, restaurant_id]);
 
-  const checkShopTimings = () => {
-      setIsShopOpen(storeDetails?.currentKitchenStatus)
-  };
+  // Check shop timings
+  const checkShopTimings = useCallback(() => {
+    setIsShopOpen(storeDetails?.currentKitchenStatus);
+  }, [storeDetails]);
 
   useEffect(() => {
     checkShopTimings();
     const interval = setInterval(checkShopTimings, 60000);
     return () => clearInterval(interval);
-  }, [storeDetails?.restaurant_status, storeDetails?.openingTime, storeDetails?.closingTime, currentTime]);
+  }, [checkShopTimings]);
 
-  if (loading && filteredFood.length === 0) {
-    return <StripeLoader />;
+  // Open food modal
+  const openFoodModal = useCallback((food) => {
+    if (!food.availability || !isShopOpen) return;
+    const timingStatus = checkItemTimingStatus(food);
+    if (timingStatus?.status === 'upcoming' || timingStatus?.status === 'ended') return;
+    setSelectedFood(food);
+    setShowFoodModal(true);
+  }, [isShopOpen]);
+
+  // Loading state
+  if (loading.initial) {
+    return (
+      <div className="order-details-page-menu-container">
+        <RestaurantHeaderSkeleton />
+        <div className="order-details-page-menu-store-details-card loading">
+          <div className="skeleton-line" style={{ width: '80%', height: '24px' }}></div>
+          <div className="skeleton-line" style={{ width: '60%', height: '18px' }}></div>
+        </div>
+        <div className="order-details-page-menu-filter-container loading">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="skeleton-filter"></div>
+          ))}
+        </div>
+        <div className="order-details-page-menu-categories-container">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="order-details-page-menu-category-section">
+              <div className="order-details-page-menu-category-header">
+                <div className="skeleton-line" style={{ width: '40%', height: '20px' }}></div>
+              </div>
+              <ul className="order-details-page-menu-food-list">
+                {[1, 2, 3].map(j => (
+                  <MenuItemSkeleton key={j} />
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
   }
-  
+
   return (
     <div className="order-details-page-menu-container">
+      {/* Restaurant Header */}
       <div className="order-details-page-menu-store-header">
         <h1 className="order-details-page-menu-store-title">{storeDetails.name}</h1>
+        {/* <button 
+          className="order-details-page-menu-share-btn header-share"
+          onClick={toggleShareOptions}
+          aria-label="Share restaurant"
+        >
+          <Share2 size={20} />
+        </button> */}
       </div>
 
+      {/* Share Options */}
       {showShareOptions && (
         <div className="order-details-page-menu-share-container restaurant-share">
           <button 
@@ -443,6 +504,7 @@ const OrderDetails = ({ user, setUser }) => {
         </div>
       )}
 
+      {/* Restaurant Details Card */}
       <div className="order-details-page-menu-store-details-card">
         {isShopOpen ? (
           <div className="order-details-page-menu-shop-status-banner open">
@@ -499,6 +561,7 @@ const OrderDetails = ({ user, setUser }) => {
         </div>
       </div>
 
+      {/* Deals Section */}
       <div className="order-details-page-menu-deals-section">
         <div className="order-details-page-menu-deals-header-wrapper">
           <h2 className="order-details-page-menu-deals-title">Deals for You</h2>
@@ -535,6 +598,7 @@ const OrderDetails = ({ user, setUser }) => {
         </div>
       </div>
 
+      {/* Filter Buttons */}
       <div className="order-details-page-menu-filter-container">
         <button
           className={`order-details-page-menu-filter-btn ${filter === "all" ? "active" : ""}`}
@@ -556,111 +620,127 @@ const OrderDetails = ({ user, setUser }) => {
         </button>
       </div>
 
+      {/* Menu Categories */}
       <div className="order-details-page-menu-categories-container">
-        {Object.keys(groupedByCategory).map((category) => (
-          <div key={category} className="order-details-page-menu-category-section">
-            <div
-              className="order-details-page-menu-category-header"
-              onClick={() => toggleCategoryVisibility(category)}
-            >
-              <h3>{category} ({groupedByCategory[category].length})</h3>
-              {categoryVisibility[category] ? (
-                <ChevronUp size={20} />
-              ) : (
-                <ChevronDown size={20} />
-              )}
+        {loading.menu ? (
+          <div className="order-details-page-menu-category-section">
+            <div className="order-details-page-menu-category-header">
+              <div className="skeleton-line" style={{ width: '40%', height: '20px' }}></div>
             </div>
-            {categoryVisibility[category] && (
-              <ul className="order-details-page-menu-food-list">
-                {groupedByCategory[category].map((food) => {
-                  const timingStatus = checkItemTimingStatus(food);
-                  return (
-                    <li key={food.id} className="order-details-page-menu-food-item">
-                      <div className="order-details-page-menu-food-image-container">
-                        <img 
-                          src={food.image} 
-                          alt={food.title} 
-                          className="order-details-page-menu-food-image" 
-                          onClick={() => openFoodModal(food)}
-                        />
-                        {food.buy_one_get_one_free && (
-                          <div className="order-details-page-menu-bogo-tag">
-                            <Gift size={14} />
-                            <span>Buy 1 Get 1 Free</span>
+            <ul className="order-details-page-menu-food-list">
+              {[1, 2, 3].map(j => (
+                <MenuItemSkeleton key={j} />
+              ))}
+            </ul>
+          </div>
+        ) : (
+          Object.keys(groupedByCategory).map((category) => (
+            <div key={category} className="order-details-page-menu-category-section">
+              <div
+                className="order-details-page-menu-category-header"
+                onClick={() => toggleCategoryVisibility(category)}
+              >
+                <h3>{category} ({groupedByCategory[category].length})</h3>
+                {categoryVisibility[category] ? (
+                  <ChevronUp size={20} />
+                ) : (
+                  <ChevronDown size={20} />
+                )}
+              </div>
+              {categoryVisibility[category] && (
+                <ul className="order-details-page-menu-food-list">
+                  {groupedByCategory[category].map((food) => {
+                    const timingStatus = checkItemTimingStatus(food);
+                    return (
+                      <li key={food.id} className="order-details-page-menu-food-item">
+                        <div className="order-details-page-menu-food-image-container">
+                          <img 
+                            src={food.image} 
+                            alt={food.title} 
+                            className="order-details-page-menu-food-image" 
+                            onClick={() => openFoodModal(food)}
+                            loading="lazy"
+                          />
+                          {food.buy_one_get_one_free && (
+                            <div className="order-details-page-menu-bogo-tag">
+                              <Gift size={14} />
+                              <span>Buy 1 Get 1 Free</span>
+                            </div>
+                          )}
+                        </div>
+                        <div className="order-details-page-menu-food-details">
+                          <div className="order-details-page-menu-food-header">
+                            <h3 
+                              className="order-details-page-menu-food-title"
+                              onClick={() => openFoodModal(food)}
+                            >
+                              {food.title} {food.type === "Veg" ? "🥦" : "🍗"}
+                            </h3>
                           </div>
-                        )}
-                      </div>
-                      <div className="order-details-page-menu-food-details">
-                        <div className="order-details-page-menu-food-header">
-                          <h3 
-                            className="order-details-page-menu-food-title"
+                          <p 
+                            className="order-details-page-menu-food-description"
                             onClick={() => openFoodModal(food)}
                           >
-                            {food.title} {food.type === "Veg" ? "🥦" : "🍗"}
-                          </h3>
-                        </div>
-                        <p 
-                          className="order-details-page-menu-food-description"
-                          onClick={() => openFoodModal(food)}
-                        >
-                          {food.description.length > 100 
-                            ? `${food.description.substring(0, 100)}...` 
-                            : food.description}
-                          {food.description.length > 100 && (
-                            <span className="order-details-page-menu-read-more">
-                              <span>Read more</span>
-                              <ArrowRight size={16} />
-                            </span>
-                          )}
-                        </p>
-                        <p className="order-details-page-menu-food-price">₹{food.price}</p>
-                        <div className="order-details-page-menu-cart-actions">
-                          {cart[food.id] > 0 ? (
-                            <>
+                            {food.description.length > 100 
+                              ? `${food.description.substring(0, 100)}...` 
+                              : food.description}
+                            {food.description.length > 100 && (
+                              <span className="order-details-page-menu-read-more">
+                                <span>Read more</span>
+                                <ArrowRight size={16} />
+                              </span>
+                            )}
+                          </p>
+                          <p className="order-details-page-menu-food-price">₹{food.price}</p>
+                          <div className="order-details-page-menu-cart-actions">
+                            {cart[food.id] > 0 ? (
+                              <>
+                                <button
+                                  className="order-details-page-menu-cart-btn"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    removeFromCart(food.id);
+                                  }}
+                                >
+                                  <MinusCircle size={20} />
+                                </button>
+                                <span className="order-details-page-menu-cart-quantity">{cart[food.id] || 0}</span>
+                                <button
+                                  className="order-details-page-menu-cart-btn"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    addToCart(food.id);
+                                  }}
+                                  disabled={!isShopOpen}
+                                >
+                                  <PlusCircle size={20} />
+                                </button>
+                              </>
+                            ) : (
                               <button
-                                className="order-details-page-menu-cart-btn"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  removeFromCart(food.id);
-                                }}
-                              >
-                                <MinusCircle size={20} />
-                              </button>
-                              <span className="order-details-page-menu-cart-quantity">{cart[food.id] || 0}</span>
-                              <button
-                                className="order-details-page-menu-cart-btn"
+                                className="order-details-page-menu-add-to-cart-btn"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   addToCart(food.id);
                                 }}
-                                disabled={!isShopOpen}
+                                disabled={!isShopOpen || timingStatus?.status === 'upcoming' || timingStatus?.status === 'ended'}
                               >
-                                <PlusCircle size={20} />
+                                {loading.cart ? <Loader2 className="spinner" size={16} /> : 'Add'}
                               </button>
-                            </>
-                          ) : (
-                            <button
-                              className="order-details-page-menu-add-to-cart-btn"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                addToCart(food.id);
-                              }}
-                              disabled={!isShopOpen || timingStatus?.status === 'upcoming' || timingStatus?.status === 'ended'}
-                            >
-                              Add
-                            </button>
-                          )}
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    </li>
-                  )
-                })}
-              </ul>
-            )}
-          </div>
-        ))}
+                      </li>
+                    )
+                  })}
+                </ul>
+              )}
+            </div>
+          ))
+        )}
       </div>
 
+      {/* Upcoming Items */}
       {upcomingFood.length > 0 && (
         <div className="order-details-page-menu-out-of-stock-section">
           <h3 className="order-details-page-menu-out-of-stock-header">Coming Soon</h3>
@@ -674,6 +754,7 @@ const OrderDetails = ({ user, setUser }) => {
                       src={food.image} 
                       alt={food.title} 
                       className="order-details-page-menu-food-image order-details-page-menu-food-image-out-of-stock" 
+                      loading="lazy"
                     />
                     {food.buy_one_get_one_free && (
                       <div className="order-details-page-menu-bogo-tag">
@@ -707,6 +788,7 @@ const OrderDetails = ({ user, setUser }) => {
         </div>
       )}
 
+      {/* Ended Items */}
       {endedFood.length > 0 && (
         <div className="order-details-page-menu-out-of-stock-section">
           <h3 className="order-details-page-menu-out-of-stock-header">Recently Ended</h3>
@@ -720,6 +802,7 @@ const OrderDetails = ({ user, setUser }) => {
                       src={food.image} 
                       alt={food.title} 
                       className="order-details-page-menu-food-image order-details-page-menu-food-image-out-of-stock" 
+                      loading="lazy"
                     />
                     {food.buy_one_get_one_free && (
                       <div className="order-details-page-menu-bogo-tag">
@@ -753,45 +836,46 @@ const OrderDetails = ({ user, setUser }) => {
         </div>
       )}
 
-      {foodData.filter(food => !food.availability).length > 0 ? (
-          <div className="order-details-page-menu-out-of-stock-section">
-            <h3 className="order-details-page-menu-out-of-stock-header">Currently Unavailable</h3>
-            <ul className="order-details-page-menu-food-list">
-              {foodData
-                .filter(food => !food.availability)
-                .map((food) => (
-                  <li key={food.id} className="order-details-page-menu-food-item order-details-page-menu-food-item-out-of-stock">
-                    <div className="order-details-page-menu-food-image-container">
-                      <img 
-                        src={food.image} 
-                        alt={food.title} 
-                        className="order-details-page-menu-food-image order-details-page-menu-food-image-out-of-stock" 
-                      />
-                      {food.buy_one_get_one_free && (
-                        <div className="order-details-page-menu-bogo-tag">
-                          <Gift size={14} />
-                          <span>Buy 1 Get 1 Free</span>
-                        </div>
-                      )}
+      {/* Unavailable Items */}
+      {unavailableFood.length > 0 && (
+        <div className="order-details-page-menu-out-of-stock-section">
+          <h3 className="order-details-page-menu-out-of-stock-header">Currently Unavailable</h3>
+          <ul className="order-details-page-menu-food-list">
+            {unavailableFood.map((food) => (
+              <li key={food.id} className="order-details-page-menu-food-item order-details-page-menu-food-item-out-of-stock">
+                <div className="order-details-page-menu-food-image-container">
+                  <img 
+                    src={food.image} 
+                    alt={food.title} 
+                    className="order-details-page-menu-food-image order-details-page-menu-food-image-out-of-stock" 
+                    loading="lazy"
+                  />
+                  {food.buy_one_get_one_free && (
+                    <div className="order-details-page-menu-bogo-tag">
+                      <Gift size={14} />
+                      <span>Buy 1 Get 1 Free</span>
                     </div>
-                    <div className="order-details-page-menu-food-details">
-                      <h3 className="order-details-page-menu-food-title">
-                        {food.title} {food.type === "Veg" ? "🥦" : "🍗"}
-                      </h3>
-                      <p className="order-details-page-menu-food-description">
-                        {food.description.length > 100 
-                          ? `${food.description.substring(0, 100)}...` 
-                          : food.description}
-                      </p>
-                      <p className="order-details-page-menu-food-price">₹{food.price}</p>
-                      <div className="order-details-page-menu-out-of-stock-badge">Out of Stock</div>
-                    </div>
-                  </li>
-                ))}
-            </ul>
-          </div>
-        ) : null}
+                  )}
+                </div>
+                <div className="order-details-page-menu-food-details">
+                  <h3 className="order-details-page-menu-food-title">
+                    {food.title} {food.type === "Veg" ? "🥦" : "🍗"}
+                  </h3>
+                  <p className="order-details-page-menu-food-description">
+                    {food.description.length > 100 
+                      ? `${food.description.substring(0, 100)}...` 
+                      : food.description}
+                  </p>
+                  <p className="order-details-page-menu-food-price">₹{food.price}</p>
+                  <div className="order-details-page-menu-out-of-stock-badge">Out of Stock</div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
+      {/* View Cart Button */}
       {totalItems > 0 && (
         <button
           className="order-details-page-menu-view-cart-btn"
@@ -806,11 +890,12 @@ const OrderDetails = ({ user, setUser }) => {
       {/* FSSAI License Section */}
       <div className="order-details-page-menu-fssai-license">
         <div className="fssai-logo-container">
-          <img src={FSSAILogo} alt="FSSAI Logo" className="fssai-logo" />
+          <img src={FSSAILogo} alt="FSSAI Logo" className="fssai-logo" loading="lazy" />
         </div>
         <p>License No. {storeDetails?.fssai_number}</p>
       </div>
 
+      {/* Reset Cart Modal */}
       {showResetCartModal && (
         <div className="order-details-page-menu-reset-cart-modal-overlay">
           <div className="order-details-page-menu-reset-cart-modal">
@@ -818,12 +903,15 @@ const OrderDetails = ({ user, setUser }) => {
             <p>Your cart contains items from another restaurant. Would you like to reset your cart?</p>
             <div className="order-details-page-menu-modal-actions">
               <button onClick={() => setShowResetCartModal(false)}>No</button>
-              <button onClick={handleFreshStart} disabled={!isShopOpen}>Yes, Start Fresh</button>
+              <button onClick={handleFreshStart} disabled={!isShopOpen}>
+                {loading.cart ? <Loader2 className="spinner" size={16} /> : 'Yes, Start Fresh'}
+              </button>
             </div>
           </div>
         </div>
       )}
 
+      {/* Food Item Modal */}
       {showFoodModal && selectedFood && (
         <div className={`order-details-page-menu-food-modal-overlay ${window.innerWidth <= 768 ? 'mobile' : 'desktop'}`}>
           <div className="order-details-page-menu-food-modal">
@@ -836,6 +924,7 @@ const OrderDetails = ({ user, setUser }) => {
                   src={selectedFood.image} 
                   alt={selectedFood.title} 
                   className="order-details-page-menu-food-modal-image" 
+                  loading="lazy"
                 />
                 {selectedFood.buy_one_get_one_free && (
                   <div className="order-details-page-menu-bogo-tag modal-bogo">
