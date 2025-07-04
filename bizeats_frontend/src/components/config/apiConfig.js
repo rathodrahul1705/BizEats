@@ -44,7 +44,13 @@ const API_ENDPOINTS = {
 
     RES_VENDOR_COUNT: `${BASE_URL}/order/vendor-dashboard-details/`,
 
-    RES_STATUS_UPDATE: (restaurant_id) => `${BASE_URL}/restaurant/status-update/${restaurant_id}/`
+    RES_STATUS_UPDATE: (restaurant_id) => `${BASE_URL}/restaurant/status-update/${restaurant_id}/`,
+
+    RES_CATEGORY_STORE: (category_id) => 
+      category_id ? `${BASE_URL}/categories/${category_id}/` : `${BASE_URL}/categories/`,
+
+    RES_CATEGORY_DELETE: (category_id) => `${BASE_URL}/categories/${category_id}/`,
+    RES_CATEGORY_GET: (restaurant_id) => `${BASE_URL}/categories/?restaurant_id=${restaurant_id}`,
 
   },
 

@@ -4,7 +4,7 @@ from rest_framework import status
 from django.views import View
 from django.http import JsonResponse
 from rest_framework.views import APIView
-from api.models import User
+from api.models import RestaurantCategory, User
 from django.conf import settings
 from django.core.files.storage import default_storage
 from rest_framework.parsers import MultiPartParser, FormParser
@@ -276,19 +276,18 @@ class RestaurantMenueStore(APIView):
 
 class RestaurantMenueList(APIView):
     def get(self, request, restaurant_id, *args, **kwargs):
-        # Get all menu items for the given restaurant_id
         menu_items = RestaurantMenu.objects.filter(restaurant_id=restaurant_id)
-
-        # Convert the queryset to a list of dictionaries
-        menu_data = [
-            {
+        menu_data = []
+        for item in menu_items:
+            category = RestaurantCategory.objects.filter(id=item.category).first()
+            menu_data.append({
                 "id": item.id,
                 "restaurant_id": item.restaurant.restaurant_id,
                 "restaurant_name": item.restaurant.restaurant_name,
                 "item_name": item.item_name,
                 "item_price": float(item.item_price),
                 "description": item.description,
-                "category": item.category,
+                "category": category.category_name,
                 "spice_level": item.spice_level,
                 "preparation_time": item.preparation_time,
                 "serving_size": item.serving_size,
@@ -302,9 +301,7 @@ class RestaurantMenueList(APIView):
                 "item_image": request.build_absolute_uri(item.item_image.url) if item.item_image else None,
                 "created_at": item.created_at,
                 "updated_at": item.updated_at,
-            }
-            for item in menu_items
-        ]
+            })
 
         return Response(menu_data, status=status.HTTP_200_OK)
     

@@ -13,7 +13,11 @@ from .restaurent.restaurant_order import PlaceOrderAPI, RestaurantCartAddOrRemov
 from .order.track_order import ApplyCouponOrder, GetActiveOrders, LiveLocationDetails, MarkAsPaid, OrderDetails, TrackOrder, RestaurantOrders, OrderStatusUpdate, UpdateOrderLiveLocationView
 from django.http import JsonResponse
 
+from rest_framework.routers import DefaultRouter
+from .views import RestaurantCategoryViewSet
 
+router = DefaultRouter()
+router.register(r'categories', RestaurantCategoryViewSet)
 
 urlpatterns = [
 
@@ -110,7 +114,9 @@ urlpatterns = [
     path('api/porter/cancel-booking/<str:booking_id>/', porter_views.porter_cancel_booking),
     path('api/porter/webhook/', porter_webhook.porter_webhook),
     path('api/porter-orders/', admin_porter_orders),
+    path('api/', include(router.urls)),
     
+
     re_path(r'^(?!media/).*$', ReactAppView.as_view(), name='react-app'),
 
 ]

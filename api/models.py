@@ -1,3 +1,4 @@
+from datetime import timezone
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.utils.timezone import now, timedelta
@@ -594,3 +595,17 @@ class PorterOrder(models.Model):
 
     def __str__(self):
         return f"Booking {self.booking_id} - {self.status}"
+
+class RestaurantCategory(models.Model):
+    category_name = models.CharField(max_length=255)
+    category_status = models.BooleanField(default=True)
+    category_description = models.TextField(blank=True, null=True)
+    restaurant_id = models.CharField(max_length=255, null=True, blank=True, default=None)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "restaurant_category"
+
+    def __str__(self):
+        return self.category_name

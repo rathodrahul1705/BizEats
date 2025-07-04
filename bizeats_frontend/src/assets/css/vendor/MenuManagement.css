@@ -13,6 +13,7 @@
   --info-color: #3182CE;
   --white: #FFFFFF;
   --gray-light: #EDF2F7;
+  --gray-medium: #CBD5E0;
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
   --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
   --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
@@ -31,7 +32,7 @@
   color: var(--text-dark);
   background-color: var(--background-light);
   min-height: 100vh;
-  padding: 40px;
+  padding: 2rem;
 }
 
 /* Header Styles */
@@ -49,6 +50,71 @@
   font-weight: 700;
   color: var(--text-dark);
   margin: 0;
+}
+
+.vendor-menu-management-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+/* Tabs Styles */
+.vendor-menu-management-tabs {
+  display: flex;
+  background-color: var(--gray-light);
+  border-radius: var(--radius-md);
+  padding: 0.25rem;
+}
+
+.vendor-menu-management-tab {
+  padding: 0.625rem 1.25rem;
+  border: none;
+  background: none;
+  color: var(--text-light);
+  font-weight: 500;
+  font-size: 0.9375rem;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: var(--transition);
+}
+
+.vendor-menu-management-tab:hover {
+  color: var(--text-dark);
+  background-color: rgba(255, 255, 255, 0.7);
+}
+
+.vendor-menu-management-tab.active {
+  background-color: var(--white);
+  color: #e65c00;
+  box-shadow: var(--shadow-sm);
+}
+
+/* Button Styles */
+.vendor-menu-management-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-weight: 500;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: var(--transition);
+  border: none;
+  outline: none;
+}
+
+.vendor-menu-management-add-item {
+  background-color: #e65c00;
+  color: var(--white);
+  padding: 0.625rem 1.25rem;
+  font-size: 0.9375rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.vendor-menu-management-add-item:hover {
+  background-color: var(--primary-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
 }
 
 /* Filter Section */
@@ -105,7 +171,7 @@
 }
 
 .vendor-menu-management-filter-toggle:hover {
-  background-color: #e2e8f0;
+  background-color: var(--gray-medium);
 }
 
 .vendor-menu-management-filter-options {
@@ -161,38 +227,11 @@
   text-decoration: underline;
 }
 
+/* Results count */
 .vendor-menu-management-results-count {
   font-size: 0.875rem;
   color: var(--text-light);
   margin-bottom: 1rem;
-}
-
-/* Button Styles */
-.vendor-menu-management-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  font-weight: 500;
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  transition: var(--transition);
-  border: none;
-  outline: none;
-}
-
-.vendor-menu-management-add-item {
-  background-color: #e65c00;
-  color: var(--white);
-  padding: 0.625rem 1.25rem;
-  font-size: 0.9375rem;
-  box-shadow: var(--shadow-sm);
-}
-
-.vendor-menu-management-add-item:hover {
-  background-color: var(--primary-hover);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-md);
 }
 
 /* Table Container */
@@ -470,7 +509,7 @@ select[multiple].vendor-menu-management-form-control option {
 .vendor-menu-management-checkbox-group input[type="checkbox"] {
   width: 1.25rem;
   height: 1.25rem;
-  accent-color: var(--primary-color);
+  accent-color: #e65c00;
   cursor: pointer;
 }
 
@@ -502,6 +541,33 @@ select[multiple].vendor-menu-management-form-control option {
   box-shadow: var(--shadow-md);
 }
 
+/* Time input styling */
+.vendor-menu-management-form-control[type="time"] {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  width: 100%;
+  background-color: #fff;
+  transition: border-color 0.3s;
+}
+
+.vendor-menu-management-form-control[type="time"]:focus {
+  border-color: #4a90e2;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+}
+
+/* Time input wrapper for better alignment */
+.vendor-menu-management-time-inputs {
+  display: flex;
+  gap: 15px;
+}
+
+.vendor-menu-management-time-inputs .vendor-menu-management-form-group {
+  flex: 1;
+}
+
 /* Responsive Styles */
 @media (max-width: 768px) {
   .vendor-menu-management {
@@ -511,6 +577,24 @@ select[multiple].vendor-menu-management-form-control option {
   .vendor-menu-management-header {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .vendor-menu-management-header-actions {
+    width: 100%;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .vendor-menu-management-tabs {
+    width: 100%;
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+  }
+
+  .vendor-menu-management-tab {
+    white-space: nowrap;
+    flex-shrink: 0;
   }
 
   .vendor-menu-management-filter-options {
@@ -524,6 +608,11 @@ select[multiple].vendor-menu-management-form-control option {
 
   .vendor-menu-management-form-group {
     margin-bottom: 1rem;
+  }
+
+  .vendor-menu-management-time-inputs {
+    flex-direction: column;
+    gap: 10px;
   }
 }
 
@@ -602,60 +691,8 @@ select[multiple].vendor-menu-management-form-control option {
 .vendor-menu-management-close-modal:focus-visible,
 .vendor-menu-management-submit-btn:focus-visible,
 .vendor-menu-management-search-input:focus-visible,
-.vendor-menu-management-filter-select:focus-visible {
+.vendor-menu-management-filter-select:focus-visible,
+.vendor-menu-management-tab:focus-visible {
   outline: 2px solid var(--primary-color);
   outline-offset: 2px;
-}
-
-/* Time input styling */
-.vendor-menu-management-form-control[type="time"] {
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 14px;
-  width: 100%;
-  background-color: #fff;
-  transition: border-color 0.3s;
-}
-
-.vendor-menu-management-form-control[type="time"]:focus {
-  border-color: #4a90e2;
-  outline: none;
-  box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
-}
-
-/* Time input wrapper for better alignment */
-.vendor-menu-management-time-inputs {
-  display: flex;
-  gap: 15px;
-}
-
-.vendor-menu-management-time-inputs .vendor-menu-management-form-group {
-  flex: 1;
-}
-
-/* Custom time picker appearance */
-.vendor-menu-management-form-control[type="time"]::-webkit-calendar-picker-indicator {
-  background: none;
-  display: none;
-}
-
-.vendor-menu-management-time-wrapper {
-  position: relative;
-}
-
-.vendor-menu-management-time-wrapper::after {
-  content: "⌚";
-  position: absolute;
-  right: 10px;
-  top: 35px;
-  pointer-events: none;
-  color: #666;
-}
-
-@media (max-width: 768px) {
-  .vendor-menu-management-time-inputs {
-    flex-direction: column;
-    gap: 10px;
-  }
 }

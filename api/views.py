@@ -5,8 +5,8 @@ from rest_framework.views import APIView
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 from api.emailer.email_notifications import send_otp_email, send_contact_email
-from api.serializers import ContactUsSerializer, OrderReviewSerializer
-from .models import Cart, ContactMessage, OrderReview, User, RestaurantMaster
+from api.serializers import ContactUsSerializer, OrderReviewSerializer, RestaurantCategorySerializer
+from .models import Cart, ContactMessage, OrderReview, RestaurantCategory, User, RestaurantMaster
 from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.views.generic import TemplateView
@@ -15,6 +15,9 @@ from django.shortcuts import render
 from django.utils.decorators import method_decorator
 import logging
 from django.db.models import Avg, Count
+from rest_framework import viewsets
+from django_filters.rest_framework import DjangoFilterBackend
+
 
 logger = logging.getLogger(__name__)
 
@@ -295,3 +298,13 @@ class FetchCartList(APIView):
             })
 
         return Response({"carts": cart_data}, status=status.HTTP_200_OK)
+
+class RestaurantCategoryViewSet(viewsets.ModelViewSet):
+    queryset = RestaurantCategory.objects.all()
+    serializer_class = RestaurantCategorySerializer
+
+    def get_queryset(self):
+        restaurant_id = self.request.query_params.get('restaurant_id')
+        if restaurant_id:
+            return self.queryset.filter(restaurant_id=restaurant_id)
+        return self.queryset

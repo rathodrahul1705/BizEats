@@ -2,7 +2,7 @@ import uuid
 from rest_framework import serializers
 from django.db.models import Avg
 from django.contrib.auth import get_user_model
-from .models import Order, OrderReview, RestaurantMaster, RestaurantOwnerDetail, RestaurantLocation, RestaurantCuisine, RestaurantDeliveryTiming, RestaurantDocuments, RestaurantMenu, UserDeliveryAddress, OrderLiveLocation
+from .models import Order, OrderReview, RestaurantCategory, RestaurantMaster, RestaurantOwnerDetail, RestaurantLocation, RestaurantCuisine, RestaurantDeliveryTiming, RestaurantDocuments, RestaurantMenu, UserDeliveryAddress, OrderLiveLocation
 
 User = get_user_model()
 
@@ -299,3 +299,8 @@ class OrderReviewSerializer(serializers.ModelSerializer):
         if value < 1 or value > 5:
             raise serializers.ValidationError("Rating must be between 1 and 5.")
         return value
+
+class RestaurantCategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RestaurantCategory
+        fields = '__all__'

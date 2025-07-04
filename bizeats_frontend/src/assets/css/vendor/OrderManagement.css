@@ -240,7 +240,7 @@
 }
 
 .order-number {
-  /* font-size: 1.4rem; */
+  font-size: 1rem;
   font-weight: 800;
   margin: 0;
   color: var(--dark);
@@ -785,7 +785,7 @@
   }
   
   .order-number {
-    font-size: 1.3rem;
+    font-size: 1rem;
   }
   
   .status-badge {
