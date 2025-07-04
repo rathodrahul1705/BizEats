@@ -16,7 +16,7 @@ from django.shortcuts import get_object_or_404
 from api.serializers import RestaurantMasterSerializer, RestaurantSerializerByStatus, RestaurantDetailSerializer, RestaurantMasterNewSerializer, RestaurantMenuSerializer, RestaurantListSerializer
 from api.models import RestaurantMaster, RestaurantCuisine, RestaurantDeliveryTiming, RestaurantDocuments, RestaurantOwnerDetail, RestaurantLocation, RestaurantMenu
 from django.utils.text import slugify
-from datetime import datetime
+from datetime import datetime, timedelta
 import pytz
 
 class RestaurantStoreStepOne(APIView):
@@ -288,6 +288,7 @@ class RestaurantMenueList(APIView):
                 "item_price": float(item.item_price),
                 "description": item.description,
                 "category": category.category_name,
+                "category_id": category.id,
                 "spice_level": item.spice_level,
                 "preparation_time": item.preparation_time,
                 "serving_size": item.serving_size,
@@ -349,6 +350,7 @@ class RestaurantMenueUpdate(APIView):
         item_name = request.data.get('item_name', menu_item.item_name)
         item_price = request.data.get('item_price', menu_item.item_price)
         description = request.data.get('description', menu_item.description)
+        category_id = request.data.get('category_id')
         category = request.data.get('category', menu_item.category)
         spice_level = request.data.get('spice_level', menu_item.spice_level)
         preparation_time = request.data.get('preparation_time', menu_item.preparation_time)
@@ -383,7 +385,7 @@ class RestaurantMenueUpdate(APIView):
         menu_item.item_name = item_name
         menu_item.item_price = item_price
         menu_item.description = description
-        menu_item.category = category
+        menu_item.category = category_id
         menu_item.spice_level = spice_level
         menu_item.preparation_time = preparation_time
         menu_item.serving_size = serving_size
@@ -392,6 +394,7 @@ class RestaurantMenueUpdate(APIView):
         menu_item.food_type = food_type
         menu_item.buy_one_get_one_free = buy_one_get_one_free
         menu_item.start_time = start_time
+        menu_item.end_time = end_time
         menu_item.end_time = end_time
 
         # Update cuisines
@@ -566,6 +569,8 @@ class RestaurantDetailMenuView(APIView):
             processed_items = []
 
             for item in items:
+                category = RestaurantCategory.objects.filter(id=item['category']).first()
+                item['category'] = category.category_name
                 if item.get("item_image"):
                     item["item_image"] = request.build_absolute_uri(
                         default_storage.url(item["item_image"])

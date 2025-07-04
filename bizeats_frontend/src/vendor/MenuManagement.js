@@ -32,6 +32,7 @@ const MenuManagement = () => {
     buy_one_get_one_free: false,
     start_time: "",
     end_time: "",
+    category_id:""
   });
 
   // Category form state
@@ -151,14 +152,16 @@ const MenuManagement = () => {
     setFilteredItems(filtered);
   };
 
-  // Common handlers
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
+  const { name, value, type, checked } = e.target;
     setFormData((prev) => ({
       ...prev,
       [name]: type === "checkbox" ? checked : value,
+      ...(name === "category" && { category_id: value }), // optional: if you want to explicitly update category_id
     }));
+    
   };
+
 
   const handleCategoryChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -365,9 +368,6 @@ const MenuManagement = () => {
     setBogoFilter("all");
   };
 
-  console.log("formData===",formData)
-  console.log("categories===",categories)
-
   if (loading && menuItems.length === 0 && categories.length === 0 && addons.length === 0) {
     return <StripeLoader />;
   }
@@ -417,6 +417,7 @@ const MenuManagement = () => {
                   cuisines: [],
                   food_type: "Veg",
                   buy_one_get_one_free: false,
+                  category_id:""
                 });
                 setShowModal(true);
               }}
@@ -839,7 +840,7 @@ const MenuManagement = () => {
                 <select
                   className="vendor-menu-management-form-control"
                   name="category"
-                  value={formData.category}
+                  value={formData.category_id}
                   onChange={handleChange}
                   required
                 >
