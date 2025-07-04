@@ -282,60 +282,91 @@ const PaymentOption = ({ user }) => {
     }
   }, [selectedPayment, storeOrderDetails, updateCartCount, navigate, restaurantOrderDetails, restaurant_id, delivery_address_id, appliedCoupon]);
 
+  
   const processOnlinePayment = useCallback(async () => {
-    try {
-      const isLoaded = await loadRazorpayScript();
-      if (!isLoaded) throw new Error("Failed to load Razorpay SDK");
+      try {
+        const isLoaded = await loadRazorpayScript();
+        if (!isLoaded) throw new Error("Failed to load Razorpay SDK");
+        
+        // Validate amount
+        if (!restaurantOrderDetails?.total_amount || restaurantOrderDetails.total_amount < 1) {
+          throw new Error("Invalid order amount");
+        }
 
-      const orderRes = await fetch(API_ENDPOINTS.PAYMENT.CREATE_ORDER, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          amount: restaurantOrderDetails.total_amount,
-          currency: "INR",
-          receipt: `order_rcptid_${Date.now()}`,
-          notes: {
-            userId: user?.user_id,
-            restaurantId: restaurant_id,
-            couponCode: appliedCoupon?.code || null,
+        // Convert amount to paise (Razorpay expects amount in smallest currency unit)
+        const amount = Math.round(restaurantOrderDetails.total_amount * 100);
+        const accessToken = localStorage.getItem("access");
+        
+        // Create order
+        const orderRes = await fetch(API_ENDPOINTS.PAYMENT.CREATE_ORDER, {
+          method: "POST",
+          headers: { 
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${accessToken}` // Add auth if needed
           },
-        }),
-      });
+          body: JSON.stringify({
+            amount: amount,
+            currency: "INR",
+            receipt: `order_rcptid_${Date.now()}`,
+            notes: {
+              userId: user?.user_id,
+              restaurantId: restaurant_id,
+              couponCode: appliedCoupon?.code || null,
+            },
+          }),
+        });
 
-      if (!orderRes.ok) {
-        const err = await orderRes.json();
-        throw new Error(err.message || "Payment order creation failed");
+        // Check for HTTP errors
+        if (!orderRes.ok) {
+          const errorData = await orderRes.json().catch(() => ({}));
+          throw new Error(errorData.error || "Payment order creation failed");
+        }
+
+        const orderData = await orderRes.json();
+
+        // Validate order response
+        if (!orderData?.data?.id || !orderData.data.amount) {
+          throw new Error("Invalid order data received from server");
+        }
+
+        // Prepare Razorpay options
+        const options = {
+          key: razorpay_api_key,
+          amount: orderData.data.amount,
+          currency: orderData.data.currency || "INR",
+          name: "Eatoor",
+          description: `Order from ${restaurantOrderDetails.restaurant_name}`,
+          order_id: orderData.data.id,
+          image: "https://www.eatoor.com/eatoormob.svg",
+          handler: (response) => {
+            if (!response.razorpay_payment_id || !response.razorpay_signature) {
+              throw new Error("Invalid payment response");
+            }
+            handlePaymentSuccess(response, orderData.data.id);
+          },
+          prefill: {
+            name: user?.full_name || "",
+            email: user?.email || "",
+            contact: user?.contact_number || "",
+          },
+          theme: {
+            color: "#e65c00",
+          },
+          modal: {
+            ondismiss: () => {
+              handlePaymentFailure(new Error("Payment cancelled by user"));
+            },
+          },
+        };
+
+        // Open Razorpay checkout
+        const rzp = new window.Razorpay(options);
+        rzp.open();
+
+      } catch (err) {
+        console.error("Payment processing error:", err);
+        handlePaymentFailure(err);
       }
-
-      const orderData = await orderRes.json();
-
-      const options = {
-        key: razorpay_api_key,
-        amount: orderData.amount,
-        currency: orderData.currency,
-        name: "Eatoor",
-        description: `Order from ${restaurantOrderDetails.restaurant_name}`,
-        order_id: orderData.id,
-        image: "https://www.eatoor.com/eatoormob.svg",
-        handler: (response) => handlePaymentSuccess(response, orderData.id),
-        prefill: {
-          name: user?.full_name,
-          email: user?.email,
-          contact: user?.contact_number,
-        },
-        theme: {
-          color: "#e65c00",
-        },
-        modal: {
-          ondismiss: () => handlePaymentFailure(new Error("Payment cancelled")),
-        },
-      };
-
-      const rzp = new window.Razorpay(options);
-      rzp.open();
-    } catch (err) {
-      handlePaymentFailure(err);
-    }
   }, [loadRazorpayScript, restaurantOrderDetails, razorpay_api_key, user, restaurant_id, appliedCoupon, handlePaymentSuccess, handlePaymentFailure]);
 
   const handleBack = useCallback(() => navigate(-1), [navigate]);
