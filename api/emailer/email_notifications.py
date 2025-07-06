@@ -209,6 +209,8 @@ def send_order_status_email(order):
 
     if recipient_list:
 
+        recipient_list.append("rathodrahul1705@gmail.com")
+
         email = EmailMessage(
             subject=subject,
             body="This is an HTML-only email.",
@@ -225,6 +227,7 @@ def send_order_status_email(order):
                 print("Attachment error:", e)
 
         email.send(fail_silently=False)
+
 
 def send_otp_email(user, subject, otp_type):
 

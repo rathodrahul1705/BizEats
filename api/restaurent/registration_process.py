@@ -18,7 +18,9 @@ from api.models import RestaurantMaster, RestaurantCuisine, RestaurantDeliveryTi
 from django.utils.text import slugify
 from datetime import datetime, timedelta
 import pytz
+from django.contrib.auth import get_user_model
 
+User = get_user_model()
 class RestaurantStoreStepOne(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -180,12 +182,16 @@ class RestaurantStoreStepFour(View):
 class RestaurantByUserAPIView(APIView):
     def get(self, request, user_id):
         try:
-            # Fetch the user
+
             user = User.objects.get(id=user_id)
 
-            # Fetch all restaurants associated with the user
-            active_restaurants = RestaurantMaster.objects.filter(user=user, restaurant_status=1)
-            live_restaurants = RestaurantMaster.objects.filter(user=user)
+            if user.role == 2:
+                active_restaurants = RestaurantMaster.objects.filter(restaurant_status=1)
+                live_restaurants = RestaurantMaster.objects.all()
+            else:
+                # Only show restaurants linked to this user
+                active_restaurants = RestaurantMaster.objects.filter(user=user, restaurant_status=1)
+                live_restaurants = RestaurantMaster.objects.filter(user=user)
 
             data = {
                 "active_restaurants": RestaurantSerializerByStatus(active_restaurants, many=True).data,
@@ -193,7 +199,7 @@ class RestaurantByUserAPIView(APIView):
             }
 
             return Response(data, status=status.HTTP_200_OK)
-        
+
         except User.DoesNotExist:
             return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
 

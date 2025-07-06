@@ -167,7 +167,7 @@ const App = () => {
           </Routes>
         </main>
 
-        <StickyTrackOrder user={user} />
+        {/* <StickyTrackOrder user={user} /> */}
         <Footer />
       </div>
     </Router>

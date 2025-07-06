@@ -779,7 +779,6 @@ const OrderDetails = ({ user, setUser }) => {
                         : food.description}
                     </p>
                     <p className="order-details-page-menu-food-price">₹{food.price}</p>
-                    <div className="order-details-page-menu-out-of-stock-badge">Available from {food.start_time}</div>
                   </div>
                 </li>
               )
