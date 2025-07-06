@@ -421,7 +421,9 @@ class LiveLocationDetails(APIView):
         c = 2 * atan2(sqrt(a), sqrt(1 - a))
         return R * c
 
-    def estimate_time_minutes(self, lat1, lon1, lat2, lon2, speed_kmph=15):
+    def estimate_time_minutes(self, lat1, lon1, lat2, lon2, speed_kmph=25):
+        print("speed_kmph====",speed_kmph)
+        
         distance_km = self.haversine_distance(lat1, lon1, lat2, lon2)
         time_hours = distance_km / speed_kmph
         return round(time_hours * 60)  # Return time in minutes
