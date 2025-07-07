@@ -474,7 +474,7 @@ def get_invoice_html(order_details):
         <div class="invoice-container">
             <div class="header">
                 <div>
-                    <div class="invoice-title">Tax Invoice</div>
+                    <div class="invoice-title"><strong>Order Invoice</strong></div>
                     <div style="font-size: 12px; color: #777; margin-top: 5px;">Order #{order_details.get("order_number", "")}</div>
                 </div>
                 <img src="data:image/png;base64,{logo_base64}" class="logo" alt="Eatoor Logo">
@@ -581,10 +581,6 @@ def get_invoice_html(order_details):
                     <td style="text-align: right;"><span class="highlight">{total:.2f}</span></td>
                 </tr>
             </table>
-
-            <div class="amount-words">
-                Amount in words: {amount_words}
-            </div>
 
             <div class="signature-section">
                 <p>For <strong class="highlight">VENSAVOR FOODTECH LLP</strong></p>
