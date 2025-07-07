@@ -88,23 +88,21 @@ def send_order_status_email(order):
     handling_fee = Decimal("0.00")
 
     if order.coupon_id:
-        coupon = Coupon.objects.get(id=order.coupon_id)
-
-        if coupon:
+        try:
+            coupon = Coupon.objects.get(id=order.coupon_id)
             coupon_code = coupon.code
             coupon_code_text = f"Discount coupon ({coupon_code})"
-        else:
-            # Apply a 10% discount
-            total_before_discount = subtotal + order.delivery_fee
-            discount = total_before_discount * Decimal('0.10')
+        except Coupon.DoesNotExist:
+            coupon = None
             coupon_code = None
-            coupon_code_text = "Discount (10%)"
+            coupon_code_text = f"Discount"
+            discount = Decimal('0.00')
     else:
-        # Apply a 10% discount
-        total_before_discount = subtotal + order.delivery_fee
-        discount = total_before_discount * Decimal('0.10')
+        coupon = None
         coupon_code = None
-        coupon_code_text = "Discount (10%)"
+        coupon_code_text = f"Discount"
+        discount = Decimal('0.00')
+
     
     discount_amount = order.coupon_discount if order.coupon_discount else round(discount)
     email_content = get_order_email_content(order)
@@ -208,7 +206,6 @@ def send_order_status_email(order):
     ]))
 
     if recipient_list:
-
         recipient_list.append("rathodrahul1705@gmail.com")
 
         email = EmailMessage(
@@ -287,7 +284,6 @@ def send_contact_email(name, email, message):
     body = f"Name: {name}\nEmail: {email}\n\nMessage:\n{message}"
     send_mail(subject, body, settings.DEFAULT_FROM_EMAIL, [settings.DEFAULT_FROM_EMAIL])
 
-
 def get_invoice_html(order_details):
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
     logo_path = os.path.join(BASE_DIR, "../static/img/eatoorweb.png")
@@ -316,27 +312,22 @@ def get_invoice_html(order_details):
     delivery_fee = float(order_details.get("delivery_fee", 0))
     tax = float(order_details.get("tax", 0))
     
-    # Calculate 10% discount on (subtotal + delivery fee)
-    calculated_discount = round((subtotal + delivery_fee) * 0.10, 2)
-
     # Get coupon_discount value from order_details (default to 0.0 if not present or invalid)
     try:
         coupon_discount = float(order_details.get("coupon_discount", 0.0))
     except (ValueError, TypeError):
         coupon_discount = 0.0
-
-    # If coupon_discount is zero, use calculated 10% discount
-    if coupon_discount == 0.0:
-        coupon_discount = calculated_discount
     
-    total_subtotal_amount = subtotal + delivery_fee
     total = float(order_details.get("total_amount", subtotal + delivery_fee + tax - coupon_discount))
 
     amount_words = num2words(total, to='currency', lang='en_IN')
 
-    html = f"""
-    <html>
+    html = f"""<!DOCTYPE html>
+    <html lang="en">
     <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <title>Invoice - Order #{order_details.get("order_number", "")}</title>
         <style>
             @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
             * {{
@@ -484,7 +475,7 @@ def get_invoice_html(order_details):
             <div class="header">
                 <div>
                     <div class="invoice-title">Tax Invoice</div>
-                    <div style="font-size: 12px; color: #777; margin-top: 5px;">Order #{order_details.get("order_number")}</div>
+                    <div style="font-size: 12px; color: #777; margin-top: 5px;">Order #{order_details.get("order_number", "")}</div>
                 </div>
                 <img src="data:image/png;base64,{logo_base64}" class="logo" alt="Eatoor Logo">
             </div>
@@ -510,11 +501,11 @@ def get_invoice_html(order_details):
                     <h3>Invoice Details</h3>
                     <div class="info-row">
                         <div class="info-label">Invoice No:</div>
-                        <div class="info-value">EAT{order_details.get("order_number")}</div>
+                        <div class="info-value">EAT{order_details.get("order_number", "")}</div>
                     </div>
                     <div class="info-row">
                         <div class="info-label">Date:</div>
-                        <div class="info-value">{order_details.get("order_date")}</div>
+                        <div class="info-value">{order_details.get("order_date", "")}</div>
                     </div>
                     <div class="info-row">
                         <div class="info-label">Order Type:</div>
@@ -540,8 +531,8 @@ def get_invoice_html(order_details):
                     <tr>
                         <th>Item</th>
                         <th>Qty</th>
-                        <th>Rate (₹)</th>
-                        <th>Net (₹)</th>
+                        <th>Rate</th>
+                        <th>Net</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -551,14 +542,11 @@ def get_invoice_html(order_details):
         price = float(item.get("price", 0))
         discount = float(item.get("discount", 0))
         net = price - discount
-        # cgst = round(net * 0.025, 2)
-        # sgst = round(net * 0.025, 2)
-        # total_line = round(net + cgst + sgst, 2)
 
         html += f"""
                     <tr>
-                        <td>{item.get("item_name")}</td>
-                        <td>{item.get("quantity")}</td>
+                        <td>{item.get("item_name", "")}</td>
+                        <td>{item.get("quantity", 1)}</td>
                         <td>{price:.2f}</td>
                         <td>{net:.2f}</td>
                     </tr>
@@ -571,27 +559,32 @@ def get_invoice_html(order_details):
             <table class="totals-table">
                 <tr>
                     <td>Item Total:</td>
-                    <td style="text-align: right;">₹{subtotal:.2f}</td>
+                    <td style="text-align: right;">{subtotal:.2f}</td>
                 </tr>
                 <tr>
                     <td>Delivery Fee:</td>
-                    <td style="text-align: right;">₹{delivery_fee:.2f}</td>
+                    <td style="text-align: right;">{delivery_fee:.2f}</td>
                 </tr>
+    """
 
+    if coupon_discount > 0:
+        html += f"""
                 <tr>
-                    <td>Subtotal (Item + Delivery Fee):</td>
-                    <td style="text-align: right;">₹{total_subtotal_amount:.2f}</td>
+                    <td>Discount:</td>
+                    <td style="text-align: right;">-{coupon_discount:.2f}</td>
                 </tr>
+        """
 
-                <tr>
-                    <td>Discount (10%):</td>
-                    <td style="text-align: right;">-₹{coupon_discount:.2f}</td>
-                </tr>
+    html += f"""
                 <tr>
                     <td><span class="highlight">Total Amount:</span></td>
-                    <td style="text-align: right;"><span class="highlight">₹{total:.2f}</span></td>
+                    <td style="text-align: right;"><span class="highlight">{total:.2f}</span></td>
                 </tr>
             </table>
+
+            <div class="amount-words">
+                Amount in words: {amount_words}
+            </div>
 
             <div class="signature-section">
                 <p>For <strong class="highlight">VENSAVOR FOODTECH LLP</strong></p>

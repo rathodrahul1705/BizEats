@@ -87,23 +87,21 @@ class TrackOrder(APIView):
                     })
 
                 if order.coupon_id:
-                    coupon = Coupon.objects.get(id=order.coupon_id)
-
-                    if coupon:
+                    try:
+                        coupon = Coupon.objects.get(id=order.coupon_id)
                         coupon_code = coupon.code
                         coupon_code_text = f"Discount coupon ({coupon_code})"
-                    else:
-                        # Apply a 10% discount
-                        total_before_discount = subtotal + order.delivery_fee
-                        discount = total_before_discount * Decimal('0.10')
+                        # You can apply the actual discount logic based on coupon details here
+                        # Example (optional): discount = coupon.discount_amount
+                    except Coupon.DoesNotExist:
                         coupon_code = None
-                        coupon_code_text = "Discount (10%)"
+                        coupon_code_text = f"Discount"
+                        discount = Decimal('0.00')
                 else:
-                    # Apply a 10% discount
-                    total_before_discount = subtotal + order.delivery_fee
-                    discount = total_before_discount * Decimal('0.10')
                     coupon_code = None
-                    coupon_code_text = "Discount (10%)"
+                    coupon_code_text = f"Discount"
+                    discount = Decimal('0.00')
+
 
                 review_exists = OrderReview.objects.filter(order_id=order.order_number, user_id=user_id).exists()
                 order_status = order.get_status_display()

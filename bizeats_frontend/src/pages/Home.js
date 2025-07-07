@@ -133,7 +133,6 @@ const Home = () => {
       price: "₹100",
       rating: 4.8,
       time: "30-45 min",
-      offer: "20% OFF"
     },
     {
       name: "Gulab Jamun",
@@ -161,7 +160,6 @@ const Home = () => {
       price: "₹45",
       rating: 4.3,
       time: "15-25 min",
-      offer: "10% OFF"
     },
     {
       name: "Maggie",
@@ -238,7 +236,7 @@ const Home = () => {
     {
       id: 2,
       title: "Weekend Special",
-      subtitle: "Enjoy 10% off on every order this weekend",
+      subtitle: "Enjoy combo offer on order this weekend",
       cta: "Order Now",
       link: "/food-list",
       bgColor: "linear-gradient(135deg, #43CBFF 0%, #9708CC 100%)",

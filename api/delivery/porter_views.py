@@ -24,8 +24,7 @@ def porter_fare_estimate(request):
 
 @api_view(["POST"])
 def porter_create_booking(request):
-    response_data = create_booking(request.data)
-
+    response_data = create_booking(request.data)    
     if response_data.get("booking_id"):
         PorterOrder.objects.create(
             booking_id=response_data["booking_id"],

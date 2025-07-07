@@ -79,27 +79,7 @@ const OrderDetails = ({ user, setUser }) => {
   const sessionId = getOrCreateSessionId();
 
   const deals = useMemo(() => [
-    {
-      id: 1,
-      title: "10% Off",
-      description: "On every order",
-      icon: "🤑",
-      color: "#fff"
-    },
-    {
-      id: 2,
-      title: "Free Delivery",
-      description: "On orders above ₹399",
-      icon: "🏍️",
-      color: "#fff"
-    },
-    {
-      id: 3,
-      title: "Free Packaging",
-      description: "Neat and secure packaging!",
-      icon: "📦",
-      color: "#fff",
-    }    
+
   ], []);
 
   // Initialize category visibility
@@ -562,7 +542,13 @@ const OrderDetails = ({ user, setUser }) => {
       </div>
 
       {/* Deals Section */}
-      <div className="order-details-page-menu-deals-section">
+
+      {
+
+        deals.length > 0?
+
+
+        <div className="order-details-page-menu-deals-section">
         <div className="order-details-page-menu-deals-header-wrapper">
           <h2 className="order-details-page-menu-deals-title">Deals for You</h2>
           <div className="order-details-page-menu-deals-swiper-wrapper">
@@ -597,7 +583,9 @@ const OrderDetails = ({ user, setUser }) => {
           </div>
         </div>
       </div>
-
+      :""
+      }
+      
       {/* Filter Buttons */}
       <div className="order-details-page-menu-filter-container">
         <button
