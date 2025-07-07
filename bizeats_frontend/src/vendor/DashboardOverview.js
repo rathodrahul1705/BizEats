@@ -298,7 +298,7 @@ const DashboardOverview = ({ user, setUser }) => {
         <div className="header-section">
           <div className="header-content">
             <h2>Dashboard Overview</h2>
-            <p className="subtitle">Monitor your restaurant's performance</p>
+            <p className="subtitle">Monitor your home kitchen performance</p>
           </div>
           <div className="dropdown-wrapper">
             <label>Restaurant</label>

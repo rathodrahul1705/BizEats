@@ -473,7 +473,7 @@ const RestaurantRegistration = ({ user, setUser }) => {
                   />
                   <input
                     type="tel"
-                    placeholder="Restaurant's Primary Contact"
+                    placeholder="Home kitchen Primary Contact"
                     value={formData.ownerDetails.primaryContactNumber}
                     onChange={(e) => handleNestedInputChange("ownerDetails", "primaryContactNumber", e.target.value)}
                     required
