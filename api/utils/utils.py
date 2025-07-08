@@ -74,6 +74,8 @@ def _haversine_distance(lat1, lon1, lat2, lon2):
         response.raise_for_status()
         data = response.json()
 
+        print("data====",data)
+
         if (
             "routes" in data and isinstance(data["routes"], list)
             and data["routes"] and "legs" in data["routes"][0]
