@@ -1,8 +1,10 @@
 import math
 import requests
 from api.models import RestaurantMaster, UserDeliveryAddress
-from django.conf import settings
 import os
+import logging
+
+logger = logging.getLogger(__name__)
 
 def calculate_distance_and_cost(restaurant_id, delivery_address_id, cost_per_km=12):
     """
@@ -69,12 +71,14 @@ def _haversine_distance(lat1, lon1, lat2, lon2):
         "api_key": api_key
     }
 
+    logger.info(f"Calculating distance between ({lat1}, {lon1}) and ({lat2}, {lon2}) using {url}")
+
     try:
         response = requests.post(url, headers=headers, params=params)
         response.raise_for_status()
         data = response.json()
 
-        print("data====",data)
+        logger.debug(f"Response from OLA Maps API: {data}")
 
         if (
             "routes" in data and isinstance(data["routes"], list)
@@ -85,14 +89,18 @@ def _haversine_distance(lat1, lon1, lat2, lon2):
             distance_meters = leg.get("distance")
             if distance_meters is not None:
                 distance_km = round(distance_meters / 1000, 2)
+                logger.info(f"Calculated distance: {distance_km} km")
                 return distance_km
             else:
-                print("Distance not found in route leg.")
+                logger.warning("Distance not found in route leg.")
                 return 0.0
         else:
-            print("Invalid or missing route/leg structure.")
+            logger.warning("Invalid or missing route/leg structure in response.")
             return 0.0
 
+    except requests.exceptions.RequestException as e:
+        logger.error(f"RequestException during distance fetch: {e}")
+        return 0.0
     except Exception as e:
-        print(f"Error fetching distance: {e}")
+        logger.exception("Unexpected error during distance calculation.")
         return 0.0
