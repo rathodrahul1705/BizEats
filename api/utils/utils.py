@@ -94,4 +94,3 @@ def _haversine_distance(lat1, lon1, lat2, lon2):
     except Exception as e:
         print(f"Error fetching distance: {e}")
         return 0.0
-
