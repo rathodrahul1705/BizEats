@@ -71,15 +71,12 @@ def _haversine_distance(lat1, lon1, lat2, lon2):
         "api_key": api_key
     }
 
-    logger.info(f"Calculating distance between ({lat1}, {lon1}) and ({lat2}, {lon2}) using {url}")
-    logger.info(f"params===== ({params}")
+    logger.info(f"Calculating distance between ({lat1}, {lon1}) and ({lat2}, {lon2}) using {url} param {params}")
 
     try:
         response = requests.post(url, headers=headers, params=params)
         response.raise_for_status()
         data = response.json()
-
-        logger.debug(f"Response from OLA Maps API: {data}")
 
         if (
             "routes" in data and isinstance(data["routes"], list)
