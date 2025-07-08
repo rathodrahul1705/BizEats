@@ -59,7 +59,7 @@ def calculate_distance_and_cost(restaurant_id, delivery_address_id, cost_per_km=
 def _haversine_distance(lat1, lon1, lat2, lon2):
     base_url = os.environ.get("OLA_MAPS_URL", "https://api.olamaps.io")
     url = f"{base_url}/routing/v1/directions"
-    api_key = os.environ.get("OLA_MAP_API_KEY")
+    api_key = os.environ.get("OLA_MAP_API_KEY", "cVMkjEbmY4Qu0FfAbUOa7CWfzUOyR00wMNS6F7hT")
     
     headers = {
         "X-Request-Id": "EATOOR-DISTANCE-CALC"
