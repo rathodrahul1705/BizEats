@@ -72,6 +72,7 @@ def _haversine_distance(lat1, lon1, lat2, lon2):
     }
 
     logger.info(f"Calculating distance between ({lat1}, {lon1}) and ({lat2}, {lon2}) using {url}")
+    logger.info(f"params===== ({params}")
 
     try:
         response = requests.post(url, headers=headers, params=params)
