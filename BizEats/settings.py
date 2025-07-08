@@ -180,8 +180,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 #     }
 # }
 
-import os
-
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,  # Important!
