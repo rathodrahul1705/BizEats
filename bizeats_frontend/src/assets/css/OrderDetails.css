@@ -312,6 +312,7 @@
   overflow-x: auto;
   padding-bottom: 12px;
   scrollbar-width: none;
+  align-items: center;
 }
 
 .order-details-page-menu-filter-container::-webkit-scrollbar {
@@ -321,15 +322,15 @@
 .order-details-page-menu-filter-btn {
   background: #f5f5f5;
   border: none;
-  padding: 12px 24px;
-  font-size: 15px;
+  padding: 12px 18px;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   border-radius: 25px;
   transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   white-space: nowrap;
   flex-shrink: 0;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
@@ -343,6 +344,11 @@
   box-shadow: 0 4px 8px rgba(230, 92, 0, 0.2);
 }
 
+.order-details-page-menu-filter-btn.active.best-seller {
+  background: linear-gradient(to right, #ffcc00, #ffdd33);
+  color: #333;
+}
+
 .order-details-page-menu-filter-btn:hover {
   background: #e0e0e0;
   transform: translateY(-2px);
@@ -350,6 +356,43 @@
 
 .order-details-page-menu-filter-btn.active:hover {
   background: linear-gradient(to right, #cc5200, #e65c00);
+}
+
+.order-details-page-menu-filter-btn.active.best-seller:hover {
+  background: linear-gradient(to right, #ffbb00, #ffcc22);
+}
+
+/* Food Type Icons */
+.food-type-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+.food-type-icon.veg svg {
+  border-radius: 50%;
+  border: 1px solid #009933;
+}
+
+.food-type-icon.non-veg svg {
+  border-radius: 50%;
+  border: 1px solid #cc0000;
+}
+
+/* Best Seller Badge */
+.best-seller-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 6px;
+  color: #ffcc00;
+  background: rgba(255, 204, 0, 0.1);
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 12px;
+  font-weight: 600;
 }
 
 /* Categories */
@@ -431,7 +474,6 @@
   left: 0;
   right: 0;
   bottom: 0;
-  /* background: rgba(255, 255, 255, 0.7); */
   z-index: 1;
 }
 
@@ -825,6 +867,9 @@
   color: #222;
   margin-bottom: 15px;
   line-height: 1.3;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .order-details-page-menu-food-modal-description {

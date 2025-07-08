@@ -58,6 +58,7 @@ const OrderDetails = ({ user, setUser }) => {
   const { city, slug, restaurant_id, offer } = useParams();
   const [cart, setCart] = useState({});
   const [filter, setFilter] = useState("all");
+  const [showBestSellers, setShowBestSellers] = useState(false);
   const [storeDetails, setStoreDetails] = useState({
     name: "",
     deliveryTime: "",
@@ -79,8 +80,15 @@ const OrderDetails = ({ user, setUser }) => {
   const sessionId = getOrCreateSessionId();
 
   const deals = useMemo(() => [
-
   ], []);
+
+  const bestSellerIds = useMemo(() => {
+    const sortedByPopularity = [...foodData]
+      .sort((a, b) => (b.popularity || 0) - (a.popularity || 0))
+      .slice(0, 3)
+      .map(item => item.id);
+    return sortedByPopularity;
+  }, [foodData]);
 
   // Initialize category visibility
   useEffect(() => {
@@ -196,6 +204,7 @@ const OrderDetails = ({ user, setUser }) => {
           buy_one_get_one_free: item.buy_one_get_one_free ?? false,
           start_time: item.start_time,
           end_time: item.end_time,
+          popularity: Math.floor(Math.random() * 100) // Simulate popularity for demo
         }))
       );
     } catch (error) {
@@ -321,13 +330,18 @@ const OrderDetails = ({ user, setUser }) => {
     }
   }, [totalItems]);
 
-  // Filter food items
+  // Filter food items with best seller filter
   const { filteredFood, upcomingFood, endedFood, unavailableFood } = useMemo(() => {
     const filtered = foodData.filter((food) => {
       const timingStatus = checkItemTimingStatus(food);
-      return (filter === "all" || food.type === filter) && 
-             food.availability && 
-             (!timingStatus || (timingStatus.status !== 'upcoming' && timingStatus.status !== 'ended'))
+      const matchesFilter = filter === "all" || food.type === filter;
+      const isAvailable = food.availability && 
+                        (!timingStatus || 
+                        (timingStatus.status !== 'upcoming' && 
+                         timingStatus.status !== 'ended'));
+      const isBestSeller = !showBestSellers || bestSellerIds.includes(food.id);
+      
+      return matchesFilter && isAvailable && isBestSeller;
     });
 
     const upcoming = foodData.filter((food) => {
@@ -343,7 +357,7 @@ const OrderDetails = ({ user, setUser }) => {
     const unavailable = foodData.filter(food => !food.availability);
 
     return { filteredFood: filtered, upcomingFood: upcoming, endedFood: ended, unavailableFood: unavailable };
-  }, [foodData, filter]);
+  }, [foodData, filter, showBestSellers, bestSellerIds]);
 
   // Group by category
   const groupedByCategory = useMemo(() => {
@@ -415,7 +429,7 @@ const OrderDetails = ({ user, setUser }) => {
           <div className="skeleton-line" style={{ width: '60%', height: '18px' }}></div>
         </div>
         <div className="order-details-page-menu-filter-container loading">
-          {[1, 2, 3].map(i => (
+          {[1, 2, 3, 4].map(i => (
             <div key={i} className="skeleton-filter"></div>
           ))}
         </div>
@@ -442,13 +456,13 @@ const OrderDetails = ({ user, setUser }) => {
       {/* Restaurant Header */}
       <div className="order-details-page-menu-store-header">
         <h1 className="order-details-page-menu-store-title">{storeDetails.name}</h1>
-        {/* <button 
+        <button 
           className="order-details-page-menu-share-btn header-share"
           onClick={toggleShareOptions}
           aria-label="Share restaurant"
         >
           <Share2 size={20} />
-        </button> */}
+        </button>
       </div>
 
       {/* Share Options */}
@@ -542,49 +556,43 @@ const OrderDetails = ({ user, setUser }) => {
       </div>
 
       {/* Deals Section */}
-
-      {
-
-        deals.length > 0?
-
-
+      {deals.length > 0 && (
         <div className="order-details-page-menu-deals-section">
-        <div className="order-details-page-menu-deals-header-wrapper">
-          <h2 className="order-details-page-menu-deals-title">Deals for You</h2>
-          <div className="order-details-page-menu-deals-swiper-wrapper">
-            <Swiper
-              slidesPerView={1}
-              spaceBetween={16}
-              modules={[Navigation]}
-              className="order-details-page-menu-deals-swiper"
-              breakpoints={{
-                640: {
-                  slidesPerView: 2,
-                },
-                768: {
-                  slidesPerView: 3,
-                },
-              }}
-            >
-              {deals.map((deal) => (
-                <SwiperSlide key={deal.id}>
-                  <div className="order-details-page-menu-deal-card">
-                    <div className="order-details-page-menu-deal-inner">
-                      <div className="order-details-page-menu-deal-icon">{deal.icon}</div>
-                      <div className="order-details-page-menu-deal-content">
-                        <h3 className="order-details-page-menu-deal-title">{deal.title}</h3>
-                        <p className="order-details-page-menu-deal-description">{deal.description}</p>
+          <div className="order-details-page-menu-deals-header-wrapper">
+            <h2 className="order-details-page-menu-deals-title">Deals for You</h2>
+            <div className="order-details-page-menu-deals-swiper-wrapper">
+              <Swiper
+                slidesPerView={1}
+                spaceBetween={16}
+                modules={[Navigation]}
+                className="order-details-page-menu-deals-swiper"
+                breakpoints={{
+                  640: {
+                    slidesPerView: 2,
+                  },
+                  768: {
+                    slidesPerView: 3,
+                  },
+                }}
+              >
+                {deals.map((deal) => (
+                  <SwiperSlide key={deal.id}>
+                    <div className="order-details-page-menu-deal-card">
+                      <div className="order-details-page-menu-deal-inner">
+                        <div className="order-details-page-menu-deal-icon">{deal.icon}</div>
+                        <div className="order-details-page-menu-deal-content">
+                          <h3 className="order-details-page-menu-deal-title">{deal.title}</h3>
+                          <p className="order-details-page-menu-deal-description">{deal.description}</p>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </SwiperSlide>
-              ))}
-            </Swiper>
+                  </SwiperSlide>
+                ))}
+              </Swiper>
+            </div>
           </div>
         </div>
-      </div>
-      :""
-      }
+      )}
       
       {/* Filter Buttons */}
       <div className="order-details-page-menu-filter-container">
@@ -598,13 +606,29 @@ const OrderDetails = ({ user, setUser }) => {
           className={`order-details-page-menu-filter-btn ${filter === "Veg" ? "active" : ""}`}
           onClick={() => setFilter("Veg")}
         >
-          🥦 Veg
+          <span className="veg-icon">
+            <svg viewBox="0 0 24 24" width="16" height="16">
+              <circle cx="12" cy="12" r="10" fill="#009933" />
+              <rect x="6" y="6" width="12" height="12" rx="1" fill="white" />
+            </svg>
+          </span> Veg
         </button>
         <button
           className={`order-details-page-menu-filter-btn ${filter === "Non-Veg" ? "active" : ""}`}
           onClick={() => setFilter("Non-Veg")}
         >
-          🍗 Non-Veg
+          <span className="non-veg-icon">
+            <svg viewBox="0 0 24 24" width="16" height="16">
+              <circle cx="12" cy="12" r="10" fill="#cc0000" />
+              <rect x="6" y="6" width="12" height="12" rx="1" fill="white" />
+            </svg>
+          </span> Non-Veg
+        </button>
+        <button
+          className={`order-details-page-menu-filter-btn ${showBestSellers ? "active" : ""}`}
+          onClick={() => setShowBestSellers(!showBestSellers)}
+        >
+          <Star size={16} /> Best Sellers
         </button>
       </div>
 
@@ -639,6 +663,7 @@ const OrderDetails = ({ user, setUser }) => {
                 <ul className="order-details-page-menu-food-list">
                   {groupedByCategory[category].map((food) => {
                     const timingStatus = checkItemTimingStatus(food);
+                    const isBestSeller = bestSellerIds.includes(food.id);
                     return (
                       <li key={food.id} className="order-details-page-menu-food-item">
                         <div className="order-details-page-menu-food-image-container">
@@ -662,7 +687,25 @@ const OrderDetails = ({ user, setUser }) => {
                               className="order-details-page-menu-food-title"
                               onClick={() => openFoodModal(food)}
                             >
-                              {food.title} {food.type === "Veg" ? "🥦" : "🍗"}
+                              {food.title}
+                              <span className={`food-type-icon ${food.type === "Veg" ? "veg" : "non-veg"}`}>
+                                {food.type === "Veg" ? (
+                                  <svg viewBox="0 0 24 24" width="16" height="16">
+                                    <circle cx="12" cy="12" r="10" fill="#009933" />
+                                    <rect x="6" y="6" width="12" height="12" rx="1" fill="white" />
+                                  </svg>
+                                ) : (
+                                  <svg viewBox="0 0 24 24" width="16" height="16">
+                                    <circle cx="12" cy="12" r="10" fill="#cc0000" />
+                                    <rect x="6" y="6" width="12" height="12" rx="1" fill="white" />
+                                  </svg>
+                                )}
+                              </span>
+                              {isBestSeller && (
+                                <span className="best-seller-badge">
+                                  <Star size={14} fill="#ffcc00" />
+                                </span>
+                              )}
                             </h3>
                           </div>
                           <p 
@@ -735,6 +778,7 @@ const OrderDetails = ({ user, setUser }) => {
           <ul className="order-details-page-menu-food-list">
             {upcomingFood.map((food) => {
               const timingStatus = checkItemTimingStatus(food);
+              const isBestSeller = bestSellerIds.includes(food.id);
               return (
                 <li key={food.id} className="order-details-page-menu-food-item order-details-page-menu-food-item-out-of-stock">
                   <div className="order-details-page-menu-food-image-container">
@@ -759,7 +803,25 @@ const OrderDetails = ({ user, setUser }) => {
                   </div>
                   <div className="order-details-page-menu-food-details">
                     <h3 className="order-details-page-menu-food-title">
-                      {food.title} {food.type === "Veg" ? "🥦" : "🍗"}
+                      {food.title}
+                      <span className={`food-type-icon ${food.type === "Veg" ? "veg" : "non-veg"}`}>
+                        {food.type === "Veg" ? (
+                          <svg viewBox="0 0 24 24" width="16" height="16">
+                            <circle cx="12" cy="12" r="10" fill="#009933" />
+                            <rect x="6" y="6" width="12" height="12" rx="1" fill="white" />
+                          </svg>
+                        ) : (
+                          <svg viewBox="0 0 24 24" width="16" height="16">
+                            <circle cx="12" cy="12" r="10" fill="#cc0000" />
+                            <rect x="6" y="6" width="12" height="12" rx="1" fill="white" />
+                          </svg>
+                        )}
+                      </span>
+                      {isBestSeller && (
+                        <span className="best-seller-badge">
+                          <Star size={14} fill="#ffcc00" />
+                        </span>
+                      )}
                     </h3>
                     <p className="order-details-page-menu-food-description">
                       {food.description.length > 100 
@@ -782,6 +844,7 @@ const OrderDetails = ({ user, setUser }) => {
           <ul className="order-details-page-menu-food-list">
             {endedFood.map((food) => {
               const timingStatus = checkItemTimingStatus(food);
+              const isBestSeller = bestSellerIds.includes(food.id);
               return (
                 <li key={food.id} className="order-details-page-menu-food-item order-details-page-menu-food-item-out-of-stock">
                   <div className="order-details-page-menu-food-image-container">
@@ -806,7 +869,25 @@ const OrderDetails = ({ user, setUser }) => {
                   </div>
                   <div className="order-details-page-menu-food-details">
                     <h3 className="order-details-page-menu-food-title">
-                      {food.title} {food.type === "Veg" ? "🥦" : "🍗"}
+                      {food.title}
+                      <span className={`food-type-icon ${food.type === "Veg" ? "veg" : "non-veg"}`}>
+                        {food.type === "Veg" ? (
+                          <svg viewBox="0 0 24 24" width="16" height="16">
+                            <circle cx="12" cy="12" r="10" fill="#009933" />
+                            <rect x="6" y="6" width="12" height="12" rx="1" fill="white" />
+                          </svg>
+                        ) : (
+                          <svg viewBox="0 0 24 24" width="16" height="16">
+                            <circle cx="12" cy="12" r="10" fill="#cc0000" />
+                            <rect x="6" y="6" width="12" height="12" rx="1" fill="white" />
+                          </svg>
+                        )}
+                      </span>
+                      {isBestSeller && (
+                        <span className="best-seller-badge">
+                          <Star size={14} fill="#ffcc00" />
+                        </span>
+                      )}
                     </h3>
                     <p className="order-details-page-menu-food-description">
                       {food.description.length > 100 
@@ -828,36 +909,57 @@ const OrderDetails = ({ user, setUser }) => {
         <div className="order-details-page-menu-out-of-stock-section">
           <h3 className="order-details-page-menu-out-of-stock-header">Currently Unavailable</h3>
           <ul className="order-details-page-menu-food-list">
-            {unavailableFood.map((food) => (
-              <li key={food.id} className="order-details-page-menu-food-item order-details-page-menu-food-item-out-of-stock">
-                <div className="order-details-page-menu-food-image-container">
-                  <img 
-                    src={food.image} 
-                    alt={food.title} 
-                    className="order-details-page-menu-food-image order-details-page-menu-food-image-out-of-stock" 
-                    loading="lazy"
-                  />
-                  {food.buy_one_get_one_free && (
-                    <div className="order-details-page-menu-bogo-tag">
-                      <Gift size={14} />
-                      <span>Buy 1 Get 1 Free</span>
-                    </div>
-                  )}
-                </div>
-                <div className="order-details-page-menu-food-details">
-                  <h3 className="order-details-page-menu-food-title">
-                    {food.title} {food.type === "Veg" ? "🥦" : "🍗"}
-                  </h3>
-                  <p className="order-details-page-menu-food-description">
-                    {food.description.length > 100 
-                      ? `${food.description.substring(0, 100)}...` 
-                      : food.description}
-                  </p>
-                  <p className="order-details-page-menu-food-price">₹{food.price}</p>
-                  <div className="order-details-page-menu-out-of-stock-badge">Out of Stock</div>
-                </div>
-              </li>
-            ))}
+            {unavailableFood.map((food) => {
+              const isBestSeller = bestSellerIds.includes(food.id);
+              return (
+                <li key={food.id} className="order-details-page-menu-food-item order-details-page-menu-food-item-out-of-stock">
+                  <div className="order-details-page-menu-food-image-container">
+                    <img 
+                      src={food.image} 
+                      alt={food.title} 
+                      className="order-details-page-menu-food-image order-details-page-menu-food-image-out-of-stock" 
+                      loading="lazy"
+                    />
+                    {food.buy_one_get_one_free && (
+                      <div className="order-details-page-menu-bogo-tag">
+                        <Gift size={14} />
+                        <span>Buy 1 Get 1 Free</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="order-details-page-menu-food-details">
+                    <h3 className="order-details-page-menu-food-title">
+                      {food.title}
+                      <span className={`food-type-icon ${food.type === "Veg" ? "veg" : "non-veg"}`}>
+                        {food.type === "Veg" ? (
+                          <svg viewBox="0 0 24 24" width="16" height="16">
+                            <circle cx="12" cy="12" r="10" fill="#009933" />
+                            <rect x="6" y="6" width="12" height="12" rx="1" fill="white" />
+                          </svg>
+                        ) : (
+                          <svg viewBox="0 0 24 24" width="16" height="16">
+                            <circle cx="12" cy="12" r="10" fill="#cc0000" />
+                            <rect x="6" y="6" width="12" height="12" rx="1" fill="white" />
+                          </svg>
+                        )}
+                      </span>
+                      {isBestSeller && (
+                        <span className="best-seller-badge">
+                          <Star size={14} fill="#ffcc00" />
+                        </span>
+                      )}
+                    </h3>
+                    <p className="order-details-page-menu-food-description">
+                      {food.description.length > 100 
+                        ? `${food.description.substring(0, 100)}...` 
+                        : food.description}
+                    </p>
+                    <p className="order-details-page-menu-food-price">₹{food.price}</p>
+                    <div className="order-details-page-menu-out-of-stock-badge">Out of Stock</div>
+                  </div>
+                </li>
+              )
+            })}
           </ul>
         </div>
       )}
@@ -923,7 +1025,25 @@ const OrderDetails = ({ user, setUser }) => {
               <div className="order-details-page-menu-food-modal-details">
                 <div className="order-details-page-menu-food-modal-header">
                   <h2 className="order-details-page-menu-food-modal-title">
-                    {selectedFood.title} {selectedFood.type === "Veg" ? "🥦" : "🍗"}
+                    {selectedFood.title}
+                    <span className={`food-type-icon ${selectedFood.type === "Veg" ? "veg" : "non-veg"}`}>
+                      {selectedFood.type === "Veg" ? (
+                        <svg viewBox="0 0 24 24" width="16" height="16">
+                          <circle cx="12" cy="12" r="10" fill="#009933" />
+                          <rect x="6" y="6" width="12" height="12" rx="1" fill="white" />
+                        </svg>
+                      ) : (
+                        <svg viewBox="0 0 24 24" width="16" height="16">
+                          <circle cx="12" cy="12" r="10" fill="#cc0000" />
+                          <rect x="6" y="6" width="12" height="12" rx="1" fill="white" />
+                        </svg>
+                      )}
+                    </span>
+                    {bestSellerIds.includes(selectedFood.id) && (
+                      <span className="best-seller-badge">
+                        <Star size={16} fill="#ffcc00" />
+                      </span>
+                    )}
                   </h2>
                 </div>
                 <p className="order-details-page-menu-food-modal-description">{selectedFood.description}</p>
