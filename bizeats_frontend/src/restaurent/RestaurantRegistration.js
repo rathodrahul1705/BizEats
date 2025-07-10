@@ -270,9 +270,12 @@ const RestaurantRegistration = ({ user, setUser }) => {
     try {
       setIsSubmitting(true);
       const formDataToSend = new FormData();
+
+      console.log("formData====",formData)
+      
       formDataToSend.append("restaurant_id", formData.restaurantId);
-      if (formData.panDetails?.panFile) {
-          formDataToSend.append("profile_image", formData.panDetails.panFile);
+      if (formData?.profile_image) {
+          formDataToSend.append("profile_image", formData.profile_image);
       }
       formDataToSend.append("cuisines", JSON.stringify(
         formData.selectedCuisines?.map((cuisine) => ({ cuisine_name: cuisine })) || []
@@ -532,14 +535,14 @@ const RestaurantRegistration = ({ user, setUser }) => {
                     <input 
                       type="file" 
                       accept="image/*" 
-                      onChange={(e) => handleFileChange(e.target.files[0], "panDetails")} 
+                      onChange={(e) => handleFileChange(e.target.files[0], "profile_image")} 
                       className="file-upload-input"
                     />
                     <div className="upload-content">
-                      {formData.panDetails?.panFile ? (
+                      {formData?.profile_image ? (
                         <>
                           <img 
-                            src={URL.createObjectURL(formData.panDetails.panFile)} 
+                            src={URL.createObjectURL(formData.profile_image)} 
                             alt="Preview" 
                             className="upload-preview"
                           />
