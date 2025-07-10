@@ -583,7 +583,7 @@ def get_invoice_html(order_details):
             </table>
 
             <div class="signature-section">
-                <p>For <strong class="highlight">VENSAVOR FOODTECH LLP</strong></p>
+                <p>For <strong class="highlight">VENSAVOR FOODTECH LLP (FORMERLY KNOWN AS EATOOR)</strong></p>
                 <img src="data:image/png;base64,{sign_base64}" class="signature-img" alt="Signature" />
                 <p style="font-size: 12px; color: #777;">Authorized Signatory</p>
             </div>
