@@ -1,3 +1,4 @@
+from datetime import datetime
 import os
 from django.core.mail import send_mail, EmailMessage
 from django.http import JsonResponse
@@ -703,3 +704,629 @@ def get_order_full_details(order_details):
     except Exception as e:
         return JsonResponse({"status": "error", "message": str(e)}, status=500)
 
+# def generate_coupon_html(coupon, is_vendor=False):
+#     """Generate HTML email content for coupon approval workflow"""
+#     discount_text = ""
+#     if coupon.discount_type == 'percentage':
+#         discount_text = f"{coupon.discount_value}% discount"
+#     elif coupon.discount_type == 'fixed':
+#         discount_text = f"{coupon.discount_value} off"
+
+#     valid_from = coupon.valid_from.strftime('%B %d, %Y') if coupon.valid_from else "immediately"
+#     valid_to = coupon.valid_to.strftime('%B %d, %Y') if coupon.valid_to else "no expiration"
+
+#     # Status mapping and colors
+#     status_info = {
+#         0: {'text': 'Inactive', 'color': '#FF5252'},
+#         1: {'text': 'Active', 'color': '#4CAF50'},
+#         2: {'text': 'Pending Approval', 'color': '#FFA000'}
+#     }
+#     current_status = status_info.get(coupon.is_active, status_info[0])
+
+#     # Different content based on recipient (vendor or admin)
+#     if is_vendor:
+#         header = "Your Coupon Status"
+#         subheader = "The status of your coupon created for restaurant"
+#         footer = "Please wait for admin approval if status is pending"
+#     else:
+#         header = "Coupon Approval Request"
+#         subheader = f"New coupon created by {coupon.restaurant.restaurant_name if coupon.restaurant else 'a vendor'}"
+#         footer = "Please review the coupon details below"
+        
+#         # Generate approval URL
+#         approval_url = f"{settings.REACT_APP_BASE_URL}/vendor-dashboard/coupon/management/{coupon.restaurant.restaurant_id}/"
+
+#     html_content = f"""
+#     <!DOCTYPE html>
+#     <html>
+#     <head>
+#         <style>
+#             body {{ font-family: Arial, sans-serif; line-height: 1.6; }}
+#             .coupon-container {{ 
+#                 border: 2px dashed #e65c00; 
+#                 padding: 20px; 
+#                 max-width: 600px; 
+#                 margin: 0 auto;
+#                 text-align: center;
+#                 background-color: #f9f9f9;
+#             }}
+#             .coupon-code {{
+#                 font-size: 24px;
+#                 font-weight: bold;
+#                 color: #4CAF50;
+#                 margin: 15px 0;
+#                 padding: 10px;
+#                 background-color: #e8f5e9;
+#                 border-radius: 5px;
+#             }}
+#             .coupon-details {{ 
+#                 text-align: left; 
+#                 margin-top: 20px;
+#                 padding: 15px;
+#                 background-color: white;
+#                 border-radius: 5px;
+#             }}
+#             .status {{
+#                 color: {current_status['color']};
+#                 font-weight: bold;
+#                 margin: 10px 0;
+#                 font-size: 1.1em;
+#             }}
+#             .footer {{
+#                 margin-top: 20px;
+#                 font-size: 0.9em;
+#                 color: #666;
+#             }}
+#             .approve-button {{
+#                 display: inline-block;
+#                 padding: 12px 24px;
+#                 margin: 20px 0;
+#                 background-color: #e65c00;
+#                 color: white;
+#                 text-decoration: none;
+#                 border-radius: 4px;
+#                 font-weight: bold;
+#             }}
+#             .approve-button:hover {{
+#                 background-color: #cc5200;
+#             }}
+#             .status-badge {{
+#                 display: inline-block;
+#                 padding: 4px 8px;
+#                 border-radius: 12px;
+#                 background-color: {current_status['color']}20;  /* 20% opacity */
+#                 color: {current_status['color']};
+#                 font-size: 0.8em;
+#             }}
+#         </style>
+#     </head>
+#     <body>
+#         <div class="coupon-container">
+#             <h2>{header}</h2>
+#             <p>{subheader}</p>
+            
+#             <div class="status">
+#                 Status: <span class="status-badge">{current_status['text']}</span>
+#             </div>
+            
+#             <div class="coupon-code">{coupon.code}</div>
+            
+#             <div class="coupon-details">
+#                 <p><strong>Discount:</strong> {discount_text}</p>
+#                 {f'<p><strong>Minimum Order:</strong> {coupon.minimum_order_amount}</p>' if coupon.minimum_order_amount else ''}
+#                 <p><strong>Valid:</strong> From {valid_from} to {valid_to}</p>
+#                 <p><strong>Max Uses:</strong> {coupon.max_uses if coupon.max_uses else 'Unlimited'}</p>
+#                 <p><strong>Created By:</strong> {coupon.restaurant.restaurant_name if coupon.restaurant else 'Vendor'}</p>
+#                 <p><strong>Created At:</strong> {coupon.created_at.strftime('%B %d, %Y %H:%M')}</p>
+#             </div>
+            
+#             {'<a href="' + approval_url + '" class="approve-button">Approve Coupon</a>' if not is_vendor and coupon.is_active == 2 else ''}
+            
+#             <div class="footer">
+#                 {footer}
+#             </div>
+#         </div>
+#     </body>
+#     </html>
+#     """
+#     return html_content
+
+# def generate_coupon_status_html(coupon):
+#     from django.conf import settings
+
+#     is_approved = coupon.is_active == 1
+#     status_text = "Approved" if is_approved else "Rejected"
+#     color = "#28a745" if is_approved else "#dc3545"
+#     bg_color = "#e6f4ea" if is_approved else "#fdecea"
+#     message = (
+#         "🎉 Congratulations! Your coupon has been approved and is now live on EATOOR."
+#         if is_approved else
+#         "⚠️ Unfortunately, your coupon was not approved. Please review the offer details or contact support."
+#     )
+
+#     return f"""
+#     <!DOCTYPE html>
+#     <html>
+#     <head>
+#         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+#         <style>
+#             body {{
+#                 font-family: Arial, sans-serif;
+#                 background-color: #f4f4f4;
+#                 margin: 0;
+#                 padding: 0;
+#             }}
+#             .email-wrapper {{
+#                 max-width: 600px;
+#                 margin: 20px auto;
+#                 background: #ffffff;
+#                 border-radius: 10px;
+#                 padding: 20px;
+#                 box-shadow: 0 0 8px rgba(0,0,0,0.05);
+#             }}
+#             .header {{
+#                 text-align: center;
+#                 font-size: 20px;
+#                 font-weight: bold;
+#                 color: {color};
+#                 margin-bottom: 10px;
+#             }}
+#             .status-box {{
+#                 background-color: {bg_color};
+#                 padding: 15px;
+#                 border-radius: 8px;
+#                 margin-bottom: 20px;
+#                 text-align: center;
+#                 color: #333;
+#                 font-size: 15px;
+#             }}
+#             .details {{
+#                 font-size: 14px;
+#                 line-height: 1.6;
+#                 color: #333;
+#             }}
+#             .details p {{
+#                 margin: 5px 0;
+#             }}
+#             .footer {{
+#                 text-align: center;
+#                 color: #888;
+#                 font-size: 12px;
+#                 margin-top: 30px;
+#             }}
+#             @media screen and (max-width: 480px) {{
+#                 .email-wrapper {{
+#                     padding: 15px;
+#                 }}
+#                 .header {{
+#                     font-size: 18px;
+#                 }}
+#             }}
+#         </style>
+#     </head>
+#     <body>
+#         <div class="email-wrapper">
+#             <div class="header">Coupon {status_text}</div>
+#             <div class="status-box">{message}</div>
+#             <div class="details">
+#                 <p><strong>Coupon Code:</strong> {coupon.code}</p>
+#                 <p><strong>Discount Type:</strong> {coupon.get_offer_type_display()}</p>
+#                 <p><strong>Discount Value:</strong> ₹{coupon.discount_value}</p>
+#                 <p><strong>Restaurant:</strong> {coupon.restaurant.restaurant_name}</p>
+#                 <p><strong>Valid From:</strong> {coupon.valid_from.strftime('%B %d, %Y')}</p>
+#                 <p><strong>Valid Till:</strong> {coupon.valid_to.strftime('%B %d, %Y')}</p>
+#             </div>
+#             <div class="footer">
+#                 If you have questions, contact us at <a href="mailto:{settings.DEFAULT_FROM_EMAIL}">{settings.DEFAULT_FROM_EMAIL}</a><br><br>
+#                 – Team EATOOR
+#             </div>
+#         </div>
+#     </body>
+#     </html>
+#     """
+
+
+
+def generate_coupon_html(coupon, is_vendor=False):
+    """Generate modern HTML email for coupon approval workflow"""
+    # Discount text
+    discount_text = ""
+    if coupon.discount_type == 'percentage':
+        discount_text = f"{coupon.discount_value}% OFF"
+    elif coupon.discount_type == 'fixed':
+        discount_text = f"${coupon.discount_value} OFF"
+
+    # Date formatting
+    valid_from = coupon.valid_from.strftime('%b %d, %Y') if coupon.valid_from else "Now"
+    valid_to = coupon.valid_to.strftime('%b %d, %Y') if coupon.valid_to else "No expiration"
+
+    # Status information
+    status_info = {
+        0: {'text': 'Reject', 'class': 'inactive', 'color': '#E53E3E'},
+        1: {'text': 'Approved', 'class': 'active', 'color': '#38A169'},
+        2: {'text': 'Pending Approval', 'class': 'pending_approval', 'color': '#DD6B20'}
+    }
+    current_status = status_info.get(coupon.is_active, status_info[0])
+
+    # Email content
+    if is_vendor:
+        header = f"Your Coupon Status Update"
+        subheader = f"Status of your coupon for {coupon.restaurant.restaurant_name if coupon.restaurant else 'your restaurant'}"
+        footer = "You'll be notified when admin reviews your coupon"
+    else:
+        header = "New Coupon Approval Request"
+        subheader = f"Created by {coupon.restaurant.restaurant_name if coupon.restaurant else 'a vendor'}"
+        footer = "Please review below and take action"
+        approval_url = f"{settings.REACT_APP_BASE_URL}/vendor-dashboard/coupon/management/{coupon.restaurant.restaurant_id}/"
+
+    html = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+            /* Modern CSS with responsive design */
+            body {{
+                font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+                line-height: 1.5;
+                margin: 0;
+                padding: 0;
+                background-color: #F8FAFC;
+                color: #1A202C;
+            }}
+            .email-container {{
+                max-width: 600px;
+                margin: 0 auto;
+                padding: 20px;
+            }}
+            .header {{
+                text-align: center;
+                padding: 30px 0 20px;
+            }}
+            .logo {{
+                height: 40px;
+                margin-bottom: 20px;
+            }}
+            .card {{
+                background: white;
+                border-radius: 12px;
+                box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+                overflow: hidden;
+                margin-bottom: 30px;
+            }}
+            .card-header {{
+                background: linear-gradient(135deg, #FF6B00, #E05D00);
+                color: white;
+                padding: 25px;
+                text-align: center;
+            }}
+            .card-header h1 {{
+                margin: 0;
+                font-size: 24px;
+                font-weight: 700;
+            }}
+            .card-header p {{
+                margin: 8px 0 0;
+                opacity: 0.9;
+                font-size: 16px;
+            }}
+            .card-body {{
+                padding: 25px;
+            }}
+            .status-badge {{
+                display: inline-block;
+                padding: 8px 16px;
+                border-radius: 20px;
+                font-weight: 600;
+                background-color: {current_status['color']}15;
+                color: {current_status['color']};
+                margin: 10px 0;
+                font-size: 14px;
+            }}
+            .coupon-code {{
+                font-size: 32px;
+                font-weight: 700;
+                color: #E05D00;
+                text-align: center;
+                margin: 25px 0;
+                padding: 15px;
+                background-color: #FFF5F0;
+                border-radius: 8px;
+                letter-spacing: 1px;
+                border: 2px dashed #FF9E66;
+            }}
+            .detail-row {{
+                display: flex;
+                margin-bottom: 12px;
+                padding-bottom: 12px;
+                border-bottom: 1px solid #EDF2F7;
+            }}
+            .detail-label {{
+                font-weight: 600;
+                color: #2D3748;
+                min-width: 150px;
+            }}
+            .detail-value {{
+                color: #4A5568;
+            }}
+            .action-btn {{
+                display: block;
+                width: 100%;
+                padding: 16px;
+                margin: 30px 0 20px;
+                background: linear-gradient(135deg, #FF6B00, #E05D00);
+                color: white;
+                text-align: center;
+                text-decoration: none;
+                border-radius: 8px;
+                font-weight: 600;
+                font-size: 16px;
+                transition: all 0.3s;
+            }}
+            .action-btn:hover {{
+                transform: translateY(-2px);
+                box-shadow: 0 6px 12px rgba(224, 93, 0, 0.2);
+            }}
+            .footer {{
+                text-align: center;
+                font-size: 14px;
+                color: #718096;
+                margin-top: 30px;
+                padding-top: 20px;
+                border-top: 1px solid #E2E8F0;
+            }}
+            @media (max-width: 480px) {{
+                .email-container {{
+                    padding: 15px;
+                }}
+                .card-header h1 {{
+                    font-size: 20px;
+                }}
+                .coupon-code {{
+                    font-size: 24px;
+                    padding: 12px;
+                }}
+                .detail-row {{
+                    flex-direction: column;
+                }}
+                .detail-label {{
+                    margin-bottom: 4px;
+                    min-width: auto;
+                }}
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="email-container">
+            <div class="header">
+                <!-- Logo placeholder - replace with actual logo in production -->
+                <div class="logo" style="font-weight: 700; font-size: 28px; color: #FF6B00;">EATOOR</div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h1>{header}</h1>
+                    <p>{subheader}</p>
+                </div>
+                
+                <div class="card-body">
+                    <div class="coupon-code">Status: {current_status['text']}</div>
+                    
+                    <div class="coupon-code">{coupon.code}</div>
+                    
+                    <div class="detail-row">
+                        <span class="detail-label">Discount:</span>
+                        <span class="detail-value">{discount_text}</span>
+                    </div>
+                    {f'<div class="detail-row"><span class="detail-label">Minimum Order:</span><span class="detail-value">${coupon.minimum_order_amount}</span></div>' if coupon.minimum_order_amount else ''}
+                    <div class="detail-row">
+                        <span class="detail-label">Valid Period:</span>
+                        <span class="detail-value">{valid_from} - {valid_to}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Max Uses:</span>
+                        <span class="detail-value">{coupon.max_uses if coupon.max_uses else 'Unlimited'}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Created By:</span>
+                        <span class="detail-value">{coupon.restaurant.restaurant_name if coupon.restaurant else 'Vendor'}</span>
+                    </div>
+                    
+                    {'<a href="' + approval_url + '" class="action-btn">Review & Approve Coupon</a>' if not is_vendor and coupon.is_active == 2 else ''}
+                </div>
+            </div>
+            
+            <div class="footer">
+                {footer}<br><br>
+                © {datetime.now().year} Eatoor. All rights reserved.
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    return html
+
+
+def generate_coupon_status_html(coupon):
+    """Generate modern HTML for coupon status notification"""
+    is_approved = coupon.is_active == 1
+    status_text = "APPROVED" if is_approved else "REJECTED"
+    status_color = "#38A169" if is_approved else "#E53E3E"
+    
+    message = (
+        "Your coupon has been approved and is now live on our platform!"
+        if is_approved else
+        "Your coupon submission didn't meet our current requirements."
+    )
+    
+    # Date formatting
+    valid_from = coupon.valid_from.strftime('%b %d, %Y') if coupon.valid_from else "Immediately"
+    valid_to = coupon.valid_to.strftime('%b %d, %Y') if coupon.valid_to else "No expiration"
+
+    html = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+            /* Reusing the same modern CSS from generate_coupon_html */
+            body {{
+                font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+                line-height: 1.5;
+                margin: 0;
+                padding: 0;
+                background-color: #F8FAFC;
+                color: #1A202C;
+            }}
+            .email-container {{
+                max-width: 600px;
+                margin: 0 auto;
+                padding: 20px;
+            }}
+            .header {{
+                text-align: center;
+                padding: 30px 0 20px;
+            }}
+            .logo {{
+                height: 40px;
+                margin-bottom: 20px;
+            }}
+            .card {{
+                background: white;
+                border-radius: 12px;
+                box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+                overflow: hidden;
+                margin-bottom: 30px;
+            }}
+            .card-header {{
+                background: linear-gradient(135deg, #FF6B00, #E05D00);
+                color: white;
+                padding: 25px;
+                text-align: center;
+            }}
+            .card-header h1 {{
+                margin: 0;
+                font-size: 24px;
+                font-weight: 700;
+            }}
+            .card-header p {{
+                margin: 8px 0 0;
+                opacity: 0.9;
+                font-size: 16px;
+            }}
+            .card-body {{
+                padding: 25px;
+            }}
+            .status-badge {{
+                display: inline-block;
+                padding: 8px 16px;
+                border-radius: 20px;
+                font-weight: 600;
+                background-color: {status_color}15;
+                color: {status_color};
+                margin: 10px 0;
+                font-size: 14px;
+            }}
+            .coupon-code {{
+                font-size: 32px;
+                font-weight: 700;
+                color: #E05D00;
+                text-align: center;
+                margin: 25px 0;
+                padding: 15px;
+                background-color: #FFF5F0;
+                border-radius: 8px;
+                letter-spacing: 1px;
+                border: 2px dashed #FF9E66;
+            }}
+            .detail-row {{
+                display: flex;
+                margin-bottom: 12px;
+                padding-bottom: 12px;
+                border-bottom: 1px solid #EDF2F7;
+            }}
+            .detail-label {{
+                font-weight: 600;
+                color: #2D3748;
+                min-width: 150px;
+            }}
+            .detail-value {{
+                color: #4A5568;
+            }}
+            .footer {{
+                text-align: center;
+                font-size: 14px;
+                color: #718096;
+                margin-top: 30px;
+                padding-top: 20px;
+                border-top: 1px solid #E2E8F0;
+            }}
+            @media (max-width: 480px) {{
+                .email-container {{
+                    padding: 15px;
+                }}
+                .card-header h1 {{
+                    font-size: 20px;
+                }}
+                .coupon-code {{
+                    font-size: 24px;
+                    padding: 12px;
+                }}
+                .detail-row {{
+                    flex-direction: column;
+                }}
+                .detail-label {{
+                    margin-bottom: 4px;
+                    min-width: auto;
+                }}
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="email-container">
+            <div class="header">
+                <!-- Logo placeholder - replace with actual logo in production -->
+                <div class="logo" style="font-weight: 700; font-size: 28px; color: #FF6B00;">EATOOR</div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h1>Coupon {status_text.capitalize()}</h1>
+                    <p>{message}</p>
+                </div>
+                
+                <div class="card-body">                    
+                    <div class="coupon-code">{status_text}</div>
+                    <div class="coupon-code">{coupon.code}</div>
+                    <div class="detail-row">
+                        <span class="detail-label">Discount:</span>
+                        <span class="detail-value">{'%' if coupon.discount_type == 'percentage' else '$'}{coupon.discount_value} OFF</span>
+                    </div>
+                    {f'<div class="detail-row"><span class="detail-label">Minimum Order:</span><span class="detail-value">{coupon.minimum_order_amount}</span></div>' if coupon.minimum_order_amount else ''}
+                    <div class="detail-row">
+                        <span class="detail-label">Valid Period:</span>
+                        <span class="detail-value">{valid_from} - {valid_to}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Restaurant:</span>
+                        <span class="detail-value">{coupon.restaurant.restaurant_name}</span>
+                    </div>
+                    
+                    <div style="margin-top: 30px; padding: 20px; background-color: #F8FAFC; border-radius: 8px; text-align: center;">
+                        <p style="margin: 0; color: #4A5568;">
+                            { 'Customers can now use this coupon when ordering from your restaurant.' if is_approved 
+                              else 'Please review our coupon guidelines and submit a new request if needed.' }
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="footer">
+                Need help? Contact contact@eatoor.com<br><br>
+                © {datetime.now().year} Eatoor. All rights reserved.
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    return html

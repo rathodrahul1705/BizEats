@@ -542,7 +542,7 @@ const DashboardOverview = ({ user, setUser }) => {
 
                   {
 
-                  user?.user_id == 2 ?
+                  user?.role == "Admin" ?
                   <>
 
                   <Link 

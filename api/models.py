@@ -1,10 +1,12 @@
-from datetime import timezone
+# from datetime import timezone
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.utils.timezone import now, timedelta
+from django.utils import timezone
 import random
 from django import forms
-
+from django.core.validators import MinValueValidator
+from django.core.exceptions import ValidationError
 
 class UserManager(BaseUserManager):
     def create_user(self, email, full_name, contact_number, role=1):  # Default to Customer
@@ -609,3 +611,130 @@ class RestaurantCategory(models.Model):
 
     def __str__(self):
         return self.category_name
+class OfferInfo(models.Model):
+    OFFER_TYPE_CHOICES = [
+        ('coupon_code', 'Coupon Code'),
+        ('automatic_discount', 'Automatic Discount'),
+        ('first_time_user', 'First-time User Offer'),
+        ('free_delivery', 'Free Delivery'),
+        ('vendor_specific', 'Vendor-specific Deal'),
+    ]
+    
+    DISCOUNT_TYPE_CHOICES = [
+        ('percentage', 'Percentage'),
+        ('fixed', 'Fixed Amount'),
+    ]
+    
+    INACTIVE = 0
+    APPROVED = 1
+    PENDING_APPROVAL = 2
+
+    STATUS_CHOICES = [
+        (INACTIVE, 'Reject'),
+        (APPROVED, 'Approved'),
+        (PENDING_APPROVAL, 'Pending Approval'),
+    ]
+
+    # Basic fields
+    offer_type = models.CharField(max_length=30, choices=OFFER_TYPE_CHOICES)
+    is_active = models.IntegerField(choices=STATUS_CHOICES, default=PENDING_APPROVAL)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    # Code - Only required for coupon_code offers
+    code = models.CharField(
+        max_length=20,
+        unique=True,
+        blank=True,
+        null=True
+    )
+    
+    # Discount details
+    discount_type = models.CharField(
+        max_length=15,
+        choices=DISCOUNT_TYPE_CHOICES,
+        blank=True,
+        null=True
+    )
+    discount_value = models.DecimalField(
+        max_digits=6,
+        decimal_places=2,
+        validators=[MinValueValidator(0.01)],
+        blank=True,
+        null=True
+    )
+    
+    # Free delivery
+    minimum_order_amount = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        validators=[MinValueValidator(0)],
+        blank=True,
+        null=True
+    )
+    
+    # Restaurant (for vendor-specific deals)
+    restaurant = models.ForeignKey(
+        'RestaurantMaster',
+        on_delete=models.CASCADE,
+        related_name='offers',
+        blank=True,
+        null=True,
+        to_field='restaurant_id'
+    )
+    
+    # Validity
+    valid_from = models.DateTimeField(blank=True, null=True)
+    valid_to = models.DateTimeField(blank=True, null=True)
+    
+    # Usage limits
+    max_uses = models.PositiveIntegerField(blank=True, null=True)
+    max_uses_per_user = models.PositiveIntegerField(blank=True, null=True)
+    times_used = models.PositiveIntegerField(default=0)
+    
+    class Meta:
+        db_table = "offer_info"
+    
+    def __str__(self):
+        return f"{self.get_offer_type_display()} - {self.code or 'No Code'}"
+
+    def is_valid(self):
+        now = timezone.now()
+        if not self.is_active:
+            return False
+        if self.valid_from and now < self.valid_from:
+            return False
+        if self.valid_to and now > self.valid_to:
+            return False
+        if self.max_uses is not None and self.times_used >= self.max_uses:
+            return False
+        return True
+
+    def clean(self):
+        """Custom field validation"""
+        errors = {}
+
+        # Coupon code required for coupon_code offers
+        if self.offer_type == 'coupon_code':
+            if not self.code:
+                errors['code'] = 'Coupon code is required for coupon code offers'
+
+        # Restaurant is mandatory for vendor_specific offer type
+        if self.offer_type == 'vendor_specific' and not self.restaurant:
+            errors['restaurant'] = 'Restaurant is required for vendor-specific offers'
+
+        # Discount type and value are mandatory for specific offer types
+        if self.offer_type in ['coupon_code', 'automatic_discount', 'first_time_user']:
+            if not self.discount_type:
+                errors['discount_type'] = 'Discount type is required for this offer type'
+            if not self.discount_value:
+                errors['discount_value'] = 'Discount value is required for this offer type'
+
+        # Validity check
+        if self.valid_from and self.valid_to and self.valid_from >= self.valid_to:
+            errors['valid_to'] = 'End date must be after the start date'
+
+        if errors:
+            raise ValidationError(errors)
+        
+    

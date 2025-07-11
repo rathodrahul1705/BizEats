@@ -119,6 +119,13 @@ const API_ENDPOINTS = {
     UPDATE: (coupon_id) => `${BASE_URL}/vendor/coupons/${coupon_id}/update/`
   },
 
+  OFFER: {
+    CREATE: `${BASE_URL}/offers/`,
+    FETCH: (restaurant_id) => `${BASE_URL}/offers/?restaurant_id=${restaurant_id}`,
+    DELETE: (coupon_id) => `${BASE_URL}/offers/${coupon_id}/`,
+    UPDATE: (coupon_id) => `${BASE_URL}/offers/${coupon_id}/`
+  },
+
   PROFILE: {
     UPDATE: `${BASE_URL}/user-profile-update/`,
   },

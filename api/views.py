@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
-from api.emailer.email_notifications import send_otp_email, send_contact_email
+from api.emailer.email_notifications import generate_coupon_html, generate_coupon_status_html, send_otp_email, send_contact_email
 from api.serializers import ContactUsSerializer, OrderReviewSerializer, RestaurantCategorySerializer
 from .models import Cart, ContactMessage, OrderReview, RestaurantCategory, User, RestaurantMaster
 from rest_framework_simplejwt.tokens import RefreshToken, TokenError
@@ -17,6 +17,14 @@ import logging
 from django.db.models import Avg, Count
 from rest_framework import viewsets
 from django_filters.rest_framework import DjangoFilterBackend
+from api.models import OfferInfo
+from api.offer.offer_serializers import OfferSerializer
+from api.serializers import RestaurantMasterSerializer 
+from rest_framework import viewsets, permissions
+from django.core.mail import send_mail
+from django.conf import settings
+from django.utils.html import strip_tags
+from django.contrib.auth import get_user_model
 
 
 logger = logging.getLogger(__name__)
@@ -307,3 +315,220 @@ class RestaurantCategoryViewSet(viewsets.ModelViewSet):
         if restaurant_id:
             return self.queryset.filter(restaurant_id=restaurant_id)
         return self.queryset
+# class OfferViewSet(viewsets.ModelViewSet):
+#     queryset = OfferInfo.objects.all()
+#     serializer_class = OfferSerializer
+#     permission_classes = [permissions.IsAuthenticated]
+
+#     def get_queryset(self):
+#         user = self.request.user
+#         queryset = super().get_queryset()
+#         restaurant = self.request.query_params.get('restaurant_id')
+#         code = self.request.query_params.get('code')
+
+#         # If code is provided in query params, filter by code
+#         if code:
+#             queryset = queryset.filter(code=code)
+
+#         # Admin role (assuming role=2 means admin)
+#         if hasattr(user, 'role') and user.role == 2:
+#             if restaurant:
+#                 return queryset.filter(restaurant_id=restaurant)
+#             return queryset
+        
+#         # For non-admin users
+#         if restaurant:
+#             return queryset.filter(
+#                 restaurant_id=restaurant,
+#             )
+        
+#         # Default return for non-admin with no restaurant_id
+#         return queryset.none()
+
+#     def perform_create(self, serializer):
+#    
+#      serializer.save()
+# class OfferViewSet(viewsets.ModelViewSet):
+#     serializer_class = OfferSerializer
+#     permission_classes = [permissions.IsAuthenticated]
+
+#     def get_queryset(self):
+#         user = self.request.user
+#         restaurant = self.request.query_params.get('restaurant_id')
+#         code = self.request.query_params.get('code')
+
+#         # Start with base queryset
+#         queryset = OfferInfo.objects.all().order_by('-id')
+
+#         # Filter by code if provided
+#         if code:
+#             queryset = queryset.filter(code=code)
+
+#         # Admin role (assuming role=2 means admin)
+#         if hasattr(user, 'role') and user.role == 2:
+#             if restaurant:
+#                 return queryset.filter(restaurant_id=restaurant)
+#             return queryset
+        
+#         # For non-admin users
+#         if restaurant:
+#             return queryset.filter(
+#                 restaurant_id=restaurant,
+#             )
+        
+#         # Default return for non-admin with no restaurant_id
+#         return queryset.none()
+
+#     def perform_create(self, serializer):
+#         instance = serializer.save()
+        
+#         # Send email only for coupon_code type offers
+#         if instance.offer_type == 'coupon_code' and instance.code:
+#             self.send_coupon_email(instance)
+    
+#     def send_coupon_email(self, coupon):
+#         """Send appropriate email based on coupon status"""
+
+#         # Email to vendor (created)
+#         vendor_html = generate_coupon_html(coupon, is_vendor=True)
+
+#         vendor_recipient_list = list(filter(None, [
+#             getattr(coupon.restaurant.owner_details, "owner_email_address", None)
+#         ]))
+        
+#         send_mail(
+#             subject=f"Your coupon {coupon.code} is pending approval",
+#             message=strip_tags(vendor_html),
+#             html_message=vendor_html,
+#             from_email=settings.DEFAULT_FROM_EMAIL,
+#             recipient_list=vendor_recipient_list,  # Removed the extra list wrapping
+#             fail_silently=False,
+#         )
+
+#         # Get all admin users (where role=2)
+#         User = get_user_model()
+#         admin_emails = User.objects.filter(role=2).values_list('email', flat=True)
+        
+#         # Convert to list and filter out any empty emails
+#         admin_recipients = list(filter(None, admin_emails))
+        
+#         # Only send to admins if there are any
+#         if admin_recipients:
+#             admin_html = generate_coupon_html(coupon, is_vendor=False)
+#             send_mail(
+#                 subject=f"Approval needed for coupon {coupon.code}",
+#                 message=strip_tags(admin_html),
+#                 html_message=admin_html,
+#                 from_email=settings.DEFAULT_FROM_EMAIL,
+#                 recipient_list=admin_recipients,
+#                 fail_silently=False,
+#             )
+    
+class OfferViewSet(viewsets.ModelViewSet):
+    serializer_class = OfferSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        restaurant = self.request.query_params.get('restaurant_id')
+        code = self.request.query_params.get('code')
+
+        queryset = OfferInfo.objects.all().order_by('-id')
+
+        if code:
+            queryset = queryset.filter(code=code)
+
+        if hasattr(user, 'role') and user.role == 2:  # Admin
+            if restaurant:
+                return queryset.filter(restaurant_id=restaurant)
+            return queryset
+
+        if restaurant:
+            return queryset.filter(restaurant_id=restaurant)
+
+        return queryset.none()
+
+    def perform_create(self, serializer):
+        instance = serializer.save()
+
+        if instance.offer_type == 'coupon_code' and instance.code:
+            self.send_coupon_email(instance)
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        prev_status = instance.is_active  # Capture status before update
+
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        updated_instance = serializer.save()
+
+        new_status = updated_instance.is_active
+
+        # Check if status changed to Approved (1) or Rejected (0)
+        if (
+            prev_status != new_status and 
+            updated_instance.offer_type == 'coupon_code' and 
+            new_status in [0, 1]  # Assuming 0 = Rejected, 1 = Approved
+        ):
+            self.send_coupon_status_update_email(updated_instance)
+
+        return Response(serializer.data)
+
+    def send_coupon_email(self, coupon):
+        """Send email when coupon is created (Pending Approval)"""
+        vendor_html = generate_coupon_html(coupon, is_vendor=True)
+
+        vendor_recipient_list = list(filter(None, [
+            getattr(coupon.restaurant.owner_details, "owner_email_address", None)
+        ]))
+
+        send_mail(
+            subject=f"Your coupon {coupon.code} is pending approval",
+            message=strip_tags(vendor_html),
+            html_message=vendor_html,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=vendor_recipient_list,
+            fail_silently=False,
+        )
+
+        User = get_user_model()
+        admin_emails = User.objects.filter(role=2).values_list('email', flat=True)
+        admin_recipients = list(filter(None, admin_emails))
+
+        if admin_recipients:
+            admin_html = generate_coupon_html(coupon, is_vendor=False)
+            send_mail(
+                subject=f"Approval needed for coupon {coupon.code}",
+                message=strip_tags(admin_html),
+                html_message=admin_html,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=admin_recipients,
+                fail_silently=False,
+            )
+
+    def send_coupon_status_update_email(self, coupon):
+        """Send email when coupon status is changed to Approved or Rejected"""
+
+        vendor_email = getattr(coupon.restaurant.owner_details, "owner_email_address", None)
+        if not vendor_email:
+            return
+
+        status_text = "approved" if coupon.is_active == 1 else "rejected"
+        subject = f"Your coupon {coupon.code} has been {status_text}"
+        body_html = generate_coupon_status_html(coupon)  # You can create a different HTML for this
+        
+        send_mail(
+            subject=subject,
+            message=strip_tags(body_html),
+            html_message=body_html,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[vendor_email],
+            fail_silently=False,
+        )
+class RestaurantListView(viewsets.ReadOnlyModelViewSet):
+    """Endpoint to list restaurants for the dropdown"""
+    queryset = RestaurantMaster.objects.filter(restaurant_status=1)  # Active restaurants
+    serializer_class = RestaurantMasterSerializer  # Make sure you have this serializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = None

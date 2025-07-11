@@ -1,388 +1,646 @@
+/* Modern Coupon Management System CSS */
+:root {
+  /* Color Palette */
+  --primary-color: #e65c00; /* Vibrant orange */
+  --primary-hover: #cc5200;
+  --primary-light: #ffefe6;
+  --text-color: #000000; /* Black */
+  --text-light: #4a5568;
+  --text-lighter: #718096;
+  --border-color: #e2e8f0;
+  --light-bg: #f8f9fa;
+  --white: #ffffff;
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  
+  /* Spacing */
+  --space-xs: 0.5rem;
+  --space-sm: 0.75rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  
+  /* Border radius */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-full: 9999px;
+  
+  /* Transitions */
+  --transition: all 0.2s ease;
+}
+
 /* Base Styles */
 .vendor-coupon-management {
-    --vendor-coupon-primary-color: #3b82f6;
-    --vendor-coupon-primary-hover: #2563eb;
-    --vendor-coupon-secondary-color: #f59e0b;
-    --vendor-coupon-secondary-hover: #d97706;
-    --vendor-coupon-danger-color: #ef4444;
-    --vendor-coupon-danger-hover: #dc2626;
-    --vendor-coupon-success-color: #10b981;
-    --vendor-coupon-success-hover: #059669;
-    --vendor-coupon-text-color: #374151;
-    --vendor-coupon-light-gray: #f3f4f6;
-    --vendor-coupon-medium-gray: #e5e7eb;
-    --vendor-coupon-dark-gray: #6b7280;
-    --vendor-coupon-white: #ffffff;
-    --vendor-coupon-modal-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    --vendor-coupon-transition: all 0.3s ease;
-  }
-  
-  /* Coupon Management Container */
-  .vendor-coupon-management {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 40px;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    color: var(--vendor-coupon-text-color);
-    line-height: 1.6;
-  }
-  
-  .vendor-coupon-management-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 24px;
-    flex-wrap: wrap;
-    gap: 16px;
-  }
-  
-  .vendor-coupon-management-header h1 {
-    font-size: 24px;
-    font-weight: bold;
-    margin: 0;
-  }
-  
-  /* Add Coupon Button */
-  .vendor-coupon-management-add-btn {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 16px;
-    background-color: #FF6B35;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
-    transition: background-color 0.2s;
-  }
-  
-  .vendor-coupon-management-add-btn:hover {
-    background-color: #FF6B35
-  }
-  
-  /* Modal Styles */
-  .vendor-coupon-management-modal {
-    position: fixed;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    z-index: 1000;
-    display: none;
-  }
-  
-  .vendor-coupon-management-modal-open {
-    display: block;
-  }
-  
-  .vendor-coupon-management-modal-overlay {
-    position: fixed;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    background-color: rgba(0, 0, 0, 0.5);
-    z-index: 1001;
-  }
-  
-  .vendor-coupon-management-modal-content {
-    position: fixed;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    width: 100%;
-    max-width: 500px;
-    background-color: var(--vendor-coupon-white);
-    z-index: 1002;
-    overflow-y: auto;
-    transform: translateX(100%);
-    transition: transform 0.3s ease-out;
-    box-shadow: var(--vendor-coupon-modal-shadow);
-  }
-  
-  .vendor-coupon-management-modal-open .vendor-coupon-management-modal-content {
-    transform: translateX(0);
-  }
-  
-  .vendor-coupon-management-modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20px;
-    border-bottom: 1px solid var(--vendor-coupon-medium-gray);
-  }
-  
-  .vendor-coupon-management-modal-header h2 {
-    font-size: 20px;
-    font-weight: 600;
-    margin: 0;
-  }
-  
-  .vendor-coupon-management-close-btn {
-    background: none;
-    border: none;
-    font-size: 24px;
-    cursor: pointer;
-    color: var(--vendor-coupon-dark-gray);
-    transition: var(--vendor-coupon-transition);
-  }
-  
-  .vendor-coupon-management-close-btn:hover {
-    color: var(--vendor-coupon-text-color);
-  }
-  
-  /* Form Styles */
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  color: var(--text-color);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--space-xl);
+  background-color: var(--white);
+}
+
+/* Typography */
+.vendor-coupon-management h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--text-color);
+}
+
+.vendor-coupon-management h2 {
+  font-size: 1.375rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+/* Header Styles */
+.vendor-coupon-management-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-xl);
+  flex-wrap: wrap;
+  gap: var(--space-md);
+}
+
+.vendor-coupon-management-header-actions {
+  display: flex;
+  gap: var(--space-sm);
+  align-items: center;
+}
+
+/* Button Styles */
+.vendor-coupon-management-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  padding: 0.75rem 1.25rem;
+  border-radius: var(--radius-md);
+  font-weight: 500;
+  font-size: 0.9375rem;
+  cursor: pointer;
+  transition: var(--transition);
+  border: none;
+  white-space: nowrap;
+  height: 42px;
+}
+
+.vendor-coupon-management-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Primary Button */
+.vendor-coupon-management-add-btn,
+.vendor-coupon-management-save-btn {
+  background-color: var(--primary-color);
+  color: var(--white);
+  box-shadow: var(--shadow-sm);
+  min-width: 160px;
+}
+
+.vendor-coupon-management-add-btn:hover:not(:disabled),
+.vendor-coupon-management-save-btn:hover:not(:disabled) {
+  background-color: var(--primary-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+/* Secondary Button */
+.vendor-coupon-management-refresh-btn,
+.vendor-coupon-management-cancel-btn {
+  background-color: var(--white);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+  min-width: 120px;
+}
+
+.vendor-coupon-management-refresh-btn:hover:not(:disabled),
+.vendor-coupon-management-cancel-btn:hover:not(:disabled) {
+  background-color: var(--light-bg);
+  border-color: var(--text-lighter);
+}
+
+/* Danger Button */
+.vendor-coupon-management-delete-btn {
+  background-color: #dc3545;
+  color: var(--white);
+  min-width: 90px;
+}
+
+.vendor-coupon-management-delete-btn:hover:not(:disabled) {
+  background-color: #bb2d3b;
+}
+
+/* Warning Button */
+.vendor-coupon-management-edit-btn {
+  background-color: #ffc107;
+  color: var(--text-color);
+  min-width: 90px;
+}
+
+.vendor-coupon-management-edit-btn:hover:not(:disabled) {
+  background-color: #e0a800;
+}
+
+/* Modal Styles */
+.vendor-coupon-management-modal {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1000;
+  display: none;
+  backdrop-filter: blur(2px);
+}
+
+.vendor-coupon-management-modal-open {
+  display: block;
+}
+
+.vendor-coupon-management-modal-overlay {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1001;
+}
+
+.vendor-coupon-management-modal-content {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  max-width: 520px;
+  background-color: var(--white);
+  z-index: 1002;
+  overflow-y: auto;
+  transform: translateX(100%);
+  transition: transform 0.3s ease-out;
+  box-shadow: var(--shadow-lg);
+}
+
+.vendor-coupon-management-modal-open .vendor-coupon-management-modal-content {
+  transform: translateX(0);
+}
+
+.vendor-coupon-management-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-lg);
+  border-bottom: 1px solid var(--border-color);
+  position: sticky;
+  top: 0;
+  background-color: var(--white);
+  z-index: 10;
+}
+
+.vendor-coupon-management-close-btn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: var(--text-lighter);
+  transition: var(--transition);
+  padding: var(--space-xs);
+  border-radius: var(--radius-full);
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vendor-coupon-management-close-btn:hover {
+  color: var(--text-color);
+  background-color: var(--light-bg);
+}
+
+/* Form Styles */
+.vendor-coupon-management-form-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-md);
+  padding: var(--space-lg);
+}
+
+.vendor-coupon-management-form-group {
+  margin-bottom: var(--space-md);
+}
+
+.vendor-coupon-management-form-group label {
+  display: block;
+  margin-bottom: var(--space-xs);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--text-light);
+}
+
+.vendor-coupon-management-form-group input,
+.vendor-coupon-management-form-group select,
+.vendor-coupon-management-form-group textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-size: 0.9375rem;
+  transition: var(--transition);
+  background-color: var(--white);
+}
+
+.vendor-coupon-management-form-group input[type="datetime-local"] {
+  padding: 0.6875rem;
+}
+
+.vendor-coupon-management-form-group input:focus,
+.vendor-coupon-management-form-group select:focus,
+.vendor-coupon-management-form-group textarea:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.vendor-coupon-management-input-error {
+  border-color: #dc3545 !important;
+}
+
+.vendor-coupon-management-error-message {
+  color: #dc3545;
+  font-size: 0.875rem;
+  margin-top: var(--space-xs);
+  display: block;
+}
+
+.vendor-coupon-management-checkbox-group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.vendor-coupon-management-checkbox-group input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+}
+
+.vendor-coupon-management-checkbox-group label {
+  margin-bottom: 0;
+  font-weight: normal;
+}
+
+.vendor-coupon-management-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-sm);
+  margin-top: var(--space-lg);
+  padding: var(--space-md) var(--space-lg);
+  border-top: 1px solid var(--border-color);
+  position: sticky;
+  bottom: 0;
+  background-color: var(--white);
+  z-index: 10;
+}
+
+/* Table Styles */
+.vendor-coupon-management-table-container {
+  background-color: var(--white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow-x: auto;
+  border: 1px solid var(--border-color);
+}
+
+.vendor-coupon-management-empty-state {
+  padding: var(--space-xl) var(--space-lg);
+  text-align: center;
+  color: var(--text-lighter);
+}
+
+.vendor-coupon-management-empty-state p {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.vendor-coupon-management-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 800px;
+}
+
+.vendor-coupon-management-table th, 
+.vendor-coupon-management-table td {
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+  vertical-align: middle;
+  font-size: 0.9375rem;
+}
+
+.vendor-coupon-management-table th {
+  background-color: var(--light-bg);
+  font-weight: 600;
+  color: var(--text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  position: sticky;
+  top: 0;
+}
+
+.vendor-coupon-management-table tr:last-child td {
+  border-bottom: none;
+}
+
+.vendor-coupon-management-table tr:hover {
+  background-color: rgba(248, 249, 250, 0.8);
+}
+
+/* Special Elements */
+.vendor-coupon-management-coupon-code {
+  font-weight: 600;
+  color: var(--primary-color);
+  font-family: 'Roboto Mono', monospace;
+  font-size: 0.875rem;
+  background-color: rgba(230, 92, 0, 0.05);
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+}
+
+.vendor-coupon-management-vendor-name {
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.vendor-coupon-management-status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.375rem 0.75rem;
+  border-radius: var(--radius-full);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  gap: var(--space-xs);
+}
+
+.vendor-coupon-management-status-active {
+  background-color: rgba(25, 135, 84, 0.1);
+  color: #198754;
+}
+
+.vendor-coupon-management-status-inactive {
+  background-color: rgba(220, 53, 69, 0.1);
+  color: #dc3545;
+}
+
+.vendor-coupon-management-actions {
+  display: flex;
+  gap: var(--space-xs);
+}
+
+.vendor-coupon-management-edit-btn,
+.vendor-coupon-management-delete-btn {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  border-radius: var(--radius-sm);
+}
+
+/* Loading State */
+.vendor-coupon-management-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-xl);
+  color: var(--text-lighter);
+}
+
+.vendor-coupon-management-spinner {
+  width: 2rem;
+  height: 2rem;
+  border: 3px solid var(--border-color);
+  border-top-color: var(--primary-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: var(--space-md);
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Error Message */
+.vendor-coupon-management-error {
+  background-color: rgba(220, 53, 69, 0.1);
+  color: #dc3545;
+  padding: var(--space-md);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-lg);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.9375rem;
+}
+
+.vendor-coupon-management-error-dismiss {
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  padding: var(--space-xs);
+  font-size: 1rem;
+}
+
+/* Responsive Styles */
+@media (min-width: 768px) {
   .vendor-coupon-management-form-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 16px;
-    padding: 20px;
+    grid-template-columns: 1fr 1fr;
   }
   
-  .vendor-coupon-management-form-group {
-    margin-bottom: 16px;
-  }
-  
-  .vendor-coupon-management-form-group label {
-    display: block;
-    margin-bottom: 8px;
-    font-size: 14px;
-    font-weight: 500;
-  }
-  
-  .vendor-coupon-management-form-group input,
-  .vendor-coupon-management-form-group select {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid var(--vendor-coupon-medium-gray);
-    border-radius: 6px;
-    font-size: 14px;
-    transition: var(--vendor-coupon-transition);
-  }
-  
-  .vendor-coupon-management-form-group input:focus,
-  .vendor-coupon-management-form-group select:focus {
-    outline: none;
-    border-color: var(--vendor-coupon-primary-color);
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
-  }
-  
-  .vendor-coupon-management-input-error {
-    border-color: var(--vendor-coupon-danger-color) !important;
-  }
-  
-  .vendor-coupon-management-error-message {
-    color: var(--vendor-coupon-danger-color);
-    font-size: 12px;
-    margin-top: 4px;
-    display: block;
+  /* Make some fields span full width */
+  .vendor-coupon-management-form-group:has(input[type="datetime-local"]),
+  .vendor-coupon-management-form-group:has(select[name="offer_type"]),
+  .vendor-coupon-management-form-group:has(select[name="vendor_id"]) {
+    grid-column: span 2;
   }
   
   .vendor-coupon-management-checkbox-group {
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    grid-column: span 2;
+  }
+}
+
+@media (max-width: 767px) {
+  .vendor-coupon-management {
+    padding: var(--space-md);
   }
   
-  .vendor-coupon-management-checkbox-group input[type="checkbox"] {
-    width: auto;
+  .vendor-coupon-management-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-md);
   }
   
-  .vendor-coupon-management-checkbox-group label {
-    margin-bottom: 0;
-    font-weight: normal;
+  .vendor-coupon-management-header-actions {
+    flex-direction: column;
   }
   
-  .vendor-coupon-management-form-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 12px;
-    margin-top: 24px;
-    padding: 16px 20px;
-    border-top: 1px solid var(--vendor-coupon-medium-gray);
-  }
-  
-  .vendor-coupon-management-save-btn {
-    background-color: #FF6B35;
-    color: var(--vendor-coupon-white);
-    padding: 10px 16px;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: 500;
-    transition: var(--vendor-coupon-transition);
-  }
-  
-  .vendor-coupon-management-save-btn:hover {
-    background-color: #FF6B35;
-  }
-  
-  .vendor-coupon-management-cancel-btn {
-    background-color: var(--vendor-coupon-white);
-    color: var(--vendor-coupon-text-color);
-    padding: 10px 16px;
-    border: 1px solid var(--vendor-coupon-medium-gray);
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: 500;
-    transition: var(--vendor-coupon-transition);
-  }
-  
-  .vendor-coupon-management-cancel-btn:hover {
-    background-color: var(--vendor-coupon-light-gray);
-  }
-  
-  /* Table Styles */
-  .vendor-coupon-management-table-container {
-    background-color: var(--vendor-coupon-white);
-    border-radius: 8px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    overflow-x: auto;
-  }
-  
-  .vendor-coupon-management-empty-state {
-    padding: 40px 20px;
-    text-align: center;
-    color: var(--vendor-coupon-dark-gray);
-  }
-  
-  .vendor-coupon-management-table {
+  .vendor-coupon-management-btn {
     width: 100%;
-    border-collapse: collapse;
-    min-width: 600px;
   }
   
   .vendor-coupon-management-table th, 
   .vendor-coupon-management-table td {
-    padding: 12px 16px;
-    text-align: left;
-    border-bottom: 1px solid var(--vendor-coupon-medium-gray);
+    padding: 0.75rem;
+    font-size: 0.875rem;
   }
   
-  .vendor-coupon-management-table th {
-    background-color: var(--vendor-coupon-light-gray);
-    font-weight: 600;
-    font-size: 14px;
-    color: var(--vendor-coupon-text-color);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+  .vendor-coupon-management-form-actions {
+    flex-direction: column-reverse;
+    gap: var(--space-sm);
   }
   
-  .vendor-coupon-management-table tr:hover {
-    background-color: rgba(243, 244, 246, 0.5);
+  .vendor-coupon-management-save-btn,
+  .vendor-coupon-management-cancel-btn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .vendor-coupon-management h1 {
+    font-size: 1.5rem;
   }
   
-  .vendor-coupon-management-coupon-code {
-    font-weight: 600;
-    color: var(--vendor-coupon-primary-color);
+  .vendor-coupon-management-modal-header {
+    padding: var(--space-md);
   }
   
-  .vendor-coupon-management-status-badge {
-    display: inline-block;
-    padding: 4px 8px;
-    border-radius: 12px;
-    font-size: 12px;
-    font-weight: 500;
-  }
-  
-  .vendor-coupon-management-status-active {
-    background-color: rgba(16, 185, 129, 0.1);
-    color: var(--vendor-coupon-success-color);
-  }
-  
-  .vendor-coupon-management-status-inactive {
-    background-color: rgba(239, 68, 68, 0.1);
-    color: var(--vendor-coupon-danger-color);
+  .vendor-coupon-management-form-grid {
+    padding: var(--space-md);
   }
   
   .vendor-coupon-management-actions {
-    display: flex;
-    gap: 8px;
+    flex-wrap: wrap;
   }
   
-  .vendor-coupon-management-edit-btn {
-    background-color: var(--vendor-coupon-secondary-color);
-    color: var(--vendor-coupon-white);
-    padding: 6px 12px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 13px;
-    transition: var(--vendor-coupon-transition);
-  }
-  
-  .vendor-coupon-management-edit-btn:hover {
-    background-color: var(--vendor-coupon-secondary-hover);
-  }
-  
+  .vendor-coupon-management-edit-btn,
   .vendor-coupon-management-delete-btn {
-    background-color: var(--vendor-coupon-danger-color);
-    color: var(--vendor-coupon-white);
-    padding: 6px 12px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 13px;
-    transition: var(--vendor-coupon-transition);
+    flex: 1;
+    min-width: 70px;
   }
-  
-  .vendor-coupon-management-delete-btn:hover {
-    background-color: var(--vendor-coupon-danger-hover);
-  }
-  
-  /* Responsive Styles */
-  @media (min-width: 768px) {
-    .vendor-coupon-management-form-grid {
-      grid-template-columns: 1fr 1fr;
-    }
-    
-    .vendor-coupon-management-modal-content {
-      width: 500px;
-    }
-  }
-  
-  @media (max-width: 767px) {
-    .vendor-coupon-management {
-      padding: 16px;
-    }
-    
-    .vendor-coupon-management-header {
-      flex-direction: column;
-      align-items: flex-start;
-    }
-    
-    .vendor-coupon-management-add-btn {
-      width: 100%;
-      justify-content: center;
-    }
-    
-    .vendor-coupon-management-table th, 
-    .vendor-coupon-management-table td {
-      padding: 8px 12px;
-      font-size: 13px;
-    }
-    
-    .vendor-coupon-management-edit-btn, 
-    .vendor-coupon-management-delete-btn {
-      padding: 4px 8px;
-      font-size: 12px;
-    }
-    
-    .vendor-coupon-management-modal-content {
-      width: 100%;
-    }
-  }
-  
-  @media (max-width: 480px) {
-    .vendor-coupon-management-form-actions {
-      flex-direction: column;
-    }
-    
-    .vendor-coupon-management-save-btn, 
-    .vendor-coupon-management-cancel-btn {
-      width: 100%;
-    }
-  }
+}
+
+/* Confirmation Popup Styles */
+.confirmation-popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.confirmation-popup {
+  background-color: white;
+  padding: 24px;
+  border-radius: 8px;
+  width: 400px;
+  max-width: 90%;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.confirmation-icon {
+  margin-bottom: 16px;
+}
+
+.confirmation-popup h3 {
+  margin: 0 0 12px;
+  color: #333;
+}
+
+.confirmation-popup p {
+  margin: 0 0 24px;
+  color: #666;
+}
+
+.confirmation-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.confirmation-cancel-btn {
+  padding: 8px 16px;
+  background-color: #f5f5f5;
+  color: #333;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.confirmation-cancel-btn:hover {
+  background-color: #e0e0e0;
+}
+
+.confirmation-confirm-btn {
+  padding: 8px 16px;
+  background-color: #ff6b6b;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.confirmation-confirm-btn:hover {
+  background-color: #ff5252;
+}
+
+/* Status Badges */
+.vendor-coupon-management-status-badge {
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.vendor-coupon-management-status-active {
+  background-color: #e6f7ee;
+  color: #10b759;
+}
+
+.vendor-coupon-management-status-inactive {
+  background-color: #f5f5f5;
+  color: #757575;
+}
+
+.vendor-coupon-management-status-pending {
+  background-color: #fff8e6;
+  color: #ff9500;
+}
+
+/* Status Dropdown in Form */
+.vendor-coupon-management-form-group select {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: white;
+}

@@ -7,7 +7,7 @@ from django.utils.decorators import method_decorator
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, generics, permissions
-from api.models import Cart, Order, OrderReview, OrderStatusLog, RestaurantLocation, RestaurantMenu, User, UserDeliveryAddress, OrderLiveLocation, Payment, Coupon
+from api.models import Cart, OfferInfo, Order, OrderReview, OrderStatusLog, RestaurantLocation, RestaurantMenu, User, UserDeliveryAddress, OrderLiveLocation, Payment, Coupon
 from math import radians, sin, cos, sqrt, atan2
 from django.db import transaction
 from django.db.models import Q 
@@ -602,9 +602,76 @@ class MarkAsPaid(APIView):
                 "message": str(e)
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+# @method_decorator(csrf_exempt, name='dispatch')
+# class ApplyCouponOrder(APIView):
+
+#     def post(self, request, *args, **kwargs):
+#         try:
+#             coupon_code = request.data.get('code')
+#             order_amount = request.data.get('order_amount')
+#             restaurant_id = request.data.get('restaurant_id')
+#             user_id = request.data.get('user_id')
+
+#             if not all([coupon_code, order_amount, restaurant_id, user_id]):
+#                 return Response({
+#                     "status": "error",
+#                     "message": "All fields (coupon_code, order_amount, restaurant_id, user_id) are required."
+#                 }, status=status.HTTP_400_BAD_REQUEST)
+
+#             try:
+#                 coupon = Coupon.objects.get(code=coupon_code)
+#             except Coupon.DoesNotExist:
+#                 return Response({
+#                     "status": "error",
+#                     "message": "Invalid coupon code."
+#                 }, status=status.HTTP_400_BAD_REQUEST)
+
+#             now = timezone.now()
+#             if not (coupon.is_active and coupon.valid_from <= now <= coupon.valid_to):
+#                 return Response({
+#                     "status": "error",
+#                     "message": "Coupon is either inactive or expired."
+#                 }, status=status.HTTP_400_BAD_REQUEST)
+
+#             try:
+#                 order_amount = float(order_amount)
+#             except (ValueError, TypeError):
+#                 return Response({
+#                     "status": "error",
+#                     "message": "Invalid order amount."
+#                 }, status=status.HTTP_400_BAD_REQUEST)
+
+#             if order_amount < float(coupon.minimum_order_amount):
+#                 return Response({
+#                     "status": "error",
+#                     "message": f"Minimum order amount should be ₹{coupon.minimum_order_amount} to apply this coupon."
+#                 }, status=status.HTTP_400_BAD_REQUEST)
+
+#             coupon_discount_value = float(coupon.discount_value) if isinstance(coupon.discount_value, Decimal) else coupon.discount_value
+
+#             if coupon.discount_type == 'percentage':
+#                 discount_amount = (coupon_discount_value / 100) * order_amount
+#             else:
+#                 discount_amount = coupon_discount_value
+            
+#             discount_amount = min(discount_amount, order_amount)
+#             final_total_amount = max(order_amount - discount_amount, 0)
+
+#             return Response({
+#                 "status": "success",
+#                 "message": "Coupon applied successfully!",
+#                 "discount_amount": round(discount_amount, 2),
+#                 "final_total_amount": round(final_total_amount, 2)
+#             }, status=status.HTTP_200_OK)
+
+#         except Exception as e:
+#             return Response({
+#                 "status": "error",
+#                 "message": "Something went wrong while applying the coupon.",
+#                 "error_details": str(e)
+#             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 @method_decorator(csrf_exempt, name='dispatch')
 class ApplyCouponOrder(APIView):
-
     def post(self, request, *args, **kwargs):
         try:
             coupon_code = request.data.get('code')
@@ -612,25 +679,11 @@ class ApplyCouponOrder(APIView):
             restaurant_id = request.data.get('restaurant_id')
             user_id = request.data.get('user_id')
 
+            # Validate required fields
             if not all([coupon_code, order_amount, restaurant_id, user_id]):
                 return Response({
                     "status": "error",
-                    "message": "All fields (coupon_code, order_amount, restaurant_id, user_id) are required."
-                }, status=status.HTTP_400_BAD_REQUEST)
-
-            try:
-                coupon = Coupon.objects.get(code=coupon_code)
-            except Coupon.DoesNotExist:
-                return Response({
-                    "status": "error",
-                    "message": "Invalid coupon code."
-                }, status=status.HTTP_400_BAD_REQUEST)
-
-            now = timezone.now()
-            if not (coupon.is_active and coupon.valid_from <= now <= coupon.valid_to):
-                return Response({
-                    "status": "error",
-                    "message": "Coupon is either inactive or expired."
+                    "message": "All fields (code, order_amount, restaurant_id, user_id) are required."
                 }, status=status.HTTP_400_BAD_REQUEST)
 
             try:
@@ -641,27 +694,72 @@ class ApplyCouponOrder(APIView):
                     "message": "Invalid order amount."
                 }, status=status.HTTP_400_BAD_REQUEST)
 
-            if order_amount < float(coupon.minimum_order_amount):
+            # Get the coupon/offer
+            try:
+                offer = OfferInfo.objects.get(
+                    code=coupon_code,
+                    offer_type='coupon_code',
+                    is_active=True
+                )
+            except OfferInfo.DoesNotExist:
                 return Response({
                     "status": "error",
-                    "message": f"Minimum order amount should be ₹{coupon.minimum_order_amount} to apply this coupon."
+                    "message": "Invalid coupon code or coupon not active."
                 }, status=status.HTTP_400_BAD_REQUEST)
 
-            coupon_discount_value = float(coupon.discount_value) if isinstance(coupon.discount_value, Decimal) else coupon.discount_value
+            # Check if coupon is valid
+            if not offer.is_valid():
+                return Response({
+                    "status": "error",
+                    "message": "Coupon is either inactive or expired."
+                }, status=status.HTTP_400_BAD_REQUEST)
 
-            if coupon.discount_type == 'percentage':
-                discount_amount = (coupon_discount_value / 100) * order_amount
-            else:
-                discount_amount = coupon_discount_value
-            
+            # Check if coupon is valid for this restaurant
+            if offer.restaurant and str(offer.restaurant.restaurant_id) != str(restaurant_id):
+                return Response({
+                    "status": "error",
+                    "message": "This coupon is not valid for the selected restaurant."
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            # Check minimum order amount
+            if offer.minimum_order_amount and order_amount < float(offer.minimum_order_amount):
+                return Response({
+                    "status": "error",
+                    "message": f"Minimum item amount should be ₹{offer.minimum_order_amount} to apply this coupon."
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            # Calculate discount
+            discount_amount = 0
+            if offer.discount_type and offer.discount_value:
+                discount_value = float(offer.discount_value) if isinstance(offer.discount_value, Decimal) else offer.discount_value
+                
+                if offer.discount_type == 'percentage':
+                    discount_amount = (discount_value / 100) * order_amount
+                else:  # fixed amount
+                    discount_amount = discount_value
+
+            # Ensure discount doesn't exceed order amount
             discount_amount = min(discount_amount, order_amount)
             final_total_amount = max(order_amount - discount_amount, 0)
+
+            # Check for free delivery offers
+            free_delivery = False
+            if offer.offer_type == 'free_delivery':
+                free_delivery = True
 
             return Response({
                 "status": "success",
                 "message": "Coupon applied successfully!",
                 "discount_amount": round(discount_amount, 2),
-                "final_total_amount": round(final_total_amount, 2)
+                "final_total_amount": round(final_total_amount, 2),
+                "free_delivery": free_delivery,
+                "offer_type": offer.offer_type,
+                "coupon_details": {
+                    "code": offer.code,
+                    "discount_type": offer.discount_type,
+                    "discount_value": str(offer.discount_value) if offer.discount_value else None,
+                    "minimum_order_amount": str(offer.minimum_order_amount) if offer.minimum_order_amount else None,
+                }
             }, status=status.HTTP_200_OK)
 
         except Exception as e:

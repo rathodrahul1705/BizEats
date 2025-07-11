@@ -14,10 +14,13 @@ from .order.track_order import ApplyCouponOrder, GetActiveOrders, LiveLocationDe
 from django.http import JsonResponse
 
 from rest_framework.routers import DefaultRouter
-from .views import RestaurantCategoryViewSet
+from .views import RestaurantCategoryViewSet, OfferViewSet
+from api import views
 
 router = DefaultRouter()
 router.register(r'categories', RestaurantCategoryViewSet)
+router.register(r'offers', OfferViewSet, basename='offer')
+router.register(r'restaurants', views.RestaurantListView, basename='restaurant')
 
 urlpatterns = [
 
@@ -96,11 +99,12 @@ urlpatterns = [
     path("api/order/vendor-dashboard-details/", GetVendorWiseCounts.as_view(), name="get_active_orders"),
     path("api/order/apply-coupen-order/", ApplyCouponOrder.as_view(), name="apply-coupen-order"),
 
-    path('api/vendor/coupons/create/', CouponCreateView.as_view(), name='coupon-create'),     
-    path('api/vendor/coupons/', CouponListView.as_view(), name='coupon-list'),                 
-    path('api/vendor/coupons/<int:pk>/', CouponDetailView.as_view(), name='coupon-detail'),    
-    path('api/vendor/coupons/<int:pk>/update/', CouponUpdateView.as_view(), name='coupon-update'),  
-    path('api/vendor/coupons/<int:pk>/delete/', CouponDeleteView.as_view(), name='coupon-delete'),
+    # path('api/vendor/coupons/create/', CouponCreateView.as_view(), name='coupon-create'),     
+    # path('api/vendor/coupons/', CouponListView.as_view(), name='coupon-list'),                 
+    # path('api/vendor/coupons/<int:pk>/', CouponDetailView.as_view(), name='coupon-detail'),    
+    # path('api/vendor/coupons/<int:pk>/update/', CouponUpdateView.as_view(), name='coupon-update'),  
+    # path('api/vendor/coupons/<int:pk>/delete/', CouponDeleteView.as_view(), name='coupon-delete'),
+    
     path('api/order-review/update/', SubmitOrderReviewView.as_view(), name='submit-order-review'),
     path('api/customer-review/', FetchReviewView.as_view(), name='fetch-review'),
     path('api/user/user_list/', FetchUserList.as_view(), name='user-list'),
@@ -116,7 +120,6 @@ urlpatterns = [
     path('api/porter-orders/', admin_porter_orders),
     path('api/', include(router.urls)),
     
-
     re_path(r'^(?!media/).*$', ReactAppView.as_view(), name='react-app'),
 
 ]
