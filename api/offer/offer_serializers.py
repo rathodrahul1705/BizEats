@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from api.models import OfferInfo
+from api.models import OfferDetail
 from api.serializers import RestaurantMasterSerializer
 
 class OfferSerializer(serializers.ModelSerializer):
@@ -7,7 +7,7 @@ class OfferSerializer(serializers.ModelSerializer):
     is_valid = serializers.BooleanField(read_only=True)
     
     class Meta:
-        model = OfferInfo
+        model = OfferDetail
         fields = [
             'id',
             'offer_type',

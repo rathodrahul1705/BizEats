@@ -611,7 +611,7 @@ class RestaurantCategory(models.Model):
 
     def __str__(self):
         return self.category_name
-class OfferInfo(models.Model):
+class OfferDetail(models.Model):
     OFFER_TYPE_CHOICES = [
         ('coupon_code', 'Coupon Code'),
         ('automatic_discount', 'Automatic Discount'),
@@ -693,7 +693,7 @@ class OfferInfo(models.Model):
     times_used = models.PositiveIntegerField(default=0)
     
     class Meta:
-        db_table = "offer_info"
+        db_table = "offer_details"
     
     def __str__(self):
         return f"{self.get_offer_type_display()} - {self.code or 'No Code'}"

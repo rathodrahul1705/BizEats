@@ -17,7 +17,7 @@ import logging
 from django.db.models import Avg, Count
 from rest_framework import viewsets
 from django_filters.rest_framework import DjangoFilterBackend
-from api.models import OfferInfo
+from api.models import OfferDetail
 from api.offer.offer_serializers import OfferSerializer
 from api.serializers import RestaurantMasterSerializer 
 from rest_framework import viewsets, permissions
@@ -316,7 +316,7 @@ class RestaurantCategoryViewSet(viewsets.ModelViewSet):
             return self.queryset.filter(restaurant_id=restaurant_id)
         return self.queryset
 # class OfferViewSet(viewsets.ModelViewSet):
-#     queryset = OfferInfo.objects.all()
+#     queryset = OfferDetail.objects.all()
 #     serializer_class = OfferSerializer
 #     permission_classes = [permissions.IsAuthenticated]
 
@@ -358,7 +358,7 @@ class RestaurantCategoryViewSet(viewsets.ModelViewSet):
 #         code = self.request.query_params.get('code')
 
 #         # Start with base queryset
-#         queryset = OfferInfo.objects.all().order_by('-id')
+#         queryset = OfferDetail.objects.all().order_by('-id')
 
 #         # Filter by code if provided
 #         if code:
@@ -433,7 +433,7 @@ class OfferViewSet(viewsets.ModelViewSet):
         restaurant = self.request.query_params.get('restaurant_id')
         code = self.request.query_params.get('code')
 
-        queryset = OfferInfo.objects.all().order_by('-id')
+        queryset = OfferDetail.objects.all().order_by('-id')
 
         if code:
             queryset = queryset.filter(code=code)

@@ -7,7 +7,7 @@ from django.utils.decorators import method_decorator
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, generics, permissions
-from api.models import Cart, OfferInfo, Order, OrderReview, OrderStatusLog, RestaurantLocation, RestaurantMenu, User, UserDeliveryAddress, OrderLiveLocation, Payment, Coupon
+from api.models import Cart, OfferDetail, Order, OrderReview, OrderStatusLog, RestaurantLocation, RestaurantMenu, User, UserDeliveryAddress, OrderLiveLocation, Payment, Coupon
 from math import radians, sin, cos, sqrt, atan2
 from django.db import transaction
 from django.db.models import Q 
@@ -696,12 +696,12 @@ class ApplyCouponOrder(APIView):
 
             # Get the coupon/offer
             try:
-                offer = OfferInfo.objects.get(
+                offer = OfferDetail.objects.get(
                     code=coupon_code,
                     offer_type='coupon_code',
                     is_active=True
                 )
-            except OfferInfo.DoesNotExist:
+            except OfferDetail.DoesNotExist:
                 return Response({
                     "status": "error",
                     "message": "Invalid coupon code or coupon not active."
