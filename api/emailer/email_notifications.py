@@ -934,7 +934,7 @@ def generate_coupon_html(coupon, is_vendor=False):
     if coupon.discount_type == 'percentage':
         discount_text = f"{coupon.discount_value}% OFF"
     elif coupon.discount_type == 'fixed':
-        discount_text = f"${coupon.discount_value} OFF"
+        discount_text = f"{coupon.discount_value} OFF"
 
     # Date formatting
     valid_from = coupon.valid_from.strftime('%b %d, %Y') if coupon.valid_from else "Now"
@@ -1118,7 +1118,7 @@ def generate_coupon_html(coupon, is_vendor=False):
                         <span class="detail-label">Discount:</span>
                         <span class="detail-value">{discount_text}</span>
                     </div>
-                    {f'<div class="detail-row"><span class="detail-label">Minimum Order:</span><span class="detail-value">${coupon.minimum_order_amount}</span></div>' if coupon.minimum_order_amount else ''}
+                    {f'<div class="detail-row"><span class="detail-label">Minimum Order:</span><span class="detail-value">{coupon.minimum_order_amount}</span></div>' if coupon.minimum_order_amount else ''}
                     <div class="detail-row">
                         <span class="detail-label">Valid Period:</span>
                         <span class="detail-value">{valid_from} - {valid_to}</span>
@@ -1300,7 +1300,7 @@ def generate_coupon_status_html(coupon):
                     <div class="coupon-code">{coupon.code}</div>
                     <div class="detail-row">
                         <span class="detail-label">Discount:</span>
-                        <span class="detail-value">{'%' if coupon.discount_type == 'percentage' else '$'}{coupon.discount_value} OFF</span>
+                        <span class="detail-value">{'%' if coupon.discount_type == 'percentage' else ''}{coupon.discount_value} OFF</span>
                     </div>
                     {f'<div class="detail-row"><span class="detail-label">Minimum Order:</span><span class="detail-value">{coupon.minimum_order_amount}</span></div>' if coupon.minimum_order_amount else ''}
                     <div class="detail-row">
