@@ -32,7 +32,9 @@ const MenuManagement = () => {
     buy_one_get_one_free: false,
     start_time: "",
     end_time: "",
-    category_id:""
+    category_id: "",
+    discount_percent: 0,
+    discount_active: false
   });
 
   // Category form state
@@ -54,6 +56,7 @@ const MenuManagement = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [availabilityFilter, setAvailabilityFilter] = useState("all");
   const [bogoFilter, setBogoFilter] = useState("all");
+  const [discountFilter, setDiscountFilter] = useState("all");
   const [showFilters, setShowFilters] = useState(false);
 
   const spiceLevels = ["Mild", "Medium", "Spicy", "Extra Spicy"];
@@ -67,7 +70,7 @@ const MenuManagement = () => {
 
   useEffect(() => {
     applyFilters();
-  }, [menuItems, searchTerm, availabilityFilter, bogoFilter]);
+  }, [menuItems, searchTerm, availabilityFilter, bogoFilter, discountFilter]);
 
   const fetchAllData = async () => {
     try {
@@ -149,19 +152,24 @@ const MenuManagement = () => {
       );
     }
     
+    if (discountFilter !== "all") {
+      filtered = filtered.filter(item => 
+        discountFilter === "discounted" ? (item.discount_active && item.discount_percent > 0) : 
+        (!item.discount_active || item.discount_percent <= 0)
+      );
+    }
+    
     setFilteredItems(filtered);
   };
 
   const handleChange = (e) => {
-  const { name, value, type, checked } = e.target;
+    const { name, value, type, checked } = e.target;
     setFormData((prev) => ({
       ...prev,
       [name]: type === "checkbox" ? checked : value,
-      ...(name === "category" && { category_id: value }), // optional: if you want to explicitly update category_id
+      ...(name === "category" && { category_id: value }),
     }));
-    
   };
-
 
   const handleCategoryChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -188,13 +196,15 @@ const MenuManagement = () => {
     setFormData((prev) => ({ ...prev, cuisines: selectedCuisines }));
   };
 
-  // Menu Item handlers
   const handleEditItem = (item) => {
     setEditingItem(item.id);
     setFormData({ 
       ...item,
       cuisines: item.cuisines || [],
-      buy_one_get_one_free: item.buy_one_get_one_free || false
+      buy_one_get_one_free: item.buy_one_get_one_free || false,
+      discount_percent: item.discount_percent || 0,
+      discount_active: item.discount_active || false,
+      category_id: item.category_id || ""
     });
     setShowModal(true);
   };
@@ -209,6 +219,8 @@ const MenuManagement = () => {
         } else if (key === "availability") {
           formDataToSend.append(key, formData[key] ? "1" : "0");
         } else if (key === "buy_one_get_one_free") {
+          formDataToSend.append(key, formData[key] ? "1" : "0");
+        } else if (key === "discount_active") {
           formDataToSend.append(key, formData[key] ? "1" : "0");
         } else {
           formDataToSend.append(key, formData[key]);
@@ -259,7 +271,6 @@ const MenuManagement = () => {
     }
   };
 
-  // Category handlers
   const handleSubmitCategory = async (e) => {
     e.preventDefault();
     try {
@@ -317,7 +328,6 @@ const MenuManagement = () => {
     }
   };
 
-  // Addon handlers
   const handleSubmitAddon = async (e) => {
     e.preventDefault();
     try {
@@ -366,6 +376,12 @@ const MenuManagement = () => {
     setSearchTerm("");
     setAvailabilityFilter("all");
     setBogoFilter("all");
+    setDiscountFilter("all");
+  };
+
+  const calculateDiscountedPrice = (price, discountPercent) => {
+    if (!discountPercent || discountPercent <= 0) return price;
+    return (price * (1 - discountPercent / 100)).toFixed(2);
   };
 
   if (loading && menuItems.length === 0 && categories.length === 0 && addons.length === 0) {
@@ -417,7 +433,11 @@ const MenuManagement = () => {
                   cuisines: [],
                   food_type: "Veg",
                   buy_one_get_one_free: false,
-                  category_id:""
+                  start_time: "",
+                  end_time: "",
+                  category_id: "",
+                  discount_percent: 0,
+                  discount_active: false
                 });
                 setShowModal(true);
               }}
@@ -462,10 +482,8 @@ const MenuManagement = () => {
         </div>
       </div>
 
-      {/* Menu Items Tab */}
       {activeTab === "menu" && (
         <>
-          {/* Filter Section */}
           <div className="vendor-menu-management-filters">
             <div className="vendor-menu-management-search">
               <Search size={18} className="vendor-menu-management-search-icon" />
@@ -514,6 +532,19 @@ const MenuManagement = () => {
                   </select>
                 </div>
 
+                <div className="vendor-menu-management-filter-group">
+                  <label>Discount</label>
+                  <select
+                    value={discountFilter}
+                    onChange={(e) => setDiscountFilter(e.target.value)}
+                    className="vendor-menu-management-filter-select"
+                  >
+                    <option value="all">All</option>
+                    <option value="discounted">Discounted Only</option>
+                    <option value="non-discounted">Non-Discounted</option>
+                  </select>
+                </div>
+
                 <button 
                   className="vendor-menu-management-reset-filters"
                   onClick={resetFilters}
@@ -524,7 +555,6 @@ const MenuManagement = () => {
             )}
           </div>
 
-          {/* Results count */}
           <div className="vendor-menu-management-results-count">
             Showing {filteredItems.length} of {menuItems.length} items
           </div>
@@ -537,9 +567,12 @@ const MenuManagement = () => {
                     <th>Image</th>
                     <th>Name</th>
                     <th>Price</th>
-                    <th>Category</th>
+                    <th>Discounted Price</th>
+                    <th>Discount %</th>
+                    {/* <th>Category</th> */}
                     <th>Availability</th>
                     <th>BOGO</th>
+                    <th>Discount Active</th>
                     <th>Start Time</th>
                     <th>End Time</th>
                     <th>Actions</th>
@@ -557,7 +590,22 @@ const MenuManagement = () => {
                       </td>
                       <td>{item.item_name}</td>
                       <td>₹{item.item_price}</td>
-                      <td>{item.category}</td>
+                      <td>
+                        {item.discount_active && item.discount_percent > 0 ? (
+                          <>
+                            ₹{calculateDiscountedPrice(item.item_price, item.discount_percent)}
+                            <span className="vendor-menu-management-original-price">
+                              (₹{item.item_price})
+                            </span>
+                          </>
+                        ) : (
+                          "₹" + item.item_price
+                        )}
+                      </td>
+                      <td>
+                        {item.discount_percent > 0 ? `${item.discount_percent}%` : "-"}
+                      </td>
+                      {/* <td>{item.category}</td> */}
                       <td>
                         <span className={`vendor-menu-management-availability-badge ${item.availability ? 'vendor-menu-management-available' : 'vendor-menu-management-not-available'}`}>
                           {item.availability ? "Available" : "Out of Stock"}
@@ -566,6 +614,11 @@ const MenuManagement = () => {
                       <td>
                         <span className={`vendor-menu-management-availability-badge ${item.buy_one_get_one_free ? 'vendor-menu-management-available' : 'vendor-menu-management-not-available'}`}>
                           {item.buy_one_get_one_free ? "B1G1F" : "Regular"}
+                        </span>
+                      </td>
+                      <td>
+                        <span className={`vendor-menu-management-availability-badge ${item.discount_active ? 'vendor-menu-management-available' : 'vendor-menu-management-not-available'}`}>
+                          {item.discount_active ? "Active" : "Inactive"}
                         </span>
                       </td>
                       <td>{item.start_time || "-"}</td>
@@ -625,7 +678,6 @@ const MenuManagement = () => {
         </>
       )}
 
-      {/* Categories Tab */}
       {activeTab === "categories" && (
         <>
           <div className="vendor-menu-management-results-count">
@@ -705,7 +757,6 @@ const MenuManagement = () => {
         </>
       )}
 
-      {/* Add-ons Tab */}
       {activeTab === "addons" && (
         <>
           <div className="vendor-menu-management-results-count">
@@ -786,7 +837,6 @@ const MenuManagement = () => {
         </>
       )}
 
-      {/* Menu Item Modal */}
       {showModal === true && (
         <div className="vendor-menu-management-modal-overlay vendor-menu-management-show">
           <div className="vendor-menu-management-modal-content">
@@ -966,6 +1016,40 @@ const MenuManagement = () => {
                 )}
               </div>
 
+              <div className="vendor-menu-management-form-group">
+                <label>Discount Percentage</label>
+                <input
+                  type="number"
+                  className="vendor-menu-management-form-control"
+                  name="discount_percent"
+                  placeholder="Discount %"
+                  value={formData.discount_percent}
+                  onChange={handleChange}
+                  min="0"
+                  max="100"
+                />
+              </div>
+
+              <div className="vendor-menu-management-form-group vendor-menu-management-checkbox-group">
+                <input
+                  type="checkbox"
+                  id="discount_active"
+                  name="discount_active"
+                  checked={formData.discount_active}
+                  onChange={handleChange}
+                />
+                <label htmlFor="discount_active">Discount Active</label>
+              </div>
+
+              {formData.discount_percent > 0 && (
+                <div className="vendor-menu-management-discount-preview">
+                  <p>
+                    Original Price: ₹{formData.item_price || 0}<br />
+                    Discounted Price: ₹{calculateDiscountedPrice(formData.item_price || 0, formData.discount_percent)}
+                  </p>
+                </div>
+              )}
+
               <div className="vendor-menu-management-form-group vendor-menu-management-checkbox-group">
                 <input
                   type="checkbox"
@@ -1024,7 +1108,6 @@ const MenuManagement = () => {
         </div>
       )}
 
-      {/* Category Modal */}
       {showModal === "category" && (
         <div className="vendor-menu-management-modal-overlay vendor-menu-management-show">
           <div className="vendor-menu-management-modal-content">
@@ -1076,7 +1159,6 @@ const MenuManagement = () => {
         </div>
       )}
 
-      {/* Addon Modal */}
       {showModal === "addon" && (
         <div className="vendor-menu-management-modal-overlay vendor-menu-management-show">
           <div className="vendor-menu-management-modal-content">

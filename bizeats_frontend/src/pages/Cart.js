@@ -69,6 +69,9 @@ const Cart = ({ user, setUser }) => {
           image: item.item_image,
           quantity: item.quantity,
           price: parseFloat(item.item_price),
+          originalPrice: parseFloat(item.original_item_price || item.item_price),
+          hasDiscount: item.discount_active === 1,
+          discountPercent: item.discount_percent || 0,
           deliveryTime: `${response.time_required_to_reach_loc} min`,
           location: response.Address,
           restaurant_id: response.restaurant_id,
@@ -144,7 +147,23 @@ const Cart = ({ user, setUser }) => {
     handleCartOperation(item_id, id, "delete");
   };
 
-  const totalPrice = cartItems.reduce((total, item) => total + (item.price), 0);
+  const calculateSubtotal = () => {
+    return cartItems.reduce((total, item) => {
+      return total + (item.price);
+    }, 0);
+  };
+
+  const calculateTotalSavings = () => {
+    return cartItems.reduce((total, item) => {
+      if (item.hasDiscount) {
+        return total + ((item.originalPrice - item.price));
+      }
+      return total;
+    }, 0);
+  };
+
+  const subtotal = calculateSubtotal();
+  const totalSavings = calculateTotalSavings();
 
   const handleProceed = () => {
     if (cartItems.length === 0) {
@@ -261,7 +280,6 @@ const Cart = ({ user, setUser }) => {
 
       {step === 3 && userSelectedAddress && (
         <div className="cart-review-container">
-          
           <ul className="cart-items-list">
             {cartItems.map((item) => (
               <li key={item.id} className="cart-item-card">
@@ -280,7 +298,15 @@ const Cart = ({ user, setUser }) => {
                 </div>
                 <div className="cart-item-details">
                   <h3 className="cart-item-title">{item.title}</h3>
-                  <p className="cart-item-price">₹{item.price.toFixed(2)}</p>
+                  {item.hasDiscount ? (
+                    <div className="cart-price-container">
+                      <span className="cart-original-price">₹{item.originalPrice.toFixed(2)}</span>
+                      <span className="cart-discounted-price">₹{item.price.toFixed(2)}</span>
+                      <span className="cart-discount-badge">{item.discountPercent}% OFF</span>
+                    </div>
+                  ) : (
+                    <p className="cart-item-price">₹{item.price.toFixed(2)}</p>
+                  )}
                   <div className="quantity-badge">
                     Qty: {item.quantity}
                   </div>
@@ -292,11 +318,17 @@ const Cart = ({ user, setUser }) => {
             <div className="price-breakdown">
               <div className="price-row">
                 <span>Subtotal</span>
-                <span>₹{totalPrice.toFixed(2)}</span>
+                <span>₹{subtotal.toFixed(2)}</span>
               </div>
+              {totalSavings > 0 && (
+                <div className="price-row savings">
+                  <span>Total Savings</span>
+                  <span>-₹{totalSavings.toFixed(2)}</span>
+                </div>
+              )}
               <div className="price-row total">
                 <span>Total</span>
-                <span>₹{totalPrice.toFixed(2)}</span>
+                <span>₹{subtotal.toFixed(2)}</span>
               </div>
             </div>
             <button className="cart-proceed-btn" onClick={handlePayment}>
@@ -357,7 +389,15 @@ const Cart = ({ user, setUser }) => {
                       <Trash2 size={18} />
                     </button>
                   </div>
-                  <p className="cart-item-price">₹{item.price.toFixed(2)}</p>
+                  {item.hasDiscount ? (
+                    <div className="cart-price-container">
+                      <span className="cart-original-price">₹{item.originalPrice.toFixed(2)}</span>
+                      <span className="cart-discounted-price">₹{item.price.toFixed(2)}</span>
+                      <span className="cart-discount-badge">{item.discountPercent}% OFF</span>
+                    </div>
+                  ) : (
+                    <p className="cart-item-price">₹{item.price.toFixed(2)}</p>
+                  )}
                   <div className="cart-item-actions">
                     <button
                       className="cart-action-btn decrease"
@@ -383,11 +423,17 @@ const Cart = ({ user, setUser }) => {
             <div className="price-breakdown">
               <div className="price-row">
                 <span>Subtotal</span>
-                <span>₹{totalPrice.toFixed(2)}</span>
+                <span>₹{subtotal.toFixed(2)}</span>
               </div>
+              {totalSavings > 0 && (
+                <div className="price-row savings">
+                  <span>Total Savings</span>
+                  <span>-₹{totalSavings.toFixed(2)}</span>
+                </div>
+              )}
               <div className="price-row total">
                 <span>Total</span>
-                <span>₹{totalPrice.toFixed(2)}</span>
+                <span>₹{subtotal.toFixed(2)}</span>
               </div>
             </div>
             <button 

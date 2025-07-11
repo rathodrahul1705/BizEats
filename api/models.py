@@ -223,9 +223,19 @@ class RestaurantMenu(models.Model):
         ('Non-Veg', 'Non-Veg'),
     ]
 
+    INACTIVE = 0
+    ACTIVE = 1
+
+    STATUS_CHOICES = [
+        (INACTIVE, 'Inactive'),
+        (ACTIVE, 'Active'),
+    ]
+
     restaurant = models.ForeignKey('RestaurantMaster', on_delete=models.CASCADE, related_name='menu_items')
     item_name = models.CharField(max_length=255)
     item_price = models.DecimalField(max_digits=6, decimal_places=2)
+    discount_percent = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+    discount_active = models.IntegerField(choices=STATUS_CHOICES, default=INACTIVE)
     description = models.TextField()
     category = models.CharField(max_length=30, choices=CATEGORY_CHOICES)
     cuisines = models.ManyToManyField('RestaurantCuisine', related_name='menu_items')
@@ -262,6 +272,15 @@ class Cart(models.Model):
         (4, 'Proceeded for Payment'),
         (5, 'Payment Completed'),
     )
+
+    INACTIVE = 0
+    ACTIVE = 1
+
+    STATUS_CHOICES = [
+        (INACTIVE, 'Inactive'),
+        (ACTIVE, 'Active'),
+    ]
+    
     user = models.ForeignKey(
         User, 
         on_delete=models.CASCADE, 
@@ -281,6 +300,8 @@ class Cart(models.Model):
     )  # For guest users
     order_number = models.CharField(max_length=20, null=True, blank=True)
     item_price = models.DecimalField(max_digits=6, decimal_places=2,null=True,blank=True)
+    discount_percent = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+    discount_active = models.IntegerField(choices=STATUS_CHOICES, default=INACTIVE)
     description = models.TextField(null=True,blank=True)
     item = models.ForeignKey(
         RestaurantMenu, 

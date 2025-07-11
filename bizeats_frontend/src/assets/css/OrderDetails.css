@@ -1519,3 +1519,77 @@
   0% { transform: translateX(-100%); }
   100% { transform: translateX(100%); }
 }
+
+/* Discount Price Styles */
+.order-details-page-menu-price-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.order-details-page-menu-original-price {
+  text-decoration: line-through;
+  color: #888;
+  font-size: 14px;
+}
+
+.order-details-page-menu-discounted-price {
+  font-weight: bold;
+  color: #333;
+  font-size: 16px;
+}
+
+.order-details-page-menu-discount-badge {
+  background-color: #ff6b6b;
+  color: white;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+/* Modal Price Styles */
+.order-details-page-menu-food-modal-price-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0;
+}
+
+.order-details-page-menu-food-modal-original-price {
+  text-decoration: line-through;
+  color: #888;
+  font-size: 16px;
+}
+
+.order-details-page-menu-food-modal-discounted-price {
+  font-weight: bold;
+  color: #333;
+  font-size: 20px;
+}
+
+.order-details-page-menu-food-modal-discount-badge {
+  background-color: #ff6b6b;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .order-details-page-menu-discount-badge {
+    font-size: 10px;
+    padding: 1px 4px;
+  }
+  
+  .order-details-page-menu-original-price {
+    font-size: 12px;
+  }
+  
+  .order-details-page-menu-discounted-price {
+    font-size: 14px;
+  }
+}

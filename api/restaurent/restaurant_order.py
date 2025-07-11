@@ -39,6 +39,7 @@ class RestaurantCartAddOrRemove(APIView):
             item_id = data.get("item_id")
             quantity = data.get("quantity", 1)  # Default quantity is 1
             id = data.get("id")  # Default quantity is 1
+            source = data.get("source")  # Default quantity is 1
 
             # Validate required fields
             if not all([action, restaurant_id, item_id]):
@@ -49,7 +50,7 @@ class RestaurantCartAddOrRemove(APIView):
 
             # Call the appropriate method based on the action
             if action == "add":
-                return self._add_to_cart(user_id, session_id, restaurant_id, item_id, quantity)
+                return self._add_to_cart(user_id, session_id, restaurant_id, item_id, quantity, source)
             elif action == "remove":
                 return self._remove_from_cart(user_id, session_id, restaurant_id, item_id)
             elif action == "delete":
@@ -71,7 +72,7 @@ class RestaurantCartAddOrRemove(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
         
-    def _add_to_cart(self, user_id, session_id, restaurant_id, item_id, quantity):
+    def _add_to_cart(self, user_id, session_id, restaurant_id, item_id, quantity, source):
         """
         Adds an item to the cart or updates its quantity if it already exists.
         """
@@ -88,6 +89,11 @@ class RestaurantCartAddOrRemove(APIView):
                     id=item_id,
                 ).first()
             
+            if restaurant_menu.discount_active == 1:
+                item_price = restaurant_menu.item_price * (1 - (restaurant_menu.discount_percent / 100))
+            else:
+                item_price = restaurant_menu.item_price
+
             if user_id is None and session_id:
 
                 cart = Cart.objects.filter(
@@ -95,12 +101,13 @@ class RestaurantCartAddOrRemove(APIView):
                     item_id=item_id,
                     session_id=session_id,
                 ).exclude(cart_status=5).first()
-
+                
                 if cart is not None:
-
                     cart.quantity += quantity
-                    cart.item_price += restaurant_menu.item_price
+                    cart.item_price += item_price
                     cart.description = restaurant_menu.description
+                    cart.discount_percent = restaurant_menu.discount_percent
+                    cart.discount_active = restaurant_menu.discount_active
                     cart.buy_one_get_one_free = restaurant_menu.buy_one_get_one_free
                     cart.user_id = user_id
                     cart.save()
@@ -111,8 +118,10 @@ class RestaurantCartAddOrRemove(APIView):
                     Cart.objects.create(
                         user_id=user_id,
                         session_id=session_id,
-                        item_price=restaurant_menu.item_price,
+                        item_price=item_price,
                         description=restaurant_menu.description,
+                        discount_percent = restaurant_menu.discount_percent,
+                        discount_active = restaurant_menu.discount_active,
                         buy_one_get_one_free = restaurant_menu.buy_one_get_one_free,
                         restaurant_id=restaurant_id,
                         item_id=item_id,
@@ -132,7 +141,9 @@ class RestaurantCartAddOrRemove(APIView):
 
                     cart.quantity += quantity
                     cart.user_id = user_id
-                    cart.item_price += restaurant_menu.item_price
+                    cart.item_price += item_price
+                    cart.discount_percent = restaurant_menu.discount_percent
+                    cart.discount_active = restaurant_menu.discount_active
                     cart.description = restaurant_menu.description
                     restaurant_menu.buy_one_get_one_free
                     cart.save()
@@ -144,7 +155,9 @@ class RestaurantCartAddOrRemove(APIView):
                         user_id=user_id,
                         session_id=session_id,
                         restaurant_id=restaurant_id,
-                        item_price=restaurant_menu.item_price,
+                        item_price=item_price,
+                        discount_percent = restaurant_menu.discount_percent,
+                        discount_active = restaurant_menu.discount_active,
                         description=restaurant_menu.description,
                         buy_one_get_one_free = restaurant_menu.buy_one_get_one_free,
                         item_id=item_id,
@@ -189,10 +202,15 @@ class RestaurantCartAddOrRemove(APIView):
                     restaurant_id=restaurant_id,
                     item_id=item_id,
                 )
-                
+            
+            if restaurant_menu.discount_active == 1:
+                item_price = restaurant_menu.item_price * (1 - (restaurant_menu.discount_percent / 100))
+            else:
+                item_price = restaurant_menu.item_price
+
             if cart.quantity > 1:
                 cart.quantity -= 1
-                cart.item_price -= restaurant_menu.item_price
+                cart.item_price -= item_price
                 cart.save()
                 message = "Item quantity reduced in cart"
             else:
@@ -308,6 +326,10 @@ class CartWithRestaurantDetails(APIView):
             # Prepare the cart details response
             cart_details = []
             for item in cart_items:
+                
+                restaurant_menu = RestaurantMenu.objects.filter(
+                    id=item.item_id,
+                ).first()
 
                 cart_details.append({
                     "item_id": item.item_id,
@@ -315,7 +337,10 @@ class CartWithRestaurantDetails(APIView):
                     "restaurant_id": item.restaurant_id,
                     "item_name": item.item.item_name,
                     "item_description": item.description,
+                    "discount_active": item.discount_active,
+                    "discount_percent": item.discount_percent,
                     "item_price": float(item.item_price),
+                    "original_item_price": float(restaurant_menu.item_price*item.quantity),
                     "buy_one_get_one_free": item.buy_one_get_one_free,
                     "quantity": item.quantity,
                     "item_image": request.build_absolute_uri(item.item.item_image.url) if item.item.item_image else None,

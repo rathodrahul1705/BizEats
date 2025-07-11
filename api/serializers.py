@@ -50,6 +50,8 @@ class RestaurantMenuSerializer(serializers.Serializer):
     buy_one_get_one_free = serializers.BooleanField()
     start_time = serializers.TimeField()
     end_time = serializers.TimeField()
+    discount_percent = serializers.CharField()
+    discount_active = serializers.CharField()
     
 
 class DeliveryTimingSerializer(serializers.Serializer):

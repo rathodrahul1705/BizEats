@@ -49,6 +49,13 @@ const checkItemTimingStatus = (item) => {
   return null;
 };
 
+// Helper function to calculate discounted price
+const calculateDiscountedPrice = (price, discountPercent) => {
+  if (!discountPercent) return price;
+  const discountAmount = (price * parseFloat(discountPercent)) / 100;
+  return price - discountAmount;
+};
+
 const OrderDetails = ({ user, setUser }) => {
   const [loading, setLoading] = useState({
     initial: true,
@@ -196,6 +203,12 @@ const OrderDetails = ({ user, setUser }) => {
           description: item.description || "",
           image: item.item_image || "",
           price: parseFloat(item.item_price) || 0,
+          originalPrice: parseFloat(item.item_price) || 0,
+          discountedPrice: item.discount_active === "1" && item.discount_percent 
+            ? calculateDiscountedPrice(parseFloat(item.item_price), parseFloat(item.discount_percent))
+            : parseFloat(item.item_price) || 0,
+          hasDiscount: item.discount_active === "1" && item.discount_percent,
+          discountPercent: item.discount_percent ? parseFloat(item.discount_percent) : 0,
           deliveryTime: `${response.time_required_to_reach_loc || 0} min`,
           location: response.Address || "",
           type: item.food_type || "Unknown",
@@ -214,11 +227,20 @@ const OrderDetails = ({ user, setUser }) => {
     }
   }, [restaurant_id, offer]);
 
-  // Initial data fetch
   useEffect(() => {
     fetchDataOrderList();
     fetchCartDetails();
   }, [fetchDataOrderList, fetchCartDetails]);
+  
+  // Calculate cart totals with discounts
+  const { totalItems, totalAmount } = useMemo(() => {
+    const items = Object.values(cart).reduce((sum, quantity) => sum + quantity, 0);
+    const amount = foodData.reduce((sum, food) => {
+      const priceToUse = food.hasDiscount ? food.discountedPrice : food.price;
+      return sum + (priceToUse * (cart[food.id] || 0));
+    }, 0);
+    return { totalItems: items, totalAmount: amount };
+  }, [cart, foodData]);
 
   // Add item to cart
   const addItem = useCallback(async (id) => {
@@ -233,6 +255,7 @@ const OrderDetails = ({ user, setUser }) => {
           session_id: sessionId,
           restaurant_id: restaurant_id,
           item_id: id,
+          source: "ITEMLIST",
           quantity: 1,
           action: "add",
         }
@@ -294,6 +317,7 @@ const OrderDetails = ({ user, setUser }) => {
           session_id: sessionId,
           restaurant_id: restaurant_id,
           item_id: id,
+          source: "ITEMLIST",
           action: "remove",
         }
       );
@@ -305,15 +329,6 @@ const OrderDetails = ({ user, setUser }) => {
       console.error("Error removing item from cart:", error);
     }
   }, [sessionId, user, restaurant_id, fetchCartDetails]);
-
-  // Calculate cart totals
-  const { totalItems, totalAmount } = useMemo(() => {
-    const items = Object.values(cart).reduce((sum, quantity) => sum + quantity, 0);
-    const amount = foodData.reduce((sum, food) => {
-      return sum + (food.price * (cart[food.id] || 0));
-    }, 0);
-    return { totalItems: items, totalAmount: amount };
-  }, [cart, foodData]);
 
   // Update cart count in local storage
   useEffect(() => {
@@ -722,7 +737,15 @@ const OrderDetails = ({ user, setUser }) => {
                               </span>
                             )}
                           </p>
-                          <p className="order-details-page-menu-food-price">₹{food.price}</p>
+                          {food.hasDiscount ? (
+                            <div className="order-details-page-menu-price-container">
+                              <span className="order-details-page-menu-original-price">₹{food.price.toFixed(2)}</span>
+                              <span className="order-details-page-menu-discounted-price">₹{food.discountedPrice.toFixed(2)}</span>
+                              <span className="order-details-page-menu-discount-badge">{food.discountPercent}% OFF</span>
+                            </div>
+                          ) : (
+                            <p className="order-details-page-menu-food-price">₹{food.price.toFixed(2)}</p>
+                          )}
                           <div className="order-details-page-menu-cart-actions">
                             {cart[food.id] > 0 ? (
                               <>
@@ -828,7 +851,15 @@ const OrderDetails = ({ user, setUser }) => {
                         ? `${food.description.substring(0, 100)}...` 
                         : food.description}
                     </p>
-                    <p className="order-details-page-menu-food-price">₹{food.price}</p>
+                    {food.hasDiscount ? (
+                      <div className="order-details-page-menu-price-container">
+                        <span className="order-details-page-menu-original-price">₹{food.price.toFixed(2)}</span>
+                        <span className="order-details-page-menu-discounted-price">₹{food.discountedPrice.toFixed(2)}</span>
+                        <span className="order-details-page-menu-discount-badge">{food.discountPercent}% OFF</span>
+                      </div>
+                    ) : (
+                      <p className="order-details-page-menu-food-price">₹{food.price.toFixed(2)}</p>
+                    )}
                   </div>
                 </li>
               )
@@ -894,7 +925,15 @@ const OrderDetails = ({ user, setUser }) => {
                         ? `${food.description.substring(0, 100)}...` 
                         : food.description}
                     </p>
-                    <p className="order-details-page-menu-food-price">₹{food.price}</p>
+                    {food.hasDiscount ? (
+                      <div className="order-details-page-menu-price-container">
+                        <span className="order-details-page-menu-original-price">₹{food.price.toFixed(2)}</span>
+                        <span className="order-details-page-menu-discounted-price">₹{food.discountedPrice.toFixed(2)}</span>
+                        <span className="order-details-page-menu-discount-badge">{food.discountPercent}% OFF</span>
+                      </div>
+                    ) : (
+                      <p className="order-details-page-menu-food-price">₹{food.price.toFixed(2)}</p>
+                    )}
                     <div className="order-details-page-menu-out-of-stock-badge">Available until {food.end_time}</div>
                   </div>
                 </li>
@@ -954,7 +993,15 @@ const OrderDetails = ({ user, setUser }) => {
                         ? `${food.description.substring(0, 100)}...` 
                         : food.description}
                     </p>
-                    <p className="order-details-page-menu-food-price">₹{food.price}</p>
+                    {food.hasDiscount ? (
+                      <div className="order-details-page-menu-price-container">
+                        <span className="order-details-page-menu-original-price">₹{food.price.toFixed(2)}</span>
+                        <span className="order-details-page-menu-discounted-price">₹{food.discountedPrice.toFixed(2)}</span>
+                        <span className="order-details-page-menu-discount-badge">{food.discountPercent}% OFF</span>
+                      </div>
+                    ) : (
+                      <p className="order-details-page-menu-food-price">₹{food.price.toFixed(2)}</p>
+                    )}
                     <div className="order-details-page-menu-out-of-stock-badge">Out of Stock</div>
                   </div>
                 </li>
@@ -1047,10 +1094,18 @@ const OrderDetails = ({ user, setUser }) => {
                   </h2>
                 </div>
                 <p className="order-details-page-menu-food-modal-description">{selectedFood.description}</p>
-                <div className="order-details-page-menu-food-modal-info">
-                  <span>⏱ {selectedFood.deliveryTime}</span>
-                  <span className="order-details-page-menu-food-modal-price">₹{selectedFood.price}</span>
-                </div>
+                {selectedFood.hasDiscount ? (
+                  <div className="order-details-page-menu-food-modal-price-container">
+                    <span className="order-details-page-menu-food-modal-original-price">₹{selectedFood.price.toFixed(2)}</span>
+                    <span className="order-details-page-menu-food-modal-discounted-price">₹{selectedFood.discountedPrice.toFixed(2)}</span>
+                    <span className="order-details-page-menu-food-modal-discount-badge">{selectedFood.discountPercent}% OFF</span>
+                  </div>
+                ) : (
+                  <div className="order-details-page-menu-food-modal-info">
+                    <span>⏱ {selectedFood.deliveryTime}</span>
+                    <span className="order-details-page-menu-food-modal-price">₹{selectedFood.price.toFixed(2)}</span>
+                  </div>
+                )}
                 {selectedFood.start_time && selectedFood.end_time && (
                   <div className="order-details-page-menu-food-modal-timing">
                     <Clock size={16} />

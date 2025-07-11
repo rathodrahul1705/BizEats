@@ -232,6 +232,8 @@ class RestaurantMenueStore(APIView):
         start_time = request.data.get('start_time')
         end_time = request.data.get('end_time')
         food_type = request.data.get('food_type')
+        discount_percent = request.data.get('discount_percent')
+        discount_active = request.data.get('discount_active')
         cuisines = request.data.get('cuisines', '').split(',')  # Split cuisines by comma
 
         # Handle image upload
@@ -258,6 +260,8 @@ class RestaurantMenueStore(APIView):
             serving_size=serving_size,
             availability=availability,
             stock_quantity=stock_quantity,
+            discount_percent=discount_percent,
+            discount_active=discount_active,
             start_time=start_time,
             end_time=end_time,
             food_type=food_type,
@@ -304,6 +308,8 @@ class RestaurantMenueList(APIView):
                 "stock_quantity": item.stock_quantity,
                 "start_time": item.start_time,
                 "end_time": item.end_time,
+                "discount_percent": item.discount_percent,
+                "discount_active": item.discount_active,
                 "cuisines": [cuisine.cuisine_name for cuisine in item.cuisines.all()],
                 "item_image": request.build_absolute_uri(item.item_image.url) if item.item_image else None,
                 "created_at": item.created_at,
@@ -368,6 +374,11 @@ class RestaurantMenueUpdate(APIView):
         cuisines = request.data.get('cuisines', '').split(',')  # Split cuisines by comma
         start_time = request.data.get('start_time', '')
         end_time = request.data.get('end_time', '')
+        discount_percent = request.data.get('discount_percent', '')
+        discount_active = request.data.get('discount_active', '')
+
+        print("discount_active====",discount_active)
+        print("discount_percent====",discount_percent)
 
         # Handle image update
         item_image = request.FILES.get('item_image')
@@ -401,7 +412,8 @@ class RestaurantMenueUpdate(APIView):
         menu_item.buy_one_get_one_free = buy_one_get_one_free
         menu_item.start_time = start_time
         menu_item.end_time = end_time
-        menu_item.end_time = end_time
+        menu_item.discount_percent=discount_percent
+        menu_item.discount_active=discount_active
 
         # Update cuisines
         if cuisines:

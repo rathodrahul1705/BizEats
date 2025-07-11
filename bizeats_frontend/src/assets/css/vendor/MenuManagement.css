@@ -696,3 +696,24 @@ select[multiple].vendor-menu-management-form-control option {
   outline: 2px solid var(--primary-color);
   outline-offset: 2px;
 }
+
+/* Discount styling */
+.vendor-menu-management-original-price {
+  text-decoration: line-through;
+  color: #999;
+  font-size: 0.8em;
+  margin-left: 5px;
+}
+
+.vendor-menu-management-discount-preview {
+  background-color: #f8f9fa;
+  padding: 10px;
+  border-radius: 4px;
+  margin-bottom: 15px;
+}
+
+.vendor-menu-management-discount-preview p {
+  margin: 0;
+  font-size: 0.9em;
+  color: #333;
+}
