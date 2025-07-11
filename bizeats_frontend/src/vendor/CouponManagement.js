@@ -319,10 +319,10 @@ const CouponForm = ({ coupon, setCoupon, onSubmit, onClose, isOpen, apiErrors, i
               >
                 <option value="">Select Offer Type</option>
                 <option value={OFFER_TYPES.COUPON_CODE}>Coupon Code</option>
-                <option value={OFFER_TYPES.AUTOMATIC_DISCOUNT}>Automatic Discount</option>
-                <option value={OFFER_TYPES.FIRST_TIME_USER}>First-time User Offer</option>
-                <option value={OFFER_TYPES.FREE_DELIVERY}>Free Delivery</option>
-                <option value={OFFER_TYPES.RESTAURANT_SPECIFIC}>Restaurant-specific Deal</option>
+                {/* <option value={OFFER_TYPES.AUTOMATIC_DISCOUNT}>Automatic Discount</option> */}
+                {/* <option value={OFFER_TYPES.FIRST_TIME_USER}>First-time User Offer</option> */}
+                {/* <option value={OFFER_TYPES.FREE_DELIVERY}>Free Delivery</option> */}
+                {/* <option value={OFFER_TYPES.RESTAURANT_SPECIFIC}>Restaurant-specific Deal</option> */}
               </select>
               {allErrors.offer_type && <span className="vendor-coupon-management-error-message">{allErrors.offer_type}</span>}
             </div>
