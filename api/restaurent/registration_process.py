@@ -1,3 +1,4 @@
+from decimal import Decimal, InvalidOperation
 import os
 import json
 from rest_framework import status
@@ -374,11 +375,14 @@ class RestaurantMenueUpdate(APIView):
         cuisines = request.data.get('cuisines', '').split(',')  # Split cuisines by comma
         start_time = request.data.get('start_time', '')
         end_time = request.data.get('end_time', '')
-        discount_percent = request.data.get('discount_percent', '')
+        # discount_percent = request.data.get('discount_percent', '0.00')
         discount_active = request.data.get('discount_active', '')
 
-        print("discount_active====",discount_active)
-        print("discount_percent====",discount_percent)
+        raw_discount = request.data.get('discount_percent', '0.00')
+        try:
+            discount_percent = Decimal(raw_discount.strip()) if raw_discount.strip() else Decimal('0.00')
+        except (InvalidOperation, AttributeError):
+            discount_percent = Decimal('0.00')
 
         # Handle image update
         item_image = request.FILES.get('item_image')
