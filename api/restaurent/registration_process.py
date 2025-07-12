@@ -311,7 +311,7 @@ class RestaurantMenueList(APIView):
                 "discount_percent": item.discount_percent,
                 "discount_active": item.discount_active,
                 "cuisines": [cuisine.cuisine_name for cuisine in item.cuisines.all()],
-                "item_image": request.build_absolute_uri(item.item_image.url) if item.item_image else None,
+                "item_image": request.build_absolute_uri(item.item_image.url) if item.item_image else "/food_image_eatoor.png",
                 "created_at": item.created_at,
                 "updated_at": item.updated_at,
             })
@@ -593,6 +593,8 @@ class RestaurantDetailMenuView(APIView):
                     item["item_image"] = request.build_absolute_uri(
                         default_storage.url(item["item_image"])
                     )
+                else:
+                    item["item_image"] = "/food_image_eatoor.png"
 
                 if offer:
                     if offer == "buy-one-get-one-free" and item.get("buy_one_get_one_free"):

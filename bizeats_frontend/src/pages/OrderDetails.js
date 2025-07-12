@@ -740,7 +740,7 @@ const OrderDetails = ({ user, setUser }) => {
                           {food.hasDiscount ? (
                             <div className="order-details-page-menu-price-container">
                               <span className="order-details-page-menu-original-price">₹{food.price.toFixed(2)}</span>
-                              <span className="order-details-page-menu-discounted-price">₹{food.discountedPrice.toFixed(2)}</span>
+                              <span className="order-details-page-menu-food-price">₹{food.discountedPrice.toFixed(2)}</span>
                               <span className="order-details-page-menu-discount-badge">{food.discountPercent}% OFF</span>
                             </div>
                           ) : (
