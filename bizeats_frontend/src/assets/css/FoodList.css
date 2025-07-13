@@ -706,3 +706,130 @@
     padding: 10px 15px;
   }
 }
+
+/* Home Cooked Detail Section */
+.home_cooked_detail {
+  padding: 3rem 0;
+}
+
+.home_cooked_detail__container {
+  max-width: 1200px;
+  margin: 0 auto;
+  /* padding: 0 1.5rem; */
+}
+
+.home_cooked_detail__header {
+  margin-bottom: 2rem;
+}
+
+.home_cooked_detail__heading {
+  font-size: 24px;
+  font-weight: 700;
+  color: #333;
+  margin: 0;
+  position: relative;
+  display: inline-block;
+  padding-bottom: 0.5rem;
+}
+
+.home_cooked_detail__heading::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 80px;
+  height: 4px;
+  background: linear-gradient(90deg, #ff7e00, #ff9a44);
+  border-radius: 2px;
+}
+
+/* Grid Layout - 4 columns by default */
+.home_cooked_detail__grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+}
+
+/* Card Styling */
+.home_cooked_detail__card {
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.home_cooked_detail__card:hover {
+  transform: translateY(-5px);
+}
+
+/* Responsive Adjustments */
+@media (max-width: 1024px) {
+  .home_cooked_detail__grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .home_cooked_detail {
+    padding: 2rem 0;
+  }
+  
+  /* 2 cards per row on tablet/mobile */
+  .home_cooked_detail__grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+  
+  .home_cooked_detail__heading {
+    font-size: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .home_cooked_detail__container {
+    /* padding: 0 1rem; */
+  }
+  
+  /* Maintain 2 cards per row on mobile */
+  .home_cooked_detail__grid {
+    grid-template-columns: repeat(2, 1fr);
+    max-width: 100%;
+    margin: 0;
+    gap: 0.75rem;
+  }
+  
+  .home_cooked_detail__heading {
+    font-size: 18px;
+  }
+  
+  /* Adjust card spacing for small mobile */
+  @media (max-width: 375px) {
+    .home_cooked_detail__grid {
+      gap: 0.5rem;
+    }
+  }
+}
+
+/* Card Content Styles */
+.home_cooked_detail__card .food-card__image-wrapper {
+  height: 200px;
+}
+
+.home_cooked_detail__card .food-card__content {
+  padding: 1rem;
+}
+
+.home_cooked_detail__card .food-card__title {
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+}
+
+.home_cooked_detail__card .food-card__cuisine {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.home_cooked_detail__card .food-card__footer {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #eee;
+}

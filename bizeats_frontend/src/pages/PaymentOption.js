@@ -10,6 +10,7 @@ import StripeLoader from "../loader/StripeLoader";
 const PaymentOption = ({ user }) => {
   const razorpay_api_key = process.env.REACT_APP_RAZORPAY_API_KEY;
   const { restaurant_id } = useParams();
+  const [isOpen, setIsOpen] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [restaurantOrderDetails, setRestaurantOrderDetails] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -23,6 +24,8 @@ const PaymentOption = ({ user }) => {
 
   const user_address = localStorage.getItem("user_full_address") || "No address found";
   const delivery_address_id = localStorage.getItem("selected_address");
+
+  const MINIMUM_ORDER_AMOUNT = 50; // Minimum order amount constant
 
   const paymentMethods = [
     {
@@ -327,9 +330,16 @@ const PaymentOption = ({ user }) => {
     }
   };
 
+  const validateMinimumOrderAmount = () => {
+    if (restaurantOrderDetails?.item_total < MINIMUM_ORDER_AMOUNT) {
+      throw new setIsOpen(true)
+    }
+  };
+
   const initiatePayment = useCallback(async () => {
     try {
       validatePaymentSelection();
+      validateMinimumOrderAmount(); // Validate minimum order amount
       setLoading(true);
 
       if (selectedPayment === "cod") {
@@ -357,7 +367,7 @@ const PaymentOption = ({ user }) => {
       }
     } catch (error) {
       console.error("Payment initiation error:", error);
-      alert(error.message);
+      setCouponError(error.message); // Show error in the coupon error section
     } finally {
       setLoading(false);
     }
@@ -454,6 +464,31 @@ const PaymentOption = ({ user }) => {
 
   return (
     <div className="payment-option-container">
+
+      <div className="eatoor-modal-wrapper">
+        {/* <button className="eatoor-modal-trigger" onClick={() => setIsOpen(true)}>
+          Open Modal
+        </button> */}
+        {isOpen && (
+          <div className="eatoor-modal-overlay">
+            <div className="eatoor-modal-container">
+              <span className="eatoor-modal-close" onClick={() => setIsOpen(false)}>
+                &times;
+              </span>
+              <div className="eatoor-modal-notice">
+                <svg className="eatoor-modal-icon" viewBox="0 0 24 24">
+                  <path fill="#e65c00" d="M12,2L1,21H23M12,6L19.5,19H4.5M11,10V14H13V10M11,16V18H13V16" />
+                </svg>
+                <span>Minimum order amount should be ₹50</span>
+              </div>
+              <button className="eatoor-modal-button" onClick={() => setIsOpen(false)}>
+                Close
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
       {postPaymentProcessing && (
         <div className="payment-option-overlay-loader">
           <div className="payment-option-verifying-box">
@@ -604,6 +639,14 @@ const PaymentOption = ({ user }) => {
           </div>
         </div>
 
+        {/* Minimum order amount warning */}
+        {restaurantOrderDetails.total_amount < MINIMUM_ORDER_AMOUNT && (
+          <div className="payment-option-minimum-error">
+            Minimum order amount should be <span className="payment-option-minimum-amount">₹{MINIMUM_ORDER_AMOUNT}</span>.
+            Please add more items to proceed.
+          </div>
+        )}
+
         <div className="payment-option-methods-section">
           <h2>Select Payment Method</h2>
           <div className="payment-option-methods-grid">
@@ -625,9 +668,17 @@ const PaymentOption = ({ user }) => {
 
         <div className="payment-option-actions">
           <button
-            className={`payment-option-button ${loading ? "processing" : ""}`}
+            className={`payment-option-button ${
+              loading ? "processing" : 
+              restaurantOrderDetails.total_amount < MINIMUM_ORDER_AMOUNT ? "disabled" : ""
+            }`}
             onClick={initiatePayment}
-            disabled={!selectedPayment || loading || postPaymentProcessing}
+            disabled={
+              !selectedPayment || 
+              loading || 
+              postPaymentProcessing || 
+              restaurantOrderDetails.total_amount < MINIMUM_ORDER_AMOUNT
+            }
           >
             {loading ? (
               <>

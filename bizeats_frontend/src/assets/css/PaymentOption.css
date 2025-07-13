@@ -708,3 +708,218 @@
   visibility: visible;
   opacity: 1;
 }
+
+/* Modal Wrapper - Base Styles */
+.eatoor-modal-wrapper {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Trigger Button */
+.eatoor-modal-trigger {
+  background-color: #e65c00; /* Primary orange color */
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.eatoor-modal-trigger:hover {
+  background-color: #cc5200; /* Slightly darker orange */
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.eatoor-modal-trigger:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* Overlay */
+.eatoor-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.75); /* Semi-transparent black */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  animation: eatoor-fadeIn 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+/* Modal Container */
+.eatoor-modal-container {
+  background-color: white;
+  border-radius: 10px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  width: 90%;
+  max-width: 450px;
+  padding: 30px;
+  position: relative;
+  animation: eatoor-modalEnter 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* Close Button */
+.eatoor-modal-close {
+  position: absolute;
+  top: 15px;
+  right: 20px;
+  font-size: 28px;
+  font-weight: bold;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  line-height: 1;
+  padding: 0 5px;
+}
+
+.eatoor-modal-close:hover {
+  color: #e65c00; /* Orange color */
+  transform: scale(1.1);
+}
+
+/* Modal Title */
+.eatoor-modal-title {
+  color: #e65c00; /* Orange color */
+  margin-top: 0;
+  margin-bottom: 20px;
+  font-size: 26px;
+  font-weight: 700;
+  text-align: center;
+}
+
+/* Modal Text */
+.eatoor-modal-text {
+  color: black;
+  margin-bottom: 30px;
+  line-height: 1.6;
+  font-size: 16px;
+  text-align: center;
+}
+
+/* Action Button */
+.eatoor-modal-button {
+  display: block;
+  width: 100%;
+  background-color: #e65c00; /* Orange color */
+  color: white;
+  border: none;
+  padding: 12px;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 20px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.eatoor-modal-button:hover {
+  background-color: #cc5200; /* Darker orange */
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.eatoor-modal-button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* Animations */
+@keyframes eatoor-fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes eatoor-modalEnter {
+  from {
+    transform: translateY(20px) scale(0.98);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+/* Focus states for accessibility */
+.eatoor-modal-trigger:focus,
+.eatoor-modal-close:focus,
+.eatoor-modal-button:focus {
+  outline: 2px solid #e65c00;
+  outline-offset: 2px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+  .eatoor-modal-container {
+    width: 95%;
+    padding: 25px 20px;
+  }
+  
+  .eatoor-modal-title {
+    font-size: 22px;
+    margin-bottom: 15px;
+  }
+  
+  .eatoor-modal-text {
+    font-size: 15px;
+    margin-bottom: 20px;
+  }
+  
+  .eatoor-modal-button {
+    padding: 10px;
+  }
+}
+
+/* Add these new styles to your existing CSS */
+
+.eatoor-modal-notice {
+  display: flex;
+  align-items: center;
+  background-color: #fff8f0;
+  border-left: 4px solid #e65c00;
+  padding: 12px 15px;
+  margin-bottom: 20px;
+  border-radius: 4px;
+  color: #333;
+  font-size: 14px;
+}
+
+.eatoor-modal-icon {
+  width: 20px;
+  height: 20px;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+/* Update the existing button style to make it more prominent */
+.eatoor-modal-button {
+  background-color: #e65c00;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: block;
+  width: 100%;
+  margin-top: 15px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.eatoor-modal-button:hover {
+  background-color: #cc5200;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}

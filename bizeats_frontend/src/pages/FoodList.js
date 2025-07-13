@@ -366,6 +366,22 @@ const FoodGrid = () => {
           </div>
         </div>
       </section>
+
+      <section className="home_cooked_detail">
+        <div className="home_cooked_detail__container">
+          <div className="home_cooked_detail__header">
+            <h2 className="home_cooked_detail__heading">Home-cooked food in Mumbai</h2>
+          </div>
+          
+          <div className="home_cooked_detail__grid">
+            {restaurants.map((restaurant) => (
+              <div key={restaurant.restaurant_id} className="home_cooked_detail__card">
+                {renderCard(restaurant)}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
     </div>
   );
 };
