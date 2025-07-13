@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { ArrowRightCircle, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowRightCircle, ChevronLeft, ChevronRight, User } from "lucide-react";
 import "../assets/css/FoodList.css";
 import { Link } from "react-router-dom";
 import API_ENDPOINTS from "../components/config/apiConfig";
@@ -20,7 +20,7 @@ import HomePageEggBiryani from "../assets/img/home_page_egg_biryani.jpg";
 import HomePageGulabJamun from "../assets/img/home_page_gulab_jamun.jpg";
 import HomePageKokamSarbat from "../assets/img/homa_page_kokam_sarbat.jpg";
 
-const FoodGrid = () => {
+const FoodGrid = ({user}) => {
   const [loading, setLoading] = useState(true);
   const [restaurants, setRestaurants] = useState([]);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -35,6 +35,9 @@ const FoodGrid = () => {
     const handleResize = () => {
       setIsMobile(window.innerWidth < 768);
     };
+
+    const firstName = user?.full_name?.split(' ')[0] || '';
+    const capitalizedFirstName = firstName.charAt(0).toUpperCase() + firstName.slice(1).toUpperCase();
 
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
@@ -208,7 +211,11 @@ const FoodGrid = () => {
         <section className="food-categories-section">
           <div className="food-categories-container">
             <div className="food-categories-header">
-              <h2 className="food-categories-heading">What's on your mind</h2>
+              <h2 className="food-categories-heading">
+                {user?.full_name
+                  ? `${user.full_name.split(' ')[0].toUpperCase()}, What's on your mind`
+                  : `What's on your mind`}
+              </h2>
               <div className="food-categories-controls">
                 <button 
                   onClick={handleFoodPrev} 
@@ -269,7 +276,11 @@ const FoodGrid = () => {
         <section className="food-categories-mobile-section">
           <div className="food-categories-mobile-container">
             <div className="food-categories-mobile-header">
-              <h2 className="food-categories-mobile-heading">What's on your mind</h2>
+              <h2 className="food-categories-mobile-heading">
+                {user?.full_name
+                  ? `${user.full_name.split(' ')[0].toUpperCase()}, What's on your mind`
+                  : `What's on your mind`}
+              </h2>
             </div>
             <div className="food-categories-mobile-grid">
               {foodItems.slice(0, 4).map((item, index) => (
