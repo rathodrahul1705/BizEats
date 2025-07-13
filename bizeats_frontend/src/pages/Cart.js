@@ -186,7 +186,20 @@ const Cart = ({ user, setUser }) => {
     }
   };
 
-  const handleBack = () => step > 1 && setStep(step - 1);
+  const handleBack = () => {
+    if (step > 1) {
+      setStep(step - 1);
+    }
+  };
+
+  const handleBackToRestaurant = () => {
+    const restaurantId = localStorage.getItem("current_order_restaurant_id");
+    if (restaurantId) {
+      navigate(`/city/thane/kokan-foods-kalwa-parsik-thane/${restaurantId}`);
+    } else {
+      navigate("/");
+    }
+  };
 
   const handleAddressSelection = (address_id, selectedFullAddress) => {
     let user_full_address = localStorage.getItem("user_full_address");
@@ -249,9 +262,12 @@ const Cart = ({ user, setUser }) => {
         )}
       </div>
 
-      {step > 1 && (
-        <button className="cart-navigation-btn back" onClick={handleBack}>
-          <ArrowLeft size={20} /> Back
+      {(step > 1 || cartItems.length > 0) && (
+        <button 
+          className="cart-navigation-btn back" 
+          onClick={step > 1 ? handleBack : handleBackToRestaurant}
+        >
+          <ArrowLeft size={20} /> {step > 1 ? "Back" : "Back to Home Kitchen"}
         </button>
       )}
 
