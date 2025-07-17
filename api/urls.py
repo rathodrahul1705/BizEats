@@ -119,6 +119,8 @@ urlpatterns = [
     path('api/', include(router.urls)),
 
 
+    path('api/user/user_list/', FetchUserList.as_view()),
+    path('api/cart/cart_list/', FetchCartList.as_view()),
     path('api/test/', trigger_background_task),
     re_path(r'^(?!media/).*$', ReactAppView.as_view(), name='react-app'),
 
