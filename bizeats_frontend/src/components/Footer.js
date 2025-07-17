@@ -135,7 +135,7 @@ const Footer = () => {
                 <MdPhone /> +91 8108662484
               </a>
               <div className="footer__mobile-address">
-                <MdLocationOn /> 123 Food Street, Bangalore, India
+                <MdLocationOn /> Thane, Mumbai
               </div>
             </div>
           </details>
