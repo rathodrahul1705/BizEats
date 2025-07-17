@@ -194,6 +194,8 @@ const TrackOrder = ({ user, setUser }) => {
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const toastTimeoutRef = useRef(null);
+  const [deliveryAgentInfo, setDeliveryAgentInfo] = useState(null);
+  const [porterTrackingDetails, setPorterTrackingDetails] = useState(null);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -201,8 +203,6 @@ const TrackOrder = ({ user, setUser }) => {
       setShowSignIn(true);
     }
   }, [user]);
-
-  // console.log("selectedOrder===",selectedOrder?.review_present)
 
   useEffect(() => {
     return () => {
@@ -383,10 +383,20 @@ const TrackOrder = ({ user, setUser }) => {
           setRestaurantLocation(parseLocation(res.restaurant_location));
           setDeliveryAgentLocation(parseLocation(res.deliver_agent_location));
           
-          if (res.estimated_time_minutes === null) {
+          // Set delivery agent information if available
+          if (res.porter_tracking_details) {
+            setPorterTrackingDetails(res.porter_tracking_details);
+            if (res.porter_tracking_details?.partner_info) {
+              setDeliveryAgentInfo(res.porter_tracking_details?.partner_info);
+            }
+          }
+          
+          if (res.estimated_time_minutes === null && res.porter_tracking_details?.partner_info == null) {
             setEstimatedTimestamp("agent_not_assigned");
           } else if (res.estimated_time_minutes) {
             setEstimatedTimestamp(res.estimated_time_minutes);
+          } else if (res.porter_tracking_details?.partner_info) {
+            setEstimatedTimestamp("assigned");
           } else {
             setEstimatedTimestamp("arrived");
           }
@@ -414,14 +424,17 @@ const TrackOrder = ({ user, setUser }) => {
   };
 
   const handleRefresh = async () => {
+  if (isRefreshing) return; // Prevent multiple simultaneous refreshes
+  
     try {
       setIsRefreshing(true);
       const res = await fetchData(API_ENDPOINTS.TRACK.TRACK_ORDER, "POST", {
         user_id: user?.user_id,
+        order_number: order_number,
       });
       if (res.status === "success" && res.orders.length) {
         setOrders(res.orders);
-        const currentOrder = res.orders.find(o => o.order_number === selectedOrder.order_number);
+        const currentOrder = res.orders.find(o => o.order_number === selectedOrder?.order_number);
         if (currentOrder) {
           setSelectedOrder(currentOrder);
         } else if (res.orders.length > 0) {
@@ -458,6 +471,12 @@ const TrackOrder = ({ user, setUser }) => {
     const dateWithHyphen = datePart.replace(/\//g, '-');
     return `${dateWithHyphen}, ${timePart}`;
   };
+
+  const formatTimestamp = (timestamp) => {
+    if (!timestamp) return "N/A";
+    const date = new Date(timestamp * 1000);
+    return convertUTCtoIST(date.toISOString());
+  };
   
   const handleCallRestaurant = () => {
     if (selectedOrder?.restaurant_contact) {
@@ -467,9 +486,30 @@ const TrackOrder = ({ user, setUser }) => {
     }
   };
 
+  const handleCallDeliveryAgent = () => {
+    if (deliveryAgentInfo?.mobile?.mobile_number) {
+      const phoneNumber = `+${deliveryAgentInfo.mobile.country_code}${deliveryAgentInfo.mobile.mobile_number}`;
+      window.location.href = `tel:${phoneNumber}`;
+    } else {
+      alert("Delivery agent phone number not available");
+    }
+  };
+
   const discount = selectedOrder?.coupon_discount;
   const total = selectedOrder?.total;
   const discount_text = selectedOrder?.coupon_code_text;
+
+  useEffect(() => {
+    // Set up the interval for auto-refresh
+    const autoRefreshInterval = setInterval(() => {
+      if (!["Delivered", "Cancelled", "Refunded"].includes(selectedOrder?.status)) {
+        handleRefresh();
+      }
+    }, 120000); // 120 seconds
+
+    // Clean up the interval when component unmounts
+    return () => clearInterval(autoRefreshInterval);
+  }, [selectedOrder?.status]); // Dependency on selectedOrder.status
 
   if (showSignIn) {
     return (
@@ -505,6 +545,7 @@ const TrackOrder = ({ user, setUser }) => {
   const progress = statusMap[selectedOrder.status] || 0;
   const initialCenter = deliveryAgentLocation || restaurantLocation || userLocation;
 
+  console.log("estimatedTimestamp==",estimatedTimestamp)
   return (
     <div className="track-order-container">
 
@@ -599,7 +640,7 @@ const TrackOrder = ({ user, setUser }) => {
           </div>
         </div>
 
-        {estimatedTimestamp !== null && (
+        {(
           <div className="eta">
             {estimatedTimestamp === "arrived" ? (
               <>
@@ -614,6 +655,13 @@ const TrackOrder = ({ user, setUser }) => {
                 <span className="status-badge">{selectedOrder.status}</span>
                 <p className="eta-note">We'll notify you once a delivery agent is assigned.</p>
               </>
+            ) : estimatedTimestamp === "assigned" &&
+              !["Delivered", "Cancelled", "Refunded"].includes(selectedOrder.status) ? (
+              <>
+                <strong>Delivery agent assigned!</strong>
+                <span className="status-badge">{selectedOrder.status}</span>
+                <p className="eta-note">Your order will be Pickup shortly.</p>
+              </>
             ) : typeof estimatedTimestamp === "number" &&
               !["Delivered", "Cancelled", "Refunded"].includes(selectedOrder.status) ? (
               <>
@@ -627,6 +675,97 @@ const TrackOrder = ({ user, setUser }) => {
           </div>
         )}
       </div>
+
+      {/* Delivery Agent Information Section */}
+      {porterTrackingDetails?.status === "accepted" && deliveryAgentInfo && (
+        <div className="delivery-agent-card">
+          <div className="delivery-agent-header">
+            <h3>Your Delivery Agent</h3>
+            <div className="agent-status-badge">
+              <span className="status-dot"></span>
+              Assigned
+            </div>
+          </div>
+          
+          <div className="agent-info-grid">
+            <div className="agent-photo">
+              <div className="agent-photo-placeholder">
+                {deliveryAgentInfo.name.charAt(0).toUpperCase()}
+              </div>
+            </div>
+            
+            <div className="agent-details">
+              <div className="agent-name-vehicle">
+                <h4>{deliveryAgentInfo.name}</h4>
+                <span className="vehicle-info">
+                  {deliveryAgentInfo.vehicle_type === "BIKE" ? (
+                    <Bike size={16} />
+                  ) : (
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="8" width="18" height="10" rx="1"></rect>
+                      <path d="M7 18h10"></path>
+                      <path d="M10 8l2-5h4l2 5"></path>
+                    </svg>
+                  )}
+                  {deliveryAgentInfo.vehicle_number}
+                </span>
+              </div>
+              
+              <div className="agent-contact">
+                <button 
+                  className="call-agent-btn"
+                  onClick={handleCallDeliveryAgent}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                  </svg>
+                  Call Agent
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <div className="delivery-timeline">
+            <div className="timeline-item">
+              <div className="timeline-dot"></div>
+              <div className="timeline-content">
+                <span>Order Accepted</span>
+                {/* <small>{formatTimestamp(porterTrackingDetails.order_timings?.order_accepted_time)}</small> */}
+              </div>
+            </div>
+            
+            {porterTrackingDetails.order_timings?.pickup_time && (
+              <div className="timeline-item">
+                <div className="timeline-dot"></div>
+                <div className="timeline-content">
+                  <span>Picked Up In Progress</span>
+                  {/* <small>{formatTimestamp(porterTrackingDetails.order_timings?.pickup_time)}</small> */}
+                </div>
+              </div>
+            )}
+
+            {porterTrackingDetails.order_timings?.order_started_time && (
+              <div className="timeline-item">
+                <div className="timeline-dot"></div>
+                <div className="timeline-content">
+                  <span>On the way</span>
+                  {/* <small>{formatTimestamp(porterTrackingDetails.order_timings?.pickup_time)}</small> */}
+                </div>
+              </div>
+            )}
+            
+            {porterTrackingDetails.order_timings?.order_ended_time && (
+              <div className="timeline-item">
+                <div className="timeline-dot completed"></div>
+                <div className="timeline-content">
+                  <span>Delivered</span>
+                  {/* <small>{formatTimestamp(porterTrackingDetails.order_timings?.order_ended_time)}</small> */}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className={`order-summary-card ${isMapExpanded ? 'map-expanded' : ''}`}>
         <div 

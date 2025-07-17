@@ -42,7 +42,7 @@ def create_booking(payload):
         return {"error": "Unable to create booking."}
 
 def track_booking(booking_id):
-    url = f"{settings.PORTER_BASE_URL}/v1/orders/{booking_id}"
+    url = f"{settings.PORTER_BASE_URL}/v1.1/orders/{booking_id}"
     try:
         response = requests.get(url, headers=HEADERS, timeout=10)
         response.raise_for_status()

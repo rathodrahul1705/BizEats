@@ -112,6 +112,7 @@ class RestaurantLocation(models.Model):
     floor_tower = models.CharField(max_length=255, blank=True, null=True)
     area_sector_locality = models.CharField(max_length=255)
     city = models.CharField(max_length=100)
+    zip_code = models.CharField(max_length=20, blank=True, null=True)
     nearby_locality = models.CharField(max_length=255, blank=True, null=True)
     latitude = models.DecimalField(max_digits=9, decimal_places=6, blank=True, null=True)
     longitude = models.DecimalField(max_digits=9, decimal_places=6, blank=True, null=True)
@@ -603,14 +604,16 @@ class OrderReview(models.Model):
 
     def __str__(self):
         return f"Review by {self.user} for {self.order_id}"
-    
 class PorterOrder(models.Model):
+    order_number = models.CharField(max_length=20, null=True, blank=True)
     booking_id = models.CharField(max_length=255, unique=True)
     status = models.CharField(max_length=50)
-    pickup_address = models.TextField()
-    drop_address = models.TextField()
     vehicle_type = models.CharField(max_length=50)
     fare_estimate = models.JSONField(null=True, blank=True)
+    estimated_pickup_time = models.DateTimeField(null=True, blank=True)
+    porter_create_request = models.JSONField(null=True, blank=True)
+    porter_create_response = models.JSONField(null=True, blank=True)
+    track_order_api_response = models.JSONField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

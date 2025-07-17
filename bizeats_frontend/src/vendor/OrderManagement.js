@@ -34,6 +34,14 @@ const OrderManagement = ({ user }) => {
   const [recentlyUpdatedOrder, setRecentlyUpdatedOrder] = useState(null);
   const [expandedOrder, setExpandedOrder] = useState(null);
 
+  const isAdmin = user?.role === "Admin";
+  const getAllowedStatusOptions = () => {
+    if (isAdmin) {
+      return statusOptions;
+    }
+    return statusOptions.slice(0, 4);
+  };
+
   const fetchVendorOrders = async () => {
     try {
       const response = await fetchData(API_ENDPOINTS.ORDER.VENDOR_ORDERS, "POST", {
@@ -62,6 +70,13 @@ const OrderManagement = ({ user }) => {
   const handleStatusChange = async (orderNumber, statusId) => {
     try {
       const newStatusObj = statusOptions.find(s => s.id === parseInt(statusId));
+      
+      // Check if status change is allowed for non-admin users
+      if (!isAdmin && parseInt(statusId) > 4) {
+        alert("You don't have permission to update to this status");
+        return;
+      }
+
       const response = await fetchData(API_ENDPOINTS.ORDER.UPDATE_ORDER_STATUS, "POST", {
         order_number: orderNumber,
         new_status: parseInt(statusId),
@@ -123,13 +138,16 @@ const OrderManagement = ({ user }) => {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      const onTheWayOrders = orders.filter(order => order.status.label === "On the Way");
-      onTheWayOrders.forEach(order => {
+      const activeStatuses = ["On the Way", "Ready for Delivery/Pickup"];
+      const activeOrders = orders.filter(order =>
+        activeStatuses.includes(order.status.label)
+      );
+      activeOrders.forEach(order => {
         updateLiveLocation(order.order_number);
       });
     }, 120000);
 
-    return () => clearInterval(interval);
+    return () => clearInterval(interval); // cleanup to avoid memory leaks
   }, [orders]);
 
   const toggleOrderExpand = (orderNumber) => {
@@ -363,7 +381,7 @@ const OrderManagement = ({ user }) => {
                   onClick={(e) => e.stopPropagation()}
                   disabled={order.status.id == '7' || order.status.id == '8'}
                 >
-                  {statusOptions.map((status) => (
+                  {getAllowedStatusOptions().map((status) => (
                     <option key={status.id} value={status.id}>{status.label}</option>
                   ))}
                 </select>
@@ -430,7 +448,7 @@ const OrderManagement = ({ user }) => {
                       <h4><FaClock /> Order Timeline</h4>
                       <p><strong>Placed:</strong> {convertUTCtoIST(order.placed_on)}</p>
                       <p><strong>Estimated Delivery:</strong> {convertUTCtoIST(order.estimated_delivery)}</p>
-                      {order.status.label === "On the Way" && (
+                      {order.status.label === "On the Way" && isAdmin && (
                         <button
                           className="update-location-btn"
                           onClick={() => updateLiveLocation(order.order_number)}

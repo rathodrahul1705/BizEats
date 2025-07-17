@@ -6,6 +6,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 from api.emailer.email_notifications import generate_coupon_html, generate_coupon_status_html, send_otp_email, send_contact_email
 from api.serializers import ContactUsSerializer, OrderReviewSerializer, RestaurantCategorySerializer
+from api.tasks import update_order_statuses
 from .models import Cart, ContactMessage, OrderReview, RestaurantCategory, User, RestaurantMaster
 from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -532,3 +533,7 @@ class RestaurantListView(viewsets.ReadOnlyModelViewSet):
     serializer_class = RestaurantMasterSerializer  # Make sure you have this serializer
     permission_classes = [IsAuthenticated]
     pagination_class = None
+
+def trigger_background_task(request):
+    update_order_statuses()  # schedules the task
+    return JsonResponse({'status': 'Task scheduled'})

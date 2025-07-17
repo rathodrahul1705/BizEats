@@ -238,7 +238,7 @@ const Home = () => {
       title: "Weekend Special",
       subtitle: "Enjoy combo offer on order this weekend",
       cta: "Order Now",
-      link: "/food-list",
+      link: "/home-kitchens",
       bgColor: "linear-gradient(135deg, #43CBFF 0%, #9708CC 100%)",
       image: "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=2069",
       badge: "Weekend Only"
@@ -338,7 +338,7 @@ const Home = () => {
               Real ingredients, real flavors, real love in every bite.
             </p>
             <div className="hero-cta">
-              <Link to="/food-list" className="hero-cta__primary">
+              <Link to="/home-kitchens" className="hero-cta__primary">
                 <span>Order Now</span>
                 <ChevronRight size={18} />
               </Link>
@@ -691,7 +691,7 @@ const Home = () => {
               Join thousands of happy customers enjoying authentic home-cooked meals delivered to their doorstep.
             </p>
             <div className="cta-buttons">
-              <Link to="/food-list" className="cta-button cta-button--primary">
+              <Link to="/home-kitchens" className="cta-button cta-button--primary">
                 Order Now
               </Link>
               <Link to="/register-your-homechef" className="cta-button cta-button--secondary">

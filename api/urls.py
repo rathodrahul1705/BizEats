@@ -14,7 +14,7 @@ from .order.track_order import ApplyCouponOrder, GetActiveOrders, LiveLocationDe
 from django.http import JsonResponse
 
 from rest_framework.routers import DefaultRouter
-from .views import RestaurantCategoryViewSet, OfferViewSet
+from .views import RestaurantCategoryViewSet, OfferViewSet, trigger_background_task
 from api import views
 
 router = DefaultRouter()
@@ -107,8 +107,6 @@ urlpatterns = [
     
     path('api/order-review/update/', SubmitOrderReviewView.as_view(), name='submit-order-review'),
     path('api/customer-review/', FetchReviewView.as_view(), name='fetch-review'),
-    path('api/user/user_list/', FetchUserList.as_view(), name='user-list'),
-    path('api/cart/cart_list/', FetchCartList.as_view(), name='cart-list'),
 
     # porter api service
     path('api/porter/locations/', porter_views.porter_locations),
@@ -119,7 +117,9 @@ urlpatterns = [
     path('api/porter/webhook/', porter_webhook.porter_webhook),
     path('api/porter-orders/', admin_porter_orders),
     path('api/', include(router.urls)),
-    
+
+
+    path('api/test/', trigger_background_task),
     re_path(r'^(?!media/).*$', ReactAppView.as_view(), name='react-app'),
 
 ]

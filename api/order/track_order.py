@@ -7,7 +7,9 @@ from django.utils.decorators import method_decorator
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, generics, permissions
-from api.models import Cart, OfferDetail, Order, OrderReview, OrderStatusLog, RestaurantLocation, RestaurantMenu, User, UserDeliveryAddress, OrderLiveLocation, Payment, Coupon
+from api.delivery.helper import helper
+from api.delivery.porter_views import porter_track_booking
+from api.models import Cart, OfferDetail, Order, OrderReview, OrderStatusLog, PorterOrder, RestaurantLocation, RestaurantMenu, User, UserDeliveryAddress, OrderLiveLocation, Payment, Coupon
 from math import radians, sin, cos, sqrt, atan2
 from django.db import transaction
 from django.db.models import Q 
@@ -281,6 +283,9 @@ class OrderStatusUpdate(APIView):
 
             order = Order.objects.get(order_number=order_number)
 
+            if new_status == 4:
+               helper.create_delivery_request(order_number,order)
+
             invoice_path = None
             if new_status == 6:
                 invoice_path = generate_invoice_pdf(order)   
@@ -403,7 +408,6 @@ class OrderDetails(APIView):
                 {"status": "error", "message": str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
-
 @method_decorator(csrf_exempt, name='dispatch')
 class LiveLocationDetails(APIView):
     """
@@ -411,95 +415,95 @@ class LiveLocationDetails(APIView):
     """
 
     def haversine_distance(self, lat1, lon1, lat2, lon2):
-        lat1, lon1, lat2, lon2 = map(float, [lat1, lon1, lat2, lon2])  # Convert Decimals to floats
         R = 6371  # Radius of Earth in km
         dLat = radians(lat2 - lat1)
         dLon = radians(lon2 - lon1)
-        a = sin(dLat / 2)**2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dLon / 2)**2
+        a = sin(dLat / 2) ** 2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dLon / 2) ** 2
         c = 2 * atan2(sqrt(a), sqrt(1 - a))
         return R * c
 
     def estimate_time_minutes(self, lat1, lon1, lat2, lon2, speed_kmph=15):
-        
         distance_km = self.haversine_distance(lat1, lon1, lat2, lon2)
-        time_hours = distance_km / speed_kmph
-        return round(time_hours * 60)  # Return time in minutes
+        return round((distance_km / speed_kmph) * 60)
 
     def post(self, request, *args, **kwargs):
+        order_id = request.data.get("order_id")
+        if not order_id:
+            return Response(
+                {"status": "error", "message": "order_id is required."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
         try:
-            order_id = request.data.get("order_id")
-            if not order_id:
-                return Response(
-                    {"status": "error", "message": "order_id is required."},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-
-            # Get the order
             order = Order.objects.select_related("delivery_address", "restaurant").get(order_number=order_id)
-            live_location = OrderLiveLocation.objects.filter(order_number=order_id).order_by("-timestamp").first()
-            delivery_address = order.delivery_address
-            restaurant = order.restaurant
-
-            try:
-                restaurant_location = restaurant.restaurant_location
-            except RestaurantLocation.DoesNotExist:
-                return Response(
-                    {"status": "error", "message": "Restaurant location not found."},
-                    status=status.HTTP_404_NOT_FOUND
-                )
-
-            if not delivery_address or not delivery_address.latitude or not delivery_address.longitude:
-                return Response(
-                    {"status": "error", "message": "Delivery address location not found."},
-                    status=status.HTTP_404_NOT_FOUND
-                )
-
-            # Set live location values
-            if live_location:
-                live_location_latitude = live_location.latitude
-                live_location_longitude = live_location.longitude
-            else:
-                live_location_latitude = None
-                live_location_longitude = None
-
-            # Calculate ETA if delivery agent location is available
-            estimated_time_minutes = None
-            if live_location_latitude and live_location_longitude:
-                estimated_time_minutes = self.estimate_time_minutes(
-                    live_location_latitude,
-                    live_location_longitude,
-                    delivery_address.latitude,
-                    delivery_address.longitude
-                )
-
-            return Response({
-                "status": "success",
-                "user_destination": {
-                    "lat": delivery_address.latitude,
-                    "lng": delivery_address.longitude,
-                },
-                "restaurant_location": {
-                    "lat": restaurant_location.latitude,
-                    "lng": restaurant_location.longitude,
-                },
-                "deliver_agent_location": {
-                    "lat": live_location_latitude,
-                    "lng": live_location_longitude,
-                },
-                "estimated_time_minutes": estimated_time_minutes
-            }, status=status.HTTP_200_OK)
-
         except Order.DoesNotExist:
-            return Response(
-                {"status": "error", "message": "Order not found."},
-                status=status.HTTP_404_NOT_FOUND
-            )
-        except Exception as e:
-            return Response(
-                {"status": "error", "message": str(e)},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            return Response({"status": "error", "message": "Order not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        delivery_address = order.delivery_address
+        restaurant = order.restaurant
+
+        if not delivery_address or not delivery_address.latitude or not delivery_address.longitude:
+            return Response({"status": "error", "message": "Delivery address location not found."},
+                            status=status.HTTP_404_NOT_FOUND)
+
+        try:
+            restaurant_location = restaurant.restaurant_location
+        except RestaurantLocation.DoesNotExist:
+            return Response({"status": "error", "message": "Restaurant location not found."},
+                            status=status.HTTP_404_NOT_FOUND)
+
+        # Initialize live location
+        live_location_lat = live_location_lng = None
+        porter_tracking_details = porter_agent_status = None
+
+        # Use porter live tracking if available
+        porter_details = PorterOrder.objects.filter(order_number=order_id).first()
+        if porter_details:
+            porter_track_booking(porter_details.booking_id)
+            porter_agent_status = porter_details.status
+            response = porter_details.track_order_api_response
+
+            if response and response.get('partner_info') and response['partner_info'].get('location'):
+                loc = response['partner_info']['location']
+                live_location_lat = loc.get('lat')
+                live_location_lng = loc.get('long')
+                porter_tracking_details = response
+
+        # Fallback to internal OrderLiveLocation if porter location is not available
+        if not live_location_lat or not live_location_lng:
+            last_live_location = OrderLiveLocation.objects.filter(order_number=order_id).order_by("-timestamp").first()
+            if last_live_location:
+                live_location_lat = last_live_location.latitude
+                live_location_lng = last_live_location.longitude
+
+        # Calculate ETA if agent location available
+        estimated_time = None
+        if live_location_lat and live_location_lng:
+            estimated_time = self.estimate_time_minutes(
+                float(live_location_lat),
+                float(live_location_lng),
+                float(delivery_address.latitude),
+                float(delivery_address.longitude),
             )
 
+        return Response({
+            "status": "success",
+            "user_destination": {
+                "lat": delivery_address.latitude,
+                "lng": delivery_address.longitude,
+            },
+            "restaurant_location": {
+                "lat": restaurant_location.latitude,
+                "lng": restaurant_location.longitude,
+            },
+            "deliver_agent_location": {
+                "lat": live_location_lat,
+                "lng": live_location_lng,
+            },
+            "estimated_time_minutes": estimated_time,
+            "porter_agent_assign_status": porter_agent_status,
+            "porter_tracking_details": porter_tracking_details
+        }, status=status.HTTP_200_OK)
 @method_decorator(csrf_exempt, name='dispatch')
 class UpdateOrderLiveLocationView(APIView):
     """
@@ -541,7 +545,6 @@ class UpdateOrderLiveLocationView(APIView):
                 "status": "error",
                 "message": str(e)
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
 
 @method_decorator(csrf_exempt, name='dispatch')
 class GetActiveOrders(APIView):

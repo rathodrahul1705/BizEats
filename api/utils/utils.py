@@ -1,5 +1,6 @@
 import math
 import requests
+from api.delivery.porter_service import get_fare_estimate
 from api.models import RestaurantMaster, UserDeliveryAddress
 import os
 import logging
@@ -35,6 +36,29 @@ def calculate_distance_and_cost(restaurant_id, delivery_address_id, cost_per_km=
 
         distance_km = _haversine_distance(r_lat, r_lon, u_lat, u_lon)
         delivery_cost = round(distance_km * cost_per_km, 2)
+
+        payload = {
+            "pickup_details": {
+                "lat": r_lat,
+                "lng": r_lon
+            },
+            "drop_details": {
+                "lat": u_lat,
+                "lng": u_lon
+            },
+            "customer": {
+                "name": user_address.user.full_name,
+                "mobile": {
+                    "country_code": "+91",
+                    "number": user_address.user.contact_number
+                }
+            }
+        }
+
+        response = get_fare_estimate(payload)
+        if response:
+            two_wheeler = next((vehicle for vehicle in response['vehicles'] if vehicle["type"] == "2 Wheeler"), None)
+            delivery_cost = two_wheeler['fare']['minor_amount']/100
 
         return {
             "restaurant_coordinates": {"latitude": r_lat, "longitude": r_lon},

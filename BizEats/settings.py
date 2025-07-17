@@ -29,7 +29,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'corsheaders',
     'rest_framework',
-    'api'
+    'api',
+    'background_task',
 ]
 
 MIDDLEWARE = [
@@ -179,7 +180,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 #         }
 #     }
 # }
-
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,  # Important!
@@ -196,12 +196,23 @@ LOGGING = {
             'filename': os.path.join(BASE_DIR, 'logs', 'eatoor.log'),
             'formatter': 'verbose',
         },
+        'background_file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'logs', 'background_tasks.log'),
+            'formatter': 'verbose',
+        },
     },
     'loggers': {
-        '': {  # root logger
+        '': {  # Root logger for everything else
             'handlers': ['file'],
             'level': 'DEBUG',
             'propagate': True,
+        },
+        'background_tasks': {  # Logger for background tasks
+            'handlers': ['background_file'],
+            'level': 'INFO',
+            'propagate': False,
         },
     },
 }
