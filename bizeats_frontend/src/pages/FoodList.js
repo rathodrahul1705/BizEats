@@ -211,9 +211,12 @@ const FoodGrid = ({user}) => {
         <section className="food-categories-section">
           <div className="food-categories-container">
             <div className="food-categories-header">
-              <h2 className="food-categories-heading">
+             <h2 className="food-categories-heading">
                 {user?.full_name
-                  ? `${user.full_name.split(' ')[0].toUpperCase()}, What's on your mind`
+                  ? `${user.full_name.split(' ')[0].charAt(0).toUpperCase()}${user.full_name
+                      .split(' ')[0]
+                      .slice(1)
+                      .toLowerCase()}, What's on your mind`
                   : `What's on your mind`}
               </h2>
               <div className="food-categories-controls">
@@ -278,7 +281,10 @@ const FoodGrid = ({user}) => {
             <div className="food-categories-mobile-header">
               <h2 className="food-categories-mobile-heading">
                 {user?.full_name
-                  ? `${user.full_name.split(' ')[0].toUpperCase()}, What's on your mind`
+                  ? `${user.full_name.split(' ')[0].charAt(0).toUpperCase()}${user.full_name
+                      .split(' ')[0]
+                      .slice(1)
+                      .toLowerCase()}, What's on your mind`
                   : `What's on your mind`}
               </h2>
             </div>
