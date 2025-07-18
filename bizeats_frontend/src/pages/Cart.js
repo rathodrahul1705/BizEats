@@ -179,7 +179,7 @@ const CartOrder = ({ user, setUser }) => {
   const subtotal = calculateSubtotal();
   const totalSavings = calculateTotalSavings();
   const deliveryFee = calculateDeliveryFee();
-  const total = subtotal + deliveryFee;
+  const total = subtotal;
 
   const handleProceed = () => {
     if (cartItems.length === 0) {
