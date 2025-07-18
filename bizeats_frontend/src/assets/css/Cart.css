@@ -291,6 +291,7 @@
   padding: 20px;
   box-shadow: var(--box-shadow);
   margin-top: 24px;
+  margin-bottom: 80px;
 }
 
 .price-breakdown {

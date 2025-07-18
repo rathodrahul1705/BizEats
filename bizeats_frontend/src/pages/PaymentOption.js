@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { FaCreditCard, FaMoneyBillWave, FaStore, FaUser, FaTag } from "react-icons/fa";
+import { FaCreditCard, FaMoneyBillWave, FaStore, FaUser, FaTag, FaInfoCircle } from "react-icons/fa";
 import { ArrowLeft } from "lucide-react";
 import "../assets/css/PaymentOption.css";
 import API_ENDPOINTS from "../components/config/apiConfig";
@@ -25,22 +25,26 @@ const PaymentOption = ({ user }) => {
   const user_address = localStorage.getItem("user_full_address") || "No address found";
   const delivery_address_id = localStorage.getItem("selected_address");
 
-  const MINIMUM_ORDER_AMOUNT = 50; // Minimum order amount constant
+  const MINIMUM_ORDER_AMOUNT = 50;
 
   const paymentMethods = [
     {
       id: "online",
       name: "Online Payment",
-      icon: <FaCreditCard className="payment-option-payment-icon" />,
+      icon: <FaCreditCard className="payment-option__method-icon" />,
       description: "Pay securely with cards, UPI or netbanking",
+      available: true
     },
     {
       id: "cod",
       name: "Cash on Delivery",
-      icon: <FaMoneyBillWave className="payment-option-payment-icon" />,
+      icon: <FaMoneyBillWave className="payment-option__method-icon" />,
       description: "Pay by cash/UPI when you receive your order",
+      available: true
     },
   ];
+
+  const availablePaymentMethods = paymentMethods.filter(method => method.available);
 
   const calculateOrderTotals = useCallback((baseOrder, coupon = null) => {
     if (!baseOrder || !baseOrder.order_summary) {
@@ -139,7 +143,7 @@ const PaymentOption = ({ user }) => {
           code: couponCodeFromResponse || couponCode.trim(),
           discount_amount,
           final_total_amount: final_total_amount || 0,
-          message: message || "Coupon applied successfully",
+          message: message,
         };
 
         setAppliedCoupon(newCoupon);
@@ -157,13 +161,13 @@ const PaymentOption = ({ user }) => {
     } finally {
       setIsApplyingCoupon(false);
     }
-  }, [couponCode, user?.user_id, restaurant_id, restaurantOrderDetails, fetchOrderDetails]);
+  }, [couponCode, user?.user_id, restaurant_id, restaurantOrderDetails]);
 
   const removeCoupon = useCallback(() => {
     setAppliedCoupon(null);
     setCouponCode("");
     setCouponError("");
-  }, [fetchOrderDetails]);
+  }, []);
 
   const toggleCouponInput = useCallback(() => {
     setShowCouponInput(prev => !prev);
@@ -332,14 +336,14 @@ const PaymentOption = ({ user }) => {
 
   const validateMinimumOrderAmount = () => {
     if (restaurantOrderDetails?.item_total < MINIMUM_ORDER_AMOUNT) {
-      throw new setIsOpen(true)
+      throw new Error(`Minimum order amount should be ₹${MINIMUM_ORDER_AMOUNT}`);
     }
   };
 
   const initiatePayment = useCallback(async () => {
     try {
       validatePaymentSelection();
-      validateMinimumOrderAmount(); // Validate minimum order amount
+      validateMinimumOrderAmount();
       setLoading(true);
 
       if (selectedPayment === "cod") {
@@ -367,7 +371,7 @@ const PaymentOption = ({ user }) => {
       }
     } catch (error) {
       console.error("Payment initiation error:", error);
-      setCouponError(error.message); // Show error in the coupon error section
+      setCouponError(error.message);
     } finally {
       setLoading(false);
     }
@@ -458,72 +462,71 @@ const PaymentOption = ({ user }) => {
     }
   }, [loadRazorpayScript, restaurantOrderDetails, razorpay_api_key, user, restaurant_id, appliedCoupon, handlePaymentSuccess, handlePaymentFailure]);
 
-  const handleBack = useCallback(() => navigate(-1), [navigate]);
-  
   if (!restaurantOrderDetails) return <StripeLoader />;
 
   return (
-    <div className="payment-option-container">
-
-      <div className="eatoor-modal-wrapper">
-        {/* <button className="eatoor-modal-trigger" onClick={() => setIsOpen(true)}>
-          Open Modal
-        </button> */}
-        {isOpen && (
-          <div className="eatoor-modal-overlay">
-            <div className="eatoor-modal-container">
-              <span className="eatoor-modal-close" onClick={() => setIsOpen(false)}>
-                &times;
-              </span>
-              <div className="eatoor-modal-notice">
-                <svg className="eatoor-modal-icon" viewBox="0 0 24 24">
-                  <path fill="#e65c00" d="M12,2L1,21H23M12,6L19.5,19H4.5M11,10V14H13V10M11,16V18H13V16" />
-                </svg>
-                <span>Minimum order amount should be ₹50</span>
-              </div>
-              <button className="eatoor-modal-button" onClick={() => setIsOpen(false)}>
-                Close
-              </button>
+    <div className="payment-option">
+      {/* Minimum Order Amount Modal */}
+      {isOpen && (
+        <div className="payment-option__modal">
+          <div className="payment-option__modal-content">
+            <div className="payment-option__modal-notice">
+              <svg className="payment-option__modal-icon" viewBox="0 0 24 24">
+                <path fill="#e65c00" d="M12,2L1,21H23M12,6L19.5,19H4.5M11,10V14H13V10M11,16V18H13V16" />
+              </svg>
+              <span>Minimum order amount should be ₹{MINIMUM_ORDER_AMOUNT}</span>
             </div>
+            <button 
+              className="payment-option__modal-button" 
+              onClick={() => setIsOpen(false)}
+            >
+              Close
+            </button>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
+      {/* Payment Processing Overlay */}
       {postPaymentProcessing && (
-        <div className="payment-option-overlay-loader">
-          <div className="payment-option-verifying-box">
-            <div className="payment-option-verify-spinner" />
+        <div className="payment-option__overlay">
+          <div className="payment-option__processing">
+            <div className="payment-option__spinner" />
             <p>Payment Verifying...</p>
           </div>
         </div>
       )}
 
-      <div className="payment-option-header-wrapper">
-        <h1 className="payment-option-page-title">Payment Details</h1>
-        <button className="payment-option-back-button" onClick={handleBack}>
+      <div className="payment-option__header">
+        <button 
+          className="payment-option__back-button" 
+          onClick={() => navigate(-1)}
+        >
           <ArrowLeft size={20} />
-          <span>Back</span>
         </button>
+        <h1 className="payment-option__title">Payment Details</h1>
       </div>
 
-      <div className="payment-option-content">
-        <div className="payment-option-delivery-route">
-          <div className="payment-option-address-point">
-            <div className="payment-option-point-icon">
-              <FaStore className="payment-option-store-icon" />
+      <div className="payment-option__content">
+        {/* Delivery Route */}
+        <div className="payment-option__route">
+          <div className="payment-option__route-point">
+            <div className="payment-option__point-icon">
+              <FaStore className="payment-option__store-icon" />
             </div>
-            <div className="payment-option-address-details">
+            <div className="payment-option__point-details">
               <h3>From</h3>
               <p><strong>{restaurantOrderDetails.restaurant_name}</strong></p>
               <p>{restaurantOrderDetails.restaurant_address}</p>
             </div>
           </div>
-          <div className="payment-option-delivery-line" />
-          <div className="payment-option-address-point">
-            <div className="payment-option-point-icon">
-              <FaUser className="payment-option-user-icon" />
+          
+          <div className="payment-option__route-line" />
+          
+          <div className="payment-option__route-point">
+            <div className="payment-option__point-icon">
+              <FaUser className="payment-option__user-icon" />
             </div>
-            <div className="payment-option-address-details">
+            <div className="payment-option__point-details">
               <h3>To</h3>
               <p><strong>{restaurantOrderDetails.user_name}</strong></p>
               <p>{restaurantOrderDetails.customer_address}</p>
@@ -531,146 +534,163 @@ const PaymentOption = ({ user }) => {
           </div>
         </div>
 
-        <div className="payment-option-order-summary-card">
-          <h3>Order Summary</h3>
+        {/* Order Summary */}
+        <div className="payment-option__summary">
+          <h2 className="payment-option__summary-title">Order Summary</h2>
 
-          <div className="payment-option-order-details">
-            <div className="payment-option-order-item">
-              <span className="payment-option-item-icon">🛒</span>
-              <span className="payment-option-item-label">{restaurantOrderDetails.number_of_items} items</span>
+          <div className="payment-option__summary-items">
+            <div className="payment-option__summary-item">
+              <span className="payment-option__item-icon">🛒</span>
+              <span className="payment-option__item-label">{restaurantOrderDetails.number_of_items} items</span>
             </div>
-            <div className="payment-option-order-item">
-              <span className="payment-option-item-icon">📦</span>
-              <span className="payment-option-item-label">Item Total:</span>
-              <span className="payment-option-item-value">₹{restaurantOrderDetails.item_total.toFixed(2)}</span>
+            
+            <div className="payment-option__summary-item">
+              <span className="payment-option__item-icon">📦</span>
+              <span className="payment-option__item-label">Item Total:</span>
+              <span className="payment-option__item-value">₹{restaurantOrderDetails.item_total.toFixed(2)}</span>
             </div>
-            <div className="payment-option-order-item">
-              <span className="payment-option-item-icon">🏍️</span>
-              <span className="payment-option-item-label">Delivery Fee | {restaurantOrderDetails.distance_km} kms</span>
-              <span className="payment-option-item-value">₹{restaurantOrderDetails.delivery_fee.toFixed(2)}</span>
+            
+            <div className="payment-option__summary-item">
+              <span className="payment-option__item-icon">🏍️</span>
+              <span className="payment-option__item-label">Delivery Fee | {restaurantOrderDetails.distance_km} kms</span>
+              <span className="payment-option__item-value">₹{restaurantOrderDetails.delivery_fee.toFixed(2)}</span>
             </div>
+            
             {restaurantOrderDetails.tax_amount > 0 && (
-              <div className="payment-option-order-item">
-                <span className="payment-option-item-icon">🧾</span>
-                <span className="payment-option-item-label">Tax:</span>
-                <span className="payment-option-item-value">₹{restaurantOrderDetails.tax_amount.toFixed(2)}</span>
+              <div className="payment-option__summary-item">
+                <span className="payment-option__item-icon">🧾</span>
+                <span className="payment-option__item-label">Tax:</span>
+                <span className="payment-option__item-value">₹{restaurantOrderDetails.tax_amount.toFixed(2)}</span>
               </div>
             )}
+            
             {(appliedCoupon?.discount_amount || 0) > 0 && (
-              <div className="payment-option-order-item discount">
-                <span className="payment-option-item-icon">🎁</span>
-                <span className="payment-option-item-label">Coupon Discount:</span>
-                <span className="payment-option-item-value">- ₹{restaurantOrderDetails.discount.toFixed(2)}</span>
+              <div className="payment-option__summary-item payment-option__summary-item--discount">
+                <span className="payment-option__item-icon">🎁</span>
+                <span className="payment-option__item-label">Coupon Discount:</span>
+                <span className="payment-option__item-value">- ₹{restaurantOrderDetails.discount.toFixed(2)}</span>
               </div>
             )}
+          </div>
 
-            <div className="payment-option-coupon-section">
-              {!appliedCoupon ? (
-                <>
-                  {!showCouponInput ? (
-                    <button 
-                      className="payment-option-have-coupon"
-                      onClick={toggleCouponInput}
-                    >
-                      Have a coupon code?
-                    </button>
-                  ) : (
-                    <div className="payment-option-coupon-input-group">
-                      <input
-                        type="text"
-                        value={couponCode}
-                        onChange={(e) => {
-                          setCouponCode(e.target.value);
-                          setCouponError("");
-                        }}
-                        placeholder="Enter coupon code"
-                        className="payment-option-coupon-input"
-                        maxLength="20"
-                      />
+          {/* Coupon Section */}
+          <div className="payment-option__coupon">
+            {!appliedCoupon ? (
+              <>
+                {!showCouponInput ? (
+                  <button 
+                    className="payment-option__coupon-toggle"
+                    onClick={toggleCouponInput}
+                  >
+                    Have a coupon code?
+                  </button>
+                ) : (
+                  <div className="payment-option__coupon-inputs">
+                    <input
+                      type="text"
+                      value={couponCode}
+                      onChange={(e) => {
+                        setCouponCode(e.target.value);
+                        setCouponError("");
+                      }}
+                      placeholder="Enter coupon code"
+                      className="payment-option__coupon-field"
+                      maxLength="20"
+                    />
+                    <div className="payment-option__coupon-buttons">
                       <button 
                         onClick={applyCoupon}
                         disabled={isApplyingCoupon || !couponCode.trim()}
-                        className="payment-option-coupon-apply"
+                        className="payment-option__coupon-apply"
                       >
                         {isApplyingCoupon ? (
                           <>
-                            <span className="payment-option-spinner" />
+                            <span className="payment-option__spinner" />
                             Applying...
                           </>
                         ) : "Apply"}
                       </button>
                       <button 
                         onClick={toggleCouponInput}
-                        className="payment-option-coupon-cancel"
+                        className="payment-option__coupon-cancel"
                       >
                         Cancel
                       </button>
                     </div>
-                  )}
-                </>
-              ) : (
-                <div className="payment-option-coupon-applied">
-                  <div className="payment-option-coupon-success">
-                    <FaTag className="payment-option-coupon-icon" />
-                    <span>Coupon Applied: {appliedCoupon.code} (-₹{appliedCoupon.discount_amount.toFixed(2)})</span>
-                    {appliedCoupon.message && (
-                      <div className="payment-option-coupon-message">{appliedCoupon.message}</div>
-                    )}
                   </div>
-                  <button 
-                    onClick={removeCoupon}
-                    className="payment-option-coupon-remove"
-                  >
-                    Remove
-                  </button>
+                )}
+              </>
+            ) : (
+              <div className="payment-option__coupon-applied">
+                <div className="payment-option__coupon-success">
+                  <FaTag className="payment-option__coupon-icon" />
+                  <span>Coupon Applied: {appliedCoupon.code} (-₹{appliedCoupon.discount_amount.toFixed(2)})</span>
                 </div>
-              )}
-              {couponError && (
-                <div className="payment-option-coupon-error">
-                  {couponError}
-                </div>
-              )}
-            </div>
-          
-            <div className="payment-option-order-total">
-              <span className="payment-option-total-label">Total Payable:</span>
-              <span className="payment-option-total-value">₹{restaurantOrderDetails.total_amount.toFixed(2)}</span>
-            </div>
+                <button 
+                  onClick={removeCoupon}
+                  className="payment-option__coupon-remove"
+                >
+                  Remove
+                </button>
+              </div>
+            )}
+            
+            {couponError && (
+              <div className="payment-option__coupon-error">
+                <FaInfoCircle className="payment-option__error-icon" />
+                {couponError}
+              </div>
+            )}
+          </div>
+
+          {/* Order Total */}
+          <div className="payment-option__total">
+            <span className="payment-option__total-label">Total Payable:</span>
+            <span className="payment-option__total-amount">₹{restaurantOrderDetails.total_amount.toFixed(2)}</span>
           </div>
         </div>
 
-        {/* Minimum order amount warning */}
+        {/* Minimum Order Amount Warning */}
         {restaurantOrderDetails.total_amount < MINIMUM_ORDER_AMOUNT && (
-          <div className="payment-option-minimum-error">
-            Minimum order amount should be <span className="payment-option-minimum-amount">₹{MINIMUM_ORDER_AMOUNT}</span>.
+          <div className="payment-option__minimum-warning">
+            Minimum order amount should be <span className="payment-option__minimum-amount">₹{MINIMUM_ORDER_AMOUNT}</span>.
             Please add more items to proceed.
           </div>
         )}
 
-        <div className="payment-option-methods-section">
-          <h2>Select Payment Method</h2>
-          <div className="payment-option-methods-grid">
-            {paymentMethods.map((method) => (
+        {/* Payment Methods */}
+        <div className="payment-option__methods">
+          <h2 className="payment-option__methods-title">Select Payment Method</h2>
+          
+          <div className="payment-option__methods-grid">
+            {availablePaymentMethods.map((method) => (
               <div
                 key={method.id}
-                className={`payment-option-method-card ${selectedPayment === method.id ? "selected" : ""}`}
+                className={`payment-option__method ${
+                  selectedPayment === method.id ? "payment-option__method--selected" : ""
+                }`}
                 onClick={() => setSelectedPayment(method.id)}
               >
-                <div className="payment-option-method-icon">{method.icon}</div>
-                <div className="payment-option-method-info">
-                  <h4>{method.name}</h4>
-                  <p>{method.description}</p>
+                <div className="payment-option__method-icon-container">
+                  {method.icon}
+                </div>
+                <div className="payment-option__method-info">
+                  <h4 className="payment-option__method-name">{method.name}</h4>
+                  <p className="payment-option__method-description">{method.description}</p>
                 </div>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="payment-option-actions">
+        {/* Payment Button */}
+        <div className="payment-option__actions">
           <button
-            className={`payment-option-button ${
-              loading ? "processing" : 
-              restaurantOrderDetails.total_amount < MINIMUM_ORDER_AMOUNT ? "disabled" : ""
+            className={`payment-option__button ${
+              loading ? "payment-option__button--loading" : ""
+            } ${
+              restaurantOrderDetails.total_amount < MINIMUM_ORDER_AMOUNT ? 
+              "payment-option__button--disabled" : ""
             }`}
             onClick={initiatePayment}
             disabled={
@@ -682,7 +702,7 @@ const PaymentOption = ({ user }) => {
           >
             {loading ? (
               <>
-                <span className="payment-option-spinner" />
+                <span className="payment-option__spinner" />
                 Processing...
               </>
             ) : selectedPayment === "cod" ? (
