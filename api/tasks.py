@@ -41,6 +41,7 @@ def update_order_statuses():
                     
                     
                     # Update order only if status changed
+                    logger.info(f"Updating Order before{order.order_number} to status {order_status}")
                     if order_status is not None:
                         logger.info(f"Updating Order {order.order_number} to status {order_status}")
 
