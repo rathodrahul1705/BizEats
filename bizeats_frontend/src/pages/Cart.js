@@ -159,14 +159,14 @@ const CartOrder = ({ user, setUser }) => {
 
   const calculateSubtotal = () => {
     return cartItems.reduce((total, item) => {
-      return total + (item.price * item.quantity);
+      return total + (item.price);
     }, 0);
   };
 
   const calculateTotalSavings = () => {
     return cartItems.reduce((total, item) => {
       if (item.hasDiscount) {
-        return total + ((item.originalPrice - item.price) * item.quantity);
+        return total + ((item.originalPrice - item.price));
       }
       return total;
     }, 0);
@@ -319,10 +319,10 @@ const CartOrder = ({ user, setUser }) => {
                     <span>-₹{totalSavings.toFixed(2)}</span>
                   </div>
                 )}
-                <div className="cart-order-price-row">
+                {/* <div className="cart-order-price-row">
                   <span>Delivery Fee</span>
                   <span>{deliveryFee === 0 ? "FREE" : `₹${deliveryFee.toFixed(2)}`}</span>
-                </div>
+                </div> */}
                 <div className="cart-order-price-row total">
                   <span>Total</span>
                   <span>₹{total.toFixed(2)}</span>
@@ -402,10 +402,10 @@ const CartOrder = ({ user, setUser }) => {
                     <span>-₹{totalSavings.toFixed(2)}</span>
                   </div>
                 )}
-                <div className="cart-order-price-row">
+                {/* <div className="cart-order-price-row">
                   <span>Delivery Fee</span>
                   <span>{deliveryFee === 0 ? "FREE" : `₹${deliveryFee.toFixed(2)}`}</span>
-                </div>
+                </div> */}
                 <div className="cart-order-price-row total">
                   <span>Total</span>
                   <span>₹{total.toFixed(2)}</span>
