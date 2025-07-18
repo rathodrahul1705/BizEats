@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { X, Clock, Bike, Maximize2, Minimize2, Star, Check, X as XIcon } from "lucide-react";
 import { MapContainer, TileLayer, Marker, useMap, Popup } from "react-leaflet";
 import L from "leaflet";
@@ -60,99 +60,99 @@ function RoutingWithLiveBike({ orderId, to, setDuration, setHasReached }) {
     iconAnchor: [16, 32],
   });
 
-  useEffect(() => {
-    if (!map) return;
+  const fetchAndUpdate = useCallback(async () => {
+    try {
+      const res = await fetchData(API_ENDPOINTS.TRACK.ORDER_LIVE_LOCATION, "POST", { order_id: orderId });
+      if (
+        res.status === "success" &&
+        res.deliver_agent_location?.lat != null &&
+        res.deliver_agent_location?.lng != null &&
+        res.restaurant_location &&
+        res.user_destination
+      ) {
+        const agent = L.latLng(res.deliver_agent_location?.lat, res.deliver_agent_location?.lng);
+        const restaurant = L.latLng(res.restaurant_location?.lat, res.restaurant_location?.lng);
+        const customer = L.latLng(res.user_destination?.lat, res.user_destination?.lng);
 
-    const fetchAndUpdate = async () => {
-      try {
-        const res = await fetchData(API_ENDPOINTS.TRACK.ORDER_LIVE_LOCATION, "POST", { order_id: orderId });
-        if (
-          res.status === "success" &&
-          res.deliver_agent_location?.lat != null &&
-          res.deliver_agent_location?.lng != null &&
-          res.restaurant_location &&
-          res.user_destination
-        ) {
-          const agent = L.latLng(res.deliver_agent_location?.lat, res.deliver_agent_location?.lng);
-          const restaurant = L.latLng(res.restaurant_location?.lat, res.restaurant_location?.lng);
-          const customer = L.latLng(res.user_destination?.lat, res.user_destination?.lng);
+        if (prevLatLng.current && agent.distanceTo(prevLatLng.current) < 5) return;
+        prevLatLng.current = agent;
 
-          if (prevLatLng.current && agent.distanceTo(prevLatLng.current) < 5) return;
-          prevLatLng.current = agent;
+        if (!bikeRef.current) {
+          bikeRef.current = L.marker(agent, { icon: bikeIcon }).addTo(map);
+          map.setView(agent, 15);
+        } else {
+          bikeRef.current.setLatLng(agent);
+        }
 
-          if (!bikeRef.current) {
-            bikeRef.current = L.marker(agent, { icon: bikeIcon }).addTo(map);
-            map.setView(agent, 15);
-          } else {
-            bikeRef.current.setLatLng(agent);
-          }
+        if (routeRef.current) {
+          map.removeControl(routeRef.current);
+        }
 
-          if (routeRef.current) {
-            map.removeControl(routeRef.current);
-          }
-
-          routeRef.current = L.Routing.control({
-            waypoints: [restaurant, agent, customer],
-            lineOptions: { styles: [{ color: "#e65c00", weight: 5 }] },
-            createMarker: () => null,
-            addWaypoints: false,
-            draggableWaypoints: false,
-            fitSelectedRoutes: false,
-            show: false,
-          })
-            .on("routesfound", (e) => {
-              const durationInSeconds = e.routes[0].summary.totalTime;
-              const adjustedDuration = Math.round((durationInSeconds / 60) * 1.5);
-              setDuration(adjustedDuration);
-          
-              const distanceToCustomer = agent.distanceTo(customer);
-              if (distanceToCustomer > 30) {
-                const bounds = e.routes[0].bounds;
-                if (bounds) {
-                  map.fitBounds(bounds.pad(0.6));
-                }
+        routeRef.current = L.Routing.control({
+          waypoints: [restaurant, agent, customer],
+          lineOptions: { styles: [{ color: "#e65c00", weight: 5 }] },
+          createMarker: () => null,
+          addWaypoints: false,
+          draggableWaypoints: false,
+          fitSelectedRoutes: false,
+          show: false,
+        })
+          .on("routesfound", (e) => {
+            const durationInSeconds = e.routes[0].summary.totalTime;
+            const adjustedDuration = Math.round((durationInSeconds / 60) * 1.5);
+            setDuration(adjustedDuration);
+        
+            const distanceToCustomer = agent.distanceTo(customer);
+            if (distanceToCustomer > 30) {
+              const bounds = e.routes[0].bounds;
+              if (bounds) {
+                map.fitBounds(bounds.pad(0.6));
               }
-            })
-            .addTo(map);
+            }
+          })
+          .addTo(map);
+        
+        const distanceToCustomer = agent.distanceTo(customer);
+        
+        if (distanceToCustomer < 30) {
+          setHasReached(true);
+          setReachedMessage("Your order has arrived!");
           
-          const distanceToCustomer = agent.distanceTo(customer);
+          if (circleRef.current) {
+            map.removeLayer(circleRef.current);
+          }
+
+          circleRef.current = L.circle(agent, {
+            radius: 30,
+            color: "#28a745",
+            fillColor: "#28a745",
+            fillOpacity: 0.2,
+            weight: 0.6
+          }).addTo(map);
+
+          const bounds = L.latLngBounds([agent, customer]);
+          map.fitBounds(bounds.pad(0.3));
+        } else {
+          setHasReached(false);
+          setReachedMessage(null);
           
-          if (distanceToCustomer < 30) {
-            setHasReached(true);
-            setReachedMessage("Your order has arrived!");
-            
-            if (circleRef.current) {
-              map.removeLayer(circleRef.current);
-            }
-
-            circleRef.current = L.circle(agent, {
-              radius: 30,
-              color: "#28a745",
-              fillColor: "#28a745",
-              fillOpacity: 0.2,
-              weight: 0.6
-            }).addTo(map);
-
-            const bounds = L.latLngBounds([agent, customer]);
-            map.fitBounds(bounds.pad(0.3));
-          } else {
-            setHasReached(false);
-            setReachedMessage(null);
-            
-            if (circleRef.current) {
-              map.removeLayer(circleRef.current);
-              circleRef.current = null;
-            }
-            if (popupRef.current) {
-              map.removeLayer(popupRef.current);
-              popupRef.current = null;
-            }
+          if (circleRef.current) {
+            map.removeLayer(circleRef.current);
+            circleRef.current = null;
+          }
+          if (popupRef.current) {
+            map.removeLayer(popupRef.current);
+            popupRef.current = null;
           }
         }
-      } catch (err) {
-        console.error("Live location fetch error:", err);
       }
-    };
+    } catch (err) {
+      console.error("Live location fetch error:", err);
+    }
+  }, [orderId, setDuration, setHasReached, map]);
+
+  useEffect(() => {
+    if (!map) return;
 
     fetchAndUpdate();
     const interval = setInterval(fetchAndUpdate, 120000);
@@ -164,7 +164,7 @@ function RoutingWithLiveBike({ orderId, to, setDuration, setHasReached }) {
       if (circleRef.current) map.removeLayer(circleRef.current);
       if (popupRef.current) map.removeLayer(popupRef.current);
     };
-  }, [map, orderId, setDuration, setHasReached]);
+  }, [map, fetchAndUpdate]);
 
   return null;
 }
@@ -197,6 +197,78 @@ const TrackOrder = ({ user, setUser }) => {
   const [deliveryAgentInfo, setDeliveryAgentInfo] = useState(null);
   const [porterTrackingDetails, setPorterTrackingDetails] = useState(null);
 
+  const statusMap = {
+    Pending: 0,
+    Confirmed: 10,
+    Preparing: 20,
+    "Ready for Delivery/Pickup": 30,
+    "On the Way": 60,
+    Delivered: 100,
+    Cancelled: 0,
+    Refunded: 0,
+  };
+
+  const fetchOrders = useCallback(async () => {
+    try {
+      setLoading(true);
+      const res = await fetchData(API_ENDPOINTS.TRACK.TRACK_ORDER, "POST", {
+        user_id: user?.user_id,
+        order_number: order_number
+      });
+      if (res.status === "success" && res.orders.length) {
+        setOrders(res.orders);
+        setSelectedOrder(res.orders[0]);
+      } else {
+        setNoOrders(true);
+      }
+    } catch (err) {
+      console.error("Fetch orders error:", err);
+      setNoOrders(true);
+    } finally {
+      setLoading(false);
+    }
+  }, [user?.user_id, order_number]);
+
+  const fetchLocations = useCallback(async () => {
+    if (!selectedOrder) return;
+    try {
+      const res = await fetchData(API_ENDPOINTS.TRACK.ORDER_LIVE_LOCATION, "POST", {
+        order_id: selectedOrder.order_number,
+      });
+      if (res.status === "success") {
+        const parseLocation = (loc) => {
+          if (!loc) return null;
+          const lat = parseFloat(loc?.lat);
+          const lng = parseFloat(loc?.lng);
+          return !isNaN(lat) && !isNaN(lng) ? { lat, lng } : null;
+        };
+
+        setUserLocation(parseLocation(res.user_destination));
+        setRestaurantLocation(parseLocation(res.restaurant_location));
+        setDeliveryAgentLocation(parseLocation(res.deliver_agent_location));
+        
+        if (res.porter_tracking_details) {
+          setPorterTrackingDetails(res.porter_tracking_details);
+          if (res.porter_tracking_details?.partner_info) {
+            setDeliveryAgentInfo(res.porter_tracking_details?.partner_info);
+          }
+        }
+        
+        if (res.estimated_time_minutes === null && res.porter_tracking_details?.partner_info == null) {
+          setEstimatedTimestamp("agent_not_assigned");
+        } else if (res.estimated_time_minutes) {
+          setEstimatedTimestamp(res.estimated_time_minutes);
+        } else if (res.porter_tracking_details?.partner_info) {
+          setEstimatedTimestamp("assigned");
+        } else {
+          setEstimatedTimestamp("arrived");
+        }
+      }
+    } catch (err) {
+      console.error("Location fetch error:", err);
+    }
+  }, [selectedOrder]);
+
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     if (!storedUser && !user) {
@@ -211,6 +283,18 @@ const TrackOrder = ({ user, setUser }) => {
       }
     };
   }, []);
+
+  useEffect(() => {
+    if (user?.user_id) {
+      fetchOrders();
+    }
+  }, [user?.user_id, order_number, fetchOrders]);
+
+  useEffect(() => {
+    if (selectedOrder) {
+      fetchLocations();
+    }
+  }, [selectedOrder, fetchLocations]);
 
   useEffect(() => {
     if (!selectedOrder) return;
@@ -247,7 +331,7 @@ const TrackOrder = ({ user, setUser }) => {
     }, 1000);
   
     return () => clearInterval(interval);
-  }, [selectedOrder]);
+  }, [selectedOrder, order_number]);
 
   const handleCancelOrder = async () => {
     if (!canCancel || isCancelling) return;
@@ -297,10 +381,12 @@ const TrackOrder = ({ user, setUser }) => {
       });
 
       if (res.status === "success") {
-        fetchOrders()
+        fetchOrders();
+        setShowToast(true);
+        setShowReviewModal(false);
         toastTimeoutRef.current = setTimeout(() => {
-          setShowToast(true);
-        }, 1000);
+          setShowToast(false);
+        }, 3000);
       } else {
         alert("Failed to submit review: " + (res.message || "Please try again later"));
       }
@@ -308,105 +394,9 @@ const TrackOrder = ({ user, setUser }) => {
       console.error("Submit review error:", err);
       alert("Failed to submit review. Please try again later.");
     } finally {
-      setShowToast(false);
       setIsSubmittingReview(false);
     }
   };
-
-  const statusMap = {
-    Pending: 0,
-    Confirmed: 10,
-    Preparing: 20,
-    "Ready for Delivery/Pickup": 30,
-    "On the Way": 60,
-    Delivered: 100,
-    Cancelled: 0,
-    Refunded: 0,
-  };
-
-  const fetchOrders = async () => {
-    try {
-      setLoading(true);
-      const res = await fetchData(API_ENDPOINTS.TRACK.TRACK_ORDER, "POST", {
-        user_id: user?.user_id,
-        order_number: order_number
-      });
-      if (res.status === "success" && res.orders.length) {
-        setOrders(res.orders);
-        setSelectedOrder(res.orders[0]);
-      } else setNoOrders(true);
-    } catch {
-      setNoOrders(true);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        setLoading(true);
-        const res = await fetchData(API_ENDPOINTS.TRACK.TRACK_ORDER, "POST", {
-          user_id: user?.user_id,
-          order_number: order_number
-        });
-        if (res.status === "success" && res.orders.length) {
-          setShowReviewModal(true)
-          setOrders(res.orders);
-          setSelectedOrder(res.orders[0]);
-        } else setNoOrders(true);
-      } catch {
-        setNoOrders(true);
-      } finally {
-        setLoading(false);
-      }
-    };
-    if (user?.user_id) fetchOrders();
-  }, [user?.user_id, order_number]);
-
-  useEffect(() => {
-    const fetchLocations = async () => {
-      if (!selectedOrder) return;
-      try {
-        const res = await fetchData(API_ENDPOINTS.TRACK.ORDER_LIVE_LOCATION, "POST", {
-          order_id: selectedOrder.order_number,
-        });
-        if (res.status === "success") {
-          const parseLocation = (loc) => {
-            if (!loc) return null;
-            const lat = parseFloat(loc?.lat);
-            const lng = parseFloat(loc?.lng);
-            return !isNaN(lat) && !isNaN(lng) ? { lat, lng } : null;
-          };
-  
-          setUserLocation(parseLocation(res.user_destination));
-          setRestaurantLocation(parseLocation(res.restaurant_location));
-          setDeliveryAgentLocation(parseLocation(res.deliver_agent_location));
-          
-          // Set delivery agent information if available
-          if (res.porter_tracking_details) {
-            setPorterTrackingDetails(res.porter_tracking_details);
-            if (res.porter_tracking_details?.partner_info) {
-              setDeliveryAgentInfo(res.porter_tracking_details?.partner_info);
-            }
-          }
-          
-          if (res.estimated_time_minutes === null && res.porter_tracking_details?.partner_info == null) {
-            setEstimatedTimestamp("agent_not_assigned");
-          } else if (res.estimated_time_minutes) {
-            setEstimatedTimestamp(res.estimated_time_minutes);
-          } else if (res.porter_tracking_details?.partner_info) {
-            setEstimatedTimestamp("assigned");
-          } else {
-            setEstimatedTimestamp("arrived");
-          }
-        }
-      } catch (err) {
-        console.error("Init loc error:", err);
-      }
-    };
-    fetchLocations();
-  }, [selectedOrder]);
 
   const handleOrderChange = (e) => {
     const order = orders.find((o) => o.order_number === e.target.value);
@@ -424,23 +414,11 @@ const TrackOrder = ({ user, setUser }) => {
   };
 
   const handleRefresh = async () => {
-  if (isRefreshing) return; // Prevent multiple simultaneous refreshes
+    if (isRefreshing) return;
   
     try {
       setIsRefreshing(true);
-      const res = await fetchData(API_ENDPOINTS.TRACK.TRACK_ORDER, "POST", {
-        user_id: user?.user_id,
-        order_number: order_number,
-      });
-      if (res.status === "success" && res.orders.length) {
-        setOrders(res.orders);
-        const currentOrder = res.orders.find(o => o.order_number === selectedOrder?.order_number);
-        if (currentOrder) {
-          setSelectedOrder(currentOrder);
-        } else if (res.orders.length > 0) {
-          setSelectedOrder(res.orders[0]);
-        }
-      }
+      await fetchOrders();
     } catch (error) {
       console.error("Refresh error:", error);
     } finally {
@@ -505,11 +483,11 @@ const TrackOrder = ({ user, setUser }) => {
       if (!["Delivered", "Cancelled", "Refunded"].includes(selectedOrder?.status)) {
         handleRefresh();
       }
-    }, 120000); // 120 seconds
+    }, 300000); // 300 seconds (5 minutes)
 
     // Clean up the interval when component unmounts
     return () => clearInterval(autoRefreshInterval);
-  }, [selectedOrder?.status]); // Dependency on selectedOrder.status
+  }, [selectedOrder?.status, handleRefresh]);
 
   if (showSignIn) {
     return (
@@ -545,10 +523,8 @@ const TrackOrder = ({ user, setUser }) => {
   const progress = statusMap[selectedOrder.status] || 0;
   const initialCenter = deliveryAgentLocation || restaurantLocation || userLocation;
 
-  console.log("estimatedTimestamp==",estimatedTimestamp)
   return (
     <div className="track-order-container">
-
       {showToast && ( 
         <div className="review-toast">
           <Check size={20} className="toast-icon" />
@@ -557,7 +533,7 @@ const TrackOrder = ({ user, setUser }) => {
       )}
 
       {/* Review Modal */}
-      {selectedOrder?.review_present == false && showReviewModal == true && (
+      {selectedOrder?.review_present === false && showReviewModal && (
         <div className="review-modal-overlay">
           <div className="review-modal">
             <button 
@@ -640,44 +616,41 @@ const TrackOrder = ({ user, setUser }) => {
           </div>
         </div>
 
-        {(
-          <div className="eta">
-            {estimatedTimestamp === "arrived" ? (
-              <>
-                <strong>Your order has arrived!</strong>
-                <span className="status-badge">{selectedOrder.status}</span>
-                <p className="eta-note">Enjoy your meal!</p>
-              </>
-            ) : estimatedTimestamp === "agent_not_assigned" &&
-              !["Delivered", "Cancelled", "Refunded"].includes(selectedOrder.status) ? (
-              <>
-                <strong>Assigning a delivery agent...</strong>
-                <span className="status-badge">{selectedOrder.status}</span>
-                <p className="eta-note">We'll notify you once a delivery agent is assigned.</p>
-              </>
-            ) : estimatedTimestamp === "assigned" &&
-              !["Delivered", "Cancelled", "Refunded"].includes(selectedOrder.status) ? (
-              <>
-                <strong>Delivery agent assigned!</strong>
-                <span className="status-badge">{selectedOrder.status}</span>
-                <p className="eta-note">Your order will be Pickup shortly.</p>
-              </>
-            ) : typeof estimatedTimestamp === "number" &&
-              !["Delivered", "Cancelled", "Refunded"].includes(selectedOrder.status) ? (
-              <>
-                <strong>Arriving:</strong> {estimatedTimestamp} mins
-                <span className="status-badge">{selectedOrder.status}</span>
-                <p className="eta-note">Note: Time shown is an estimate once your order is out for delivery.</p>
-              </>
-            ) : (
+        <div className="eta">
+          {estimatedTimestamp === "arrived" ? (
+            <>
+              <strong>Your order has arrived!</strong>
               <span className="status-badge">{selectedOrder.status}</span>
-            )}
-          </div>
-        )}
+              <p className="eta-note">Enjoy your meal!</p>
+            </>
+          ) : estimatedTimestamp === "agent_not_assigned" &&
+            !["Delivered", "Cancelled", "Refunded"].includes(selectedOrder.status) ? (
+            <>
+              <strong>Assigning a delivery agent...</strong>
+              <span className="status-badge">{selectedOrder.status}</span>
+              <p className="eta-note">We'll notify you once a delivery agent is assigned.</p>
+            </>
+          ) : estimatedTimestamp === "assigned" &&
+            !["Delivered", "Cancelled", "Refunded"].includes(selectedOrder.status) ? (
+            <>
+              <strong>Delivery agent assigned!</strong>
+              <span className="status-badge">{selectedOrder.status}</span>
+              <p className="eta-note">Your order will be Pickup shortly.</p>
+            </>
+          ) : typeof estimatedTimestamp === "number" &&
+            !["Delivered", "Cancelled", "Refunded"].includes(selectedOrder.status) ? (
+            <>
+              <strong>Arriving:</strong> {estimatedTimestamp} mins
+              <span className="status-badge">{selectedOrder.status}</span>
+              <p className="eta-note">Note: Time shown is an estimate once your order is out for delivery.</p>
+            </>
+          ) : (
+            <span className="status-badge">{selectedOrder.status}</span>
+          )}
+        </div>
       </div>
 
-      {/* Delivery Agent Information Section */}
-      {(porterTrackingDetails?.status === "accepted" || porterTrackingDetails?.status === "live" || porterTrackingDetails?.status === "ended" || porterTrackingDetails?.status === "reopened" || porterTrackingDetails?.status === "cancelled") && deliveryAgentInfo && (
+      {(porterTrackingDetails?.status === "accepted" || porterTrackingDetails?.status === "live" || porterTrackingDetails?.status === "ended" || porterTrackingDetails?.status === "reopened" || porterTrackingDetails?.status === "cancelled" || porterTrackingDetails?.status === "completed") && deliveryAgentInfo && (
         <div className="delivery-agent-card">
           <div className="delivery-agent-header">
             <h3>Your Delivery Agent</h3>
@@ -730,7 +703,6 @@ const TrackOrder = ({ user, setUser }) => {
               <div className="timeline-dot"></div>
               <div className="timeline-content">
                 <span>Order Accepted</span>
-                {/* <small>{formatTimestamp(porterTrackingDetails.order_timings?.order_accepted_time)}</small> */}
               </div>
             </div>
             
@@ -739,7 +711,6 @@ const TrackOrder = ({ user, setUser }) => {
                 <div className="timeline-dot"></div>
                 <div className="timeline-content">
                   <span>Picked Up In Progress</span>
-                  {/* <small>{formatTimestamp(porterTrackingDetails.order_timings?.pickup_time)}</small> */}
                 </div>
               </div>
             )}
@@ -749,7 +720,6 @@ const TrackOrder = ({ user, setUser }) => {
                 <div className="timeline-dot"></div>
                 <div className="timeline-content">
                   <span>On the way</span>
-                  {/* <small>{formatTimestamp(porterTrackingDetails.order_timings?.pickup_time)}</small> */}
                 </div>
               </div>
             )}
@@ -759,7 +729,6 @@ const TrackOrder = ({ user, setUser }) => {
                 <div className="timeline-dot completed"></div>
                 <div className="timeline-content">
                   <span>Delivered</span>
-                  {/* <small>{formatTimestamp(porterTrackingDetails.order_timings?.order_ended_time)}</small> */}
                 </div>
               </div>
             )}
