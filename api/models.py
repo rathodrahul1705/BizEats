@@ -605,6 +605,15 @@ class OrderReview(models.Model):
     def __str__(self):
         return f"Review by {self.user} for {self.order_id}"
 class PorterOrder(models.Model):
+
+    INPROGRESS = 0
+    COMPLETED = 1
+
+    STATUS_CHOICES = [
+        (INPROGRESS, 'Inprogress'),
+        (COMPLETED, 'Completed'),
+    ]
+
     order_number = models.CharField(max_length=20, null=True, blank=True)
     booking_id = models.CharField(max_length=255, unique=True)
     status = models.CharField(max_length=50)
@@ -614,6 +623,7 @@ class PorterOrder(models.Model):
     porter_create_request = models.JSONField(null=True, blank=True)
     porter_create_response = models.JSONField(null=True, blank=True)
     track_order_api_response = models.JSONField(null=True, blank=True)
+    eatoor_delivery_status = models.IntegerField(choices=STATUS_CHOICES, default=INPROGRESS)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
