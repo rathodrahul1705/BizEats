@@ -460,7 +460,8 @@ class LiveLocationDetails(APIView):
         porter_details = PorterOrder.objects.filter(order_number=order_id).first()
 
         if porter_details:
-            porter_track_booking(porter_details.booking_id)
+            if porter_details.eatoor_delivery_status == 0:
+                porter_track_booking(porter_details.booking_id)
             porter_agent_status = porter_details.status
             response = porter_details.track_order_api_response
 
