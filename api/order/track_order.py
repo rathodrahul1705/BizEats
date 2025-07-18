@@ -458,15 +458,17 @@ class LiveLocationDetails(APIView):
 
         # Use porter live tracking if available
         porter_details = PorterOrder.objects.filter(order_number=order_id).first()
+
         if porter_details:
             porter_track_booking(porter_details.booking_id)
             porter_agent_status = porter_details.status
             response = porter_details.track_order_api_response
 
-            if response and response.get('partner_info') and response['partner_info'].get('location'):
+            if response and response.get('partner_info') and response.get('partner_info'):
                 loc = response['partner_info']['location']
-                live_location_lat = loc.get('lat')
-                live_location_lng = loc.get('long')
+                if loc:
+                    live_location_lat = loc.get('lat')
+                    live_location_lng = loc.get('long')
                 porter_tracking_details = response
 
         # Fallback to internal OrderLiveLocation if porter location is not available

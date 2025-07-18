@@ -36,10 +36,12 @@ def update_order_statuses():
                         order_status = 5  # On the Way
                     elif status == "ended":
                         order_status = 6  # Delivered
+                    else:
+                        order_status = 6
                     
                     
                     # Update order only if status changed
-                    if order_status is not None and status != porter_order.status:
+                    if order_status is not None:
                         logger.info(f"Updating Order {order.order_number} to status {order_status}")
 
                         # Generate invoice if order is delivered
