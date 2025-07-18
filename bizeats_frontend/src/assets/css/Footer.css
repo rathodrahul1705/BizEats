@@ -16,6 +16,15 @@
   color: var(--text-color);
   font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
   border-top: 1px solid rgba(0, 0, 0, 0.05);
+  width: 100%;
+  margin-top: auto; /* This pushes the footer to the bottom */
+}
+
+/* Layout fix for the page */
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
 }
 
 /* ===== DESKTOP FOOTER ===== */
@@ -369,7 +378,12 @@
   text-align: center;
   padding-top: 15px;
   border-top: 1px solid #eee;
-  margin-bottom: 60px;
+}
+
+.footer__web-bottom {
+  text-align: center;
+  padding-top: 15px;
+  border-top: 1px solid #eee;
 }
 
 .footer__payment-methods-mobile {

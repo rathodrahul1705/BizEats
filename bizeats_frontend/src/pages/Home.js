@@ -532,7 +532,7 @@ const Home = () => {
             <div className="step-card">
               <div className="step-card__number">1</div>
               <div className="step-card__content">
-                <h3 className="step-card__title">Browse Home Chefs</h3>
+                <h3 className="step-card__title">Browse Home Kitchens</h3>
                 <p className="step-card__description">
                   Discover talented home chefs in your neighborhood offering their specialties
                 </p>

@@ -78,6 +78,13 @@ const Footer = () => {
             </form>
           </div>
         </div>
+
+        <div className="footer__web-bottom">
+          <div className="footer__copyright-mobile">
+            © {new Date().getFullYear()} EATOOR. All rights reserved.
+          </div>
+        </div>
+
       </div>
 
       {/* Mobile Footer (hidden on desktop) */}
@@ -161,14 +168,6 @@ const Footer = () => {
         </div>
 
         <div className="footer__mobile-bottom">
-          <div className="footer__payment-methods-mobile">
-            <span>We accept:</span>
-            <div className="payment-icons-mobile">
-              <span>Visa</span>
-              <span>Paytm</span>
-              <span>UPI</span>
-            </div>
-          </div>
           <div className="footer__copyright-mobile">
             © {new Date().getFullYear()} EATOOR. All rights reserved.
           </div>

@@ -34,10 +34,12 @@
 }
 
 .food-categories-heading {
-  font-size: 24px;
-  font-weight: 600;
-  color: #1c1c1c;
+  font-size: var(--text-3xl);
+  font-weight: 700;
+  color: var(--text);
   margin: 0;
+  position: relative;
+  display: inline-block;
 }
 
 .food-categories-controls {
@@ -131,11 +133,12 @@
 }
 
 .food-categories-mobile-heading {
-  font-size: 20px;
-  font-weight: 600;
-  color: #1c1c1c;
-  margin: 0 0 15px;
-  padding-left: 10px;
+    font-size: var(--text-3xl);
+    font-weight: 700;
+    color: var(--text);
+    margin: 0;
+    position: relative;
+    display: inline-block;
 }
 
 .food-categories-mobile-grid {
@@ -630,10 +633,12 @@
 }
 
 .restaurants-heading {
-  font-size: 24px;
-  font-weight: 600;
-  color: #1c1c1c;
+  font-size: var(--text-3xl);
+  font-weight: 700;
+  color: var(--text);
   margin: 0;
+  position: relative;
+  display: inline-block;
 }
 
 .restaurants-heading::after {
@@ -689,7 +694,7 @@
   
   .restaurants-heading {
     font-size: 22px;
-    padding-left: 15px;
+    /* padding-left: 15px; */
   }
 }
 

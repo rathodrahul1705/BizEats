@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import Home from './pages/Home';
@@ -30,148 +30,201 @@ import CancellationPolicy from "./components/links/CancellationPolicy";
 import Pricing from "./components/links/Pricing";
 import ScrollToTop from "./components/ScrollToTop";
 import StickyTrackOrder from '../src/order/StickyTrackOrder';
-import LocationChecker from '../src/location/LocationRestriction'; // still imported in case you reuse later
+import LocationChecker from '../src/location/LocationRestriction';
 
-const PrivateRoute = ({ children, user }) => user ? children : <Navigate to="/" />;
+// Private Route Components with improved validation
+const PrivateRoute = ({ children, user }) => {
+  const isAuthenticated = React.useMemo(() => {
+    try {
+      return !!user || !!JSON.parse(localStorage.getItem('user'));
+    } catch {
+      return false;
+    }
+  }, [user]);
 
-const VendorPrivateRoute = ({ children, user, is_restaurant_register }) => {
-  if (!user) return <Navigate to="/" />;
-  if (!is_restaurant_register) return <Navigate to="/register-your-homechef" />;
+  return isAuthenticated ? children : <Navigate to="/" />;
+};
+
+const VendorPrivateRoute = ({ children, user }) => {
+  const [isReady, setIsReady] = React.useState(false);
+  const [isRegistered, setIsRegistered] = React.useState(false);
+
+  React.useEffect(() => {
+    try {
+      const storedUser = localStorage.getItem('user');
+      const storedRegistration = localStorage.getItem('is_restaurant_register');
+      
+      setIsRegistered(storedRegistration ? JSON.parse(storedRegistration) : false);
+      setIsReady(true);
+    } catch (error) {
+      console.error("Error checking registration status:", error);
+      setIsReady(true);
+    }
+  }, []);
+
+  if (!isReady) return null; // or loading spinner
+
+  const isAuthenticated = !!user || !!JSON.parse(localStorage.getItem('user'));
+  if (!isAuthenticated) return <Navigate to="/" />;
+  if (!isRegistered) return <Navigate to="/register-your-homechef" />;
+  
   return children;
 };
 
+// Main App Component with robust state management
 const App = () => {
-  const [user, setUser] = React.useState(() => JSON.parse(localStorage.getItem('user')) || null);
-  const [is_restaurant_register, setIsRestaurantRegister] = React.useState(
-    () => JSON.parse(localStorage.getItem('is_restaurant_register')) || false
-  );
+  const [user, setUser] = React.useState(null);
+  const [isInitialized, setIsInitialized] = React.useState(false);
 
+  // Initialize state from localStorage
   React.useEffect(() => {
-    user 
-      ? localStorage.setItem('user', JSON.stringify(user)) 
-      : localStorage.removeItem('user');
-  }, [user]);
+    try {
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
+        setUser(JSON.parse(storedUser));
+      }
+    } catch (error) {
+      console.error("Failed to initialize user state:", error);
+    }
+    setIsInitialized(true);
+  }, []);
+
+  // Sync user to localStorage
+  React.useEffect(() => {
+    if (!isInitialized) return;
+    
+    try {
+      if (user) {
+        localStorage.setItem('user', JSON.stringify(user));
+      } else {
+        localStorage.removeItem('user');
+      }
+    } catch (error) {
+      console.error("Failed to sync user to localStorage:", error);
+    }
+  }, [user, isInitialized]);
+
+  const location = useLocation();
+
+  if (!isInitialized) {
+    return <div>Loading...</div>; // Or your custom loading component
+  }
 
   return (
-    <Router>
-      <ScrollToTop />
-      <div className="app-container">
-        <Header user={user} setUser={setUser} />
+    <div className="app-container">
+      <Header user={user} setUser={setUser} />
+      
+      <main className="content">
+        <ScrollToTop />
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/" element={<Home />} />
+          <Route path="/about-us" element={<AboutUs />} />
+          <Route path="/contact-us" element={<ContactUs />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
+          <Route path="/cancellation-refund-policy" element={<CancellationPolicy />} />
+          <Route path="/pricing" element={<Pricing />} />
+          <Route path="/offers" element={<Offers />} />
+          <Route path="/home-kitchens" element={<FoodList user={user} />} />
+          <Route path="/cart" element={<Cart user={user} setUser={setUser} />} />
+          <Route path="/payments/:restaurant_id" element={<PaymentOption user={user} setUser={setUser} />} />
+          <Route path="/register-your-homechef" element={<RestHome setUser={setUser} />} />
+          <Route path="/payment/success" element={<PaymentSuccess />} />
+          <Route path="/payment/failed" element={<PaymentFailed />} />
+          <Route path="/order-confirmation" element={<OrderConfirmation />} />
+          <Route path="/check-location" element={<LocationChecker />} />
+          <Route path="/city/:city/:slug/:restaurant_id" element={<OrderDetails user={user} setUser={setUser} />} />
+          <Route path="/city/:city/:slug/:restaurant_id/:offer" element={<OrderDetails user={user} setUser={setUser} />} />
 
-        <main className="content">
-          <Routes>
-            <Route path="/" element={<Home />} />
+          {/* Customer Private Routes */}
+          <Route path="/track-order" element={
+            <PrivateRoute user={user}>
+              <TrackOrder user={user} setUser={setUser} />
+            </PrivateRoute>
+          } />
+          <Route path="/track-order/:order_number" element={
+            <PrivateRoute user={user}>
+              <TrackOrder user={user} setUser={setUser} />
+            </PrivateRoute>
+          } />
+          <Route path="/profile" element={
+            <PrivateRoute user={user}>
+              <Profile user={user} setUser={setUser} />
+            </PrivateRoute>
+          } />
 
-            <Route path="/about-us" element={<AboutUs />} />
-            <Route path="/contact-us" element={<ContactUs />} />
-            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-            <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
-            <Route path="/cancellation-refund-policy" element={<CancellationPolicy />} />
-            <Route path="/pricing" element={<Pricing />} />
+          {/* Vendor Routes */}
+          <Route path="/register-restaurant" element={
+            <PrivateRoute user={user}>
+              <RestaurantRegistration 
+                user={user} 
+                setUser={setUser} 
+              />
+            </PrivateRoute>
+          } />
+          <Route path="/register-restaurant/:restaurant_id" element={
+            <PrivateRoute user={user}>
+              <RestaurantRegistration 
+                user={user} 
+                setUser={setUser} 
+              />
+            </PrivateRoute>
+          } />
+          
+          {/* Vendor Private Routes */}
+          <Route path="/vendor-dashboard" element={
+            <VendorPrivateRoute user={user}>
+              <DashboardOverview user={user} setUser={setUser} />
+            </VendorPrivateRoute>
+          } />
+          <Route path="/vendor-dashboard/menu/:restaurant_id" element={
+            <VendorPrivateRoute user={user}>
+              <MenuManagement user={user} setUser={setUser} />
+            </VendorPrivateRoute>
+          } />
+          <Route path="/vendor-dashboard/customer" element={
+            <VendorPrivateRoute user={user}>
+              <CustomerManagement user={user} setUser={setUser} />
+            </VendorPrivateRoute>
+          } />
+          <Route path="/vendor-dashboard/cart/management" element={
+            <VendorPrivateRoute user={user}>
+              <CartManagement user={user} setUser={setUser} />
+            </VendorPrivateRoute>
+          } />
+          <Route path="/vendor-dashboard/restaurant" element={
+            <VendorPrivateRoute user={user}>
+              <RestaurantManagement user={user} setUser={setUser} />
+            </VendorPrivateRoute>
+          } />
+          <Route path="/vendor-dashboard/order/management/:restaurant_id" element={
+            <VendorPrivateRoute user={user}>
+              <OrderManagement user={user} setUser={setUser} />
+            </VendorPrivateRoute>
+          } />
+          <Route path="/vendor-dashboard/coupon/management/:restaurant_id" element={
+            <VendorPrivateRoute user={user}>
+              <CouponManagement user={user} setUser={setUser} />
+            </VendorPrivateRoute>
+          } />
 
-            <Route path="/offers" element={<Offers />} />
-            <Route path="/home-kitchens" element={<FoodList user={user} />} />
-            <Route path="/cart" element={<Cart user={user} setUser={setUser} />} />
-            {/* <Route path="/order-details" element={<OrderDetails />} /> */}
-            {/* <Route path="/order-details/:restaurant_id" element={<OrderDetails user={user} setUser={setUser} />} /> */}
-            <Route path="/payments/:restaurant_id" element={<PaymentOption user={user} setUser={setUser} />} />
-            <Route path="/register-your-homechef" element={<RestHome setUser={setUser} setIsRestaurantRegister={setIsRestaurantRegister} />} />
-            <Route path="/payment/success" element={<PaymentSuccess />} />
-            <Route path="/payment/failed" element={<PaymentFailed />} />
-            <Route path="/order-confirmation" element={<OrderConfirmation />} />
-            <Route path="/check-location" element={<LocationChecker />} />
+          {/* Fallback Route */}
+          <Route path="*" element={<Navigate to="/" />} />
+        </Routes>
+      </main>
 
-            <Route path="/city/:city/:slug/:restaurant_id" element={<OrderDetails user={user} setUser={setUser} />} />
-
-            <Route path="/city/:city/:slug/:restaurant_id/:offer" element={<OrderDetails user={user} setUser={setUser} />} />
-
-            {/* Private Routes */}
-            <Route path="/track-order" element={
-              // <PrivateRoute user={user}>
-                <TrackOrder user={user} setUser={setUser} />
-              // </PrivateRoute>
-            } />
-            <Route path="/track-order/:order_number" element={
-              // <PrivateRoute user={user}>
-                <TrackOrder user={user} setUser={setUser} />
-              // </PrivateRoute>
-            } />
-            <Route path="/profile" element={
-              <PrivateRoute user={user}>
-                <Profile user={user} setUser={setUser} />
-              </PrivateRoute>
-            } />
-
-            {/* Vendor Routes */}
-            <Route path="/register-restaurant" element={
-              <PrivateRoute user={user}>
-                <RestaurantRegistration 
-                  user={user} 
-                  setUser={setUser} 
-                  setIsRestaurantRegister={setIsRestaurantRegister} 
-                />
-              </PrivateRoute>
-            } />
-            <Route path="/register-restaurant/:restaurant_id" element={
-              <PrivateRoute user={user}>
-                <RestaurantRegistration 
-                  user={user} 
-                  setUser={setUser} 
-                  setIsRestaurantRegister={setIsRestaurantRegister} 
-                />
-              </PrivateRoute>
-            } />
-            <Route path="/vendor-dashboard" element={
-              <VendorPrivateRoute user={user} is_restaurant_register={is_restaurant_register}>
-                <DashboardOverview user={user} setUser={setUser} />
-              </VendorPrivateRoute>
-            } />
-
-            <Route path="/vendor-dashboard/menu/:restaurant_id" element={
-              <VendorPrivateRoute user={user} is_restaurant_register={is_restaurant_register}>
-                <MenuManagement user={user} setUser={setUser} />
-              </VendorPrivateRoute>
-            } />
-
-            <Route path="/vendor-dashboard/customer" element={
-              <VendorPrivateRoute user={user} is_restaurant_register={is_restaurant_register}>
-                  <CustomerManagement user={user} setUser={setUser} />
-              </VendorPrivateRoute>
-            } />
-
-            <Route path="/vendor-dashboard/cart/management" element={
-              <VendorPrivateRoute user={user} is_restaurant_register={is_restaurant_register}>
-                  <CartManagement user={user} setUser={setUser} />
-              </VendorPrivateRoute>
-            } />
-
-            <Route path="/vendor-dashboard/restaurant" element={
-              <VendorPrivateRoute user={user} is_restaurant_register={is_restaurant_register}>
-                <RestaurantManagement user={user} setUser={setUser} />
-              </VendorPrivateRoute>
-            } />
-
-            <Route path="/vendor-dashboard/order/management/:restaurant_id" element={
-              <VendorPrivateRoute user={user} is_restaurant_register={is_restaurant_register}>
-                <OrderManagement user={user} setUser={setUser} />
-              </VendorPrivateRoute>
-            } />
-
-            <Route path="/vendor-dashboard/coupon/management/:restaurant_id" element={
-              <VendorPrivateRoute user={user} is_restaurant_register={is_restaurant_register}>
-                <CouponManagement user={user} setUser={setUser} />
-              </VendorPrivateRoute>
-            } />
-
-            <Route path="*" element={<Navigate to="/" />} />
-          </Routes>
-        </main>
-
-        {/* <StickyTrackOrder user={user} /> */}
-        <Footer />
-      </div>
-    </Router>
+      {/* <Footer /> */}
+      {location.pathname === '/' && <Footer />}
+    </div>
   );
 };
 
-export default App;
+// Wrap App with Router
+const AppWrapper = () => (
+  <Router>
+    <App />
+  </Router>
+);
+
+export default AppWrapper;
