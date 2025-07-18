@@ -464,7 +464,7 @@ class LiveLocationDetails(APIView):
                 porter_track_booking(porter_details.booking_id)
             porter_agent_status = porter_details.status
             response = porter_details.track_order_api_response
-
+            
             if response and response.get('partner_info') and response.get('partner_info'):
                 loc = response['partner_info']['location']
                 if loc:
