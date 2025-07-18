@@ -13,7 +13,8 @@ import {
   MapPin,
   Star,
   AlertCircle,
-  Loader2
+  Loader2,
+  ArrowLeft
 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import "../assets/css/OrderDetails.css";
@@ -434,6 +435,14 @@ const OrderDetails = ({ user, setUser }) => {
     setShowFoodModal(true);
   }, [isShopOpen]);
 
+  // const handleBack = () => {
+  //   if (step > 1) {
+  //     setStep(step - 1);
+  //   } else {
+  //     handleBackToRestaurant();
+  //   }
+  // };
+
   // Loading state
   if (loading.initial) {
     return (
@@ -470,7 +479,17 @@ const OrderDetails = ({ user, setUser }) => {
     <div className="order-details-page-menu-container">
       {/* Restaurant Header */}
       <div className="order-details-page-menu-store-header">
-        <h1 className="order-details-page-menu-store-title">{storeDetails.name}</h1>
+        <div className="cart-order-header-content">
+            <button 
+              className="cart-order-navigation-btn back" 
+              onClick={() => navigate("/home-kitchens")}
+              aria-label="Go back"
+            >
+              <ArrowLeft size={20} />
+            </button>
+          <h2 className="order-details-page-menu-store-title">{storeDetails.name}</h2>
+        </div>
+        {/* <h1 className="order-details-page-menu-store-title">{storeDetails.name}</h1> */}
         {/* <button 
           className="order-details-page-menu-share-btn header-share"
           onClick={toggleShareOptions}

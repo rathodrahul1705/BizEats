@@ -283,7 +283,6 @@
   /* Responsive */
   @media (max-width: 480px) {
     .signin-modal {
-      width: 90%;
       padding: 25px 20px;
     }
     

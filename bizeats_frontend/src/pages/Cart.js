@@ -10,20 +10,30 @@ import { getOrCreateSessionId } from "../components/helper/Helper";
 import StripeLoader from "../loader/StripeLoader";
 import Confetti from 'react-dom-confetti';
 
-const Cart = ({ user, setUser }) => {
+const CartOrder = ({ user, setUser }) => {
   const navigate = useNavigate();
   const [cartItems, setCartItems] = useState([]);
   const [showSignIn, setShowSignIn] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [confetti, setConfetti] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   const sessionId = getOrCreateSessionId();
   const restaurantId = localStorage.getItem("current_order_restaurant_id");
 
   const [step, setStep] = useState(() => {
-    return parseInt(localStorage.getItem("cart_current_step")) || 1;
+    return parseInt(localStorage.getItem("cart_order_current_step")) || 1;
   });
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     window.scrollTo({
@@ -37,7 +47,7 @@ const Cart = ({ user, setUser }) => {
   );
 
   useEffect(() => {
-    localStorage.setItem("cart_current_step", step.toString());
+    localStorage.setItem("cart_order_current_step", step.toString());
   }, [step]);
 
   const fetchCartData = useCallback(async () => {
@@ -149,21 +159,27 @@ const Cart = ({ user, setUser }) => {
 
   const calculateSubtotal = () => {
     return cartItems.reduce((total, item) => {
-      return total + (item.price);
+      return total + (item.price * item.quantity);
     }, 0);
   };
 
   const calculateTotalSavings = () => {
     return cartItems.reduce((total, item) => {
       if (item.hasDiscount) {
-        return total + ((item.originalPrice - item.price));
+        return total + ((item.originalPrice - item.price) * item.quantity);
       }
       return total;
     }, 0);
   };
 
+  const calculateDeliveryFee = () => {
+    return subtotal > 200 ? 0 : 40;
+  };
+
   const subtotal = calculateSubtotal();
   const totalSavings = calculateTotalSavings();
+  const deliveryFee = calculateDeliveryFee();
+  const total = subtotal + deliveryFee;
 
   const handleProceed = () => {
     if (cartItems.length === 0) {
@@ -189,6 +205,8 @@ const Cart = ({ user, setUser }) => {
   const handleBack = () => {
     if (step > 1) {
       setStep(step - 1);
+    } else {
+      handleBackToRestaurant();
     }
   };
 
@@ -202,8 +220,7 @@ const Cart = ({ user, setUser }) => {
   };
 
   const handleAddressSelection = (address_id, selectedFullAddress) => {
-    let user_full_address = localStorage.getItem("user_full_address");
-    setUserSelectedAddress(user_full_address);
+    setUserSelectedAddress(selectedFullAddress);
     setStep(3);
   };
 
@@ -215,66 +232,257 @@ const Cart = ({ user, setUser }) => {
 
   if (error && cartItems.length === 0) {
     return (
-      <div className="cart-error-container">
-        <p className="cart-error-message">{error}</p>
-        <button className="cart-retry-btn" onClick={fetchCartData}>
+      <div className="cart-order-error-container">
+        <p className="cart-order-error-message">{error}</p>
+        <button className="cart-order-retry-btn" onClick={fetchCartData}>
           Retry
         </button>
       </div>
     );
   }
 
+  const renderStepContent = () => {
+    switch (step) {
+      case 1:
+        return (
+          <>
+            <ul className="cart-order-items-list">
+              {cartItems.map((item) => (
+                <li key={item.id} className="cart-order-item-card">
+                  <div className="cart-order-item-image-container">
+                    <img 
+                      src={item.image} 
+                      alt={item.title} 
+                      className="cart-order-item-image" 
+                      loading="lazy"
+                    />
+                    {item.buy_one_get_one_free && (
+                      <div className="cart-order-bogo-tag">
+                        <Gift size={14} />
+                        <span>BOGO</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="cart-order-item-details">
+                    <div className="cart-order-item-header">
+                      <h3 className="cart-order-item-title">{item.title}</h3>
+                      <button
+                        className="cart-order-action-btn delete"
+                        onClick={() => deleteItem(item.id, item.item_id)}
+                        disabled={loading}
+                        aria-label={`Remove ${item.title} from cart`}
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
+                    {item.hasDiscount ? (
+                      <div className="cart-order-price-container">
+                        <span className="cart-order-original-price">₹{item.originalPrice.toFixed(2)}</span>
+                        <span className="cart-order-discounted-price">₹{item.price.toFixed(2)}</span>
+                        <span className="cart-order-discount-badge">{item.discountPercent}% OFF</span>
+                      </div>
+                    ) : (
+                      <p className="cart-order-item-price">₹{item.price.toFixed(2)}</p>
+                    )}
+                    <div className="cart-order-item-actions">
+                      <button
+                        className="cart-order-action-btn decrease"
+                        onClick={() => decreaseQuantity(item.id, item.item_id)}
+                        disabled={loading || item.quantity <= 1}
+                        aria-label="Decrease quantity"
+                      >
+                        <MinusCircle size={20} />
+                      </button>
+                      <span className="cart-order-item-quantity">{item.quantity}</span>
+                      <button
+                        className="cart-order-action-btn increase"
+                        onClick={() => increaseQuantity(item.id, item.item_id)}
+                        disabled={loading}
+                        aria-label="Increase quantity"
+                      >
+                        <PlusCircle size={20} />
+                      </button>
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+            <div className="cart-order-summary-section">
+              <div className="cart-order-price-breakdown">
+                <div className="cart-order-price-row">
+                  <span>Subtotal</span>
+                  <span>₹{subtotal.toFixed(2)}</span>
+                </div>
+                {totalSavings > 0 && (
+                  <div className="cart-order-price-row savings">
+                    <span>Total Savings</span>
+                    <span>-₹{totalSavings.toFixed(2)}</span>
+                  </div>
+                )}
+                <div className="cart-order-price-row">
+                  <span>Delivery Fee</span>
+                  <span>{deliveryFee === 0 ? "FREE" : `₹${deliveryFee.toFixed(2)}`}</span>
+                </div>
+                <div className="cart-order-price-row total">
+                  <span>Total</span>
+                  <span>₹{total.toFixed(2)}</span>
+                </div>
+                {/* {deliveryFee > 0 && subtotal < 200 && (
+                  <div className="cart-order-delivery-message">
+                    Add ₹{(200 - subtotal).toFixed(2)} more to get FREE delivery
+                  </div>
+                )} */}
+              </div>
+              <button 
+                className="cart-order-proceed-btn" 
+                onClick={handleProceed} 
+                disabled={loading}
+              >
+                {user ? "Select Delivery Address" : "Proceed to Checkout"}
+              </button>
+            </div>
+          </>
+        );
+      case 2:
+        return <AddressSelection onAddressSelect={handleAddressSelection} />;
+      case 3:
+        return (
+          <div className="cart-order-review-container">
+            {/* <div className="cart-order-delivery-info">
+              <MapPin size={18} />
+              <div>
+                <p className="cart-order-delivery-address">{userSelectedAddress}</p>
+                <p className="cart-order-delivery-time">Estimated delivery: {cartItems[0]?.deliveryTime || "30-40 min"}</p>
+              </div>
+            </div> */}
+            <ul className="cart-order-items-list">
+              {cartItems.map((item) => (
+                <li key={item.id} className="cart-order-item-card">
+                  <div className="cart-order-item-image-container">
+                    <img 
+                      src={item.image} 
+                      alt={item.title} 
+                      className="cart-order-item-image" 
+                      loading="lazy"
+                    />
+                    {item.buy_one_get_one_free && (
+                      <div className="cart-order-bogo-tag">
+                        <Gift size={14} />
+                        <span>BOGO</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="cart-order-item-details">
+                    <h3 className="cart-order-item-title">{item.title}</h3>
+                    {item.hasDiscount ? (
+                      <div className="cart-order-price-container">
+                        <span className="cart-order-original-price">₹{item.originalPrice.toFixed(2)}</span>
+                        <span className="cart-order-discounted-price">₹{item.price.toFixed(2)}</span>
+                        <span className="cart-order-discount-badge">{item.discountPercent}% OFF</span>
+                      </div>
+                    ) : (
+                      <p className="cart-order-item-price">₹{item.price.toFixed(2)}</p>
+                    )}
+                    <div className="cart-order-quantity-badge">
+                      Qty: {item.quantity}
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+            <div className="cart-order-summary-section">
+              <div className="cart-order-price-breakdown">
+                <div className="cart-order-price-row">
+                  <span>Subtotal</span>
+                  <span>₹{subtotal.toFixed(2)}</span>
+                </div>
+                {totalSavings > 0 && (
+                  <div className="cart-order-price-row savings">
+                    <span>Total Savings</span>
+                    <span>-₹{totalSavings.toFixed(2)}</span>
+                  </div>
+                )}
+                <div className="cart-order-price-row">
+                  <span>Delivery Fee</span>
+                  <span>{deliveryFee === 0 ? "FREE" : `₹${deliveryFee.toFixed(2)}`}</span>
+                </div>
+                <div className="cart-order-price-row total">
+                  <span>Total</span>
+                  <span>₹{total.toFixed(2)}</span>
+                </div>
+              </div>
+              <button className="cart-order-proceed-btn" onClick={handlePayment}>
+                {isMobile ? "Continue" : "Proceed to Payment"}
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
-    <div className="cart-page-container">
+    <div className="cart-order">
       <Confetti active={confetti} config={{ elementCount: 50, spread: 70 }} />
       
-      <div className="cart-header">
-        <h2 className="cart-page-title">Your Cart</h2>
+      <div className="cart-order-header">
+        <div className="cart-order-header-content">
+          {(step > 1 || cartItems.length > 0) && (
+            <button 
+              className="cart-order-navigation-btn back" 
+              onClick={handleBack}
+              aria-label="Go back"
+            >
+              <ArrowLeft size={20} />
+            </button>
+          )}
+          <h2 className="cart-order-title">Your Cart</h2>
+        </div>
+        
         {cartItems.length > 0 && (
-          <div className="cart-step-indicator">
-            <div className={`cart-step ${step >= 1 ? "active" : ""}`}>
-              <div className="step-content">
-                <span className="step-icon">
+          <div className="cart-order-step-indicator">
+            <div className={`cart-order-step ${step >= 1 ? "active" : ""}`}>
+              <div className="cart-order-step-content">
+                <span className="cart-order-step-icon">
                   {step > 1 ? <CheckCircle size={18} /> : <User size={18} />}
                 </span>
-                <span className="step-text">Login</span>
+                {!isMobile && <span className="cart-order-step-text">Login</span>}
               </div>
             </div>
-            <div className="step-connector"></div>
-            <div className={`cart-step ${step >= 2 ? "active" : ""}`}>
-              <div className="step-content">
-                <span className="step-icon">
+            <div className="cart-order-step-connector"></div>
+            <div className={`cart-order-step ${step >= 2 ? "active" : ""}`}>
+              <div className="cart-order-step-content">
+                <span className="cart-order-step-icon">
                   {step > 2 ? <CheckCircle size={18} /> : <MapPin size={18} />}
                 </span>
-                <span className="step-text">Address</span>
+                {!isMobile && <span className="cart-order-step-text">Address</span>}
               </div>
             </div>
-            <div className="step-connector"></div>
-            <div className={`cart-step ${step >= 3 ? "active" : ""}`}>
-              <div className="step-content">
-                <span className="step-icon">
+            <div className="cart-order-step-connector"></div>
+            <div className={`cart-order-step ${step >= 3 ? "active" : ""}`}>
+              <div className="cart-order-step-content">
+                <span className="cart-order-step-icon">
                   <ClipboardCheck size={18} />
                 </span>
-                <span className="step-text">Review</span>
+                {!isMobile && <span className="cart-order-step-text">Review</span>}
               </div>
             </div>
           </div>
         )}
       </div>
-
-      {(step > 1 || cartItems.length > 0) && (
-        <button 
-          className="cart-navigation-btn back" 
-          onClick={step > 1 ? handleBack : handleBackToRestaurant}
-        >
-          <ArrowLeft size={20} /> {step > 1 ? "Back" : "Back to Home Kitchen"}
-        </button>
-      )}
-
+      
       {step === 1 && !user && showSignIn && (
-        <div className="signin-modal-overlay">
-          <div className="signin-modal">
-            <button className="close-modal" onClick={() => setShowSignIn(false)}>
+        <div className="cart-order-signin-modal-overlay">
+          <div className="cart-order-signin-modal">
+            <button 
+              className="cart-order-close-modal" 
+              onClick={() => setShowSignIn(false)}
+              aria-label="Close sign in modal"
+            >
               <X size={24} />
             </button>
             <SignIn
@@ -292,180 +500,26 @@ const Cart = ({ user, setUser }) => {
         </div>
       )}
 
-      {step === 2 && user && <AddressSelection onAddressSelect={handleAddressSelection} />}
-
-      {step === 3 && userSelectedAddress && (
-        <div className="cart-review-container">
-          <ul className="cart-items-list">
-            {cartItems.map((item) => (
-              <li key={item.id} className="cart-item-card">
-                <div className="cart-item-image-container">
-                  <img 
-                    src={item.image} 
-                    alt={item.title} 
-                    className="cart-item-image" 
-                  />
-                  {item.buy_one_get_one_free && (
-                    <div className="bogo-tag">
-                      <Gift size={14} />
-                      <span>BOGO</span>
-                    </div>
-                  )}
-                </div>
-                <div className="cart-item-details">
-                  <h3 className="cart-item-title">{item.title}</h3>
-                  {item.hasDiscount ? (
-                    <div className="cart-price-container">
-                      <span className="cart-original-price">₹{item.originalPrice.toFixed(2)}</span>
-                      <span className="cart-discounted-price">₹{item.price.toFixed(2)}</span>
-                      <span className="cart-discount-badge">{item.discountPercent}% OFF</span>
-                    </div>
-                  ) : (
-                    <p className="cart-item-price">₹{item.price.toFixed(2)}</p>
-                  )}
-                  <div className="quantity-badge">
-                    Qty: {item.quantity}
-                  </div>
-                </div>
-              </li>
-            ))}
-          </ul>
-          <div className="cart-summary-section">
-            <div className="price-breakdown">
-              <div className="price-row">
-                <span>Subtotal</span>
-                <span>₹{subtotal.toFixed(2)}</span>
-              </div>
-              {totalSavings > 0 && (
-                <div className="price-row savings">
-                  <span>Total Savings</span>
-                  <span>-₹{totalSavings.toFixed(2)}</span>
-                </div>
-              )}
-              <div className="price-row total">
-                <span>Total</span>
-                <span>₹{subtotal.toFixed(2)}</span>
-              </div>
-            </div>
-            <button className="cart-proceed-btn" onClick={handlePayment}>
-              Review Order
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </button>
-          </div>
-        </div>
-      )}
-
-      {cartItems.length === 0 && !loading && (
-        <div className="cart-empty-state">
-          <div className="empty-cart-animation">
-            <div className="empty-cart-icon">
+      {cartItems.length === 0 && !loading ? (
+        <div className="cart-order-empty-state">
+          <div className="cart-order-empty-animation">
+            <div className="cart-order-empty-icon">
               <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M3 3H5L5.4 5M7 13H17L21 5H5.4M7 13L5.4 5M7 13L4.707 15.293C4.077 15.923 4.523 17 5.414 17H17M17 17C15.895 17 15 17.895 15 19C15 20.105 15.895 21 17 21C18.105 21 19 20.105 19 19C19 17.895 18.105 17 17 17ZM9 19C9 20.105 8.105 21 7 21C5.895 21 5 20.105 5 19C5 17.895 5.895 17 7 17C8.105 17 9 17.895 9 19Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </div>
           </div>
-          <h3 className="cart-empty-title">Your cart is empty</h3>
-          <p className="cart-empty-message">
+          <h3 className="cart-order-empty-title">Your cart is empty</h3>
+          <p className="cart-order-empty-message">
             Looks like you haven't added anything to your cart yet
           </p>
-          <button className="cart-explore-btn" onClick={() => navigate("/")}>
+          <button className="cart-order-explore-btn" onClick={() => navigate("/")}>
             Explore Home Kitchens
           </button>
         </div>
-      )}
-
-      {cartItems.length > 0 && step !== 3 && step !== 2 && (
-        <>
-          <ul className="cart-items-list">
-            {cartItems.map((item) => (
-              <li key={item.id} className="cart-item-card">
-                <div className="cart-item-image-container">
-                  <img 
-                    src={item.image} 
-                    alt={item.title} 
-                    className="cart-item-image" 
-                  />
-                  {item.buy_one_get_one_free && (
-                    <div className="bogo-tag">
-                      <Gift size={14} />
-                      <span>BOGO</span>
-                    </div>
-                  )}
-                </div>
-                <div className="cart-item-details">
-                  <div className="cart-item-header">
-                    <h3 className="cart-item-title">{item.title}</h3>
-                    <button
-                      className="cart-action-btn delete"
-                      onClick={() => deleteItem(item.id, item.item_id)}
-                      disabled={loading}
-                    >
-                      <Trash2 size={18} />
-                    </button>
-                  </div>
-                  {item.hasDiscount ? (
-                    <div className="cart-price-container">
-                      <span className="cart-original-price">₹{item.originalPrice.toFixed(2)}</span>
-                      <span className="cart-discounted-price">₹{item.price.toFixed(2)}</span>
-                      <span className="cart-discount-badge">{item.discountPercent}% OFF</span>
-                    </div>
-                  ) : (
-                    <p className="cart-item-price">₹{item.price.toFixed(2)}</p>
-                  )}
-                  <div className="cart-item-actions">
-                    <button
-                      className="cart-action-btn decrease"
-                      onClick={() => decreaseQuantity(item.id, item.item_id)}
-                      disabled={loading || item.quantity <= 1}
-                    >
-                      <MinusCircle size={20} />
-                    </button>
-                    <span className="cart-item-quantity">{item.quantity}</span>
-                    <button
-                      className="cart-action-btn increase"
-                      onClick={() => increaseQuantity(item.id, item.item_id)}
-                      disabled={loading}
-                    >
-                      <PlusCircle size={20} />
-                    </button>
-                  </div>
-                </div>
-              </li>
-            ))}
-          </ul>
-          <div className="cart-summary-section">
-            <div className="price-breakdown">
-              <div className="price-row">
-                <span>Subtotal</span>
-                <span>₹{subtotal.toFixed(2)}</span>
-              </div>
-              {totalSavings > 0 && (
-                <div className="price-row savings">
-                  <span>Total Savings</span>
-                  <span>-₹{totalSavings.toFixed(2)}</span>
-                </div>
-              )}
-              <div className="price-row total">
-                <span>Total</span>
-                <span>₹{subtotal.toFixed(2)}</span>
-              </div>
-            </div>
-            <button 
-              className="cart-proceed-btn" 
-              onClick={handleProceed} 
-              disabled={loading}
-            >
-              {step === 1
-                ? "Proceed to Checkout"
-                : "Select Delivery Address"}
-            </button>
-          </div>
-        </>
-      )}
+      ) : renderStepContent()}
     </div>
   );
 };
 
-export default Cart;
+export default CartOrder;

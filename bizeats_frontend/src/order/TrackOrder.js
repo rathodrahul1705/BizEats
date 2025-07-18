@@ -677,7 +677,7 @@ const TrackOrder = ({ user, setUser }) => {
       </div>
 
       {/* Delivery Agent Information Section */}
-      {porterTrackingDetails?.status === "accepted" && deliveryAgentInfo && (
+      {(porterTrackingDetails?.status === "accepted" || porterTrackingDetails?.status === "live" || porterTrackingDetails?.status === "ended" || porterTrackingDetails?.status === "reopened" || porterTrackingDetails?.status === "cancelled") && deliveryAgentInfo && (
         <div className="delivery-agent-card">
           <div className="delivery-agent-header">
             <h3>Your Delivery Agent</h3>
