@@ -58,7 +58,12 @@ def calculate_distance_and_cost(restaurant_id, delivery_address_id, cost_per_km=
         logger.info(f" Porter get api quote {payload}")
         response = get_fare_estimate(payload)
         if response:
-            two_wheeler = next((vehicle for vehicle in response['vehicles'] if vehicle["type"] == "2 Wheeler"), None)
+            # two_wheeler = next((vehicle for vehicle in response['vehicles'] if vehicle["type"] == "2 Wheeler"), None)
+            two_wheeler = next(
+                (vehicle for vehicle in response['vehicles'] if vehicle["type"] in ["2 Wheeler", "Scooter"]),
+                None
+            )
+
             delivery_cost = two_wheeler['fare']['minor_amount']/100
 
         return {
