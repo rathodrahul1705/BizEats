@@ -510,38 +510,37 @@ class RestaurantOrderDetailsAPI(APIView):
     Optimized POST-only API for restaurant order details
     Requires JSON payload: {"restaurant_id": "BIZ23154878", "user_id": 1, "delivery_address_id": 12}
     """
-
+    
+    REQUIRED_FIELDS = {'restaurant_id', 'user_id', 'delivery_address_id'}
+    
     def post(self, request, *args, **kwargs):
         try:
-            restaurant_id = request.data.get('restaurant_id')
-            user_id = request.data.get('user_id')
-            delivery_address_id = request.data.get('delivery_address_id')
-
-            if not restaurant_id or not user_id:
+            # Validate required fields first
+            missing_fields = self.REQUIRED_FIELDS - set(request.data.keys())
+            if missing_fields:
                 return self._error_response(
-                    "Both restaurant_id and user_id are required in JSON payload",
+                    f"Missing required fields: {', '.join(missing_fields)}",
                     status.HTTP_400_BAD_REQUEST
                 )
+            
+            restaurant_id = request.data['restaurant_id']
+            user_id = request.data['user_id']
+            delivery_address_id = request.data['delivery_address_id']
 
-            restaurant = (RestaurantMaster.objects
-                          .filter(restaurant_id=restaurant_id)
-                          .select_related('restaurant_location')
-                          .first())
-
+            # Fetch restaurant with single query
+            restaurant = self._get_restaurant_with_location(restaurant_id)
             if not restaurant:
                 return self._error_response("Restaurant not found", status.HTTP_404_NOT_FOUND)
 
-            cart_items = (Cart.objects
-                          .filter(user_id=user_id, restaurant_id=restaurant_id)
-                          .exclude(cart_status=5)
-                          .select_related('item')
-                          .only('quantity', 'item__id', 'item__item_name', 'item__item_price'))
-
+            # Get cart items in one query
+            cart_items = self._get_user_cart_items(user_id, restaurant_id)
+            
+            # Calculate distance and cost
             location_data = calculate_distance_and_cost(restaurant_id, delivery_address_id)
-
             if "error" in location_data:
                 return self._error_response(location_data["error"], status.HTTP_400_BAD_REQUEST)
 
+            # Build response data
             response_data = {
                 "status": "success",
                 "restaurant_details": self._build_restaurant_details(restaurant),
@@ -556,41 +555,53 @@ class RestaurantOrderDetailsAPI(APIView):
 
         except Exception as e:
             return self._error_response(
-                "An error occurred while processing your request: " + str(e),
-                status.HTTP_500_INTERNAL_SERVER_ERROR
+                "An error occurred while processing your request",
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+                error_detail=str(e)
             )
 
+    def _get_restaurant_with_location(self, restaurant_id):
+        """Fetch restaurant with location in a single query"""
+        return (RestaurantMaster.objects
+                .filter(restaurant_id=restaurant_id)
+                .select_related('restaurant_location')
+                .first())
+
+    def _get_user_cart_items(self, user_id, restaurant_id):
+        """Fetch user cart items with optimized query"""
+        return (Cart.objects
+                .filter(user_id=user_id, restaurant_id=restaurant_id)
+                .exclude(cart_status=5)
+                .select_related('item')
+                .only('quantity', 'item__id', 'item__item_name', 'item__item_price'))
+
     def _build_restaurant_details(self, restaurant):
-        """Construct restaurant details with formatted address"""
+        """Construct restaurant details with formatted address using list comprehension"""
         location = restaurant.restaurant_location
-        address_parts = [
+        address_parts = filter(None, [
             location.shop_no_building,
             location.floor_tower,
             location.area_sector_locality,
             f"Near {location.nearby_locality}" if location.nearby_locality else None,
             location.city
-        ]
+        ])
         return {
             "restaurant_name": restaurant.restaurant_name,
-            "restaurant_address": ", ".join(filter(None, address_parts))
+            "restaurant_address": ", ".join(address_parts)
         }
 
     def _build_order_summary(self, cart_items):
-        """Calculate and construct order summary"""
-        item_details = []
-        total_amount = 0.0
+        """Calculate and construct order summary with list comprehension"""
+        item_details = [{
+            "item_id": item.item.id,
+            "item_name": item.item.item_name,
+            "quantity": item.quantity,
+            "unit_price": float(item.item.item_price),
+            "total_price": round(float(item.item.item_price) * item.quantity, 2)
+        } for item in cart_items]
         
-        for item in cart_items:
-            item_total = float(item.item_price)
-            item_details.append({
-                "item_id": item.item.id,
-                "item_name": item.item.item_name,
-                "quantity": item.quantity,
-                "unit_price": float(item.item_price),
-                "total_price": round(item_total, 2)
-            })
-            total_amount += item_total
-
+        total_amount = sum(item['total_price'] for item in item_details)
+        
         return {
             "number_of_items": len(item_details),
             "total_order_amount": round(total_amount, 2),
@@ -602,13 +613,10 @@ class RestaurantOrderDetailsAPI(APIView):
         """Helper for consistent error responses"""
         response = {
             "status": "error",
-            "message": message
+            "message": message,
+            **({"error_details": error_detail} if error_detail else {})
         }
-        if error_detail:
-            response["error_details"] = error_detail
         return Response(response, status=status_code)
-    
-
 @method_decorator(csrf_exempt, name='dispatch')
 class PlaceOrderAPI(APIView):
     """

@@ -213,7 +213,9 @@ const App = () => {
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </main>
-
+        
+      
+      {(location.pathname === '/' || location.pathname === '/home-kitchens') && <StickyTrackOrder user={user} setUser={setUser} />}
       {/* <Footer /> */}
       {location.pathname === '/' && <Footer />}
     </div>

@@ -4,7 +4,7 @@ import { FaMotorcycle, FaBoxOpen, FaTimes } from 'react-icons/fa';
 import "../assets/css/order/StickyTrackOrder.css";
 import API_ENDPOINTS from "../components/config/apiConfig";
 
-const StickyTrackOrder = ({ user }) => {
+const StickyTrackOrder = ({ user, setUser }) => {
   const navigate = useNavigate();
   const location = useLocation(); // Get current location
   const [activeOrders, setActiveOrders] = useState([]);
