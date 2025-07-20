@@ -380,10 +380,9 @@ const MenuManagement = () => {
   };
 
   const calculateDiscountedPrice = (price, discountPercent) => {
-  if (!discountPercent || discountPercent <= 0) return price;
-    return Math.round(price * (1 - discountPercent / 100));
+    if (!discountPercent || discountPercent <= 0) return price;
+    return (price * (1 - discountPercent / 100)).toFixed(2);
   };
-
 
   if (loading && menuItems.length === 0 && categories.length === 0 && addons.length === 0) {
     return <StripeLoader />;
