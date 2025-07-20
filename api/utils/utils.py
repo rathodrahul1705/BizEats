@@ -8,7 +8,7 @@ from typing import Dict, Union, Optional, Tuple
 
 logger = logging.getLogger(__name__)
 
-def calculate_distance_and_cost(restaurant_id: int, delivery_address_id: int, cost_per_km: float = 12.0) -> Dict[str, Union[float, str, Dict]]:
+def calculate_distance_and_cost(restaurant_id: int, delivery_address_id: int, cost_per_km: float = 15.0) -> Dict[str, Union[float, str, Dict]]:
     """
     Calculates distance in km and estimated delivery cost between restaurant and user address.
     Returns a dictionary with coordinates, distance, and cost or error message.
@@ -76,17 +76,18 @@ def calculate_distance_and_cost(restaurant_id: int, delivery_address_id: int, co
         
         logger.info("Porter get api quote for payload: %s", payload)
         
+        delivery_cost = calculate_delivery_cost(distance_km)
         # Get fare estimate from external service
-        delivery_cost = round(distance_km * cost_per_km, 2)
-        response = get_fare_estimate(payload)
-        
-        if response and 'vehicles' in response:
-            two_wheeler = next(
-                (v for v in response['vehicles'] if v.get("type") in ("2 Wheeler", "Scooter")),
-                None
-            )
-            if two_wheeler and 'fare' in two_wheeler and 'minor_amount' in two_wheeler['fare']:
-                delivery_cost = two_wheeler['fare']['minor_amount'] / 100
+        # delivery_cost = round(distance_km * cost_per_km, 2)
+        # if distance_km > 5:
+        #     response = get_fare_estimate(payload)
+        #     if response and 'vehicles' in response:
+        #         two_wheeler = next(
+        #             (v for v in response['vehicles'] if v.get("type") in ("2 Wheeler", "Scooter")),
+        #             None
+        #         )
+        #         if two_wheeler and 'fare' in two_wheeler and 'minor_amount' in two_wheeler['fare']:
+        #             delivery_cost = two_wheeler['fare']['minor_amount'] / 100
 
         return {
             "restaurant_coordinates": {"latitude": r_lat, "longitude": r_lon},
@@ -145,3 +146,10 @@ def _get_routing_distance(lat1: float, lon1: float, lat2: float, lon2: float) ->
     except (ValueError, KeyError, IndexError) as e:
         logger.error("Failed to parse API response: %s", str(e))
         return 0.0
+    
+def calculate_delivery_cost(distance_km):
+    if distance_km <= 5:
+        return distance_km * 15
+    else:
+        extra_cost = distance_km * 11  # Remaining km at ₹11/km
+        return extra_cost
