@@ -214,10 +214,9 @@ const App = () => {
         </Routes>
       </main>
         
-      
       {(location.pathname === '/' || location.pathname === '/home-kitchens') && <StickyTrackOrder user={user} setUser={setUser} />}
       {/* <Footer /> */}
-      {location.pathname === '/' && <Footer />}
+      {(location.pathname === '/' || location.pathname === '/about-us' || location.pathname === '/contact-us' || location.pathname === '/privacy-policy' || location.pathname === '/terms-and-conditions' || location.pathname === '/cancellation-refund-policy') && <Footer />}
     </div>
   );
 };

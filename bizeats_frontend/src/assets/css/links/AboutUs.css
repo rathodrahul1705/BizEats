@@ -1,90 +1,460 @@
+/* Base Styles */
 .aboutus {
-    font-family: 'Segoe UI', sans-serif;
-    color: #333;
-    background-color: #fff;
-    padding-bottom: 40px;
+  font-family: 'Poppins', 'Segoe UI', sans-serif;
+  color: #333;
+  background-color: #f9f9f9;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+/* Hero Section */
+.aboutus__hero {
+  background: linear-gradient(135deg, #ff7e00, #e65c00);
+  color: #fff;
+  text-align: center;
+  padding: 100px 20px 80px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* CSS-only diagonal pattern for hero background */
+.aboutus__hero::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: 
+    linear-gradient(45deg,
+      rgba(255,255,255,0.05) 25%,
+      transparent 25%,
+      transparent 50%,
+      rgba(255,255,255,0.05) 50%,
+      rgba(255,255,255,0.05) 75%,
+      transparent 75%,
+      transparent);
+  background-size: 20px 20px;
+  opacity: 0.4;
+}
+
+.aboutus__hero-content {
+  position: relative;
+  z-index: 2;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.aboutus__hero h1 {
+  font-size: 3.5rem;
+  font-weight: 700;
+  margin-bottom: 15px;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.aboutus__hero .subtitle {
+  font-size: 1.5rem;
+  font-weight: 300;
+  margin-bottom: 40px;
+  opacity: 0.9;
+}
+
+/* Stats Section */
+.aboutus__stats {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  margin-top: 50px;
+  flex-wrap: wrap;
+}
+
+.stat-item {
+  background: rgba(255,255,255,0.15);
+  backdrop-filter: blur(5px);
+  padding: 25px 30px;
+  border-radius: 12px;
+  min-width: 150px;
+  text-align: center;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.stat-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+
+.stat-icon {
+  font-size: 2rem;
+  margin-bottom: 10px;
+  color: rgba(255,255,255,0.9);
+}
+
+.stat-number {
+  display: block;
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 5px;
+}
+
+.stat-label {
+  font-size: 1rem;
+  opacity: 0.9;
+  font-weight: 500;
+}
+
+/* Main Content */
+.aboutus__content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 60px 20px;
+}
+
+/* Section Styles */
+.aboutus__section {
+  margin-bottom: 80px;
+}
+
+.aboutus__section h2 {
+  color: #e65c00;
+  font-size: 2.2rem;
+  margin-bottom: 30px;
+  text-align: center;
+  position: relative;
+}
+
+.aboutus__section h2::after {
+  content: '';
+  display: block;
+  width: 80px;
+  height: 4px;
+  background: #e65c00;
+  margin: 15px auto 0;
+  border-radius: 2px;
+}
+
+/* Who We Are Section */
+.aboutus__section--who {
+  display: flex;
+  align-items: center;
+  gap: 50px;
+}
+
+.section-content {
+  flex: 1;
+}
+
+.section-content p {
+  font-size: 1.1rem;
+  margin-bottom: 20px;
+  color: #555;
+  line-height: 1.8;
+}
+
+.section-image {
+  flex: 1;
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+  height: 400px;
+  position: relative;
+}
+
+/* CSS-only diagonal pattern for section image */
+.pattern-diagonal {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: 
+    linear-gradient(45deg, 
+      #f9f9f9 25%, 
+      #f0f0f0 25%, 
+      #f0f0f0 50%, 
+      #f9f9f9 50%, 
+      #f9f9f9 75%, 
+      #f0f0f0 75%, 
+      #f0f0f0);
+  background-size: 20px 20px;
+  opacity: 0.8;
+}
+
+/* Mission Section */
+.aboutus__section--mission {
+  background: #fff;
+  padding: 50px;
+  border-radius: 15px;
+  box-shadow: 0 5px 25px rgba(0,0,0,0.05);
+}
+
+.mission-card {
+  max-width: 800px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.mission-card p {
+  font-size: 1.1rem;
+  margin-bottom: 40px;
+  color: #555;
+  line-height: 1.8;
+}
+
+.mission-values {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  margin-top: 40px;
+  flex-wrap: wrap;
+}
+
+.value-item {
+  flex: 1;
+  min-width: 250px;
+  padding: 30px 20px;
+  background: #f9f9f9;
+  border-radius: 10px;
+  transition: all 0.3s ease;
+  text-align: center;
+}
+
+.value-item:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+
+.value-icon {
+  font-size: 2.5rem;
+  color: #e65c00;
+  margin-bottom: 20px;
+}
+
+.value-item h3 {
+  font-size: 1.3rem;
+  margin-bottom: 15px;
+  color: #333;
+}
+
+.value-item p {
+  font-size: 1rem;
+  margin-bottom: 0;
+  color: #666;
+}
+
+/* Why Choose Us Section */
+.benefits-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 30px;
+  margin-top: 40px;
+}
+
+.benefit-card {
+  background: #fff;
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.benefit-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+}
+
+.benefit-icon {
+  font-size: 2.5rem;
+  color: #e65c00;
+  margin-bottom: 20px;
+}
+
+.benefit-card h3 {
+  font-size: 1.3rem;
+  margin-bottom: 15px;
+  color: #333;
+}
+
+.benefit-card p {
+  font-size: 1rem;
+  color: #666;
+  line-height: 1.6;
+}
+
+/* Testimonials Section */
+.testimonials-container {
+  display: flex;
+  gap: 30px;
+  margin-top: 40px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.testimonial-card {
+  flex: 1;
+  min-width: 300px;
+  max-width: 450px;
+  background: #fff;
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+  transition: all 0.3s ease;
+}
+
+.testimonial-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+
+.testimonial-text {
+  font-size: 1.1rem;
+  font-style: italic;
+  color: #555;
+  margin-bottom: 25px;
+  position: relative;
+  line-height: 1.8;
+}
+
+.testimonial-text::before {
+  content: '"';
+  font-size: 4rem;
+  color: rgba(230, 92, 0, 0.1);
+  position: absolute;
+  top: -20px;
+  left: -15px;
+  line-height: 1;
+  font-family: serif;
+}
+
+.testimonial-author {
+  display: flex;
+  align-items: center;
+}
+
+.testimonial-avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  margin-right: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+
+.testimonial-author h4 {
+  font-size: 1.1rem;
+  margin-bottom: 5px;
+  color: #333;
+}
+
+.testimonial-author p {
+  font-size: 0.9rem;
+  color: #777;
+}
+
+/* Responsive Design */
+@media (max-width: 992px) {
+  .aboutus__section--who {
+    flex-direction: column;
   }
   
+  .section-content, .section-image {
+    flex: none;
+    width: 100%;
+  }
+
+  .section-image {
+    height: 300px;
+    margin-top: 30px;
+  }
+  
+  .aboutus__hero h1 {
+    font-size: 2.8rem;
+  }
+  
+  .aboutus__hero .subtitle {
+    font-size: 1.3rem;
+  }
+
+  .mission-values {
+    gap: 20px;
+  }
+}
+
+@media (max-width: 768px) {
   .aboutus__hero {
-    background-color: #fff;
-    color: #fff;
-    text-align: center;
     padding: 80px 20px 60px;
   }
   
   .aboutus__hero h1 {
-    font-size: 42px;
-    color: #e65c00;
-    margin-bottom: 10px;
+    font-size: 2.2rem;
   }
   
-  .aboutus__hero p {
-    font-size: 18px;
-    color: #ccc;
+  .aboutus__hero .subtitle {
+    font-size: 1.1rem;
   }
   
-  .aboutus__content {
-    max-width: 1000px;
-    margin: 0 auto;
-    padding: 40px 20px;
+  .stat-item {
+    padding: 20px;
+    min-width: 120px;
   }
   
-  .aboutus__section {
-    margin-bottom: 40px;
+  .stat-number {
+    font-size: 2rem;
+  }
+
+  .stat-icon {
+    font-size: 1.5rem;
   }
   
   .aboutus__section h2 {
-    color: #e65c00;
-    font-size: 28px;
-    margin-bottom: 10px;
+    font-size: 1.8rem;
   }
   
-  .aboutus__section p {
-    font-size: 16px;
-    line-height: 1.6;
+  .mission-values {
+    flex-direction: column;
+    align-items: center;
   }
   
-  .aboutus__list {
-    list-style: none;
-    padding-left: 0;
-    font-size: 16px;
-  }
-  
-  .aboutus__list li {
-    margin-bottom: 10px;
-    padding-left: 20px;
-    position: relative;
-  }
-  
-  .aboutus__list li::before {
-    content: "✔";
-    color: #e65c00;
-    position: absolute;
-    left: 0;
-  }
-  
-  .aboutus__section--image img {
+  .value-item {
     width: 100%;
-    border-radius: 12px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    max-width: 350px;
+  }
+
+  .aboutus__section--mission {
+    padding: 30px;
+  }
+}
+
+@media (max-width: 576px) {
+  .aboutus__stats {
+    gap: 15px;
   }
   
-  /* Responsive Design */
-  @media (max-width: 768px) {
-    .aboutus__hero h1 {
-      font-size: 32px;
-    }
-  
-    .aboutus__hero p {
-      font-size: 16px;
-    }
-  
-    .aboutus__section h2 {
-      font-size: 22px;
-    }
-  
-    .aboutus__section p, .aboutus__list {
-      font-size: 15px;
-    }
+  .stat-item {
+    padding: 15px;
+    min-width: 100px;
   }
   
+  .stat-number {
+    font-size: 1.5rem;
+  }
+  
+  .stat-label {
+    font-size: 0.9rem;
+  }
+
+  .testimonial-card {
+    padding: 20px;
+  }
+
+  .aboutus__section {
+    margin-bottom: 60px;
+  }
+}
