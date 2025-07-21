@@ -608,10 +608,12 @@ class PorterOrder(models.Model):
 
     INPROGRESS = 0
     COMPLETED = 1
+    ONTHEWAY = 2
 
     STATUS_CHOICES = [
         (INPROGRESS, 'Inprogress'),
         (COMPLETED, 'Completed'),
+        (ONTHEWAY, 'On The Way'),
     ]
 
     order_number = models.CharField(max_length=20, null=True, blank=True)

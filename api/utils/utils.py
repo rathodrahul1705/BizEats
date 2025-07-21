@@ -151,5 +151,5 @@ def calculate_delivery_cost(distance_km):
     if distance_km <= 5:
         return distance_km * 15
     else:
-        extra_cost = distance_km * 11  # Remaining km at ₹11/km
+        extra_cost = distance_km * 15  # Remaining km at ₹11/km
         return extra_cost

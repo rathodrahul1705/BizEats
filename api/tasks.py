@@ -62,13 +62,7 @@ def update_order_statuses():
                             porter_order.status = "ended"
                             porter_order.save()
                             logger.info(f"Updated PorterOrder {porter_order.order_number} eatoor_delivery_status to 1")
-
-                        if order_status == 5:
-                            porter_order.eatoor_delivery_status = 2
-                            porter_order.status = "live"
-                            porter_order.save()
-                            logger.info(f"Updated PorterOrder {porter_order.order_number} eatoor_delivery_status to 1")
-
+                            
                         # Send notification email
                         send_order_status_email(order)
                         logger.info(f"Order status email sent for Order {order.order_number}")

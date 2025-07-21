@@ -242,16 +242,6 @@ const Home = () => {
       bgColor: "linear-gradient(135deg, #43CBFF 0%, #9708CC 100%)",
       image: "https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=2069",
       badge: "Weekend Only"
-    },
-    {
-      id: 3,
-      title: "New User Offer",
-      subtitle: "Get ₹100 off on your first order with code WELCOME100",
-      cta: "Order Now",
-      link: "/signup",
-      bgColor: "linear-gradient(135deg, #FAD961 0%, #F76B1C 100%)",
-      image: "https://images.unsplash.com/photo-1559847844-5315695dadae?q=80&w=1974",
-      badge: "New Customers"
     }
   ];
   
