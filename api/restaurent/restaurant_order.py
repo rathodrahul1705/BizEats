@@ -596,8 +596,8 @@ class RestaurantOrderDetailsAPI(APIView):
             "item_id": item.item.id,
             "item_name": item.item.item_name,
             "quantity": item.quantity,
-            "unit_price": float(item.item.item_price),
-            "total_price": round(float(item.item.item_price) * item.quantity, 2)
+            "unit_price": item.item_price,
+            "total_price": round(item.item_price)
         } for item in cart_items]
         
         total_amount = sum(item['total_price'] for item in item_details)
