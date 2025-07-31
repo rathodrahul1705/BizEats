@@ -25,6 +25,10 @@ TWILIO_PHONE_NUMBER = f"{settings.TWILIO_PHONE_NUMBER}"
 OTP_EXPIRY_SECONDS = 30  # OTP expires in 30 seconds
 OTP_LENGTH = 6   # 6-digit OTP
 
+print("TWILIO_ACCOUNT_SID===",TWILIO_ACCOUNT_SID)
+print("TWILIO_AUTH_TOKEN===",TWILIO_AUTH_TOKEN)
+print("TWILIO_PHONE_NUMBER===",TWILIO_PHONE_NUMBER)
+
 # Initialize Twilio client once (better performance)
 twilio_client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
 
