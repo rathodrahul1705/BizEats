@@ -51,7 +51,7 @@ const Home = () => {
       setLoading(true);
       try {
         const response = await fetchData(API_ENDPOINTS.HOME.LIVE_RES_LIST, "GET", null);
-        setRestaurants(response);
+        setRestaurants(response.data.KitchenList);
       } catch (error) {
         console.error("Error fetching restaurants:", error);
       } finally {

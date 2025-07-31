@@ -67,7 +67,7 @@ class RestaurantMasterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = RestaurantMaster
-        fields = ['restaurant_name', 'restaurant_status', 'owner_details', 'restaurant_location', 'menu_items']
+        fields = ['restaurant_name', 'profile_image', 'restaurant_status', 'owner_details', 'restaurant_location', 'menu_items']
 
     def generate_unique_restaurant_id(self, name):
         """Generate a unique restaurant ID."""

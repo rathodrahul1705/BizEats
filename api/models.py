@@ -37,6 +37,14 @@ class User(AbstractBaseUser, PermissionsMixin):
         (VENDOR, 'Vendor'),
     ]
 
+    DELIVERY_VEG = 1
+    DELIVERY_NONVEG = 2
+
+    DELIVERY_PREFERENCE_CHOICES = [
+        (DELIVERY_VEG, 'Veg'),
+        (DELIVERY_NONVEG, 'Non-Veg'),
+    ]
+
     full_name = models.CharField(max_length=255)
     email = models.EmailField(unique=True)
     contact_number = models.CharField(max_length=15, unique=True, null=True, blank=True)  # Optional
@@ -49,6 +57,19 @@ class User(AbstractBaseUser, PermissionsMixin):
     # OTP-based authentication
     otp = models.CharField(max_length=6, null=True, blank=True)
     otp_expiry = models.DateTimeField(null=True, blank=True)
+
+    is_email_verified = models.BooleanField(default=False)
+    is_mobile_verified = models.BooleanField(default=False)
+
+    email_verified_at = models.DateTimeField(null=True, blank=True)
+    mobile_verified_at = models.DateTimeField(null=True, blank=True)
+
+    delivery_preference = models.PositiveSmallIntegerField(
+        choices=DELIVERY_PREFERENCE_CHOICES, null=True, blank=True
+    )
+    whatsapp_updates = models.PositiveSmallIntegerField(
+        choices=[(1, 'Yes'), (0, 'No')], null=True, blank=True
+    )
 
     objects = UserManager()
 

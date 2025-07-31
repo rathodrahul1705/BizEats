@@ -463,15 +463,14 @@ class RestaurantMenueDelete(APIView):
                 {"error": str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-
 class RestaurantListAPI(APIView):
     def get(self, request):
         try:
             live_restaurants = RestaurantMaster.objects.filter(restaurant_status__in=[2, 3])
-            data = RestaurantSerializerByStatus(live_restaurants, many=True).data
+            serialized_data = RestaurantSerializerByStatus(live_restaurants, many=True).data
 
             final_data = []
-            for restaurant in data:
+            for restaurant in serialized_data:
                 location = restaurant.get("location", {})
                 area = location.get("area_sector_locality", "")
                 city = location.get("city", "")
@@ -489,7 +488,6 @@ class RestaurantListAPI(APIView):
 
                 image_profile = request.build_absolute_uri(restaurant["profile_image"]) if restaurant.get("profile_image") else None
 
-                # Generate SEO-friendly slug
                 seo_slug = slugify(f"{restaurant_name} {area} {city}")
                 seo_city = slugify(f"{city}")
 
@@ -505,11 +503,54 @@ class RestaurantListAPI(APIView):
                     "restaurant_status": restaurant.get("restaurant_status")
                 })
 
-            return Response(final_data, status=status.HTTP_200_OK)
+            # Static Category List
+            category_list = [
+                {
+                    "id": 2,
+                    "name": "Biryani",
+                    "icon": "https://www.eatoor.com/static/media/home_page_chicken_biryani.0503389071788d69602d.avif"
+                },
+                {
+                    "id": 3,
+                    "name": "Snacks",
+                    "icon": "https://www.eatoor.com/static/media/home_page_poha.7469656b09ad11462b68.png"
+                },
+                {
+                    "id": 4,
+                    "name": "Desserts",
+                    "icon": "https://www.eatoor.com/static/media/home_page_gulab_jamun.c6ff9289e79d7fae82ba.jpg"
+                },
+                {
+                    "id": 5,
+                    "name": "Beverages",
+                    "icon": "https://www.eatoor.com/static/media/homa_page_kokam_sarbat.f184224b0255bb0439ed.jpg"
+                },
+                {
+                    "id": 6,
+                    "name": "Rolls",
+                    "icon": "https://www.eatoor.com/static/media/home_page_egg_roll.72953cc48da1b0705a3e.avif"
+                },
+                {
+                    "id": 7,
+                    "name": "Fast Food",
+                    "icon": "https://www.eatoor.com/static/media/home_page_maggie.af48fa7b0186c85461f6.webp"
+                }
+            ]
+
+            # Feature Kitchen List (Top 10 by rating)
+            feature_kitchen_list = sorted(final_data, key=lambda r: r.get("avg_price_range", 0), reverse=True)[:10]
+
+            return Response({
+                "success": True,
+                "data": {
+                    "CategoryList": category_list,
+                    "FeatureKitchenList": feature_kitchen_list,
+                    "KitchenList": final_data
+                }
+            }, status=status.HTTP_200_OK)
 
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
 class RestaurantDetailMenuView(APIView):
     def get(self, request, restaurant_id, offer=None):
         try:
@@ -525,6 +566,7 @@ class RestaurantDetailMenuView(APIView):
             restaurant = RestaurantMaster.objects.get(restaurant_id=restaurant_id)
             serializer = RestaurantMasterSerializer(restaurant)
             restaurant_data = serializer.data.copy()
+            image_profile = request.build_absolute_uri(restaurant_data["profile_image"]) if restaurant_data.get("profile_image") else None
 
             restaurant_status_value = restaurant_data.get("restaurant_status", 0)
             status_meta = restaurantStatuses.get(restaurant_status_value, {
@@ -608,6 +650,7 @@ class RestaurantDetailMenuView(APIView):
 
             response_data = {
                 "time_required_to_reach_loc": time_required_to_reach_loc,
+                "restaurant_image": image_profile,
                 "restaurant_name": restaurant_data.get("restaurant_name"),
                 "restaurant_status": restaurant_status_value,
                 "restaurant_current_status": {

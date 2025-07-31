@@ -1,7 +1,7 @@
 from django.urls import path, re_path, include
-
 from api.delivery import porter_views, porter_webhook
 from api.delivery.porter_admin import admin_porter_orders
+from api.mobile.home import HomeKitchenList
 from api.payment.payment import create_order, verify_payment
 from api.vendor.Coupon import CouponCreateView, CouponDeleteView, CouponDetailView, CouponListView, CouponUpdateView
 from .vendor.Vendor import GetVendorWiseCounts
@@ -12,10 +12,10 @@ from django.conf.urls.static import static
 from .restaurent.restaurant_order import PlaceOrderAPI, RestaurantCartAddOrRemove, RestaurantCartList, CartWithRestaurantDetails,CartWithRestaurantDetailsClear, UserDeliveryAddressCreateView, UserDeliveryAddressUpdateView, UserDeliveryAddressListCreateView, CartWithRestaurantUserUpdate, RestaurantOrderDetailsAPI
 from .order.track_order import ApplyCouponOrder, GetActiveOrders, LiveLocationDetails, MarkAsPaid, OrderDetails, TrackOrder, RestaurantOrders, OrderStatusUpdate, UpdateOrderLiveLocationView
 from django.http import JsonResponse
-
 from rest_framework.routers import DefaultRouter
 from .views import RestaurantCategoryViewSet, OfferViewSet, trigger_background_task
 from api import views
+from .mobile.auth import EmailLoginVerifyOTP, MobileLoginResendOTP, MobileLoginSendOTP, MobileLoginVerifyOTP, SendEmailOTP, UserProfileUpdates
 
 router = DefaultRouter()
 router.register(r'categories', RestaurantCategoryViewSet)
@@ -25,6 +25,16 @@ router.register(r'restaurants', views.RestaurantListView, basename='restaurant')
 urlpatterns = [
 
     # path('api/', include('your_api_urls')),
+
+    # Mobile app Signin API
+    path("api/login/send-otp/", MobileLoginSendOTP.as_view(), name="send-otp-code"),
+    path("api/login/verify-otp/", MobileLoginVerifyOTP.as_view(), name="verify_otp"),
+    path("api/login/resend-otp/", MobileLoginResendOTP.as_view(), name="resend-otp"),
+    path('api/send-email-otp/', SendEmailOTP.as_view(), name='send_email_otp'),
+    path('api/verify-email-otp/', EmailLoginVerifyOTP.as_view(), name='verify_email_otp'),
+    path("api/user/personal-details-update/", UserProfileUpdates.as_view(), name="user-personal-details-update"),
+
+    path('api/get-home-list/', HomeKitchenList.as_view(), name='get-home-list'),
 
     path("api/register/", UserRegistrationView.as_view(), name="user-register"),
     path("api/verify-otp/", OTPVerificationView.as_view(), name="verify-otp"),
@@ -122,7 +132,9 @@ urlpatterns = [
     path('api/user/user_list/', FetchUserList.as_view()),
     path('api/cart/cart_list/', FetchCartList.as_view()),
     path('api/test/', trigger_background_task),
+
     re_path(r'^(?!media/).*$', ReactAppView.as_view(), name='react-app'),
+
 
 ]
 

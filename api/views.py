@@ -1,3 +1,5 @@
+from datetime import timedelta
+import random
 from django.core.mail import send_mail
 from rest_framework import status
 from rest_framework.response import Response
@@ -5,6 +7,7 @@ from rest_framework.views import APIView
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 from api.emailer.email_notifications import generate_coupon_html, generate_coupon_status_html, send_otp_email, send_contact_email
+from api.mobile.auth import send_otp_via_twilio
 from api.serializers import ContactUsSerializer, OrderReviewSerializer, RestaurantCategorySerializer
 from api.tasks import update_order_statuses
 from .models import Cart, ContactMessage, OrderReview, RestaurantCategory, User, RestaurantMaster
@@ -26,6 +29,7 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django.utils.html import strip_tags
 from django.contrib.auth import get_user_model
+from django.utils.timezone import now
 
 
 logger = logging.getLogger(__name__)
