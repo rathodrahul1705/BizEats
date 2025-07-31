@@ -83,6 +83,10 @@ RAZORPAY_API_SECRET = config('RAZORPAY_API_SECRET')
 PORTER_API_KEY = config('PORTER_API_KEY')
 PORTER_BASE_URL = config('PORTER_BASE_URL')
 
+TWILIO_ACCOUNT_SID = config('TWILIO_ACCOUNT_SID')
+TWILIO_AUTH_TOKEN = config('TWILIO_AUTH_TOKEN')
+TWILIO_PHONE_NUMBER = config('TWILIO_PHONE_NUMBER')
+
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = config('EMAIL_HOST')  # e.g., 'smtp.hostinger.com'
 EMAIL_PORT = config('EMAIL_PORT', cast=int)  # usually 587

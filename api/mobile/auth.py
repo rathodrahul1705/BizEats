@@ -14,15 +14,16 @@ from rest_framework.permissions import IsAuthenticated
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
+from django.conf import settings
 
 User = get_user_model()
 
 # Constants (should be moved to settings.py or environment variables in production)
-TWILIO_ACCOUNT_SID = 'AC606d06c896778d573a6ba695d8ce7286'
-TWILIO_AUTH_TOKEN = '8af0a02cde0df326ac50161ee665fc34'
-TWILIO_PHONE_NUMBER = '+16205091504'
+TWILIO_ACCOUNT_SID = f"{settings.TWILIO_ACCOUNT_SID}"
+TWILIO_AUTH_TOKEN = f"{settings.TWILIO_AUTH_TOKEN}"
+TWILIO_PHONE_NUMBER = f"{settings.TWILIO_PHONE_NUMBER}"
 OTP_EXPIRY_SECONDS = 30  # OTP expires in 30 seconds
-OTP_LENGTH = 6  # 6-digit OTP
+OTP_LENGTH = 6   # 6-digit OTP
 
 # Initialize Twilio client once (better performance)
 twilio_client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
@@ -78,13 +79,13 @@ class MobileLoginSendOTP(BaseOTPView):
 
         otp = self.update_user_otp(user)
 
-        # try:
-        #     send_otp_via_twilio(contact, otp)
-        # except Exception as e:
-        #     return Response(
-        #         {"error": f"OTP sending failed: {str(e)}"},
-        #         status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        #     )
+        try:
+            send_otp_via_twilio(contact, otp)
+        except Exception as e:
+            return Response(
+                {"error": f"OTP sending failed: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
         return Response({
             "message": "OTP sent successfully.",
