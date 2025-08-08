@@ -2,7 +2,7 @@ import uuid
 from rest_framework import serializers
 from django.db.models import Avg
 from django.contrib.auth import get_user_model
-from .models import Order, OrderReview, RestaurantCategory, RestaurantMaster, RestaurantOwnerDetail, RestaurantLocation, RestaurantCuisine, RestaurantDeliveryTiming, RestaurantDocuments, RestaurantMenu, UserDeliveryAddress, OrderLiveLocation
+from .models import FavouriteKitchen, Order, OrderReview, RestaurantCategory, RestaurantMaster, RestaurantOwnerDetail, RestaurantLocation, RestaurantCuisine, RestaurantDeliveryTiming, RestaurantDocuments, RestaurantMenu, UserDeliveryAddress, OrderLiveLocation
 
 User = get_user_model()
 
@@ -222,6 +222,7 @@ class RestaurantMenuSerializer(serializers.ModelSerializer):
 
 class UserDeliveryAddressSerializer(serializers.ModelSerializer):
     full_address = serializers.SerializerMethodField()
+    home_type = serializers.SerializerMethodField()
     
     class Meta:
         model = UserDeliveryAddress
@@ -244,6 +245,12 @@ class UserDeliveryAddressSerializer(serializers.ModelSerializer):
     def get_full_address(self, obj):
         landmark = f"Landmark: {obj.near_by_landmark}" if obj.near_by_landmark else "No Landmark"
         return f"{obj.street_address}, {obj.city}, {obj.state}, {obj.zip_code}, {obj.country} ({landmark}, Type: {obj.home_type})"
+    
+    def get_home_type(self, obj):
+        """Return custom home_type value if it's 'Other'."""
+        if obj.home_type == "Other":
+            return obj.name_of_location or "Other"
+        return obj.home_type
 
 class OrderPlacementSerializer(serializers.Serializer):
     user_id = serializers.IntegerField(required=True)
@@ -306,3 +313,27 @@ class RestaurantCategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = RestaurantCategory
         fields = '__all__'
+class RestaurantMasterFavSerializer(serializers.ModelSerializer):
+    profile_image = serializers.SerializerMethodField()
+
+    class Meta:
+        model = RestaurantMaster
+        fields = ['restaurant_id', 'restaurant_name', 'restaurant_status', 'profile_image']
+
+    def get_profile_image(self, obj):
+        request = self.context.get('request')
+        if obj.profile_image and hasattr(obj.profile_image, 'url'):
+            return request.build_absolute_uri(obj.profile_image.url)
+        return None
+    
+class FavouriteKitchenSerializer(serializers.ModelSerializer):
+    restaurant_details = serializers.SerializerMethodField()
+
+    class Meta:
+        model = FavouriteKitchen
+        fields = ['id', 'restaurant', 'restaurant_details', 'created_at']
+
+    def get_restaurant_details(self, obj):
+        from .serializers import RestaurantMasterFavSerializer
+        request = self.context.get('request')
+        return RestaurantMasterFavSerializer(obj.restaurant, context={'request': request}).data

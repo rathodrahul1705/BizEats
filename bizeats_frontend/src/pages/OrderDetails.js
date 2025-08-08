@@ -75,6 +75,8 @@ const OrderDetails = ({ user, setUser }) => {
     minOrder: 0,
   });
 
+  localStorage.setItem("restaurant_id", restaurant_id);
+
   const [foodData, setFoodData] = useState([]);
   const [showResetCartModal, setShowResetCartModal] = useState(false);
   const [pendingItem, setPendingItem] = useState(null);

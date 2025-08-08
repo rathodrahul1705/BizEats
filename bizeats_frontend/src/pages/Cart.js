@@ -46,6 +46,10 @@ const CartOrder = ({ user, setUser }) => {
     localStorage.getItem("user_full_address") || null
   );
 
+  // const [restaurantid, setRestaurantid] = useState(
+  //   localStorage.getItem("restaurant_id") || null
+  // );
+
   useEffect(() => {
     localStorage.setItem("cart_order_current_step", step.toString());
   }, [step]);
@@ -67,6 +71,7 @@ const CartOrder = ({ user, setUser }) => {
       const response = await fetchData(API_ENDPOINTS.ORDER.GET_CART_ITEM_LIST, "POST", {
         user_id: user?.user_id || null,
         session_id: sessionId,
+        restaurant_id:restaurantId
       });
 
       if (response?.cart_details) {

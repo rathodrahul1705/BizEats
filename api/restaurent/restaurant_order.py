@@ -88,14 +88,15 @@ class RestaurantCartAddOrRemove(APIView):
             restaurant_menu = RestaurantMenu.objects.filter(
                     id=item_id,
                 ).first()
-            
+
             if restaurant_menu.discount_active == 1:
                 item_price = restaurant_menu.item_price * (1 - (restaurant_menu.discount_percent / 100))
             else:
                 item_price = restaurant_menu.item_price
 
-            if user_id is None and session_id:
 
+            if user_id is None and session_id:
+                
                 cart = Cart.objects.filter(
                     restaurant_id=restaurant_id,
                     item_id=item_id,
@@ -303,8 +304,6 @@ class RestaurantCartList(APIView):
                 "status": "error",
                 "message": str(e),
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        
-
 @method_decorator(csrf_exempt, name='dispatch')
 class CartWithRestaurantDetails(APIView):
     """
@@ -316,21 +315,25 @@ class CartWithRestaurantDetails(APIView):
             data = json.loads(request.body)
             user_id = data.get("user_id")  # Can be null for guest users
             session_id = data.get("session_id")  # For guest users
+            restaurant_id = data.get("restaurant_id")
+            address_id = data.get("address_id")
 
-            # Fetch cart items based on user_id or session_id
+            restaurant = RestaurantMaster.objects.get(restaurant_id=restaurant_id)
+
+            # Fetch cart items
             if user_id:
-                cart_items = Cart.objects.filter(user_id=user_id).exclude(cart_status=5)
+                cart_items = Cart.objects.filter(user_id=user_id, restaurant_id=restaurant_id).exclude(cart_status=5)
             else:
-                cart_items = Cart.objects.filter(session_id=session_id).exclude(cart_status=5)
+                cart_items = Cart.objects.filter(session_id=session_id, restaurant_id=restaurant_id).exclude(cart_status=5)
 
-            # Prepare the cart details response
             cart_details = []
-            for item in cart_items:
-                
-                restaurant_menu = RestaurantMenu.objects.filter(
-                    id=item.item_id,
-                ).first()
+            subtotal = 0
 
+            for item in cart_items:
+                restaurant_menu = RestaurantMenu.objects.filter(id=item.item_id).first()
+                item_total_price = float(item.item_price)
+                subtotal += item_total_price
+                
                 cart_details.append({
                     "item_id": item.item_id,
                     "id": item.id,
@@ -338,36 +341,102 @@ class CartWithRestaurantDetails(APIView):
                     "item_name": item.item.item_name,
                     "item_description": item.description,
                     "discount_active": item.discount_active,
+                    "type": restaurant_menu.food_type if restaurant_menu else None,
                     "discount_percent": item.discount_percent,
                     "item_price": float(item.item_price),
-                    "original_item_price": float(restaurant_menu.item_price*item.quantity),
+                    "original_item_price": float(restaurant_menu.item_price * item.quantity) if restaurant_menu else 0,
                     "buy_one_get_one_free": item.buy_one_get_one_free,
                     "quantity": item.quantity,
                     "item_image": request.build_absolute_uri(item.item.item_image.url) if item.item.item_image else None,
                 })
 
-            # Fetch restaurant details
-            try:
+            # Fetch suggestion items (from same restaurant, excluding already in cart)
+            cart_item_ids = [item.item_id for item in cart_items]
+            suggestion_items_qs = RestaurantMenu.objects.filter(
+                restaurant_id=restaurant_id
+            ).exclude(id__in=cart_item_ids)[:5]
 
-                response_data = {
-                    "status": "success",
-                    "cart_details": cart_details,
+            suggestion_cart_items = [
+                {
+                    "item_name": item.item_name,
+                    "item_id": item.id,
+                    "item_price": float(item.item_price),
+                    "type": item.food_type,
+                    "item_image": request.build_absolute_uri(item.item_image.url) if item.item_image else None
+                }
+                for item in suggestion_items_qs
+            ]
+
+            # Get delivery address dynamically from UserDeliveryAddress table
+            delivery_address_details = {}
+            if address_id:
+                try:
+                    if user_id:
+                        address_obj = UserDeliveryAddress.objects.get(id=address_id, user_id=user_id)
+                    else:
+                        # Optional: if guest, address lookup can be skipped or handled differently
+                        address_obj = UserDeliveryAddress.objects.get(id=address_id)
+                    
+                    # Compose single address line (you can customize the format)
+                    address_line = f"{address_obj.street_address}, "
+                    if address_obj.near_by_landmark:
+                        address_line += f"Near {address_obj.near_by_landmark}, "
+                    address_line += f"{address_obj.city}, {address_obj.state} - {address_obj.zip_code}, {address_obj.country}"
+                    
+                    delivery_address_details = {
+                        "id": address_obj.id,
+                        "address": address_line,
+                        "home_type": address_obj.home_type,
+                        "name_of_location": address_obj.name_of_location,
+                        "latitude": float(address_obj.latitude) if address_obj.latitude else None,
+                        "longitude": float(address_obj.longitude) if address_obj.longitude else None,
+                    }
+                except UserDeliveryAddress.DoesNotExist:
+                    delivery_address_details = {
+                        "error": "Address not found"
+                    }
+            else:
+                # If no address_id provided, you can send empty or default value
+                delivery_address_details = {
+                    "address": None
                 }
 
-                return Response(response_data, status=status.HTTP_200_OK)
+            # Static delivery time (you can update as needed)
+            delivery_time = {
+                "estimated_time": "30-45 mins",
+                "is_express_available": True
+            }
 
-            except RestaurantMaster.DoesNotExist:
-                return Response({"status": "error", "message": "Restaurant not found"}, status=404)
-            except RestaurantLocation.DoesNotExist:
-                return Response({"status": "error", "message": "Restaurant location not found"}, status=404)
+            # Billing details
+            delivery_amount = 0
+            tax = 0  # Or calculate if needed
+            total = subtotal + delivery_amount + tax
 
+            billing_details = {
+                "subtotal": round(subtotal),
+                "delivery_fee": 0,
+                "delivery_amount": delivery_amount,
+                "tax": tax,
+                "total": round(total),
+                "currency": "INR"
+            }
+
+            response_data = {
+                "status": "success",
+                "restaurant_name": restaurant.restaurant_name,
+                "cart_details": cart_details,
+                "suggestion_cart_items": suggestion_cart_items,
+                "delivery_address_details": delivery_address_details,
+                "delivery_time": delivery_time,
+                "billing_details": billing_details
+            }
+
+            return Response(response_data, status=status.HTTP_200_OK)
+
+        except RestaurantMaster.DoesNotExist:
+            return Response({"status": "error", "message": "Restaurant not found"}, status=404)
         except Exception as e:
-            return Response({
-                "status": "error",
-                "message": str(e),
-            }, status=status.HTTP_400_BAD_REQUEST)
-        
-
+            return Response({"status": "error", "message": str(e)}, status=status.HTTP_400_BAD_REQUEST)        
 @method_decorator(csrf_exempt, name='dispatch')
 class CartWithRestaurantDetailsClear(APIView):
     """
@@ -410,7 +479,6 @@ class UserDeliveryAddressCreateView(generics.CreateAPIView):
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)  # Assign the logged-in user
 
-
 class UserDeliveryAddressUpdateView(generics.RetrieveUpdateAPIView):
     """API to update an existing address."""
     serializer_class = UserDeliveryAddressSerializer
@@ -418,14 +486,50 @@ class UserDeliveryAddressUpdateView(generics.RetrieveUpdateAPIView):
 
     def get_queryset(self):
         return UserDeliveryAddress.objects.filter(user=self.request.user)
-
-class UserDeliveryAddressListCreateView(generics.ListCreateAPIView):
-    serializer_class = UserDeliveryAddressSerializer
+    
+class UserDeliveryAddressDeleteView(generics.DestroyAPIView):
+    """API to delete an existing user address."""
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        """Return only addresses that belong to the authenticated user."""
         return UserDeliveryAddress.objects.filter(user=self.request.user)
+
+class SetDefaultAddressView(generics.UpdateAPIView):
+    """API to set or unset an address as the default for the user."""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def update(self, request, *args, **kwargs):
+        address_id = kwargs.get('pk')
+        user = request.user
+        is_default = request.data.get('is_default', False)
+
+        try:
+            address = UserDeliveryAddress.objects.get(pk=address_id, user=user)
+        except UserDeliveryAddress.DoesNotExist:
+            return Response({"detail": "Address not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        if is_default:
+            # Set all other addresses to is_default=False
+            UserDeliveryAddress.objects.filter(user=user).update(is_default=False)
+            # Set selected address to is_default=True
+            address.is_default = True
+            address.save()
+            return Response({"detail": "Default address updated successfully."}, status=status.HTTP_200_OK)
+        else:
+            # Only unset if this address is currently default
+            if address.is_default:
+                address.is_default = False
+                address.save()
+                return Response({"detail": "Address unset as default."}, status=status.HTTP_200_OK)
+            return Response({"detail": "No changes made."}, status=status.HTTP_200_OK)
+    
+class UserDeliveryAddressListCreateView(generics.ListCreateAPIView):
+    serializer_class = UserDeliveryAddressSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get_queryset(self):
+        """Return only addresses that belong to the authenticated user."""
+        return UserDeliveryAddress.objects.filter(user=self.request.user).order_by('-id')
 
     def perform_create(self, serializer):
         """Assign user to the address before saving."""
@@ -757,3 +861,38 @@ class PlaceOrderAPI(APIView):
         base_time = 15  # minutes
         item_time = sum(item.item.preparation_time * item.quantity for item in cart_items)
         return min(base_time + item_time, 120)  # Cap at 2 hours
+class GetAddressByFilter(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        try:
+            lat = request.data.get("lat")
+            long = request.data.get("long")
+
+            if not lat or not long:
+                return Response({"detail": "Latitude and Longitude are required"}, status=status.HTTP_400_BAD_REQUEST)
+
+            latitude = Decimal(lat)
+            longitude = Decimal(long)
+
+            address = UserDeliveryAddress.objects.filter(
+                user=request.user,
+                latitude=latitude,
+                longitude=longitude
+            ).first()
+
+            if address:
+                serializer = UserDeliveryAddressSerializer(address)
+                data = serializer.data
+
+                # Override home_type if it is "Other"
+                if address.home_type == "Other" and address.name_of_location:
+                    data["home_type"] = address.name_of_location
+
+                return Response(data, status=status.HTTP_200_OK)
+            else:
+                return Response({"detail": "Address not found"}, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+

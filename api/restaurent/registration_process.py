@@ -5,7 +5,7 @@ from rest_framework import status
 from django.views import View
 from django.http import JsonResponse
 from rest_framework.views import APIView
-from api.models import RestaurantCategory, User
+from api.models import FavouriteKitchen, RestaurantCategory, User
 from django.conf import settings
 from django.core.files.storage import default_storage
 from rest_framework.parsers import MultiPartParser, FormParser
@@ -20,6 +20,7 @@ from django.utils.text import slugify
 from datetime import datetime, timedelta
 import pytz
 from django.contrib.auth import get_user_model
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
 
 User = get_user_model()
 class RestaurantStoreStepOne(APIView):
@@ -437,6 +438,7 @@ class RestaurantMenueUpdate(APIView):
             status=status.HTTP_200_OK
         )
     
+@method_decorator(csrf_exempt, name="dispatch")
 class RestaurantMenueDelete(APIView):
     def delete(self, request, restaurant_id, menu_id, *args, **kwargs):
         """
@@ -464,10 +466,22 @@ class RestaurantMenueDelete(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 class RestaurantListAPI(APIView):
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
     def get(self, request):
         try:
+            user = request.user if request.user.is_authenticated else None
+
+            # Get all live restaurants
             live_restaurants = RestaurantMaster.objects.filter(restaurant_status__in=[2, 3])
             serialized_data = RestaurantSerializerByStatus(live_restaurants, many=True).data
+
+            # Fetch user's favourite restaurant IDs if logged in
+            favourite_ids = set()
+            if user:
+                favourite_ids = set(
+                    FavouriteKitchen.objects.filter(user=user).values_list('restaurant_id', flat=True)
+                )
 
             final_data = []
             for restaurant in serialized_data:
@@ -491,8 +505,10 @@ class RestaurantListAPI(APIView):
                 seo_slug = slugify(f"{restaurant_name} {area} {city}")
                 seo_city = slugify(f"{city}")
 
+                restaurant_id = restaurant.get("restaurant_id")
+
                 final_data.append({
-                    "restaurant_id": restaurant.get("restaurant_id"),
+                    "restaurant_id": restaurant_id,
                     "restaurant_name": restaurant_name,
                     "restaurant_slug": seo_slug,
                     "restaurant_image": image_profile,
@@ -500,7 +516,8 @@ class RestaurantListAPI(APIView):
                     "item_cuisines": item_cuisines,
                     "avg_price_range": round(avg_price_range),
                     "restaurant_city": seo_city,
-                    "restaurant_status": restaurant.get("restaurant_status")
+                    "restaurant_status": restaurant.get("restaurant_status"),
+                    "is_favourite": restaurant_id in favourite_ids
                 })
 
             # Static Category List
@@ -537,7 +554,7 @@ class RestaurantListAPI(APIView):
                 }
             ]
 
-            # Feature Kitchen List (Top 10 by rating)
+            # Feature Kitchen List (Top 10 by avg_price_range)
             feature_kitchen_list = sorted(final_data, key=lambda r: r.get("avg_price_range", 0), reverse=True)[:10]
 
             return Response({

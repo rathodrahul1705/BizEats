@@ -114,12 +114,21 @@ class TrackOrder(APIView):
                     review_exists = True
                 else:
                     review_exists = True
-                
+
+                config_data  = config("REACT_APP_BASE_URL")
+                full_image_url = f"{config_data}/media/{order.restaurant.profile_image}"
+
+                restaurant = order.restaurant
+                location = restaurant.restaurant_location
+                restaurant_address_line = f"{location.shop_no_building or ''} {location.floor_tower or ''} {location.area_sector_locality}, {location.city}, {location.nearby_locality or ''}".strip().replace("  ", " ")
+            
                 order_data = {
                     "order_number": order.order_number,
                     "restaurant_id": order.restaurant_id,
                     "delivery_fee": order.delivery_fee,
                     "restaurant_name": order.restaurant.restaurant_name,
+                    "restaurant_address_line": restaurant_address_line,
+                    "restaurant_image": full_image_url,
                     "restaurant_contact": order.restaurant.owner_details.owner_contact,
                     "status": order.get_status_display(),
                     "payment_status": order.get_payment_status_display(),

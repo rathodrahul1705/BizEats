@@ -366,6 +366,7 @@ class UserDeliveryAddress(models.Model):
     country = models.CharField(max_length=100)
     near_by_landmark = models.CharField(max_length=255, blank=True, null=True)
     home_type = models.CharField(max_length=10, choices=HOME_TYPE_CHOICES, default=HOME)
+    name_of_location = models.CharField(max_length=100,blank=True, null=True)
     latitude = models.DecimalField(max_digits=9, decimal_places=6, blank=True, null=True)
     longitude = models.DecimalField(max_digits=9, decimal_places=6, blank=True, null=True)
     is_default = models.BooleanField(default=False)
@@ -793,5 +794,15 @@ class OfferDetail(models.Model):
 
         if errors:
             raise ValidationError(errors)
-        
-    
+         
+class FavouriteKitchen(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    restaurant = models.ForeignKey(RestaurantMaster, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'restaurant')
+        db_table = "favourite_kitchens"
+
+    def __str__(self):
+        return f"{self.user} ❤️ {self.restaurant.restaurant_name}"

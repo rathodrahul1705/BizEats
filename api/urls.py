@@ -1,6 +1,7 @@
 from django.urls import path, re_path, include
 from api.delivery import porter_views, porter_webhook
 from api.delivery.porter_admin import admin_porter_orders
+from api.favourites import FavouriteKitchenListView, FavouriteKitchenToggleView
 from api.mobile.home import HomeKitchenList
 from api.payment.payment import create_order, verify_payment
 from api.vendor.Coupon import CouponCreateView, CouponDeleteView, CouponDetailView, CouponListView, CouponUpdateView
@@ -9,13 +10,13 @@ from .views import CustomTokenRefreshView, FetchReviewView, FetchUserList, Fetch
 from .restaurent.registration_process import RestaurantStatusUpdate, RestaurantStoreStepOne, RestaurantStoreStepTwo, RestaurantStoreStepThree, RestaurantStoreStepFour, RestaurantByUserAPIView, RestaurantByRestauranrtAPIView, RestaurantMenueStore, RestaurantMenueList,RestaurantMenueDetails,RestaurantMenueUpdate,RestaurantMenueDelete, RestaurantListAPI, RestaurantDetailMenuView
 from django.conf import settings
 from django.conf.urls.static import static
-from .restaurent.restaurant_order import PlaceOrderAPI, RestaurantCartAddOrRemove, RestaurantCartList, CartWithRestaurantDetails,CartWithRestaurantDetailsClear, UserDeliveryAddressCreateView, UserDeliveryAddressUpdateView, UserDeliveryAddressListCreateView, CartWithRestaurantUserUpdate, RestaurantOrderDetailsAPI
+from .restaurent.restaurant_order import GetAddressByFilter, PlaceOrderAPI, RestaurantCartAddOrRemove, RestaurantCartList, CartWithRestaurantDetails,CartWithRestaurantDetailsClear, SetDefaultAddressView, UserDeliveryAddressCreateView, UserDeliveryAddressDeleteView, UserDeliveryAddressUpdateView, UserDeliveryAddressListCreateView, CartWithRestaurantUserUpdate, RestaurantOrderDetailsAPI
 from .order.track_order import ApplyCouponOrder, GetActiveOrders, LiveLocationDetails, MarkAsPaid, OrderDetails, TrackOrder, RestaurantOrders, OrderStatusUpdate, UpdateOrderLiveLocationView
 from django.http import JsonResponse
 from rest_framework.routers import DefaultRouter
 from .views import RestaurantCategoryViewSet, OfferViewSet, trigger_background_task
 from api import views
-from .mobile.auth import EmailLoginVerifyOTP, MobileLoginResendOTP, MobileLoginSendOTP, MobileLoginVerifyOTP, SendEmailOTP, UserProfileUpdates
+from .mobile.auth import EmailLoginVerifyOTP, GetUserDetails, MobileLoginResendOTP, MobileLoginSendOTP, MobileLoginVerifyOTP, SendEmailOTP, UserProfileUpdates
 
 router = DefaultRouter()
 router.register(r'categories', RestaurantCategoryViewSet)
@@ -32,10 +33,13 @@ urlpatterns = [
     path("api/login/resend-otp/", MobileLoginResendOTP.as_view(), name="resend-otp"),
     path('api/send-email-otp/', SendEmailOTP.as_view(), name='send_email_otp'),
     path('api/verify-email-otp/', EmailLoginVerifyOTP.as_view(), name='verify_email_otp'),
+    path('api/get-user-details/', GetUserDetails.as_view(), name='get_user_details'),
     path("api/user/personal-details-update/", UserProfileUpdates.as_view(), name="user-personal-details-update"),
+    path('api/favourites/toggle/', FavouriteKitchenToggleView.as_view(), name='favourite-kitchen-toggle'),
+    path('api/favourites/', FavouriteKitchenListView.as_view(), name='favourite-kitchen-list'),
+    path('api/address/filter/', GetAddressByFilter.as_view(), name='get-address-by-filter'),
 
-    path('api/get-home-list/', HomeKitchenList.as_view(), name='get-home-list'),
-
+    # path('api/get-home-list/', HomeKitchenList.as_view(), name='get-home-list'),
     path("api/register/", UserRegistrationView.as_view(), name="user-register"),
     path("api/verify-otp/", OTPVerificationView.as_view(), name="verify-otp"),
     path("api/login/", UserLoginView.as_view(), name="user-login"),
@@ -87,7 +91,9 @@ urlpatterns = [
     path('api/restaurant/cart/user/update/', CartWithRestaurantUserUpdate.as_view(), name='restaurant-cart-user_update'),
 
     path("api/user_address/store/", UserDeliveryAddressCreateView.as_view(), name="create_address"),
+    path("api/user_address/status_update/<int:pk>/", SetDefaultAddressView.as_view(), name="status_update"),
     path("api/user_address/update/<int:pk>/", UserDeliveryAddressUpdateView.as_view(), name="update_address"),
+    path("api/user_address/delete/<int:pk>/", UserDeliveryAddressDeleteView.as_view(), name="delete_address"),
     path("api/addresses/list/", UserDeliveryAddressListCreateView.as_view(), name="address-list-create"),
     path("api/restaurant/order/details/", RestaurantOrderDetailsAPI.as_view(), name="restaurant-order-details"),
     path("api/restaurant/order/details/update/", PlaceOrderAPI.as_view(), name="restaurant-order-details-update"),
