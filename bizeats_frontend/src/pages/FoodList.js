@@ -11,14 +11,14 @@ import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 import 'swiper/css/free-mode';
-import HomePageUpma from "../assets/img/home_page_upma.avif";
+import HomePageUpma from "../assets/img/snaks.png";
 import HomePagePoha from "../assets/img/home_page_poha.png";
 import HomePageMaggie from "../assets/img/home_page_maggie.webp";
-import HomePageEggRoll from "../assets/img/home_page_egg_roll.avif";
-import HomePageChickenBiryani from "../assets/img/home_page_chicken_biryani.avif";
-import HomePageEggBiryani from "../assets/img/home_page_egg_biryani.jpg";
-import HomePageGulabJamun from "../assets/img/home_page_gulab_jamun.jpg";
-import HomePageKokamSarbat from "../assets/img/homa_page_kokam_sarbat.jpg";
+import HomePageEggRoll from "../assets/img/home_page_egg_roll.png";
+import HomePageChickenBiryani from "../assets/img/home_page_chicken_biryani.png";
+import HomePageEggBiryani from "../assets/img/home_page_chicken_biryani.png";
+import HomePageGulabJamun from "../assets/img/home_page_gulab_jamun.png";
+import HomePageKokamSarbat from "../assets/img/homa_page_kokam_sarbat.png";
 
 const FoodGrid = ({user}) => {
   const [loading, setLoading] = useState(true);
@@ -71,7 +71,7 @@ const FoodGrid = ({user}) => {
       restaurant_id: restaurants[0]?.restaurant_id
     },
     {
-      name: "Upma",
+      name: "Samosa",
       image: HomePageUpma,
       restaurant_id: restaurants[0]?.restaurant_id
     },
