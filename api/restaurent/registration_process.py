@@ -523,29 +523,29 @@ class RestaurantListAPI(APIView):
             # Static Category List
             category_list = [
                 {
-                    "id": 2,
+                    "id": 1,
                     "name": "Biryani",
-                    "icon": "https://www.eatoor.com/static/media/home_page_chicken_biryani.cf2f4de55960859ea6c3.png"
+                    "icon": "https://www.eatoor.com/static/media/home_page_chicken_biryani.91da5b8eaf687f028e92.png"
+                },
+                {
+                    "id": 2,
+                    "name": "Snacks",
+                    "icon": "https://www.eatoor.com/static/media/snaks.5d324dc4cc28391f6118.png"
                 },
                 {
                     "id": 3,
-                    "name": "Snacks",
-                    "icon": "https://www.eatoor.com/static/media/snaks.f0668ae9cdbe9ae3d918.png"
+                    "name": "Desserts",
+                    "icon": "https://www.eatoor.com/static/media/home_page_gulab_jamun.73f1e06ceb211d805520.png"
                 },
                 {
                     "id": 4,
-                    "name": "Desserts",
-                    "icon": "https://www.eatoor.com/static/media/home_page_gulab_jamun.295a3e88858aa8233d95.png"
+                    "name": "Beverages",
+                    "icon": "https://www.eatoor.com/static/media/homa_page_kokam_sarbat.09fdaceb80602ade2225.png"
                 },
                 {
                     "id": 5,
-                    "name": "Beverages",
-                    "icon": "https://www.eatoor.com/static/media/homa_page_kokam_sarbat.e4674c47fe7a4084997d.png"
-                },
-                {
-                    "id": 6,
                     "name": "Rolls",
-                    "icon": "https://www.eatoor.com/static/media/home_page_egg_roll.9a83a8dd33865d9b284d.png"
+                    "icon": "https://www.eatoor.com/static/media/home_page_egg_roll.b76ca71670d0b3c74b31.png"
                 }
             ]
 
