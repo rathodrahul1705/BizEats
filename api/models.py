@@ -344,7 +344,7 @@ class Cart(models.Model):
         
     def __str__(self):
         if self.user:
-            return f"Cart for {self.user.full_name} at {self.restaurant.restaurant_name} - {self.item.item_name}"
+            return f"Cart for {self.user.full_name} at {self.restaurant.profile_image} {self.restaurant.restaurant_name} - {self.item.item_name}"
         return f"Cart for Guest (Session: {self.session_id}) at {self.restaurant.restaurant_name} - {self.item.item_name}"
     
 class UserDeliveryAddress(models.Model):

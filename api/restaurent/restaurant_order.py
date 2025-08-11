@@ -265,7 +265,6 @@ class RestaurantCartAddOrRemove(APIView):
                 {"status": "error", "message": str(e)},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-
 @method_decorator(csrf_exempt, name='dispatch')
 class RestaurantCartList(APIView):
     """
@@ -285,18 +284,33 @@ class RestaurantCartList(APIView):
 
             # Prepare the response data
             cart_details = []
+            total_item_count = 0
+
             for item in cart_items:
+                total_item_count += item.quantity
                 cart_details.append({
                     "item_id": item.item_id,
                     "item_name": item.item.item_name,
                     "item_price": item.item_price,
                     "quantity": item.quantity,
-                    "item_image": request.build_absolute_uri(item.item.item_image.url) if item.item.item_image else None,
+                    "restaurant_id": item.restaurant_id
                 })
 
             return Response({
                 "status": "success",
                 "cart_details": cart_details,
+                "total_item_count": total_item_count,
+                "existingCartDetails": [
+                    {
+                        "restaurant_id": i.restaurant_id,
+                        "restaurant_name": i.restaurant.restaurant_name,
+                        "restaurant_profile_image": (
+                            request.build_absolute_uri(i.restaurant.profile_image.url)
+                            if i.restaurant.profile_image else None
+                        )
+                    }
+                    for i in cart_items
+                ]
             }, status=status.HTTP_200_OK)
 
         except Exception as e:
