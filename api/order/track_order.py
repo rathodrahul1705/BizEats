@@ -574,14 +574,22 @@ class GetActiveOrders(APIView):
             orders = Order.objects.filter(user_id=user_id).exclude(status__in=[6, 7, 8])
             data = []
             for order in orders:
-
                 order_data = {
                     "order_number": order.order_number,
                     "status": order.get_status_display(),
+                    "kitchan_name": order.restaurant.restaurant_name,
+                    "kitchan_image": (
+                        request.build_absolute_uri(order.restaurant.profile_image.url)
+                        if order.restaurant.profile_image
+                        else None  # or a default image URL
+                    ),
                     "placed_on": order.created_at.strftime("%Y-%m-%d %H:%M:%S"),
-                    "estimated_delivery": order.delivery_date.strftime("%Y-%m-%d %H:%M:%S") if order.delivery_date else "Not available",
+                    "estimated_delivery": (
+                        order.delivery_date.strftime("%Y-%m-%d %H:%M:%S")
+                        if order.delivery_date
+                        else "Not available"
+                    ),
                 }
-
                 data.append(order_data)
 
             return Response({

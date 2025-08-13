@@ -134,7 +134,6 @@ def verify_payment(request):
             'eatoor_order_id',
             'amount'
         ]
-        
         missing_fields = [field for field in required_fields if field not in data]
         if missing_fields:
             return Response({
@@ -148,6 +147,7 @@ def verify_payment(request):
                 'razorpay_payment_id': data['razorpay_payment_id'],
                 'razorpay_signature': data['razorpay_signature']
             })
+
         except razorpay.errors.SignatureVerificationError as e:
             logger.error(f"Signature verification failed: {str(e)}")
             return Response({'error': 'Invalid payment signature'}, status=400)
@@ -179,7 +179,7 @@ def verify_payment(request):
             order = Order.objects.get(id=data['eatoor_order_id'])
         except Order.DoesNotExist:
             return Response({'error': 'Order not found'}, status=404)
-
+        
         # Get payment method details
         method = payment_details.get('method')
         card_type = payment_details.get('card', {}).get('type') if method == 'card' else None
