@@ -10,7 +10,7 @@ from .views import CustomTokenRefreshView, FetchReviewView, FetchUserList, Fetch
 from .restaurent.registration_process import RestaurantStatusUpdate, RestaurantStoreStepOne, RestaurantStoreStepTwo, RestaurantStoreStepThree, RestaurantStoreStepFour, RestaurantByUserAPIView, RestaurantByRestauranrtAPIView, RestaurantMenueStore, RestaurantMenueList,RestaurantMenueDetails,RestaurantMenueUpdate,RestaurantMenueDelete, RestaurantListAPI, RestaurantDetailMenuView
 from django.conf import settings
 from django.conf.urls.static import static
-from .restaurent.restaurant_order import GetAddressByFilter, PlaceOrderAPI, RestaurantCartAddOrRemove, RestaurantCartList, CartWithRestaurantDetails,CartWithRestaurantDetailsClear, SetDefaultAddressView, UserDeliveryAddressCreateView, UserDeliveryAddressDeleteView, UserDeliveryAddressUpdateView, UserDeliveryAddressListCreateView, CartWithRestaurantUserUpdate, RestaurantOrderDetailsAPI
+from .restaurent.restaurant_order import GetAddressByFilter, PlaceOrderAPI, RestaurantCartAddOrRemove, RestaurantCartList, CartWithRestaurantDetails,CartWithRestaurantDetailsClear, RestaurantCartReOrder, SetDefaultAddressView, UserDeliveryAddressCreateView, UserDeliveryAddressDeleteView, UserDeliveryAddressUpdateView, UserDeliveryAddressListCreateView, CartWithRestaurantUserUpdate, RestaurantOrderDetailsAPI
 from .order.track_order import ApplyCouponOrder, GetActiveOrders, LiveLocationDetails, MarkAsPaid, OrderDetails, TrackOrder, RestaurantOrders, OrderStatusUpdate, UpdateOrderLiveLocationView
 from django.http import JsonResponse
 from rest_framework.routers import DefaultRouter
@@ -85,6 +85,7 @@ urlpatterns = [
     ),
 
     path('api/restaurant/cart/add/', RestaurantCartAddOrRemove.as_view(), name='restaurant-cart-add'),
+    path('api/restaurant/cart/reorder/<str:order_number>/', RestaurantCartReOrder.as_view(), name='restaurant-cart-reorder'),
     path('api/restaurant/cart/list/', RestaurantCartList.as_view(), name='restaurant-cart-list'),
     path('api/restaurant/cart/details/', CartWithRestaurantDetails.as_view(), name='restaurant-cart-details'),
     path('api/restaurant/cart/clear/', CartWithRestaurantDetailsClear.as_view(), name='restaurant-cart-clear'),

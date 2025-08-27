@@ -909,4 +909,45 @@ class GetAddressByFilter(APIView):
 
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+@method_decorator(csrf_exempt, name='dispatch')
+class RestaurantCartReOrder(APIView):
+    """
+    API endpoint to reorder items from a previous order.
+    Given an order_number, all items from that order will be re-added to the user's cart.
+    """
+    
+    def post(self, request, order_number, *args, **kwargs):
+        try:
+            # Fetch items from the previous order
+            order_items = Cart.objects.filter(order_number=order_number)
+
+            if not order_items.exists():
+                return Response({
+                    "status": "error",
+                    "message": "No items found in this order."
+                }, status=status.HTTP_404_NOT_FOUND)
+
+            # Iterate and re-add items using RestaurantCartAddOrRemove logic
+            cart_handler = RestaurantCartAddOrRemove()
+
+            for item in order_items:
+                cart_handler._add_to_cart(
+                    user_id=item.user.id if item.user else None,
+                    session_id=request.data.get("session_id", ""),  # fallback for guest
+                    restaurant_id=str(item.restaurant_id),
+                    item_id=item.item_id,
+                    quantity=item.quantity,
+                    source="REORDER"
+                )
+
+            return Response({
+                "status": "success",
+                "message": "Items from previous order added to cart successfully."
+            }, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response({
+                "status": "error",
+                "message": str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
