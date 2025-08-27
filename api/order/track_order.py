@@ -388,6 +388,7 @@ class OrderDetails(APIView):
                     item_details.append({
                         "item_name": menu_item.item_name if menu_item else "Unknown",
                         "quantity": item.quantity,
+                        "restaurant_id": item.restaurant_id,
                         "unit_price": str(price),
                         "total_price": str(item_total),
                         "buy_one_get_one_free": item.buy_one_get_one_free,
@@ -395,6 +396,7 @@ class OrderDetails(APIView):
 
                 order_data = {
                     "order_number": order.order_number,
+                    "restaurant_id": order.restaurant_id,
                     "status": order.get_status_display(),
                     "placed_on": order.created_at.strftime("%Y-%m-%d %H:%M:%S"),
                     "delivery_address": address_details,
