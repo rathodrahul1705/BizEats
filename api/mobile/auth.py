@@ -184,7 +184,7 @@ class MobileLoginVerifyOTP(BaseOTPView):
             navigate_to = "PersonalDetailsScreen"
             logger.info(f"User {user.id} needs to complete profile")
         else:
-            navigate_to = "Home"
+            navigate_to = "HomeTabs"
             logger.info(f"User {user.id} has complete profile")
 
         logger.info(f"MobileLoginVerifyOTP successful for user {user.id}")
