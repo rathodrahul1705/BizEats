@@ -425,15 +425,14 @@ class CartWithRestaurantDetails(APIView):
             if "error" in location_data:
                 return self._error_response(location_data["error"], status.HTTP_400_BAD_REQUEST)
             
-            # Billing details
-            delivery_amount = 0
-            tax = 0  # Or calculate if needed
+            delivery_amount = location_data["estimated_delivery_cost"]
+            tax = 0
             total = subtotal + delivery_amount + tax
 
             billing_details = {
                 "subtotal": round(subtotal),
-                "delivery_fee": 0,
                 "delivery_amount": delivery_amount,
+                "distance_km": location_data["distance_km"],
                 "tax": tax,
                 "total": round(total),
                 "currency": "INR"
@@ -446,10 +445,6 @@ class CartWithRestaurantDetails(APIView):
                 "suggestion_cart_items": suggestion_cart_items,
                 "delivery_address_details": delivery_address_details,
                 "delivery_time": delivery_time,
-                "estimated_delivery_cost": location_data["estimated_delivery_cost"],
-                "restaurant_coordinates": location_data["restaurant_coordinates"],
-                "user_coordinates": location_data["user_coordinates"],
-                "distance_km": location_data["distance_km"],
                 "billing_details": billing_details
             }
 
