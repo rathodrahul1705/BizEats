@@ -331,6 +331,7 @@ class UserProfileUpdates(APIView):
                 {"error": "Failed to update profile."},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+        refresh = RefreshToken.for_user(user)
 
         return Response({
             "message": "Profile updated successfully.",
@@ -347,7 +348,11 @@ class UserProfileUpdates(APIView):
                 "mobile_verified_at":user.mobile_verified_at,
                 "is_email_verified":user.is_email_verified,
                 "email_verified_at":user.email_verified_at,
-            }
+            },
+            "tokens": {
+                "refresh": str(refresh),
+                "access": str(refresh.access_token),
+            },
         }, status=status.HTTP_200_OK)
 
 class SendEmailOTP(APIView):
