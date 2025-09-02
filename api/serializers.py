@@ -222,7 +222,7 @@ class RestaurantMenuSerializer(serializers.ModelSerializer):
 
 class UserDeliveryAddressSerializer(serializers.ModelSerializer):
     full_address = serializers.SerializerMethodField()
-    home_type = serializers.SerializerMethodField()
+    home_type_display = serializers.SerializerMethodField()  # new field just for display
     
     class Meta:
         model = UserDeliveryAddress
@@ -244,13 +244,14 @@ class UserDeliveryAddressSerializer(serializers.ModelSerializer):
     
     def get_full_address(self, obj):
         landmark = f"Landmark: {obj.near_by_landmark}" if obj.near_by_landmark else "No Landmark"
-        return f"{obj.street_address}, {obj.city}, {obj.state}, {obj.zip_code}, {obj.country} ({landmark}, Type: {obj.home_type})"
-    
-    def get_home_type(self, obj):
+        return f"{obj.street_address}, {obj.city}, {obj.state}, {obj.zip_code}, {obj.country} ({landmark}, Type: {self.get_home_type_display(obj)})"
+
+    def get_home_type_display(self, obj):
         """Return custom home_type value if it's 'Other'."""
         if obj.home_type == "Other":
             return obj.name_of_location or "Other"
         return obj.home_type
+
 
 class OrderPlacementSerializer(serializers.Serializer):
     user_id = serializers.IntegerField(required=True)
