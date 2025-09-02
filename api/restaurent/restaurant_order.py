@@ -383,7 +383,10 @@ class CartWithRestaurantDetails(APIView):
 
             # Get delivery address dynamically from UserDeliveryAddress table
             delivery_address_details = {}
+            delivery_amount = 0
+            distance_km = 0
             if address_id:
+
                 try:
                     if user_id:
                         address_obj = UserDeliveryAddress.objects.get(id=address_id, user_id=user_id)
@@ -405,6 +408,14 @@ class CartWithRestaurantDetails(APIView):
                         "latitude": float(address_obj.latitude) if address_obj.latitude else None,
                         "longitude": float(address_obj.longitude) if address_obj.longitude else None,
                     }
+
+                    location_data = calculate_distance_and_cost(restaurant_id, address_id)
+                    if "error" in location_data:
+                        return self._error_response(location_data["error"], status.HTTP_400_BAD_REQUEST)
+                    
+                    delivery_amount = location_data["estimated_delivery_cost"]
+                    distance_km = location_data["distance_km"]
+                    
                 except UserDeliveryAddress.DoesNotExist:
                     delivery_address_details = {
                         "error": "Address not found"
@@ -415,24 +426,20 @@ class CartWithRestaurantDetails(APIView):
                     "address": None
                 }
 
+
             # Static delivery time (you can update as needed)
             delivery_time = {
                 "estimated_time": "30-45 mins",
                 "is_express_available": True
             }
 
-            location_data = calculate_distance_and_cost(restaurant_id, address_id)
-            if "error" in location_data:
-                return self._error_response(location_data["error"], status.HTTP_400_BAD_REQUEST)
-            
-            delivery_amount = location_data["estimated_delivery_cost"]
             tax = 0
             total = subtotal + delivery_amount + tax
 
             billing_details = {
                 "subtotal": round(subtotal),
                 "delivery_amount": delivery_amount,
-                "distance_km": location_data["distance_km"],
+                "distance_km": distance_km,
                 "tax": tax,
                 "total": round(total),
                 "currency": "INR"
