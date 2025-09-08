@@ -1,9 +1,11 @@
 from datetime import datetime, timedelta
 from decimal import Decimal, ROUND_UP
 import math
+from django.conf import settings
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
+import requests
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, generics, permissions
@@ -885,6 +887,40 @@ class PlaceOrderAPI(APIView):
         base_time = 15  # minutes
         item_time = sum(item.item.preparation_time * item.quantity for item in cart_items)
         return min(base_time + item_time, 120)  # Cap at 2 hours
+# class GetAddressByFilter(APIView):
+#     permission_classes = [permissions.IsAuthenticated]
+
+#     def post(self, request):
+#         try:
+#             lat = request.data.get("lat")
+#             long = request.data.get("long")
+
+#             if not lat or not long:
+#                 return Response({"detail": "Latitude and Longitude are required"}, status=status.HTTP_400_BAD_REQUEST)
+
+#             latitude = Decimal(lat)
+#             longitude = Decimal(long)
+
+#             address = UserDeliveryAddress.objects.filter(
+#                 user=request.user,
+#                 latitude=latitude,
+#                 longitude=longitude
+#             ).first()
+
+#             if address:
+#                 serializer = UserDeliveryAddressSerializer(address)
+#                 data = serializer.data
+
+#                 # Override home_type if it is "Other"
+#                 if address.home_type == "Other" and address.name_of_location:
+#                     data["home_type"] = address.name_of_location
+
+#                 return Response(data, status=status.HTTP_200_OK)
+#             else:
+#                 return Response({"detail": "Address not found"}, status=status.HTTP_200_OK)
+
+#         except Exception as e:
+#             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 class GetAddressByFilter(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -894,11 +930,15 @@ class GetAddressByFilter(APIView):
             long = request.data.get("long")
 
             if not lat or not long:
-                return Response({"detail": "Latitude and Longitude are required"}, status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    {"detail": "Latitude and Longitude are required"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
 
             latitude = Decimal(lat)
             longitude = Decimal(long)
 
+            # Check if address exists in DB
             address = UserDeliveryAddress.objects.filter(
                 user=request.user,
                 latitude=latitude,
@@ -909,13 +949,33 @@ class GetAddressByFilter(APIView):
                 serializer = UserDeliveryAddressSerializer(address)
                 data = serializer.data
 
-                # Override home_type if it is "Other"
                 if address.home_type == "Other" and address.name_of_location:
                     data["home_type"] = address.name_of_location
 
                 return Response(data, status=status.HTTP_200_OK)
+
             else:
-                return Response({"detail": "Address not found"}, status=status.HTTP_200_OK)
+
+                GOOGLE_API_KEY = settings.GOOGLE_MAP_API_KEY
+                url = (
+                    f"https://maps.googleapis.com/maps/api/geocode/json"
+                    f"?latlng={latitude},{longitude}&key={GOOGLE_API_KEY}"
+                )
+
+                response = requests.get(url)
+                if response.status_code == 200:
+                    results = response.json().get("results")
+                    if results:
+                        full_address = results[0].get("formatted_address")
+                        return Response(
+                            {"detail": "Address not found in DB", "full_address": full_address},
+                            status=status.HTTP_200_OK
+                        )
+
+                return Response(
+                    {"detail": "Address not found and unable to fetch from Google"},
+                    status=status.HTTP_200_OK
+                )
 
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
@@ -971,4 +1031,5 @@ class RestaurantCartReOrder(APIView):
                 "message": str(e)
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-
+class userDataDelete(APIView):
+    print("====")

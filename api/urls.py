@@ -10,7 +10,7 @@ from .views import CustomTokenRefreshView, FetchReviewView, FetchUserList, Fetch
 from .restaurent.registration_process import RestaurantStatusUpdate, RestaurantStoreStepOne, RestaurantStoreStepTwo, RestaurantStoreStepThree, RestaurantStoreStepFour, RestaurantByUserAPIView, RestaurantByRestauranrtAPIView, RestaurantMenueStore, RestaurantMenueList,RestaurantMenueDetails,RestaurantMenueUpdate,RestaurantMenueDelete, RestaurantListAPI, RestaurantDetailMenuView
 from django.conf import settings
 from django.conf.urls.static import static
-from .restaurent.restaurant_order import GetAddressByFilter, PlaceOrderAPI, RestaurantCartAddOrRemove, RestaurantCartList, CartWithRestaurantDetails,CartWithRestaurantDetailsClear, RestaurantCartReOrder, SetDefaultAddressView, UserDeliveryAddressCreateView, UserDeliveryAddressDeleteView, UserDeliveryAddressUpdateView, UserDeliveryAddressListCreateView, CartWithRestaurantUserUpdate, RestaurantOrderDetailsAPI
+from .restaurent.restaurant_order import GetAddressByFilter, PlaceOrderAPI, RestaurantCartAddOrRemove, RestaurantCartList, CartWithRestaurantDetails,CartWithRestaurantDetailsClear, RestaurantCartReOrder, SetDefaultAddressView, UserDeliveryAddressCreateView, UserDeliveryAddressDeleteView, UserDeliveryAddressUpdateView, UserDeliveryAddressListCreateView, CartWithRestaurantUserUpdate, RestaurantOrderDetailsAPI, userDataDelete
 from .order.track_order import ApplyCouponOrder, GetActiveOrders, LiveLocationDetails, MarkAsPaid, OrderDetails, TrackOrder, RestaurantOrders, OrderStatusUpdate, UpdateOrderLiveLocationView
 from django.http import JsonResponse
 from rest_framework.routers import DefaultRouter
@@ -38,6 +38,7 @@ urlpatterns = [
     path('api/favourites/toggle/', FavouriteKitchenToggleView.as_view(), name='favourite-kitchen-toggle'),
     path('api/favourites/', FavouriteKitchenListView.as_view(), name='favourite-kitchen-list'),
     path('api/address/filter/', GetAddressByFilter.as_view(), name='get-address-by-filter'),
+    path('api/request/user-data/delete/', userDataDelete.as_view(), name='user-data-delete'),
 
     # path('api/get-home-list/', HomeKitchenList.as_view(), name='get-home-list'),
     path("api/register/", UserRegistrationView.as_view(), name="user-register"),
