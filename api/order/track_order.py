@@ -115,9 +115,6 @@ class TrackOrder(APIView):
                 else:
                     review_exists = True
 
-                config_data  = config("REACT_APP_BASE_URL")
-                full_image_url = f"{config_data}/media/{order.restaurant.profile_image}"
-
                 restaurant = order.restaurant
                 location = restaurant.restaurant_location
                 restaurant_address_line = f"{location.shop_no_building or ''} {location.floor_tower or ''} {location.area_sector_locality}, {location.city}, {location.nearby_locality or ''}".strip().replace("  ", " ")
@@ -128,7 +125,7 @@ class TrackOrder(APIView):
                     "delivery_fee": order.delivery_fee,
                     "restaurant_name": order.restaurant.restaurant_name,
                     "restaurant_address_line": restaurant_address_line,
-                    "restaurant_image": full_image_url,
+                    "restaurant_image": order.restaurant.profile_image.url,
                     "restaurant_contact": order.restaurant.owner_details.owner_contact,
                     "status": order.get_status_display(),
                     "payment_status": order.get_payment_status_display(),
@@ -364,12 +361,11 @@ class OrderDetails(APIView):
 
                 
                 image_profile = order.restaurant.profile_image
-                full_image_url = f"{config_data}/media/{image_profile}"
 
                 address_details = {
                     "full_name": full_name,
                     "restaurant_name": order.restaurant.restaurant_name,
-                    "restaurant_image": full_image_url,
+                    "restaurant_image": image_profile.url,
                     "address": address_string,
                     "landmark": delivery_address.near_by_landmark if delivery_address else "",
                     "home_type": delivery_address.home_type if delivery_address else "",
