@@ -5,7 +5,7 @@ from rest_framework import status
 from django.views import View
 from django.http import JsonResponse
 from rest_framework.views import APIView
-from api.models import FavouriteKitchen, RestaurantCategory, User
+from api.models import CustomImage, FavouriteKitchen, RestaurantCategory, User
 from django.conf import settings
 from django.core.files.storage import default_storage
 from rest_framework.parsers import MultiPartParser, FormParser
@@ -21,6 +21,8 @@ from datetime import datetime, timedelta
 import pytz
 from django.contrib.auth import get_user_model
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
+
+from api.storage_backends import optimize_image
 
 User = get_user_model()
 class RestaurantStoreStepOne(APIView):
@@ -52,6 +54,13 @@ class RestaurantStoreStepOne(APIView):
 
 @method_decorator(csrf_exempt, name="dispatch")
 class RestaurantStoreStepTwo(View):
+    """
+    Step 2 of Restaurant Registration:
+    - Upload Profile Image (optimized before saving to S3)
+    - Save cuisines
+    - Save delivery timings
+    """
+
     def post(self, request, *args, **kwargs):
         try:
             # Extract form data
@@ -63,9 +72,10 @@ class RestaurantStoreStepTwo(View):
             # Fetch the restaurant
             restaurant = RestaurantMaster.objects.get(restaurant_id=restaurant_id)
 
-            # Save the profile image (if provided)
+            # Save the profile image (if provided, with optimization)
             if profile_image:
-                restaurant.profile_image = profile_image
+                optimized_image = optimize_image(profile_image)
+                restaurant.profile_image = optimized_image
                 restaurant.save()
 
             # Save cuisines (delete existing cuisines and create new ones)
@@ -93,7 +103,7 @@ class RestaurantStoreStepTwo(View):
                 {"detail": str(e)},
                 status=400,
             )
-
+        
 @method_decorator(csrf_exempt, name="dispatch")
 class RestaurantStoreStepThree(View):
     def post(self, request, *args, **kwargs):
@@ -114,6 +124,10 @@ class RestaurantStoreStepThree(View):
             # Fetch the restaurant
             restaurant = RestaurantMaster.objects.get(restaurant_id=restaurant_id)
 
+            # Optimize images (if provided)
+            optimized_pan_image = optimize_image(pan_image) if pan_image else None
+            optimized_fssai_image = optimize_image(fssai_licence_image) if fssai_licence_image else None
+
             # Create or update restaurant documents
             RestaurantDocuments.objects.update_or_create(
                 restaurant=restaurant,
@@ -121,10 +135,10 @@ class RestaurantStoreStepThree(View):
                     "pan_number": pan_number,
                     "name_as_per_pan": name_as_per_pan,
                     "registered_business_address": registered_business_address,
-                    "pan_image": pan_image,
+                    "pan_image": optimized_pan_image if optimized_pan_image else None,
                     "fssai_number": fssai_number,
                     "fssai_expiry_date": fssai_expiry_date,
-                    "fssai_licence_image": fssai_licence_image,
+                    "fssai_licence_image": optimized_fssai_image if optimized_fssai_image else None,
                     "bank_account_number": bank_account_number,
                     "bank_account_ifsc_code": bank_account_ifsc_code,
                     "bank_account_type": bank_account_type,
@@ -352,6 +366,92 @@ class RestaurantMenueDetails(APIView):
 
         return Response(menu_data, status=status.HTTP_200_OK)
 
+# class RestaurantMenueUpdate(APIView):
+#     parser_classes = (MultiPartParser, FormParser)
+
+#     def put(self, request, restaurant_id, menu_id, *args, **kwargs):
+#         # Get the restaurant and menu item instances
+#         restaurant = get_object_or_404(RestaurantMaster, restaurant_id=restaurant_id)
+#         menu_item = get_object_or_404(RestaurantMenu, id=menu_id, restaurant=restaurant)
+
+#         # Extract form data
+#         item_name = request.data.get('item_name', menu_item.item_name)
+#         item_price = request.data.get('item_price', menu_item.item_price)
+#         description = request.data.get('description', menu_item.description)
+#         category_id = request.data.get('category_id')
+#         category = request.data.get('category', menu_item.category)
+#         spice_level = request.data.get('spice_level', menu_item.spice_level)
+#         preparation_time = request.data.get('preparation_time', menu_item.preparation_time)
+#         serving_size = request.data.get('serving_size', menu_item.serving_size)
+#         buy_one_get_one_free = request.data.get('buy_one_get_one_free')
+#         availability = request.data.get('availability')
+#         stock_quantity = request.data.get('stock_quantity', menu_item.stock_quantity)
+#         food_type = request.data.get('food_type', menu_item.food_type)
+#         cuisines = request.data.get('cuisines', '').split(',')  # Split cuisines by comma
+#         start_time = request.data.get('start_time', '')
+#         end_time = request.data.get('end_time', '')
+#         # discount_percent = request.data.get('discount_percent', '0.00')
+#         discount_active = request.data.get('discount_active', '')
+
+#         raw_discount = request.data.get('discount_percent', '0.00')
+#         try:
+#             discount_percent = Decimal(raw_discount.strip()) if raw_discount.strip() else Decimal('0.00')
+#         except (InvalidOperation, AttributeError):
+#             discount_percent = Decimal('0.00')
+
+#         # Handle image update
+#         item_image = request.FILES.get('item_image')
+
+#         if item_image:
+#             # Define image directory inside media
+#             image_directory = os.path.join(settings.MEDIA_ROOT, 'menu_images')
+#             os.makedirs(image_directory, exist_ok=True)  # Ensure directory exists
+
+#             # Delete old image if it exists
+#             if menu_item.item_image:
+#                 old_image_path = menu_item.item_image.path  # Use .path to get the file path
+#                 if os.path.exists(old_image_path):
+#                     os.remove(old_image_path)
+
+#             # Save new image
+#             image_path = default_storage.save(os.path.join('menu_images', item_image.name), item_image)
+#             menu_item.item_image = image_path  # Update image field
+
+#         # Update menu item fields
+#         menu_item.item_name = item_name
+#         menu_item.item_price = item_price
+#         menu_item.description = description
+#         menu_item.category = category_id
+#         menu_item.spice_level = spice_level
+#         menu_item.preparation_time = preparation_time
+#         menu_item.serving_size = serving_size
+#         menu_item.availability = availability
+#         menu_item.stock_quantity = stock_quantity
+#         menu_item.food_type = food_type
+#         menu_item.buy_one_get_one_free = buy_one_get_one_free
+#         menu_item.start_time = start_time
+#         menu_item.end_time = end_time
+#         menu_item.discount_percent=discount_percent
+#         menu_item.discount_active=discount_active
+
+#         # Update cuisines
+#         if cuisines:
+#             menu_item.cuisines.clear()  # Remove existing cuisines
+#             for cuisine_name in cuisines:
+#                 cuisine, _ = RestaurantCuisine.objects.get_or_create(restaurant=restaurant, cuisine_name=cuisine_name.strip())
+#                 menu_item.cuisines.add(cuisine)
+
+#         menu_item.save()
+
+#         return Response(
+#             {
+#                 "message": "Menu item updated successfully",
+#                 "menu_item_id": menu_item.id,
+#                 "image_path": menu_item.item_image.url if menu_item.item_image else None  # Return URL of the image
+#             },
+#             status=status.HTTP_200_OK
+#         )
+
 class RestaurantMenueUpdate(APIView):
     parser_classes = (MultiPartParser, FormParser)
 
@@ -365,7 +465,6 @@ class RestaurantMenueUpdate(APIView):
         item_price = request.data.get('item_price', menu_item.item_price)
         description = request.data.get('description', menu_item.description)
         category_id = request.data.get('category_id')
-        category = request.data.get('category', menu_item.category)
         spice_level = request.data.get('spice_level', menu_item.spice_level)
         preparation_time = request.data.get('preparation_time', menu_item.preparation_time)
         serving_size = request.data.get('serving_size', menu_item.serving_size)
@@ -376,7 +475,6 @@ class RestaurantMenueUpdate(APIView):
         cuisines = request.data.get('cuisines', '').split(',')  # Split cuisines by comma
         start_time = request.data.get('start_time', '')
         end_time = request.data.get('end_time', '')
-        # discount_percent = request.data.get('discount_percent', '0.00')
         discount_active = request.data.get('discount_active', '')
 
         raw_discount = request.data.get('discount_percent', '0.00')
@@ -387,21 +485,24 @@ class RestaurantMenueUpdate(APIView):
 
         # Handle image update
         item_image = request.FILES.get('item_image')
-
         if item_image:
-            # Define image directory inside media
-            image_directory = os.path.join(settings.MEDIA_ROOT, 'menu_images')
-            os.makedirs(image_directory, exist_ok=True)  # Ensure directory exists
+            # ✅ Optimize and generate unique filename
+            optimized_image = optimize_image(item_image)
 
-            # Delete old image if it exists
+            # Delete old image from storage if exists
             if menu_item.item_image:
-                old_image_path = menu_item.item_image.path  # Use .path to get the file path
-                if os.path.exists(old_image_path):
-                    os.remove(old_image_path)
+                try:
+                    old_image_path = menu_item.item_image.path
+                    if os.path.exists(old_image_path):
+                        os.remove(old_image_path)
+                except Exception:
+                    pass  # Ignore if storage is remote (like S3)
 
-            # Save new image
-            image_path = default_storage.save(os.path.join('menu_images', item_image.name), item_image)
-            menu_item.item_image = image_path  # Update image field
+            # Save optimized image
+            image_path = default_storage.save(
+                os.path.join('menu_images', optimized_image.name), optimized_image
+            )
+            menu_item.item_image = image_path
 
         # Update menu item fields
         menu_item.item_name = item_name
@@ -417,14 +518,17 @@ class RestaurantMenueUpdate(APIView):
         menu_item.buy_one_get_one_free = buy_one_get_one_free
         menu_item.start_time = start_time
         menu_item.end_time = end_time
-        menu_item.discount_percent=discount_percent
-        menu_item.discount_active=discount_active
+        menu_item.discount_percent = discount_percent
+        menu_item.discount_active = discount_active
 
         # Update cuisines
         if cuisines:
             menu_item.cuisines.clear()  # Remove existing cuisines
             for cuisine_name in cuisines:
-                cuisine, _ = RestaurantCuisine.objects.get_or_create(restaurant=restaurant, cuisine_name=cuisine_name.strip())
+                cuisine, _ = RestaurantCuisine.objects.get_or_create(
+                    restaurant=restaurant,
+                    cuisine_name=cuisine_name.strip()
+                )
                 menu_item.cuisines.add(cuisine)
 
         menu_item.save()
@@ -433,11 +537,10 @@ class RestaurantMenueUpdate(APIView):
             {
                 "message": "Menu item updated successfully",
                 "menu_item_id": menu_item.id,
-                "image_path": menu_item.item_image.url if menu_item.item_image else None  # Return URL of the image
+                "image_url": menu_item.item_image.url if menu_item.item_image else None
             },
             status=status.HTTP_200_OK
-        )
-    
+        )    
 @method_decorator(csrf_exempt, name="dispatch")
 class RestaurantMenueDelete(APIView):
     def delete(self, request, restaurant_id, menu_id, *args, **kwargs):
@@ -520,33 +623,14 @@ class RestaurantListAPI(APIView):
                     "is_favourite": restaurant_id in favourite_ids
                 })
 
-            # Static Category List
-            category_list = [
+            category_list_images = CustomImage.objects.filter(type_of_images=5)
+            final_category_image = [
                 {
-                    "id": 1,
-                    "name": "Biryani",
-                    "icon": "https://www.eatoor.com/static/media/home_page_chicken_biryani.91da5b8eaf687f028e92.png"
-                },
-                {
-                    "id": 2,
-                    "name": "Snacks",
-                    "icon": "https://www.eatoor.com/static/media/snaks.5d324dc4cc28391f6118.png"
-                },
-                {
-                    "id": 3,
-                    "name": "Desserts",
-                    "icon": "https://www.eatoor.com/static/media/home_page_gulab_jamun.73f1e06ceb211d805520.png"
-                },
-                {
-                    "id": 4,
-                    "name": "Beverages",
-                    "icon": "https://www.eatoor.com/static/media/homa_page_kokam_sarbat.09fdaceb80602ade2225.png"
-                },
-                {
-                    "id": 5,
-                    "name": "Rolls",
-                    "icon": "https://www.eatoor.com/static/media/home_page_egg_roll.b76ca71670d0b3c74b31.png"
+                    "id": img.id,
+                    "name": img.title,
+                    "icon": img.image.url  # S3 URL
                 }
+                    for img in category_list_images
             ]
 
             # Feature Kitchen List (Top 10 by avg_price_range)
@@ -555,7 +639,7 @@ class RestaurantListAPI(APIView):
             return Response({
                 "success": True,
                 "data": {
-                    "CategoryList": category_list,
+                    "CategoryList": final_category_image,
                     "FeatureKitchenList": feature_kitchen_list,
                     "KitchenList": final_data
                 }

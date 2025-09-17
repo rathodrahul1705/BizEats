@@ -806,3 +806,22 @@ class FavouriteKitchen(models.Model):
 
     def __str__(self):
         return f"{self.user} ❤️ {self.restaurant.restaurant_name}"
+class CustomImage(models.Model):
+    IMAGE_TYPES = (
+        (1, "Restaurant"),
+        (2, "Menu"),
+        (3, "Banner"),
+        (4, "Offer"),
+        (5, "Category"),
+        (6, "Other"),
+    )
+
+    title = models.CharField(max_length=100)
+    image = models.ImageField(upload_to="uploads/", blank=True, null=True)
+    type_of_images = models.PositiveSmallIntegerField(choices=IMAGE_TYPES, default=6)
+
+    class Meta:
+        db_table = "custom_image"
+
+    def __str__(self):
+        return f"{self.title} ({self.get_type_of_images_display()})"
