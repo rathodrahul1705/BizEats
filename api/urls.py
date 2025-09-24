@@ -4,6 +4,7 @@ from api.delivery.porter_admin import admin_porter_orders
 from api.favourites import FavouriteKitchenListView, FavouriteKitchenToggleView
 from api.mobile.home import HomeKitchenList
 from api.payment.payment import create_order, verify_payment
+from api.search.searchcontent import search_results, search_suggestions
 from api.storage_backends import GetSingleImageFromS3, ListImagesFromS3, UploadImageToS3
 from api.vendor.Coupon import CouponCreateView, CouponDeleteView, CouponDetailView, CouponListView, CouponUpdateView
 from .vendor.Vendor import GetVendorWiseCounts
@@ -40,6 +41,9 @@ urlpatterns = [
     path('api/favourites/', FavouriteKitchenListView.as_view(), name='favourite-kitchen-list'),
     path('api/address/filter/', GetAddressByFilter.as_view(), name='get-address-by-filter'),
     path('api/request/user-data/delete/', userDataDelete.as_view(), name='user-data-delete'),
+
+    path("api/search/suggestions/", search_suggestions, name="search-suggestions"),
+    path("api/search/results/", search_results, name="search-results"),
 
     path("api/upload-image/", UploadImageToS3.as_view(), name="upload_image"),
     path("api/images/", ListImagesFromS3.as_view(), name="list_images"),
