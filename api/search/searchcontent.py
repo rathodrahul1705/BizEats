@@ -118,7 +118,6 @@ def search_suggestions(request):
         "restaurants": restaurants_response
     })
 
-
 @api_view(["GET"])
 def search_results(request):
     q = request.GET.get("q", "").strip()
@@ -145,18 +144,34 @@ def search_results(request):
                 menu_grouped[key] = []
             menu_grouped[key].append(item)
 
-        # Build menu response
+        # Build menu response including menu images
         menus = []
         for menu_name, items in menu_grouped.items():
             menus.append({
                 "menu_name": menu_name,
-                "items": MenuItemSerializer(items, many=True).data
+                "items": MenuItemSerializer(items, many=True).data  # includes restaurant info with profile_image
             })
 
         # List of unique restaurants serving the menu
         restaurant_ids = menu_items_qs.values_list("restaurant__restaurant_id", flat=True).distinct()
         restaurants = RestaurantMaster.objects.filter(restaurant_id__in=restaurant_ids)
-        restaurant_data = [{"restaurant_id": r.restaurant_id, "restaurant_name": r.restaurant_name} for r in restaurants]
+        restaurant_data = []
+        for r in restaurants:
+            restaurant_data.append({
+                "restaurant_id": r.restaurant_id,
+                "restaurant_name": r.restaurant_name,
+                "profile_image": r.profile_image.url if r.profile_image else None,
+                "menu_items": [
+                    {
+                        "id": item.id,
+                        "item_name": item.item_name,
+                        "item_price": item.item_price,
+                        "availability": item.availability,
+                        "item_image": item.item_image.url if item.item_image else None
+                    }
+                    for item in r.menu_items.filter(availability=True)
+                ]
+            })
 
         logger.info(f"Returning {len(menus)} menus and {len(restaurant_data)} restaurants")
         return Response({
@@ -165,7 +180,7 @@ def search_results(request):
             "restaurants": restaurant_data
         })
 
-    # Step 2: If no menu items found, search by kitchen/restaurant name
+    # Step 2: Fallback - search by restaurant name
     restaurants_qs = RestaurantMaster.objects.filter(restaurant_name__icontains=q).prefetch_related("menu_items")
     restaurants = []
     logger.info(f"Fallback restaurant search found {restaurants_qs.count()} restaurants")
@@ -175,7 +190,16 @@ def search_results(request):
         restaurants.append({
             "restaurant_id": rest.restaurant_id,
             "restaurant_name": rest.restaurant_name,
-            "menu_items": MenuItemSerializer(menu_items, many=True).data
+            "profile_image": rest.profile_image.url if rest.profile_image else None,
+            "menu_items": [
+                {
+                    "id": item.id,
+                    "item_name": item.item_name,
+                    "item_price": item.item_price,
+                    "availability": item.availability,
+                    "item_image": item.item_image.url if item.item_image else None
+                } for item in menu_items
+            ]
         })
 
     logger.info(f"Returning {len(restaurants)} restaurants from fallback search")
