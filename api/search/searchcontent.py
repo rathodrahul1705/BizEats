@@ -149,60 +149,54 @@ def search_results(request):
         for menu_name, items in menu_grouped.items():
             menus.append({
                 "menu_name": menu_name,
-                "items": MenuItemSerializer(items, many=True).data  # includes restaurant info with profile_image
-            })
-
-        # List of unique restaurants serving the menu
-        restaurant_ids = menu_items_qs.values_list("restaurant__restaurant_id", flat=True).distinct()
-        restaurants = RestaurantMaster.objects.filter(restaurant_id__in=restaurant_ids)
-        restaurant_data = []
-        for r in restaurants:
-            restaurant_data.append({
-                "restaurant_id": r.restaurant_id,
-                "restaurant_name": r.restaurant_name,
-                "profile_image": r.profile_image.url if r.profile_image else None,
-                "menu_items": [
+                "items": [
                     {
                         "id": item.id,
                         "item_name": item.item_name,
                         "item_price": item.item_price,
                         "availability": item.availability,
-                        "item_image": item.item_image.url if item.item_image else None
+                        "item_image": item.item_image.url if item.item_image else None,
+                        "restaurant": {
+                            "restaurant_id": item.restaurant.restaurant_id,
+                            "restaurant_name": item.restaurant.restaurant_name,
+                            "profile_image": item.restaurant.profile_image.url if item.restaurant.profile_image else None,
+                        }
                     }
-                    for item in r.menu_items.filter(availability=True)
+                    for item in items
                 ]
             })
 
-        logger.info(f"Returning {len(menus)} menus and {len(restaurant_data)} restaurants")
+        # List of unique restaurants serving the menu (without menu items)
+        restaurant_ids = menu_items_qs.values_list("restaurant__restaurant_id", flat=True).distinct()
+        restaurants_qs = RestaurantMaster.objects.filter(restaurant_id__in=restaurant_ids)
+        restaurants = [
+            {
+                "restaurant_id": r.restaurant_id,
+                "restaurant_name": r.restaurant_name,
+                "profile_image": r.profile_image.url if r.profile_image else None,
+            }
+            for r in restaurants_qs
+        ]
+
+        logger.info(f"Returning {len(menus)} menus and {len(restaurants)} restaurants")
         return Response({
             "query": q,
             "menus": menus,
-            "restaurants": restaurant_data
+            "restaurants": restaurants
         })
 
-    # Step 2: Fallback - search by restaurant name
-    restaurants_qs = RestaurantMaster.objects.filter(restaurant_name__icontains=q).prefetch_related("menu_items")
-    restaurants = []
-    logger.info(f"Fallback restaurant search found {restaurants_qs.count()} restaurants")
+    # Step 2: Fallback - search by restaurant name (no menu items)
+    restaurants_qs = RestaurantMaster.objects.filter(restaurant_name__icontains=q)
+    restaurants = [
+        {
+            "restaurant_id": r.restaurant_id,
+            "restaurant_name": r.restaurant_name,
+            "profile_image": r.profile_image.url if r.profile_image else None,
+        }
+        for r in restaurants_qs
+    ]
+    logger.info(f"Fallback restaurant search found {len(restaurants)} restaurants")
 
-    for rest in restaurants_qs:
-        menu_items = rest.menu_items.filter(availability=True)
-        restaurants.append({
-            "restaurant_id": rest.restaurant_id,
-            "restaurant_name": rest.restaurant_name,
-            "profile_image": rest.profile_image.url if rest.profile_image else None,
-            "menu_items": [
-                {
-                    "id": item.id,
-                    "item_name": item.item_name,
-                    "item_price": item.item_price,
-                    "availability": item.availability,
-                    "item_image": item.item_image.url if item.item_image else None
-                } for item in menu_items
-            ]
-        })
-
-    logger.info(f"Returning {len(restaurants)} restaurants from fallback search")
     return Response({
         "query": q,
         "menus": [],
