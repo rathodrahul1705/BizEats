@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 @api_view(["GET"])
 def search_suggestions(request):
     """
-    Autocomplete/search API with logging.
+    Autocomplete/search API with discount details and logging.
     """
     q = request.GET.get("q", "").strip()
     logger.info(f"search_suggestions called with query: '{q}'")
@@ -28,7 +28,7 @@ def search_suggestions(request):
     menu_qs = RestaurantMenu.objects.filter(
         Q(item_name__icontains=q) | Q(description__icontains=q),
         availability=True
-    ).select_related("restaurant").prefetch_related("cuisines").distinct()  # distinct BEFORE slicing
+    ).select_related("restaurant").prefetch_related("cuisines").distinct()
 
     logger.info(f"Found {menu_qs.count()} menu items matching query")
 
@@ -47,7 +47,15 @@ def search_suggestions(request):
                 "items": [
                     {
                         "id": i.id,
-                        "item_price": str(i.item_price),
+                        "item_name": i.item_name,
+                        "item_price": float(i.item_price),
+                        "discount_percent": float(i.discount_percent) if i.discount_percent else 0.0,
+                        "discount_active": i.discount_active,
+                        "discount_price": (
+                            round(float(i.item_price) * (1 - float(i.discount_percent) / 100), 2)
+                            if i.discount_active == RestaurantMenu.ACTIVE and i.discount_percent
+                            else float(i.item_price)
+                        ),
                         "item_image": i.item_image.url if i.item_image else None,
                         "category": i.category,
                         "food_type": i.food_type,
@@ -62,7 +70,7 @@ def search_suggestions(request):
                 ]
             })
 
-        # List of unique restaurants serving these menu items
+        # Unique restaurants serving these menu items
         restaurant_ids = list(menu_qs.values_list("restaurant__restaurant_id", flat=True).distinct())
         logger.info(f"Unique restaurants serving menu items: {restaurant_ids}")
 
@@ -86,7 +94,7 @@ def search_suggestions(request):
     # -------- Step 2: Fallback - Kitchen search --------
     restaurant_qs = RestaurantMaster.objects.filter(
         restaurant_name__icontains=q
-    ).prefetch_related("cuisines", "menu_items").distinct()  # distinct BEFORE slicing
+    ).prefetch_related("cuisines", "menu_items").distinct()
 
     logger.info(f"Fallback restaurant search found {restaurant_qs.count()} restaurants")
 
@@ -102,7 +110,14 @@ def search_suggestions(request):
                 {
                     "id": m.id,
                     "item_name": m.item_name,
-                    "item_price": str(m.item_price),
+                    "item_price": float(m.item_price),
+                    "discount_percent": float(m.discount_percent) if m.discount_percent else 0.0,
+                    "discount_active": m.discount_active,
+                    "discount_price": (
+                        round(float(m.item_price) * (1 - float(m.discount_percent) / 100), 2)
+                        if m.discount_active == RestaurantMenu.ACTIVE and m.discount_percent
+                        else float(m.item_price)
+                    ),
                     "item_image": m.item_image.url if m.item_image else None,
                     "category": m.category,
                     "food_type": m.food_type,
@@ -144,7 +159,7 @@ def search_results(request):
                 menu_grouped[key] = []
             menu_grouped[key].append(item)
 
-        # Build menu response including menu images
+        # Build menu response including discounts and menu images
         menus = []
         for menu_name, items in menu_grouped.items():
             menus.append({
@@ -153,8 +168,21 @@ def search_results(request):
                     {
                         "id": item.id,
                         "item_name": item.item_name,
-                        "item_price": item.item_price,
+                        "item_price": float(item.item_price),  # Original price
+                        "discount_percent": float(item.discount_percent) if item.discount_percent else 0.0,
+                        "discount_active": item.discount_active,
+                        "discount_price": (
+                            round(float(item.item_price) * (1 - float(item.discount_percent) / 100), 2)
+                            if item.discount_active == RestaurantMenu.ACTIVE and item.discount_percent
+                            else float(item.item_price)
+                        ),
                         "availability": item.availability,
+                        "food_type": item.food_type,
+                        "category": item.category,
+                        "spice_level": item.spice_level,
+                        "serving_size": item.serving_size,
+                        "buy_one_get_one_free": item.buy_one_get_one_free,
+                        "preparation_time": item.preparation_time,
                         "item_image": item.item_image.url if item.item_image else None,
                         "restaurant": {
                             "restaurant_id": item.restaurant.restaurant_id,
