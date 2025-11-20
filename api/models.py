@@ -825,3 +825,115 @@ class CustomImage(models.Model):
 
     def __str__(self):
         return f"{self.title} ({self.get_type_of_images_display()})"
+
+class TagMaster(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    description = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "notification_tag_master"
+        verbose_name = "Tag"
+        verbose_name_plural = "Tags"
+
+    def __str__(self):
+        return self.name
+
+
+class AssignTags(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='assigned_tags')
+    tag = models.ForeignKey(TagMaster, on_delete=models.CASCADE, related_name='assigned_users')
+    assigned_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "notification_assign_tags"
+        unique_together = ('user', 'tag')
+        verbose_name = "Assigned Tag"
+        verbose_name_plural = "Assigned Tags"
+
+    def __str__(self):
+        return f"{self.user.username} → {self.tag.name}"
+
+class NotificationMaster(models.Model):
+    key = models.CharField(max_length=100, unique=True)
+    title = models.CharField(max_length=255)
+    subject = models.CharField(max_length=255, blank=True, null=True)
+    body = models.TextField()
+
+    # NEW: Notification is connected to tags
+    tags = models.ManyToManyField(TagMaster, blank=True, related_name="notifications")
+
+    channel = models.CharField(
+        max_length=10,
+        choices=(
+            ('email', 'Email'),
+            ('push', 'Push'),
+            ('both', 'Both')
+        )
+    )
+
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "notification_master"
+        verbose_name = "Notification Template"
+        verbose_name_plural = "Notification Templates"
+
+    def __str__(self):
+        return self.key
+
+
+class NotificationQueue(models.Model):
+    template = models.ForeignKey(NotificationMaster, on_delete=models.SET_NULL, null=True)
+    channel = models.CharField(max_length=10)  # email / push / both
+
+    # Either direct user OR tag-based targeting
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    target_tags = models.ManyToManyField(TagMaster, blank=True)
+
+    # Extra dynamic data
+    payload = models.JSONField(null=True, blank=True)
+
+    status = models.CharField(
+        max_length=10,
+        choices=(
+            ('pending', 'Pending'),
+            ('sent', 'Sent'),
+            ('failed', 'Failed'),
+            ('cancelled', 'Cancelled')
+        ),
+        default='pending'
+    )
+
+    attempts = models.PositiveSmallIntegerField(default=0)
+    last_error = models.TextField(null=True, blank=True)
+
+    next_try_at = models.DateTimeField(default=timezone.now)
+    scheduled_at = models.DateTimeField(null=True, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    sent_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = "notification_queue"
+        verbose_name = "Notification Queue"
+        verbose_name_plural = "Notification Queue"
+
+    def __str__(self):
+        return f"{self.id} - {self.status}"
+
+
+class Device(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='devices')
+    token = models.CharField(max_length=512)  # FCM Token
+    platform = models.CharField(max_length=10)  # android / ios / web
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        db_table = "user_device"
+        verbose_name = "Device"
+        verbose_name_plural = "Devices"
+
+    def __str__(self):
+        return f"{self.user.username} - {self.platform}"
