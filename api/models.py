@@ -832,7 +832,7 @@ class TagMaster(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        db_table = "notification_v1_tag_master"
+        db_table = "notification_tag_master"
         verbose_name = "Tag"
         verbose_name_plural = "Tags"
 
@@ -846,7 +846,7 @@ class AssignTags(models.Model):
     assigned_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        db_table = "notification_v1_assign_tags"
+        db_table = "notification_assign_tags"
         unique_together = ('user', 'tag')
         verbose_name = "Assigned Tag"
         verbose_name_plural = "Assigned Tags"
@@ -876,7 +876,7 @@ class NotificationMaster(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        db_table = "notification_v1_master"
+        db_table = "notification_master"
         verbose_name = "Notification Template"
         verbose_name_plural = "Notification Templates"
 
@@ -916,7 +916,7 @@ class NotificationQueue(models.Model):
     sent_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
-        db_table = "notification_v1_queue"
+        db_table = "notification_queue"
         verbose_name = "Notification Queue"
         verbose_name_plural = "Notification Queue"
 
@@ -931,7 +931,7 @@ class Device(models.Model):
     is_active = models.BooleanField(default=True)
 
     class Meta:
-        db_table = "user_v1_device"
+        db_table = "user_device"
         verbose_name = "Device"
         verbose_name_plural = "Devices"
 
