@@ -9,7 +9,7 @@ from logging.handlers import TimedRotatingFileHandler
 import firebase_admin
 from firebase_admin import credentials
 
-cred = credentials.Certificate("eatoor-firebase-configuration.json")
+cred = credentials.Certificate("serviceAccountKey.json")
 
 if not firebase_admin._apps:
     firebase_admin.initialize_app(cred)
