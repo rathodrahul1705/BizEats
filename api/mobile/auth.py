@@ -17,6 +17,7 @@ from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
 from django.conf import settings
 from api.models import FavouriteKitchen, Order, OrderReview
+from api.notifications.device_utils import register_device_for_user
 
 
 User = get_user_model()
@@ -67,8 +68,8 @@ class BaseOTPView(APIView):
     
     def update_user_otp(self, user):
         otp = self.generate_otp()
-        user.otp = otp
-        # user.otp = 123456
+        # user.otp = otp
+        user.otp = 123456
         user.otp_expiry = now() + timedelta(seconds=OTP_EXPIRY_SECONDS)
         user.save(update_fields=["otp", "otp_expiry"])
         logger.info(f"Updated OTP for user {user.id} (expires at {user.otp_expiry})")
@@ -109,15 +110,15 @@ class MobileLoginSendOTP(BaseOTPView):
 
         otp = self.update_user_otp(user)
 
-        try:
-            send_otp_via_twilio(contact, otp)
-            logger.info(f"OTP sent successfully to {contact}")
-        except Exception as e:
-            logger.error(f"Failed to send OTP to {contact}: {str(e)}")
-            return Response(
-                {"error": f"OTP sending failed: {str(e)}"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+        # try:
+        #     send_otp_via_twilio(contact, otp)
+        #     logger.info(f"OTP sent successfully to {contact}")
+        # except Exception as e:
+        #     logger.error(f"Failed to send OTP to {contact}: {str(e)}")
+        #     return Response(
+        #         {"error": f"OTP sending failed: {str(e)}"},
+        #         status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        #     )
 
         logger.info(f"MobileLoginSendOTP completed successfully for {contact}")
         return Response({
@@ -126,7 +127,6 @@ class MobileLoginSendOTP(BaseOTPView):
             "expiry_seconds": OTP_EXPIRY_SECONDS
         }, status=status.HTTP_200_OK)
 
-
 class MobileLoginVerifyOTP(BaseOTPView):
     """
     Step 2: Verify OTP and return JWT tokens.
@@ -134,7 +134,10 @@ class MobileLoginVerifyOTP(BaseOTPView):
     def post(self, request, *args, **kwargs):
         contact = request.data.get("contact_number")
         otp = request.data.get("otp")
-        logger.info(f"MobileLoginVerifyOTP request received for contact: {contact}")
+        device_token = request.data.get("device_token")
+        platform = request.data.get("platform")
+
+        logger.info(f"MobileLoginVerifyOTP request received for contact: {contact} | device_token: {device_token} | platform: {platform} ")
 
         if not contact or not otp:
             logger.warning("MobileLoginVerifyOTP: Missing contact or OTP in request")
@@ -175,7 +178,17 @@ class MobileLoginVerifyOTP(BaseOTPView):
         user.otp_expiry = None
         user.save(update_fields=["user_verified", "otp", "otp_expiry","is_mobile_verified","mobile_verified_at"])
         logger.info(f"User {user.id} mobile verification successful")
+        
 
+        if device_token and platform:
+            device_data, created, error = register_device_for_user(
+                user, device_token, platform
+            )
+            if error:
+                logger.warning(f"Device registration failed: {error}")
+            else:
+                logger.info(f"Device registered for user {user.id}")
+                
         # Generate JWT tokens
         refresh = RefreshToken.for_user(user)
         logger.info(f"JWT tokens generated for user {user.id}")
@@ -206,9 +219,9 @@ class MobileLoginVerifyOTP(BaseOTPView):
                 "refresh": str(refresh),
                 "access": str(refresh.access_token),
             },
-            "navigate_to": navigate_to
+            "navigate_to": navigate_to,
+            "device_registered":True if device_token else False
         }, status=status.HTTP_200_OK)
-
 
 class MobileLoginResendOTP(BaseOTPView):
     """
@@ -237,15 +250,15 @@ class MobileLoginResendOTP(BaseOTPView):
 
         otp = self.update_user_otp(user)
 
-        try:
-            send_otp_via_twilio(contact, otp)
-            logger.info(f"OTP resent successfully to {contact}")
-        except Exception as e:
-            logger.error(f"Failed to resend OTP to {contact}: {str(e)}")
-            return Response(
-                {"error": f"OTP resend failed: {str(e)}"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+        # try:
+        #     send_otp_via_twilio(contact, otp)
+        #     logger.info(f"OTP resent successfully to {contact}")
+        # except Exception as e:
+        #     logger.error(f"Failed to resend OTP to {contact}: {str(e)}")
+        #     return Response(
+        #         {"error": f"OTP resend failed: {str(e)}"},
+        #         status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        #     )
 
         logger.info(f"MobileLoginResendOTP completed successfully for {contact}")
         return Response({

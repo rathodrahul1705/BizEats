@@ -5,43 +5,40 @@ from django.utils import timezone
 from django.contrib.auth import get_user_model
 from api.emailer.email_template import build_email_html
 from django.core.mail import EmailMultiAlternatives
-
+from firebase_admin import messaging
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-
 from api.models import NotificationQueue, Device
 
 User = get_user_model()
 MAX_ATTEMPTS = 5
 
-FCM_SERVER_KEY = "YOUR_FCM_SERVER_KEY_HERE"  # Replace with your key
-
-
-def send_push_notification(tokens, title, body, data):
-    """Send push notification using FCM."""
+def send_push_notification(tokens, title, body, data=None):
+    """Send push notification using Firebase Admin SDK."""
     if not tokens:
-        return True, "No tokens"
+        return False, "No tokens provided"
 
-    url = "https://fcm.googleapis.com/fcm/send"
-    headers = {
-        "Authorization": "key=" + FCM_SERVER_KEY,
-        "Content-Type": "application/json"
-    }
+    # Ensure data is a dictionary with string values
+    clean_data = {str(k): str(v) for k, v in (data or {}).items()}
 
-    payload = {
-        "registration_ids": list(tokens),
-        "notification": {
-            "title": title,
-            "body": body
-        },
-        "data": data
-    }
+    # Build list of messages for each token
+    messages = []
 
-    response = requests.post(url, headers=headers, json=payload)
+    for token in tokens:
+        message = messaging.Message(
+            notification=messaging.Notification(
+                title=title,
+                body=body,
+            ),
+            token=token,
+            data=clean_data,
+        )
+        messages.append(message)
 
-    if response.status_code == 200:
-        return True, "Success"
-    return False, response.text
+    # Send messages in bulk
+    response = messaging.send_each(messages)
+
+    return True, f"Sent: {response.success_count}, Failed: {response.failure_count}"
 
 def send_email_notification(email, subject, body, username, offer=None):
 
@@ -50,7 +47,7 @@ def send_email_notification(email, subject, body, username, offer=None):
         title=subject,
         message=body,
         button_text="Order Now",
-        button_url="https://bizeats.com/offers",
+        button_url="https://eatoor.com/home-kitchens",
         footer_text="Delivering happiness to your doorstep ❤️"
     )
 
@@ -190,3 +187,57 @@ def process_notification_queue(request):
     return Response({
         "processed": len(results),
     })
+
+@api_view(["POST"])
+def send_fcm_notification(request):
+    body = request.data
+
+    device_token = body.get("device_token")
+    if not device_token:
+        return Response({"error": "device_token is required"}, status=400)
+
+    image_url = "https://eatoorprod.s3.amazonaws.com/menu_images/173660591bbc4c8a9a2a0dcb85bdc173.jpg"
+
+    message = messaging.Message(
+        notification=messaging.Notification(
+            title=body.get("title", "Aloo Paratha Set"),
+            body=body.get("body", "Get in 10 rs only"),
+            image=image_url
+        ),
+        token=device_token,
+
+        data={
+            **body,
+            "image": image_url,
+            "click_action": "FLUTTER_NOTIFICATION_CLICK",
+            "action_type": "navigate",
+            "action_screen": "HomeTabs",
+            "action_button": "Order Now",
+        },
+
+        android=messaging.AndroidConfig(
+            priority="high",
+            notification=messaging.AndroidNotification(
+                sound="default",
+                channel_id="default",
+                image=image_url,
+                click_action="OPEN_KITCHEN_PAGE",
+            )
+        ),
+
+        apns=messaging.APNSConfig(
+            payload=messaging.APNSPayload(
+                aps=messaging.Aps(
+                    sound="default",
+                    content_available=True
+                ),
+            ),
+            fcm_options=messaging.APNSFCMOptions(
+                image=image_url
+            )
+        )
+    )
+
+    response = messaging.send(message)
+    return Response({"message_id": response})
+

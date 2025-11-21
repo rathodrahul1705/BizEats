@@ -3,8 +3,8 @@ from api.delivery import porter_views, porter_webhook
 from api.delivery.porter_admin import admin_porter_orders
 from api.favourites import FavouriteKitchenListView, FavouriteKitchenToggleView
 from api.mobile.home import HomeKitchenList
-from api.notifications.notification_send import process_notification_queue
-from api.notifications.views import AssignTagCreateView, NotificationMasterCreateView, NotificationMasterListView, NotificationQueueCreateView, NotificationQueueListView, TagMasterCreateView, TagMasterListView
+from api.notifications.notification_send import process_notification_queue, send_fcm_notification
+from api.notifications.views import AssignTagCreateView, DeviceDeleteView, DeviceListView, DeviceRegisterView, NotificationMasterCreateView, NotificationMasterListView, NotificationQueueCreateView, NotificationQueueListView, RemoveDeviceToken, TagMasterCreateView, TagMasterListView
 from api.payment.payment import create_order, verify_payment
 from api.search.searchcontent import search_results, search_suggestions
 from api.storage_backends import GetSingleImageFromS3, ListImagesFromS3, UploadImageToS3
@@ -60,19 +60,6 @@ urlpatterns = [
 
     # Noftifications api start
 
-    # path("api/tags/", TagListCreateAPIView.as_view(), name="tag-list-create"),
-    # path("api/tags/<int:pk>/", TagDetailAPIView.as_view(), name="tag-detail"),
-    # path("api/users/<int:user_id>/tags/assign/", assign_tag_to_user, name="assign-tag"),
-
-    # path("api/notifications/templates/", NotificationMasterListCreateAPIView.as_view(), name="template-list-create"),
-    # path("api/notifications/templates/<int:pk>/", NotificationMasterDetailAPIView.as_view(), name="template-detail"),
-
-    # path("api/device/register/", DeviceRegisterAPIView.as_view(), name="device-register"),
-
-    # path("api/notifications/queue/", NotificationQueueCreateAPIView.as_view(), name="queue-create"),
-    # path("api/notifications/queue/list/", NotificationQueueListAPIView.as_view(), name="queue-list"),
-    # path("api/notifications/queue/<uuid:pk>/", NotificationQueueDetailAPIView.as_view(), name="queue-detail"),
-
     path("api/tags/list/", TagMasterListView.as_view()),
     path("api/tags/create/", TagMasterCreateView.as_view()),
 
@@ -86,6 +73,16 @@ urlpatterns = [
 
     path("api/queue/prepare/", process_notification_queue),
 
+
+    # test notification api
+
+    path("api/notification/test/", send_fcm_notification),
+
+    path('api/device/register/', DeviceRegisterView.as_view(), name='device-register'),
+    path('api/device/list/', DeviceListView.as_view(), name='device-list'),
+    path('api/device/delete/<int:pk>/', DeviceDeleteView.as_view(), name='device-delete'),
+    path('api/device/remove/', RemoveDeviceToken.as_view(), name='device-remove'),
+    
     # Noftifications api end
 
     path("api/contact-us/", ContactUsView.as_view(), name="contact-us"), 

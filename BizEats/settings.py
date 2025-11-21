@@ -6,6 +6,13 @@ from datetime import timedelta
 from decouple import config
 import logging
 from logging.handlers import TimedRotatingFileHandler
+import firebase_admin
+from firebase_admin import credentials
+
+cred = credentials.Certificate("eatoor-firebase-configuration.json")
+
+if not firebase_admin._apps:
+    firebase_admin.initialize_app(cred)
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
