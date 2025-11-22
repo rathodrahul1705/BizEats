@@ -137,8 +137,43 @@ const API_ENDPOINTS = {
   USER: {
     USER_LIST: `${BASE_URL}/user/user_list/`,
     CART_LIST: `${BASE_URL}/cart/cart_list/`,
-  }
+  },
 
+  TAGS: {
+    CREATE: `${BASE_URL}/tags/create/`,
+    FETCH_ALL: `${BASE_URL}/tags/list/`,
+    UPDATE: (tag_id) => `${BASE_URL}/tags/update//${tag_id}/`,
+    DELETE: (tag_id) => `${BASE_URL}/tags/delete/${tag_id}/`,
+  },
+
+  NOTIFICATION_TEMPLATES: {
+    CREATE: `${BASE_URL}/notifications/create/`,
+    FETCH_ALL: `${BASE_URL}/notifications/list/`,
+    UPDATE: (template_id) => `${BASE_URL}/notifications/update/${template_id}/`,
+    DELETE: (template_id) => `${BASE_URL}/notifications/delete/${template_id}/`,
+    TOGGLE_STATUS: (template_id) => `${BASE_URL}/notifications/${template_id}/toggle-status/`,
+  },
+
+
+  NOTIFICATION_QUEUE: {
+    CREATE: `${BASE_URL}/notifications/queue/create/`,
+    FETCH_ALL: `${BASE_URL}/notifications/queue/list/`,
+  },
+
+  ASSIGNED_TAGS: {
+    CREATE: `${BASE_URL}/user/assign-tags//`,
+    FETCH_ALL: `${BASE_URL}/user/assigned-tags/list`,
+  },
+
+  DEVICES: {
+    CREATE: `${BASE_URL}/device/register/`,
+    FETCH_ALL: `${BASE_URL}/device/list/`,
+    DELETE: (device_id) => `${BASE_URL}/device/delete/${device_id}/`,
+  },
+
+  NOTIFICATIONS: {
+    SEND_IMMEDIATE: `${BASE_URL}/queue/prepare/`,
+  },
 
 };
 

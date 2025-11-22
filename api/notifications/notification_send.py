@@ -193,6 +193,7 @@ def send_fcm_notification(request):
     body = request.data
 
     device_token = body.get("device_token")
+
     if not device_token:
         return Response({"error": "device_token is required"}, status=400)
 
@@ -240,4 +241,3 @@ def send_fcm_notification(request):
 
     response = messaging.send(message)
     return Response({"message_id": response})
-

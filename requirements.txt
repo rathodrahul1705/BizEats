@@ -20,7 +20,7 @@ django-cors-headers==4.7.0
 django-filter==25.2
 django-storages==1.14.6
 djangorestframework==3.15.2
-djangorestframework_simplejwt==5.5.0
+djangorestframework_simplejwt==5.5.1
 docopt==0.6.2
 firebase_admin==7.1.0
 freetype-py==2.5.1

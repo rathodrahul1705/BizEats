@@ -89,3 +89,4 @@ celerybeat.pid
 *.tar
 docker-compose.override.yml
 public
+serviceAccountKey.json

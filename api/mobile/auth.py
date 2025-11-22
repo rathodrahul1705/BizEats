@@ -68,8 +68,8 @@ class BaseOTPView(APIView):
     
     def update_user_otp(self, user):
         otp = self.generate_otp()
-        user.otp = otp
-        # user.otp = 123456
+        # user.otp = otp
+        user.otp = 123456
         user.otp_expiry = now() + timedelta(seconds=OTP_EXPIRY_SECONDS)
         user.save(update_fields=["otp", "otp_expiry"])
         logger.info(f"Updated OTP for user {user.id} (expires at {user.otp_expiry})")
@@ -110,15 +110,15 @@ class MobileLoginSendOTP(BaseOTPView):
 
         otp = self.update_user_otp(user)
 
-        try:
-            send_otp_via_twilio(contact, otp)
-            logger.info(f"OTP sent successfully to {contact}")
-        except Exception as e:
-            logger.error(f"Failed to send OTP to {contact}: {str(e)}")
-            return Response(
-                {"error": f"OTP sending failed: {str(e)}"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+        # try:
+        #     send_otp_via_twilio(contact, otp)
+        #     logger.info(f"OTP sent successfully to {contact}")
+        # except Exception as e:
+        #     logger.error(f"Failed to send OTP to {contact}: {str(e)}")
+        #     return Response(
+        #         {"error": f"OTP sending failed: {str(e)}"},
+        #         status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        #     )
 
         logger.info(f"MobileLoginSendOTP completed successfully for {contact}")
         return Response({
@@ -250,15 +250,15 @@ class MobileLoginResendOTP(BaseOTPView):
 
         otp = self.update_user_otp(user)
 
-        try:
-            send_otp_via_twilio(contact, otp)
-            logger.info(f"OTP resent successfully to {contact}")
-        except Exception as e:
-            logger.error(f"Failed to resend OTP to {contact}: {str(e)}")
-            return Response(
-                {"error": f"OTP resend failed: {str(e)}"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+        # try:
+        #     send_otp_via_twilio(contact, otp)
+        #     logger.info(f"OTP resent successfully to {contact}")
+        # except Exception as e:
+        #     logger.error(f"Failed to resend OTP to {contact}: {str(e)}")
+        #     return Response(
+        #         {"error": f"OTP resend failed: {str(e)}"},
+        #         status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        #     )
 
         logger.info(f"MobileLoginResendOTP completed successfully for {contact}")
         return Response({

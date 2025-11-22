@@ -569,6 +569,18 @@ const DashboardOverview = ({ user, setUser }) => {
                     <div className="link-arrow">→</div>
                   </Link>
 
+                  <Link 
+                    to={`/vendor-dashboard/notification/management`} 
+                    className="link-card"
+                  >
+                    <div className="link-icon">:🔔</div>
+                    <div className="link-content">
+                      <h4>Notification Management</h4>
+                      <p>Manage your notification details</p>
+                    </div>
+                    <div className="link-arrow">→</div>
+                  </Link>
+
                     </>
                     :""
                   }
