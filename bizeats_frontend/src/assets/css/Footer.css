@@ -169,44 +169,33 @@ body {
   margin: 0.25rem 0;
 }
 
-.footer__newsletter-text {
+/* App Downloads Section */
+.footer__download-text {
   color: var(--text-light);
   font-size: 0.9rem;
   margin-bottom: 1rem;
 }
 
-.footer__newsletter-form {
+.footer__app-downloads {
   display: flex;
-  gap: 0.5rem;
+  flex-direction: column;
+  gap: 12px;
 }
 
-.footer__newsletter-form input {
-  flex: 1;
-  padding: 0.75rem;
-  border: 1px solid #ddd;
-  border-radius: var(--border-radius);
-  font-size: 0.9rem;
-  outline: none;
+.footer__app-link {
+  display: block;
   transition: var(--transition);
 }
 
-.footer__newsletter-form input:focus {
-  border-color: var(--primary-color);
+.footer__app-link:hover {
+  transform: translateY(-2px);
 }
 
-.footer__newsletter-form button {
-  padding: 0 1.25rem;
-  background-color: var(--primary-color);
-  color: white;
-  border: none;
-  border-radius: var(--border-radius);
-  cursor: pointer;
-  font-size: 0.9rem;
-  transition: var(--transition);
-}
-
-.footer__newsletter-form button:hover {
-  background-color: var(--primary-light);
+.footer__app-badge {
+  height: 40px;
+  width: auto;
+  border-radius: 6px;
+  object-fit: contain;
 }
 
 /* ===== MOBILE FOOTER ===== */
@@ -335,42 +324,49 @@ body {
   margin: 5px 0;
 }
 
-/* Newsletter */
-.footer__mobile-newsletter {
+/* Mobile App Downloads Section */
+.footer__mobile-apps {
   background: white;
   padding: 15px;
   border-radius: 10px;
   margin-bottom: 20px;
   box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+  text-align: center;
 }
 
-.footer__mobile-newsletter h4 {
-  margin: 0 0 10px 0;
+.footer__mobile-apps h4 {
+  margin: 0 0 8px 0;
   font-size: 16px;
   color: var(--text-color);
 }
 
-.footer__mobile-newsletter form {
+.footer__mobile-apps-text {
+  font-size: 13px;
+  color: var(--text-light);
+  margin-bottom: 12px;
+}
+
+.footer__mobile-app-badges {
   display: flex;
-  gap: 8px;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
 }
 
-.footer__mobile-newsletter input {
-  flex: 1;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  font-size: 14px;
+.footer__mobile-app-link {
+  display: block;
+  transition: var(--transition);
 }
 
-.footer__mobile-newsletter button {
-  padding: 0 15px;
-  background: var(--primary-color);
-  color: white;
-  border: none;
-  border-radius: 5px;
-  font-size: 14px;
-  font-weight: 500;
+.footer__mobile-app-link:hover {
+  transform: translateY(-2px);
+}
+
+.footer__mobile-app-badge {
+  height: 40px;
+  width: auto;
+  border-radius: 6px;
+  object-fit: contain;
 }
 
 /* Bottom Section */
@@ -437,10 +433,30 @@ body {
   .footer__section {
     margin-bottom: 0;
   }
+
+  /* Desktop App Downloads */
+  .footer__app-downloads {
+    gap: 10px;
+  }
+
+  .footer__app-badge {
+    height: 45px;
+  }
 }
 
 @media (min-width: 992px) {
   .footer__container {
     gap: 50px;
+  }
+}
+
+/* Additional responsive adjustments for app badges */
+@media (max-width: 767px) {
+  .footer__mobile-app-badges {
+    gap: 8px;
+  }
+  
+  .footer__mobile-app-badge {
+    height: 38px;
   }
 }

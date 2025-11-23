@@ -4,6 +4,10 @@ import { MdEmail, MdPhone, MdLocationOn } from 'react-icons/md';
 import { Link } from 'react-router-dom';
 import "../assets/css/Footer.css";
 
+// Import app store badges - make sure these images are in your assets folder
+import AppStoreBadge from "../assets/img/app-store-badge.jpg";
+import PlayStoreBadge from "../assets/img/play-store-badge.png";
+
 const Footer = () => {
   const TwitterXIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1227" width="1em" height="1em" fill="currentColor">
@@ -67,15 +71,38 @@ const Footer = () => {
             </div>
           </div>
 
+          {/* Updated Section: App Downloads instead of Newsletter */}
           <div className="footer__section">
-            <h3 className="footer__heading">Newsletter</h3>
-            <p className="footer__newsletter-text">
-              Subscribe for exclusive offers and updates
+            <h3 className="footer__heading">Download Our App</h3>
+            <p className="footer__download-text">
+              Get the best experience on mobile
             </p>
-            <form className="footer__newsletter-form">
-              <input type="email" placeholder="Your email address" required />
-              <button type="submit">Subscribe</button>
-            </form>
+            <div className="footer__app-downloads">
+              <a 
+                href="https://apps.apple.com/app/eatoor" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="footer__app-link"
+              >
+                <img 
+                  src={AppStoreBadge} 
+                  alt="Download on the App Store" 
+                  className="footer__app-badge"
+                />
+              </a>
+              <a 
+                href="https://play.google.com/store/apps/details?id=com.eatoor" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="footer__app-link"
+              >
+                <img 
+                  src={PlayStoreBadge} 
+                  alt="Get it on Google Play" 
+                  className="footer__app-badge"
+                />
+              </a>
+            </div>
           </div>
         </div>
 
@@ -84,7 +111,6 @@ const Footer = () => {
             © {new Date().getFullYear()} EATOOR. All rights reserved.
           </div>
         </div>
-
       </div>
 
       {/* Mobile Footer (hidden on desktop) */}
@@ -159,12 +185,36 @@ const Footer = () => {
           </details>
         </div>
 
-        <div className="footer__mobile-newsletter">
-          <h4>Get Special Offers</h4>
-          <form>
-            <input type="email" placeholder="Your email address" required />
-            <button type="submit">Subscribe</button>
-          </form>
+        {/* Updated Mobile Section: App Downloads instead of Newsletter */}
+        <div className="footer__mobile-apps">
+          <h4>Download Our App</h4>
+          <p className="footer__mobile-apps-text">Get the best experience on mobile</p>
+          <div className="footer__mobile-app-badges">
+            <a 
+              href="https://apps.apple.com/app/eatoor" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="footer__mobile-app-link"
+            >
+              <img 
+                src={AppStoreBadge} 
+                alt="Download on the App Store" 
+                className="footer__mobile-app-badge"
+              />
+            </a>
+            <a 
+              href="https://play.google.com/store/apps/details?id=com.eatoor" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="footer__mobile-app-link"
+            >
+              <img 
+                src={PlayStoreBadge} 
+                alt="Get it on Google Play" 
+                className="footer__mobile-app-badge"
+              />
+            </a>
+          </div>
         </div>
 
         <div className="footer__mobile-bottom">
