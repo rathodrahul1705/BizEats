@@ -73,7 +73,6 @@ urlpatterns = [
 
     path("api/queue/prepare/", process_notification_queue),
 
-
     # test notification api
 
     path("api/notification/test/", send_fcm_notification),
