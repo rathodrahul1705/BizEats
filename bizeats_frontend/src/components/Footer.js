@@ -108,7 +108,7 @@ const Footer = () => {
 
         <div className="footer__web-bottom">
           <div className="footer__copyright-mobile">
-            © {new Date().getFullYear()} EATOOR. All rights reserved.
+            © {new Date().getFullYear()} Vensavor FoodTech LLP
           </div>
         </div>
       </div>
@@ -219,7 +219,7 @@ const Footer = () => {
 
         <div className="footer__mobile-bottom">
           <div className="footer__copyright-mobile">
-            © {new Date().getFullYear()} EATOOR. All rights reserved.
+            © {new Date().getFullYear()} Vensavor FoodTech LLP
           </div>
         </div>
       </div>
