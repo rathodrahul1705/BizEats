@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import "../assets/css/Home.css";
-import { ArrowRightCircle, ChevronLeft, ChevronRight, Star, Clock, MapPin, Heart, Zap } from "lucide-react";
+import { ArrowRightCircle, ChevronLeft, ChevronRight, Star, Clock, MapPin, Heart, Zap, Download, Smartphone, Play } from "lucide-react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 import "swiper/css/navigation";
@@ -11,7 +11,10 @@ import { Navigation, Pagination, Autoplay, EffectFade, FreeMode } from "swiper/m
 import API_ENDPOINTS from "../components/config/apiConfig";
 import fetchData from "../components/services/apiService";
 import StripeLoader from "../loader/StripeLoader";
-import HomePageThali from "../assets/img/homepage.webp";
+import QRCodeImage from "../assets/img/qr-code-download.png";
+import MobileScreen from "../assets/img/mobile_screen_v1.png";
+import AppStoreBadge from "../assets/img/app-store-badge.jpg";
+import PlayStoreBadge from "../assets/img/play-store-badge.png";
 import HomePageUpma from "../assets/img/home_page_upma.avif";
 import HomePagePoha from "../assets/img/home_page_poha.png";
 import HomePageMaggie from "../assets/img/home_page_maggie.webp";
@@ -36,6 +39,7 @@ const Home = () => {
   const [resviewdetails, serReviewDetails] = useState([]);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [activeCategory, setActiveCategory] = useState("All");
+  const [showVideoModal, setShowVideoModal] = useState(false);
 
   useEffect(() => {
     const handleResize = () => {
@@ -318,22 +322,19 @@ const Home = () => {
       <section className="hero-section">
         <div className="hero-content">
           <div className="hero-text">
-            <div className="hero-badge">🔥 Hot & Fresh Meals</div>
+            <div className="hero-badge">🚀 Fast Food Delivery</div>
             <h1>
-              <span className="hero-highlight">Homemade</span> food delivered to your 
-              <span className="hero-highlight"> doorstep</span>
+              <span className="hero-highlight">Delicious</span> food delivered 
+              <span className="hero-highlight"> fast & fresh</span>
             </h1>
             <p className="hero-subtitle">
-              Discover authentic home-cooked meals from talented chefs in your neighborhood. 
-              Real ingredients, real flavors, real love in every bite.
+              Order from the best restaurants in your city. Quick delivery, great prices, 
+              and amazing food right at your doorstep.
             </p>
             <div className="hero-cta">
               <Link to="/home-kitchens" className="hero-cta__primary">
                 <span>Order Now</span>
                 <ChevronRight size={18} />
-              </Link>
-              <Link to="/about-us" className="hero-cta__secondary">
-                How it works
               </Link>
             </div>
             
@@ -343,8 +344,8 @@ const Home = () => {
                 <span>Happy Customers</span>
               </div>
               <div className="hero-stat">
-                <strong>2+</strong>
-                <span>Home Chefs</span>
+                <strong>50+</strong>
+                <span>Restaurants</span>
               </div>
               <div className="hero-stat">
                 <strong>{resviewdetails?.rating_ratio}</strong>
@@ -354,31 +355,31 @@ const Home = () => {
           </div>
           
           <div className="hero-image">
-            <img
-              src={HomePageThali}
-              alt="Delicious homemade thali"
-              className="hero-image__main"
-              loading="eager"
-            />
-            <div className="hero-image__floating">
-              <div className="floating-badge">
-                <div className="floating-badge__icon">
-                  <Star size={16} fill="#fff" />
-                </div>
-                <div className="floating-badge__content">
-                  <span className="floating-badge__rating">{resviewdetails?.rating_ratio}</span>
-                  <span className="floating-badge__reviews">{resviewdetails?.total_reviews} Reviews</span>
-                </div>
+            <div className="qr-download-card">
+              <div className="qr-download-card__header">
+                <Smartphone size={26} />
+                <h4>Scan to Download App</h4>
               </div>
-              
-              <div className="floating-card floating-card--delivery">
-                <div className="floating-card__icon">
-                  <Clock size={16} />
-                </div>
-                <div className="floating-card__content">
-                  <span className="floating-card__title">Fast Delivery</span>
-                  <span className="floating-card__subtitle">30-45 min</span>
-                </div>
+              <div className="qr-download-card__qr">
+                <img src={QRCodeImage} alt="Download App QR Code" />
+              </div>
+              <div className="qr-download-card__stores">
+                <a 
+                  href="https://play.google.com/store/apps/details?id=com.eatoor" 
+                  className="store-badge"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <img src={PlayStoreBadge} alt="Get on Google Play" />
+                </a>
+                <a 
+                  href="https://apps.apple.com/in/app/eatoor-food-delivery-app/id6479472712" 
+                  className="store-badge"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <img src={AppStoreBadge} alt="Download on App Store" />
+                </a>
               </div>
             </div>
           </div>
@@ -408,22 +409,6 @@ const Home = () => {
         <div className="section-container">
           <div className="section-header">
             <h2 className="section-heading">Popular Near You</h2>
-            {/* <div className="slider-controls">
-              <button 
-                onClick={handleFoodPrev} 
-                className={`slider-arrow ${isFoodBeginning ? 'disabled' : ''}`}
-                disabled={isFoodBeginning}
-              >
-                <ChevronLeft size={24} />
-              </button>
-              <button 
-                onClick={handleFoodNext} 
-                className={`slider-arrow ${isFoodEnd ? 'disabled' : ''}`}
-                disabled={isFoodEnd}
-              >
-                <ChevronRight size={24} />
-              </button>
-            </div> */}
           </div>
 
           <div className="food-items-grid">
@@ -472,6 +457,129 @@ const Home = () => {
         </div>
       </section>
 
+      {/* YouTube Shorts Section */}
+      <section className="youtube-shorts-section">
+        <div className="section-container">
+          <div className="section-header">
+            <h2 className="section-heading">Foodie Shorts</h2>
+          </div>
+          
+          <div className="youtube-shorts-container">
+            <div className="youtube-short-card">
+              <div className="youtube-short-card__video" onClick={() => setShowVideoModal(true)}>
+                <div className="youtube-short-card__thumbnail">
+                  <img 
+                    src="https://img.youtube.com/vi/fq4iT7bWaHQ/maxresdefault.jpg" 
+                    alt="Food Preparation Short" 
+                  />
+                  <div className="youtube-short-card__play-button">
+                    <Play size={48} fill="#fff" />
+                  </div>
+                </div>
+                <div className="youtube-short-card__content">
+                  <h3 className="youtube-short-card__title">Eatoor App Launch | Order Food, Track Delivery & Review</h3>
+                  <p className="youtube-short-card__description">
+                    Welcome to Eatoor – your all-in-one food delivery app! 🍴✨ In this video, we walk you through the complete Eatoor app flow:
+
+                  </p>
+                  <div className="youtube-short-card__meta">
+                    <span className="youtube-short-card__duration">Short</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Video Modal */}
+      {showVideoModal && (
+        <div className="video-modal" onClick={() => setShowVideoModal(false)}>
+          <div className="video-modal__content" onClick={(e) => e.stopPropagation()}>
+            <button 
+              className="video-modal__close"
+              onClick={() => setShowVideoModal(false)}
+            >
+              ×
+            </button>
+            <div className="video-modal__video">
+              <iframe
+                width="100%"
+                height="100%"
+                src="https://www.youtube.com/embed/fq4iT7bWaHQ?autoplay=1"
+                title="YouTube video player"
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              ></iframe>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* App Download Section */}
+      <section className="app-download-section">
+        <div className="section-container">
+          <div className="app-download-content">
+            <div className="app-download-text">
+              <h2 className="section-heading">Get the App</h2>
+              <p className="section-subtitle">
+                Experience faster ordering, exclusive deals, and personalized recommendations
+              </p>
+              <div className="app-features">
+                <div className="app-feature">
+                  <div className="app-feature__icon">⚡</div>
+                  <div className="app-feature__text">
+                    <h4>Faster Ordering</h4>
+                    <p>One-tap reordering and saved favorites</p>
+                  </div>
+                </div>
+                <div className="app-feature">
+                  <div className="app-feature__icon">🎁</div>
+                  <div className="app-feature__text">
+                    <h4>Exclusive Deals</h4>
+                    <p>App-only discounts and promotions</p>
+                  </div>
+                </div>
+                <div className="app-feature">
+                  <div className="app-feature__icon">🔔</div>
+                  <div className="app-feature__text">
+                    <h4>Real-time Tracking</h4>
+                    <p>Track your order from kitchen to doorstep</p>
+                  </div>
+                </div>
+              </div>
+              <div className="app-download-buttons">
+                <a 
+                  href="https://play.google.com/store/apps/details?id=com.eatoor" 
+                  className="download-button"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <img src={PlayStoreBadge} alt="Get on Google Play" />
+                </a>
+                <a 
+                  href="https://apps.apple.com/in/app/eatoor-food-delivery-app/id6479472712" 
+                  className="download-button"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <img src={AppStoreBadge} alt="Download on App Store" />
+                </a>
+              </div>
+            </div>
+            <div className="app-download-visual">
+  <div className="phone-mockup">
+      <div className="phone-mockup__screen">
+        <img src={MobileScreen} alt="App Preview" />
+      </div>
+  </div>
+</div>
+
+          </div>
+        </div>
+      </section>
+
       {/* Promotional Banner Carousel */}
       <section className="promo-banner-section">
         <div className="section-container">
@@ -515,16 +623,16 @@ const Home = () => {
       {/* How It Works Section */}
       <section className="how-it-works-section">
         <div className="section-container">
-          <h2 className="section-heading">How HomeEats Works</h2>
-          <p className="section-subtitle">Get homemade food in 3 simple steps</p>
+          <h2 className="section-heading">How It Works</h2>
+          <p className="section-subtitle">Get your favorite food in 3 simple steps</p>
           
           <div className="steps-container">
             <div className="step-card">
               <div className="step-card__number">1</div>
               <div className="step-card__content">
-                <h3 className="step-card__title">Browse Home Kitchens</h3>
+                <h3 className="step-card__title">Choose Your Food</h3>
                 <p className="step-card__description">
-                  Discover talented home chefs in your neighborhood offering their specialties
+                  Browse through hundreds of restaurants and dishes in your area
                 </p>
               </div>
               <div className="step-card__icon">
@@ -554,7 +662,7 @@ const Home = () => {
               <div className="step-card__content">
                 <h3 className="step-card__title">Enjoy Your Meal</h3>
                 <p className="step-card__description">
-                  Receive your fresh, homemade food delivered fast or ready for pickup
+                  Receive your fresh, hot food delivered fast to your doorstep
                 </p>
               </div>
               <div className="step-card__icon">
@@ -571,7 +679,7 @@ const Home = () => {
       <section className="restaurants-section">
         <div className="section-container">
           <div className="section-header">
-            <h2 className="section-heading">Top Home Kitchens Near You</h2>
+            <h2 className="section-heading">Top Restaurants Near You</h2>
             {!isMobile && (
               <div className="slider-controls">
                 <button 
@@ -676,16 +784,13 @@ const Home = () => {
       <section className="cta-section">
         <div className="section-container">
           <div className="cta-content">
-            <h2 className="cta-title">Hungry for homemade goodness?</h2>
+            <h2 className="cta-title">Ready to satisfy your cravings?</h2>
             <p className="cta-subtitle">
-              Join thousands of happy customers enjoying authentic home-cooked meals delivered to their doorstep.
+              Join thousands of happy customers enjoying delicious meals delivered fast to their doorstep.
             </p>
             <div className="cta-buttons">
               <Link to="/home-kitchens" className="cta-button cta-button--primary">
                 Order Now
-              </Link>
-              <Link to="/register-your-homechef" className="cta-button cta-button--secondary">
-                Become a Home Chef
               </Link>
             </div>
           </div>

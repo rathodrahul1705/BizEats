@@ -150,10 +150,10 @@
 .hero-section {
   width: 100%;
   padding: var(--space-3xl) 0;
-  background: #E65C00; /* Updated to the requested color */
+  background: linear-gradient(135deg, #E65C00 0%, #FF8E3C 100%);
   position: relative;
   overflow: hidden;
-  color: white; /* Added for better contrast */
+  color: white;
 }
 
 .hero-section::before {
@@ -203,7 +203,7 @@
   font-weight: 800;
   line-height: 1.2;
   margin-bottom: var(--space-md);
-  color: white; /* Updated for better contrast */
+  color: white;
 }
 
 .hero-highlight {
@@ -216,7 +216,7 @@
 
 .hero-subtitle {
   font-size: var(--text-xl);
-  color: rgba(255,255,255,0.9); /* Updated for better contrast */
+  color: rgba(255,255,255,0.9);
   margin-bottom: var(--space-2xl);
   line-height: 1.6;
 }
@@ -298,14 +298,63 @@
   position: relative;
 }
 
-.hero-image__main {
-  max-width: 100%;
-  height: auto;
-  max-height: 500px;
+/* QR Download Card */
+.qr-download-card {
+  background: white;
   border-radius: var(--rounded-2xl);
+  padding: var(--space-xl);
+  box-shadow: var(--shadow-2xl);
+  text-align: center;
+  max-width: 300px;
   animation: float 6s ease-in-out infinite;
-  box-shadow: var(--shadow-xl);
   border: 8px solid white;
+}
+
+.qr-download-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-lg);
+  color: var(--text);
+}
+
+.qr-download-card__header h3 {
+  font-size: var(--text-lg);
+  font-weight: 700;
+  margin: 0;
+}
+
+.qr-download-card__qr {
+  margin-bottom: var(--space-lg);
+}
+
+.qr-download-card__qr img {
+  width: 200px;
+  height: 200px;
+  border-radius: var(--rounded-lg);
+  border: 2px solid var(--border);
+}
+
+.qr-download-card__stores {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.store-badge {
+  display: block;
+  transition: var(--transition);
+}
+
+.store-badge img {
+  height: 40px;
+  width: auto;
+  border-radius: var(--rounded);
+}
+
+.store-badge:hover {
+  transform: translateY(-2px);
 }
 
 .hero-image__floating {
@@ -413,27 +462,295 @@
   color: var(--text-light);
 }
 
-@keyframes float {
-  0% { transform: translateY(0px) rotate(0deg); }
-  50% { transform: translateY(-15px) rotate(2deg); }
-  100% { transform: translateY(0px) rotate(0deg); }
+/* App Download Section */
+.app-download-section {
+  padding: var(--space-3xl) 0;
+  background: #F1731C;
+  color: white;
 }
 
-@keyframes pulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-  100% { transform: scale(1); }
+.app-download-content {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2xl);
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateX(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
+.app-download-text {
+  flex: 1;
+}
+
+.app-download-text .section-heading {
+  color: white;
+  text-align: left;
+}
+
+.app-download-text .section-heading::after {
+  background: linear-gradient(90deg, white, rgba(255,255,255,0.5));
+}
+
+.app-download-text .section-subtitle {
+  color: rgba(255,255,255,0.9);
+  text-align: left;
+  margin-bottom: var(--space-xl);
+}
+
+.app-features {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  margin-bottom: var(--space-2xl);
+}
+
+.app-feature {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.app-feature__icon {
+  font-size: var(--text-2xl);
+  width: 50px;
+  height: 50px;
+  background: rgba(255,255,255,0.2);
+  border-radius: var(--rounded-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(5px);
+}
+
+.app-feature__text h4 {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  margin-bottom: var(--space-xs);
+  color: white;
+}
+
+.app-feature__text p {
+  color: rgba(255,255,255,0.8);
+  margin: 0;
+}
+
+.app-download-buttons {
+  display: flex;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+}
+
+.download-button {
+  display: block;
+  transition: var(--transition);
+}
+
+.download-button img {
+  height: 50px;
+  width: auto;
+  border-radius: var(--rounded);
+}
+
+.download-button:hover {
+  transform: translateY(-3px);
+}
+
+.app-download-visual {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
+
+.phone-mockup {
+  width: 300px;           /* Perfect mobile mockup width */
+  height: 600px;          /* Perfect mobile mockup height */
+  background: #1a1a1a;
+  border-radius: 40px;    /* Outer radius */
+  padding: 12px;
+  position: relative;
+  box-shadow: var(--shadow-2xl);
+  border: 8px solid #2d2d2d;
+}
+
+/* Customizable radius variable */
+.phone-mockup__screen {
+  width: 100%;
+  height: 100%;
+  background: white;
+  border-radius: var(--screen-radius, 32px); /* radius option */
+  overflow: hidden;
+}
+
+/* Perfect full-screen mobile image */
+.phone-mockup__screen img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;     /* ensures screen perfectly fills */
+  border-radius: inherit; /* auto follows radius */
+}
+
+
+/* YouTube Shorts Section */
+.youtube-shorts-section {
+  padding: var(--space-3xl) 0;
+  background: var(--bg-light);
+}
+
+.youtube-shorts-container {
+  display: flex;
+  justify-content: center;
+}
+
+.youtube-short-card {
+  max-width: 400px;
+  width: 100%;
+  background: white;
+  border-radius: var(--rounded-xl);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+  transition: var(--transition);
+  cursor: pointer;
+}
+
+.youtube-short-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-lg);
+}
+
+.youtube-short-card__video {
+  position: relative;
+}
+
+.youtube-short-card__thumbnail {
+  position: relative;
+  height: 300px;
+  overflow: hidden;
+}
+
+.youtube-short-card__thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.youtube-short-card:hover .youtube-short-card__thumbnail img {
+  transform: scale(1.05);
+}
+
+.youtube-short-card__play-button {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 80px;
+  height: 80px;
+  background: rgba(255, 0, 0, 0.8);
+  border-radius: var(--rounded-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  transition: var(--transition);
+}
+
+.youtube-short-card:hover .youtube-short-card__play-button {
+  background: rgba(255, 0, 0, 0.9);
+  transform: translate(-50%, -50%) scale(1.1);
+}
+
+.youtube-short-card__content {
+  padding: var(--space-lg);
+}
+
+.youtube-short-card__title {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: var(--space-sm);
+}
+
+.youtube-short-card__description {
+  font-size: var(--text-sm);
+  color: var(--text-light);
+  margin-bottom: var(--space-md);
+  line-height: 1.5;
+}
+
+.youtube-short-card__meta {
+  display: flex;
+  gap: var(--space-md);
+  font-size: var(--text-xs);
+  color: var(--text-lighter);
+}
+
+.youtube-short-card__duration {
+  background: var(--primary);
+  color: white;
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--rounded);
+  font-weight: 600;
+}
+
+/* Video Modal */
+.video-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: var(--space-md);
+}
+
+.video-modal__content {
+  position: relative;
+  width: 100%;
+  max-width: 800px;
+  background: black;
+  border-radius: var(--rounded-lg);
+  overflow: hidden;
+}
+
+.video-modal__close {
+  position: absolute;
+  top: var(--space-md);
+  right: var(--space-md);
+  width: 40px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: var(--rounded-full);
+  color: white;
+  font-size: var(--text-2xl);
+  cursor: pointer;
+  z-index: 1001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+}
+
+.video-modal__close:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.video-modal__video {
+  position: relative;
+  width: 100%;
+  height: 0;
+  padding-bottom: 56.25%; /* 16:9 aspect ratio */
+}
+
+.video-modal__video iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
 }
 
 /* Categories Section */
@@ -1179,37 +1496,18 @@
     gap: var(--space-xl);
   }
 
-  .food-item-card__name {
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--text);
-    margin-bottom: var(--space-sm);
-    display: -webkit-box;
-    -webkit-line-clamp: 1;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-
-  .how-it-works-section {
-    padding: var(--space-3xl) 0;
-    background: white;
-    text-align: center;
-  }
-  
-  .testimonials-section {
-    padding: var(--space-3xl) 0;
-    background: white;
+  .app-download-content {
+    flex-direction: column;
     text-align: center;
   }
 
-  .promo-banner-section {
-    padding: var(--space-2xl) 0;
-    position: relative;
+  .app-download-text .section-heading,
+  .app-download-text .section-subtitle {
     text-align: center;
   }
 
-  .promo-banner__button{
-    margin-bottom: 45px;
+  .app-features {
+    align-items: center;
   }
 
   .hero-text h1 {
@@ -1238,39 +1536,6 @@
     padding: var(--space-2xl) 0;
   }
   
-  .food-item-card__name {
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--text);
-    margin-bottom: var(--space-sm);
-    display: -webkit-box;
-    -webkit-line-clamp: 1;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-
-  .how-it-works-section {
-    padding: var(--space-3xl) 0;
-    background: white;
-    text-align: center;
-  }
-
-  .promo-banner-section {
-    padding: var(--space-2xl) 0;
-    position: relative;
-    text-align: center;
-  }
-
-  .promo-banner__button{
-    margin-bottom: 45px;
-  }
-  
-  .testimonials-section {
-    padding: var(--space-3xl) 0;
-    background: white;
-    text-align: center;
-  }
-
   .hero-content {
     flex-direction: column;
     text-align: center;
@@ -1346,6 +1611,20 @@
   .promo-banner__content {
     max-width: 100%;
   }
+
+  .qr-download-card {
+    max-width: 280px;
+    padding: var(--space-lg);
+  }
+
+  .qr-download-card__qr img {
+    width: 180px;
+    height: 180px;
+  }
+
+  .youtube-short-card {
+    max-width: 350px;
+  }
 }
 
 @media (max-width: 640px) {
@@ -1353,39 +1632,6 @@
     font-size: var(--text-3xl);
   }
   
-  .food-item-card__name {
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--text);
-    margin-bottom: var(--space-sm);
-    display: -webkit-box;
-    -webkit-line-clamp: 1;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-
-  .how-it-works-section {
-    padding: var(--space-3xl) 0;
-    background: white;
-    text-align: center;
-  }
-  
-  .testimonials-section {
-    padding: var(--space-3xl) 0;
-    background: white;
-    text-align: center;
-  }
-
-  .promo-banner-section {
-    padding: var(--space-2xl) 0;
-    position: relative;
-    text-align: center;
-  }
-
-  .promo-banner__button{
-    margin-bottom: 45px;
-  }
-
   .hero-subtitle {
     font-size: var(--text-base);
   }
@@ -1419,44 +1665,23 @@
   .cta-button {
     width: 100%;
   }
+
+  .app-download-buttons {
+    justify-content: center;
+  }
+
+  .download-button img {
+    height: 45px;
+  }
+
+  .youtube-short-card__thumbnail {
+    height: 250px;
+  }
 }
 
 @media (max-width: 480px) {
   .hero-section {
     padding: var(--space-xl) 0;
-  }
-
-  .food-item-card__name {
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--text);
-    margin-bottom: var(--space-sm);
-    display: -webkit-box;
-    -webkit-line-clamp: 1;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-  
-  .how-it-works-section {
-    padding: var(--space-3xl) 0;
-    background: white;
-    text-align: center;
-  }
-  
-  .testimonials-section {
-    padding: var(--space-3xl) 0;
-    background: white;
-    text-align: center;
-  }
-
-  .promo-banner-section {
-    padding: var(--space-2xl) 0;
-    position: relative;
-    text-align: center;
-  }
-
-  .promo-banner__button{
-    margin-bottom: 45px;
   }
   
   .hero-text h1 {
@@ -1504,6 +1729,34 @@
   .steps-container {
     grid-template-columns: 1fr;
   }
+
+  .qr-download-card {
+    max-width: 260px;
+    padding: var(--space-md);
+  }
+
+  .qr-download-card__qr img {
+    width: 160px;
+    height: 160px;
+  }
+
+  .store-badge img {
+    height: 35px;
+  }
+
+  .youtube-short-card__thumbnail {
+    height: 200px;
+  }
+
+  .youtube-short-card__play-button {
+    width: 60px;
+    height: 60px;
+  }
+
+  .youtube-short-card__play-button svg {
+    width: 24px;
+    height: 24px;
+  }
 }
 
 /* Animation Classes */
@@ -1529,4 +1782,16 @@
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+@keyframes float {
+  0% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-15px) rotate(2deg); }
+  100% { transform: translateY(0px) rotate(0deg); }
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
 }
