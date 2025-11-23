@@ -63,7 +63,7 @@ urlpatterns = [
     path("api/tags/list/", TagMasterListView.as_view()),
     path("api/tags/create/", TagMasterCreateView.as_view()),
 
-    path("api/user/assign-tags/", AssignTagCreateView.as_view()),
+    path("api/user/assigned-tags/list/", AssignTagCreateView.as_view()),
 
     path("api/notifications/list/", NotificationMasterListView.as_view()),
     path("api/notifications/create/", NotificationMasterCreateView.as_view()),

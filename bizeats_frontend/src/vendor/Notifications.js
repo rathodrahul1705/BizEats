@@ -102,12 +102,12 @@ const Notifications = () => {
       // This is optional - if you don't have users endpoint, you can skip it
       try {
         const usersResponse = await fetchData(
-          API_ENDPOINTS.USERS?.FETCH_ALL || "/api/users/",
+          API_ENDPOINTS.USER?.USER_LIST || "/api/users/",
           "GET",
           null,
           token
         );
-        setUsers(usersResponse || []);
+        setUsers(usersResponse?.users || []);
       } catch (userError) {
         console.warn("Could not fetch users:", userError);
         setUsers([]);
@@ -892,7 +892,7 @@ const Notifications = () => {
                   <div className="notification-header">
                     <div className="notification-title-group">
                       <h4 className="notification-title">
-                        {notification.template?.title || 'No Template'}
+                        {notification?.template_key || 'No Template'}
                       </h4>
                       <div className="notification-meta">
                         <span className={`status-badge ${notification.status}`}>
@@ -925,7 +925,7 @@ const Notifications = () => {
                         </div>
                         <div className="detail-item">
                           <strong>Target Tags:</strong> 
-                          <span>{notification.target_tags.map(tag => tag.name).join(', ') || 'None'}</span>
+                          <span>{notification.target_tags_details.map(tag => tag.name).join(', ') || 'None'}</span>
                         </div>
                       </div>
                       
@@ -1027,7 +1027,7 @@ const Notifications = () => {
                 >
                   <option value="">Select User</option>
                   {users.map(user => (
-                    <option key={user.id} value={user.id}>{Icons.user} {user.username} ({user.email})</option>
+                    <option key={user.id} value={user.id}>{Icons.user} {user.full_name} ({user.contact_number})</option>
                   ))}
                 </select>
               </div>
@@ -1067,14 +1067,16 @@ const Notifications = () => {
                     <span className="col-user">
                       <span className="mobile-label">User:</span>
                       <div className="user-info">
-                        {Icons.user} {assignedTag.user?.username} 
-                        <small>{assignedTag.user?.email}</small>
+                        {Icons.user} {assignedTag?.full_name} 
+                        <small>
+                          {assignedTag?.email ? assignedTag.email : assignedTag?.contact_number}
+                        </small>
                       </div>
                     </span>
                     <span className="col-tag">
                       <span className="mobile-label">Tag:</span>
                       <div className="tag-info">
-                        {Icons.tags} {assignedTag.tag?.name}
+                        {Icons.tags} {assignedTag?.tag_name}
                       </div>
                     </span>
                     <span className="col-date">
@@ -1117,7 +1119,7 @@ const Notifications = () => {
                 <div key={device.id} className={`device-card ${device.is_active ? 'active' : 'inactive'}`}>
                   <div className="device-header">
                     <div className="device-title-group">
-                      <h4>{Icons.devices} {device.user?.username} - {device.platform}</h4>
+                      <h4>{Icons.devices} {device.full_name} - {device.platform}</h4>
                       <span className={`device-status ${device.is_active ? 'active' : 'inactive'}`}>
                         {device.is_active ? `${Icons.active} Active` : `${Icons.inactive} Inactive`}
                       </span>
@@ -1129,7 +1131,7 @@ const Notifications = () => {
                       <div className="detail-group">
                         <div className="detail-item">
                           <strong>User:</strong> 
-                          <span>{Icons.user} {device.user?.email}</span>
+                          <span>{Icons.user} {device?.email}</span>
                         </div>
                         <div className="detail-item">
                           <strong>Platform:</strong> 

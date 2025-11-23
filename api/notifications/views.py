@@ -26,7 +26,7 @@ class TagMasterListView(generics.ListAPIView):
     serializer_class = TagMasterSerializer
 
 
-class AssignTagCreateView(generics.CreateAPIView):
+class AssignTagCreateView(generics.ListAPIView):
     queryset = AssignTags.objects.all()
     serializer_class = AssignTagsSerializer
 
@@ -81,10 +81,9 @@ class DeviceListView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        devices = Device.objects.filter(user=request.user)
+        devices = Device.objects.all()   # ← list every device
         serializer = DeviceSerializer(devices, many=True)
         return Response(serializer.data)
-    
 class DeviceDeleteView(APIView):
     permission_classes = [IsAuthenticated]
 

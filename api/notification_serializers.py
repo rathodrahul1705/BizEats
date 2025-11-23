@@ -10,9 +10,15 @@ class TagMasterSerializer(serializers.ModelSerializer):
 
 
 class AssignTagsSerializer(serializers.ModelSerializer):
+    email = serializers.CharField(source='user.email', read_only=True)
+    contact_number = serializers.CharField(source='user.contact_number', read_only=True)
+    full_name = serializers.CharField(source='user.full_name', read_only=True)
+    tag_name = serializers.CharField(source='tag.name', read_only=True)
+
     class Meta:
         model = AssignTags
         fields = "__all__"
+
 
 
 class NotificationMasterSerializer(serializers.ModelSerializer):
@@ -22,12 +28,18 @@ class NotificationMasterSerializer(serializers.ModelSerializer):
 
 
 class NotificationQueueSerializer(serializers.ModelSerializer):
+    template_key = serializers.CharField(source="template.key", read_only=True)
+    target_tags_details = TagMasterSerializer(source="target_tags", many=True, read_only=True)
     class Meta:
         model = NotificationQueue
         fields = "__all__"
 
 
+
 class DeviceSerializer(serializers.ModelSerializer):
+    email = serializers.CharField(source='user.email', read_only=True)
+    contact_number = serializers.CharField(source='user.contact_number', read_only=True)
+    full_name = serializers.CharField(source='user.full_name', read_only=True)
     class Meta:
         model = Device
         fields = "__all__"
