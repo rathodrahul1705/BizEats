@@ -319,6 +319,7 @@ const Home = () => {
   return (
     <div className="home-container">
       {/* Hero Section */}
+      {/* Hero Section - Improved QR Code Section */}
       <section className="hero-section">
         <div className="hero-content">
           <div className="hero-text">
@@ -354,32 +355,50 @@ const Home = () => {
             </div>
           </div>
           
-          <div className="hero-image">
+          <div className="hero-visual">
+            {/* Improved QR Download Card */}
             <div className="qr-download-card">
               <div className="qr-download-card__header">
-                <Smartphone size={26} />
-                <h4>Scan to Download App</h4>
+                <div className="qr-download-card__header-icon">
+                  <Smartphone size={24} />
+                </div>
+                <div className="qr-download-card__header-text">
+                  <h4 className="qr-download-card__title">Download Our App</h4>
+                  <p className="qr-download-card__subtitle">Better experience & exclusive deals</p>
+                </div>
               </div>
-              <div className="qr-download-card__qr">
-                <img src={QRCodeImage} alt="Download App QR Code" />
+              
+              <div className="qr-download-card__qr-container">
+                <img 
+                  src={QRCodeImage} 
+                  alt="Download Eatoor App QR Code" 
+                  className="qr-download-card__qr"
+                />
+                <p className="qr-download-card__scan-text">
+                  Scan to download the app
+                </p>
               </div>
+              
               <div className="qr-download-card__stores">
-                <a 
-                  href="https://play.google.com/store/apps/details?id=com.eatoor" 
-                  className="store-badge"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <img src={PlayStoreBadge} alt="Get on Google Play" />
-                </a>
-                <a 
-                  href="https://apps.apple.com/in/app/eatoor-food-delivery-app/id6479472712" 
-                  className="store-badge"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <img src={AppStoreBadge} alt="Download on App Store" />
-                </a>
+                <h5 className="qr-download-card__stores-title">Available On</h5>
+                <div className="qr-download-card__store-badges">
+                  <a 
+                    href="https://play.google.com/store/apps/details?id=com.eatoor" 
+                    className="store-badge"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <img src={PlayStoreBadge} alt="Get on Google Play" />
+                  </a>
+                  <a 
+                    href="https://apps.apple.com/in/app/eatoor-food-delivery-app/id6479472712" 
+                    className="store-badge"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <img src={AppStoreBadge} alt="Download on App Store" />
+                  </a>
+                </div>
               </div>
             </div>
           </div>
@@ -480,7 +499,6 @@ const Home = () => {
                   <h3 className="youtube-short-card__title">Eatoor App Launch | Order Food, Track Delivery & Review</h3>
                   <p className="youtube-short-card__description">
                     Welcome to Eatoor – your all-in-one food delivery app! 🍴✨ In this video, we walk you through the complete Eatoor app flow:
-
                   </p>
                   <div className="youtube-short-card__meta">
                     <span className="youtube-short-card__duration">Short</span>
@@ -569,13 +587,12 @@ const Home = () => {
               </div>
             </div>
             <div className="app-download-visual">
-  <div className="phone-mockup">
-      <div className="phone-mockup__screen">
-        <img src={MobileScreen} alt="App Preview" />
-      </div>
-  </div>
-</div>
-
+              <div className="phone-mockup">
+                <div className="phone-mockup__screen">
+                  <img src={MobileScreen} alt="App Preview" />
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>

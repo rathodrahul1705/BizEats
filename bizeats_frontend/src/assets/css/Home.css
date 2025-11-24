@@ -146,7 +146,7 @@
   cursor: not-allowed;
 }
 
-/* Hero Section */
+/* Hero Section - Improved */
 .hero-section {
   width: 100%;
   padding: var(--space-3xl) 0;
@@ -163,6 +163,7 @@
   right: -50%;
   width: 100%;
   height: 200%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 70%);
   z-index: 0;
 }
 
@@ -250,24 +251,6 @@
   box-shadow: 0 15px 30px rgba(0,0,0,0.2);
 }
 
-.hero-cta__secondary {
-  font-weight: 600;
-  color: white;
-  transition: var(--transition);
-  text-decoration: none;
-  display: flex;
-  align-items: center;
-  gap: var(--space-xs);
-  border: 2px solid rgba(255,255,255,0.3);
-  padding: var(--space-md) var(--space-xl);
-  border-radius: var(--rounded-lg);
-}
-
-.hero-cta__secondary:hover {
-  background: rgba(255,255,255,0.1);
-  transform: translateX(5px);
-}
-
 .hero-stats {
   display: flex;
   gap: var(--space-xl);
@@ -277,6 +260,7 @@
 .hero-stat {
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
 }
 
 .hero-stat strong {
@@ -290,7 +274,7 @@
   color: rgba(255,255,255,0.8);
 }
 
-.hero-image {
+.hero-visual {
   flex: 1;
   display: flex;
   justify-content: center;
@@ -298,16 +282,30 @@
   position: relative;
 }
 
-/* QR Download Card */
+/* QR Download Card - IMPROVED */
 .qr-download-card {
   background: white;
   border-radius: var(--rounded-2xl);
   padding: var(--space-xl);
   box-shadow: var(--shadow-2xl);
   text-align: center;
-  max-width: 300px;
+  max-width: 380px;
+  width: 100%;
   animation: float 6s ease-in-out infinite;
-  border: 8px solid white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  position: relative;
+  overflow: hidden;
+}
+
+.qr-download-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--primary), var(--primary-light));
 }
 
 .qr-download-card__header {
@@ -317,156 +315,155 @@
   gap: var(--space-sm);
   margin-bottom: var(--space-lg);
   color: var(--text);
+  padding-bottom: var(--space-md);
+  border-bottom: 1px solid var(--border);
 }
 
-.qr-download-card__header h3 {
-  font-size: var(--text-lg);
+.qr-download-card__header-icon {
+  color: var(--primary);
+  background: rgba(230, 92, 0, 0.1);
+  padding: var(--space-sm);
+  border-radius: var(--rounded-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.qr-download-card__header-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.qr-download-card__title {
+  font-size: var(--text-xl);
   font-weight: 700;
   margin: 0;
+  color: var(--text);
+  line-height: 1.2;
+}
+
+.qr-download-card__subtitle {
+  font-size: var(--text-sm);
+  color: var(--text-light);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.qr-download-card__qr-container {
+  margin-bottom: var(--space-lg);
+  padding: var(--space-md);
+  background: linear-gradient(135deg, var(--bg-light) 0%, var(--bg) 100%);
+  border-radius: var(--rounded-lg);
+  display: inline-block;
+  border: 1px solid var(--border);
+  position: relative;
 }
 
 .qr-download-card__qr {
-  margin-bottom: var(--space-lg);
-}
-
-.qr-download-card__qr img {
   width: 200px;
   height: 200px;
-  border-radius: var(--rounded-lg);
-  border: 2px solid var(--border);
+  border-radius: var(--rounded);
+  display: block;
+  margin: 0 auto;
+}
+
+.qr-download-card__scan-text {
+  font-size: var(--text-xs);
+  color: var(--text-light);
+  margin-top: var(--space-sm);
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+}
+
+.qr-download-card__scan-text::before {
+  content: '📱';
+  font-size: var(--text-sm);
 }
 
 .qr-download-card__stores {
   display: flex;
   flex-direction: column;
-  gap: var(--space-sm);
+  gap: var(--space-md);
+  align-items: center;
+}
+
+.qr-download-card__stores-title {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text);
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  position: relative;
+  display: inline-block;
+}
+
+.qr-download-card__stores-title::after {
+  content: '';
+  display: block;
+  width: 30px;
+  height: 2px;
+  background: var(--primary);
+  margin: var(--space-xs) auto 0;
+  border-radius: var(--rounded-full);
+}
+
+.qr-download-card__store-badges {
+  display: flex;
+  gap: var(--space-md);
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
 }
 
 .store-badge {
   display: block;
   transition: var(--transition);
+  width: 140px;
+  border-radius: var(--rounded-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
 }
 
 .store-badge img {
-  height: 40px;
-  width: auto;
-  border-radius: var(--rounded);
-}
-
-.store-badge:hover {
-  transform: translateY(-2px);
-}
-
-.hero-image__floating {
-  position: absolute;
-  top: 0;
-  right: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-md);
-}
-
-.floating-badge {
-  position: relative;
-  background: white;
-  border-radius: var(--rounded-full);
-  padding: var(--space-sm) var(--space-md);
-  box-shadow: var(--shadow-lg);
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  z-index: 2;
-  animation: pulse 2s infinite;
-}
-
-.floating-badge__icon {
-  width: 24px;
-  height: 24px;
-  background: var(--primary);
-  border-radius: var(--rounded-full);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.floating-badge__content {
-  display: flex;
-  flex-direction: column;
-}
-
-.floating-badge__rating {
-  font-weight: 700;
-  color: var(--text);
-  font-size: var(--text-sm);
-}
-
-.floating-badge__reviews {
-  font-size: var(--text-xs);
-  color: var(--text-light);
-}
-
-.floating-card {
-  background: white;
-  border-radius: var(--rounded-lg);
-  padding: var(--space-sm);
-  box-shadow: var(--shadow-md);
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  max-width: 160px;
+  width: 100%;
+  height: auto;
+  display: block;
   transition: var(--transition);
 }
 
-.floating-card:hover {
-  transform: translateY(-5px);
-  box-shadow: var(--shadow-lg);
+.store-badge:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
 }
 
-.floating-card--delivery {
-  position: relative;
-  background: white;
-  border-radius: var(--rounded-full);
-  padding: var(--space-sm) var(--space-md);
-  box-shadow: var(--shadow-lg);
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  z-index: 2;
-  animation: pulse 2s infinite;
+.store-badge:hover img {
+  transform: scale(1.05);
 }
 
-.floating-card__icon {
-  width: 32px;
-  height: 32px;
-  background: rgba(108, 99, 255, 0.1);
-  border-radius: var(--rounded-full);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--secondary);
-}
-
-.floating-card__content {
-  display: flex;
-  flex-direction: column;
-}
-
-.floating-card__title {
-  font-size: var(--text-xs);
-  font-weight: 600;
-  color: var(--text);
-}
-
-.floating-card__subtitle {
-  font-size: var(--text-xs);
-  color: var(--text-light);
-}
-
-/* App Download Section */
+/* App Download Section - Improved */
 .app-download-section {
   padding: var(--space-3xl) 0;
-  background: #F1731C;
+  background: linear-gradient(135deg, #F1731C 0%, #E65C00 100%);
   color: white;
+  position: relative;
+  overflow: hidden;
+}
+
+.app-download-section::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -50%;
+  width: 100%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 70%);
+  z-index: 0;
 }
 
 .app-download-content {
@@ -475,25 +472,31 @@
   gap: var(--space-2xl);
   max-width: 1200px;
   margin: 0 auto;
+  position: relative;
+  z-index: 1;
 }
 
 .app-download-text {
   flex: 1;
+  max-width: 500px;
 }
 
 .app-download-text .section-heading {
   color: white;
   text-align: left;
+  margin-bottom: var(--space-md);
 }
 
 .app-download-text .section-heading::after {
   background: linear-gradient(90deg, white, rgba(255,255,255,0.5));
+  margin: var(--space-sm) 0 0;
 }
 
 .app-download-text .section-subtitle {
   color: rgba(255,255,255,0.9);
   text-align: left;
   margin-bottom: var(--space-xl);
+  font-size: var(--text-lg);
 }
 
 .app-features {
@@ -505,8 +508,18 @@
 
 .app-feature {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: var(--space-md);
+  padding: var(--space-md);
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: var(--rounded-lg);
+  backdrop-filter: blur(5px);
+  transition: var(--transition);
+}
+
+.app-feature:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateX(5px);
 }
 
 .app-feature__icon {
@@ -519,6 +532,7 @@
   align-items: center;
   justify-content: center;
   backdrop-filter: blur(5px);
+  flex-shrink: 0;
 }
 
 .app-feature__text h4 {
@@ -531,6 +545,7 @@
 .app-feature__text p {
   color: rgba(255,255,255,0.8);
   margin: 0;
+  font-size: var(--text-sm);
 }
 
 .app-download-buttons {
@@ -542,52 +557,62 @@
 .download-button {
   display: block;
   transition: var(--transition);
+  width: 160px;
+  border-radius: var(--rounded-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
 }
 
 .download-button img {
-  height: 50px;
-  width: auto;
-  border-radius: var(--rounded);
+  width: 100%;
+  height: auto;
+  display: block;
+  transition: var(--transition);
 }
 
 .download-button:hover {
   transform: translateY(-3px);
+  box-shadow: var(--shadow-lg);
+}
+
+.download-button:hover img {
+  transform: scale(1.05);
 }
 
 .app-download-visual {
   flex: 1;
   display: flex;
   justify-content: center;
+  align-items: center;
 }
 
 .phone-mockup {
-  width: 300px;           /* Perfect mobile mockup width */
-  height: 600px;          /* Perfect mobile mockup height */
-  background: #1a1a1a;
-  border-radius: 40px;    /* Outer radius */
+  width: 300px;
+  height: 600px;
+  background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+  border-radius: 40px;
   padding: 12px;
   position: relative;
   box-shadow: var(--shadow-2xl);
   border: 8px solid #2d2d2d;
+  animation: float 4s ease-in-out infinite;
 }
 
-/* Customizable radius variable */
 .phone-mockup__screen {
   width: 100%;
   height: 100%;
   background: white;
-  border-radius: var(--screen-radius, 32px); /* radius option */
+  border-radius: 32px;
   overflow: hidden;
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.1);
 }
 
-/* Perfect full-screen mobile image */
 .phone-mockup__screen img {
   width: 100%;
   height: 100%;
-  object-fit: cover;     /* ensures screen perfectly fills */
-  border-radius: inherit; /* auto follows radius */
+  object-fit: cover;
+  border-radius: inherit;
 }
-
 
 /* YouTube Shorts Section */
 .youtube-shorts-section {
@@ -667,6 +692,7 @@
   font-weight: 600;
   color: var(--text);
   margin-bottom: var(--space-sm);
+  line-height: 1.4;
 }
 
 .youtube-short-card__description {
@@ -674,6 +700,10 @@
   color: var(--text-light);
   margin-bottom: var(--space-md);
   line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .youtube-short-card__meta {
@@ -713,6 +743,7 @@
   background: black;
   border-radius: var(--rounded-lg);
   overflow: hidden;
+  box-shadow: var(--shadow-2xl);
 }
 
 .video-modal__close {
@@ -770,7 +801,6 @@
   padding: var(--space-xs) 0;
   scrollbar-width: none;
   -ms-overflow-style: none;
-  color: #000;
 }
 
 .categories-scroller::-webkit-scrollbar {
@@ -791,20 +821,29 @@
   transition: var(--transition);
   white-space: nowrap;
   flex-shrink: 0;
+  color: var(--text);
 }
 
 .category-pill:hover {
   background: var(--bg-dark);
+  transform: translateY(-2px);
 }
 
 .category-pill.active {
   background: var(--primary);
   color: white;
   box-shadow: 0 4px 15px rgba(230, 92, 0, 0.3);
+  transform: translateY(-2px);
 }
 
 .category-pill__emoji {
   font-size: var(--text-lg);
+}
+
+.category-pill__name {
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: 500;
 }
 
 /* Food Items Section */
@@ -914,6 +953,7 @@
 .food-item-card__price {
   font-weight: 700;
   color: var(--primary);
+  font-size: var(--text-lg);
 }
 
 .food-item-card__rating {
@@ -980,8 +1020,12 @@
   left: 0;
   width: 100%;
   height: 100%;
+}
+
+.promo-banner__image img {
+  width: 100%;
+  height: 100%;
   object-fit: cover;
-  z-index: 0;
 }
 
 .promo-banner__content {
@@ -1078,6 +1122,7 @@
   position: relative;
   overflow: hidden;
   border: 1px solid var(--border);
+  text-align: center;
 }
 
 .step-card:hover {
@@ -1130,7 +1175,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-top: var(--space-xl);
+  margin: var(--space-lg) auto 0;
   color: var(--primary);
 }
 
@@ -1323,6 +1368,7 @@
   transition: var(--transition);
   height: 100%;
   border: 1px solid var(--border);
+  text-align: center;
 }
 
 .testimonial-card:hover {
@@ -1344,6 +1390,7 @@
   margin-bottom: var(--space-xl);
   text-align: center;
   position: relative;
+  line-height: 1.6;
 }
 
 .testimonial-card__quote::before,
@@ -1370,11 +1417,13 @@
   justify-content: center;
   color: white;
   font-weight: 600;
+  flex-shrink: 0;
 }
 
 .testimonial-card__author-info {
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
 }
 
 .testimonial-card__author-name {
@@ -1479,17 +1528,6 @@
   box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
 }
 
-.cta-button--secondary {
-  background: transparent;
-  color: white;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-}
-
-.cta-button--secondary:hover {
-  background: rgba(255, 255, 255, 0.1);
-  transform: translateY(-3px);
-}
-
 /* Responsive Styles */
 @media (max-width: 1024px) {
   .hero-content {
@@ -1499,6 +1537,11 @@
   .app-download-content {
     flex-direction: column;
     text-align: center;
+    gap: var(--space-2xl);
+  }
+
+  .app-download-text {
+    max-width: 100%;
   }
 
   .app-download-text .section-heading,
@@ -1508,6 +1551,11 @@
 
   .app-features {
     align-items: center;
+  }
+
+  .app-feature {
+    max-width: 400px;
+    margin: 0 auto;
   }
 
   .hero-text h1 {
@@ -1550,23 +1598,8 @@
     justify-content: center;
   }
   
-  .hero-image {
+  .hero-visual {
     margin-top: var(--space-xl);
-  }
-  
-  .hero-image__floating {
-    flex-direction: row;
-    top: auto;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    justify-content: center;    
-  }
-  
-  .floating-badge {
-    position: relative;
-    top: auto;
-    right: auto;
   }
   
   .section-heading {
@@ -1607,23 +1640,32 @@
   .cta-subtitle {
     font-size: var(--text-lg);
   }
-  
-  .promo-banner__content {
-    max-width: 100%;
-  }
 
   .qr-download-card {
-    max-width: 280px;
+    max-width: 340px;
     padding: var(--space-lg);
   }
 
-  .qr-download-card__qr img {
+  .qr-download-card__qr {
     width: 180px;
     height: 180px;
   }
 
+  .qr-download-card__store-badges {
+    gap: var(--space-sm);
+  }
+
+  .store-badge {
+    width: 130px;
+  }
+
   .youtube-short-card {
     max-width: 350px;
+  }
+
+  .phone-mockup {
+    width: 280px;
+    height: 560px;
   }
 }
 
@@ -1670,12 +1712,43 @@
     justify-content: center;
   }
 
-  .download-button img {
-    height: 45px;
+  .download-button {
+    width: 140px;
   }
 
   .youtube-short-card__thumbnail {
     height: 250px;
+  }
+
+  .hero-stats {
+    justify-content: center;
+    gap: var(--space-lg);
+  }
+
+  .hero-stat {
+    align-items: center;
+  }
+
+  .qr-download-card {
+    max-width: 320px;
+    padding: var(--space-md);
+  }
+
+  .qr-download-card__qr {
+    width: 160px;
+    height: 160px;
+  }
+
+  .store-badge {
+    width: 120px;
+  }
+
+  .qr-download-card__title {
+    font-size: var(--text-lg);
+  }
+
+  .qr-download-card__subtitle {
+    font-size: var(--text-xs);
   }
 }
 
@@ -1731,17 +1804,22 @@
   }
 
   .qr-download-card {
-    max-width: 260px;
+    max-width: 280px;
     padding: var(--space-md);
   }
 
-  .qr-download-card__qr img {
-    width: 160px;
-    height: 160px;
+  .qr-download-card__qr {
+    width: 140px;
+    height: 140px;
   }
 
-  .store-badge img {
-    height: 35px;
+  .store-badge {
+    width: 110px;
+  }
+
+  .qr-download-card__store-badges {
+    flex-direction: column;
+    gap: var(--space-sm);
   }
 
   .youtube-short-card__thumbnail {
@@ -1756,6 +1834,12 @@
   .youtube-short-card__play-button svg {
     width: 24px;
     height: 24px;
+  }
+
+  .phone-mockup {
+    width: 250px;
+    height: 500px;
+    border-radius: 30px;
   }
 }
 
