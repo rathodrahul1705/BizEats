@@ -40,14 +40,30 @@ except Exception as e:
     raise
 
 
-def send_otp_via_twilio(contact_number, otp):
+def send_otp_via_twilio(contact_number, otp, app_hash=None):
     """Send OTP using Twilio SMS API."""
     try:
         logger.info(f"TWILIO_ACCOUNT_SID: {TWILIO_ACCOUNT_SID}: TWILIO_AUTH_TOKEN {TWILIO_AUTH_TOKEN} : TWILIO_PHONE_NUMBER {TWILIO_PHONE_NUMBER}")
 
         logger.info(f"Attempting to send OTP to {contact_number}")
+
+        if app_hash:
+            body = (
+                f"<#> Hello, {otp} is the OTP for Eatoor.\n"
+                f"App login using your phone number.\n"
+                f"Do not share it with anyone.\n"
+                f"{app_hash} - EATOOR"
+            )
+        else:
+            body = (
+                f"Hello, {otp} is the OTP for Eatoor.\n"
+                f"App login using your phone number.\n"
+                f"Do not share it with anyone.\n"
+                f"EATOOR"
+            )
+    
         message = twilio_client.messages.create(
-            body=f"Your EATOOR login OTP is {otp}",
+            body=body,
             from_=TWILIO_PHONE_NUMBER,
             to=f"+91{contact_number}"  # Assuming Indian numbers, adjust as needed
         )
@@ -82,7 +98,10 @@ class MobileLoginSendOTP(BaseOTPView):
     """
     def post(self, request, *args, **kwargs):
         contact = request.data.get("contact_number")
-        logger.info(f"MobileLoginSendOTP request received for contact: {contact}")
+        platform = request.data.get("platform")
+        app_hash = request.data.get("app_hash")
+
+        logger.info(f"MobileLoginSendOTP request received for contact: {contact} | platform: {platform} | app_hash: {app_hash}")
         
         if not contact:
             logger.warning("MobileLoginSendOTP: Contact number missing in request")
@@ -111,7 +130,7 @@ class MobileLoginSendOTP(BaseOTPView):
         otp = self.update_user_otp(user)
 
         try:
-            send_otp_via_twilio(contact, otp)
+            send_otp_via_twilio(contact, otp, app_hash=app_hash if platform == 'android' else None)
             logger.info(f"OTP sent successfully to {contact}")
         except Exception as e:
             logger.error(f"Failed to send OTP to {contact}: {str(e)}")
