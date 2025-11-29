@@ -49,10 +49,9 @@ def send_otp_via_twilio(contact_number, otp, app_hash=None):
 
         if app_hash:
             body = (
-                f"<#> Hello, {otp} is the OTP for Eatoor.\n"
-                f"App login using your phone number.\n"
-                f"Do not share it with anyone.\n"
-                f"{app_hash} - EATOOR"
+                f"<#> Your Eatoor OTP is {otp}\n"
+                f"Do not share this code with anyone.\n"
+                f"{app_hash}"
             )
         else:
             body = (
