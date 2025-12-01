@@ -381,9 +381,9 @@ class CartWithRestaurantDetails(APIView):
                     "item_id": item.id,
                     "original_item_price": float(item.item_price),
                     "buy_one_get_one_free": item.buy_one_get_one_free,
-                    "quantity": item.quantity,
+                    "quantity": 1,
                     "item_price": float(item.item_price),
-                    "type": 1,
+                    "type": item.food_type,
                     "item_image": request.build_absolute_uri(item.item_image.url) if item.item_image else None
                 }
                 for item in suggestion_items_qs
