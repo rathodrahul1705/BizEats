@@ -368,26 +368,35 @@ class CartWithRestaurantDetails(APIView):
 
             # Fetch suggestion items (from same restaurant, excluding already in cart)
             cart_item_ids = [item.item_id for item in cart_items]
+
             suggestion_items_qs = RestaurantMenu.objects.filter(
                 restaurant_id=restaurant_id
             ).exclude(id__in=cart_item_ids)[:5]
 
-            suggestion_cart_items = [
-                {
+            suggestion_cart_items = []
+
+            for item in suggestion_items_qs:
+                original_price = float(item.item_price)
+
+                # Apply discount logic
+                if item.discount_percent and item.discount_percent > 0:
+                    discounted_price = original_price - (original_price * (item.discount_percent / 100))
+                else:
+                    discounted_price = original_price
+
+                suggestion_cart_items.append({
                     "item_name": item.item_name,
                     "item_description": item.description,
                     "discount_active": item.discount_active,
                     "discount_percent": item.discount_percent,
                     "item_id": item.id,
-                    "original_item_price": float(item.item_price),
+                    "original_item_price": original_price,
                     "buy_one_get_one_free": item.buy_one_get_one_free,
                     "quantity": 1,
-                    "item_price": float(item.item_price),
+                    "item_price": round(discounted_price, 2),  # Updated discounted price
                     "type": item.food_type,
                     "item_image": request.build_absolute_uri(item.item_image.url) if item.item_image else None
-                }
-                for item in suggestion_items_qs
-            ]
+                })
 
             # Get delivery address dynamically from UserDeliveryAddress table
             delivery_address_details = {}
