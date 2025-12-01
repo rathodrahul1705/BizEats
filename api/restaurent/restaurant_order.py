@@ -362,7 +362,7 @@ class CartWithRestaurantDetails(APIView):
                     "item_price": float(item.item_price),
                     "original_item_price": float(restaurant_menu.item_price * item.quantity) if restaurant_menu else 0,
                     "buy_one_get_one_free": item.buy_one_get_one_free,
-                    "quantity": 1,
+                    "quantity": item.quantity,
                     "item_image": request.build_absolute_uri(item.item.item_image.url) if item.item.item_image else None,
                 })
 
@@ -383,7 +383,7 @@ class CartWithRestaurantDetails(APIView):
                     "buy_one_get_one_free": item.buy_one_get_one_free,
                     "quantity": item.quantity,
                     "item_price": float(item.item_price),
-                    "type": item.food_type,
+                    "type": 1,
                     "item_image": request.build_absolute_uri(item.item_image.url) if item.item_image else None
                 }
                 for item in suggestion_items_qs
