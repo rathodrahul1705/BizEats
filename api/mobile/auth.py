@@ -55,10 +55,8 @@ def send_otp_via_twilio(contact_number, otp, app_hash=None):
             )
         else:
             body = (
-                f"Hello, {otp} is the OTP for Eatoor.\n"
-                f"App login using your phone number.\n"
-                f"Do not share it with anyone.\n"
-                f"EATOOR"
+                f"Your Eatoor OTP is {otp}.\n"
+                f"Do not share this code with anyone.\n"
             )
     
         message = twilio_client.messages.create(
@@ -247,7 +245,10 @@ class MobileLoginResendOTP(BaseOTPView):
     """
     def post(self, request, *args, **kwargs):
         contact = request.data.get("contact_number")
-        logger.info(f"MobileLoginResendOTP request received for contact: {contact}")
+        platform = request.data.get("platform")
+        app_hash = request.data.get("app_hash")
+
+        logger.info(f"MobileLoginResendOTP request received for contact: {contact} | platform: {platform} | app_hash: {app_hash}")
 
         if not contact:
             logger.warning("MobileLoginResendOTP: Contact number missing")
@@ -269,7 +270,7 @@ class MobileLoginResendOTP(BaseOTPView):
         otp = self.update_user_otp(user)
 
         try:
-            send_otp_via_twilio(contact, otp)
+            send_otp_via_twilio(contact, otp, app_hash=app_hash if platform == 'android' else None)
             logger.info(f"OTP resent successfully to {contact}")
         except Exception as e:
             logger.error(f"Failed to resend OTP to {contact}: {str(e)}")
