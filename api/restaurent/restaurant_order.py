@@ -375,7 +375,13 @@ class CartWithRestaurantDetails(APIView):
             suggestion_cart_items = [
                 {
                     "item_name": item.item_name,
+                    "item_description": item.description,
+                    "discount_active": item.discount_active,
+                    "discount_percent": item.discount_percent,
                     "item_id": item.id,
+                    "original_item_price": float(restaurant_menu.item_price * item.quantity) if restaurant_menu else 0,
+                    "buy_one_get_one_free": item.buy_one_get_one_free,
+                    "quantity": item.quantity,
                     "item_price": float(item.item_price),
                     "type": item.food_type,
                     "item_image": request.build_absolute_uri(item.item_image.url) if item.item_image else None
