@@ -377,10 +377,11 @@ class CartWithRestaurantDetails(APIView):
 
             for item in suggestion_items_qs:
                 original_price = float(item.item_price)
+                discount_percent = float(item.discount_percent or 0)  # convert to float safely
 
                 # Apply discount logic
-                if item.discount_percent and item.discount_percent > 0:
-                    discounted_price = original_price - (original_price * (item.discount_percent / 100))
+                if discount_percent > 0:
+                    discounted_price = original_price - (original_price * (discount_percent / 100))
                 else:
                     discounted_price = original_price
 
@@ -388,12 +389,12 @@ class CartWithRestaurantDetails(APIView):
                     "item_name": item.item_name,
                     "item_description": item.description,
                     "discount_active": item.discount_active,
-                    "discount_percent": item.discount_percent,
+                    "discount_percent": discount_percent,
                     "item_id": item.id,
                     "original_item_price": original_price,
                     "buy_one_get_one_free": item.buy_one_get_one_free,
                     "quantity": 1,
-                    "item_price": round(discounted_price, 2),  # Updated discounted price
+                    "item_price": round(discounted_price, 2),  # final discounted price
                     "type": item.food_type,
                     "item_image": request.build_absolute_uri(item.item_image.url) if item.item_image else None
                 })
