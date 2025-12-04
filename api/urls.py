@@ -4,7 +4,7 @@ from api.delivery.porter_admin import admin_porter_orders
 from api.favourites import FavouriteKitchenListView, FavouriteKitchenToggleView
 from api.mobile.home import HomeKitchenList
 from api.notifications.notification_send import process_notification_queue, send_fcm_notification
-from api.notifications.views import AssignTagCreateView, DeviceDeleteView, DeviceListView, DeviceRegisterView, NotificationMasterCreateView, NotificationMasterListView, NotificationQueueCreateView, NotificationQueueListView, RemoveDeviceToken, TagMasterCreateView, TagMasterListView
+from api.notifications.views import AssignTagCreateView, AssignTagListView, DeviceDeleteView, DeviceListView, DeviceRegisterView, NotificationMasterCreateView, NotificationMasterListView, NotificationQueueCreateView, NotificationQueueListView, RemoveDeviceToken, TagMasterCreateView, TagMasterListView
 from api.payment.payment import create_order, verify_payment
 from api.search.searchcontent import search_results, search_suggestions
 from api.storage_backends import GetSingleImageFromS3, ListImagesFromS3, UploadImageToS3
@@ -63,7 +63,8 @@ urlpatterns = [
     path("api/tags/list/", TagMasterListView.as_view()),
     path("api/tags/create/", TagMasterCreateView.as_view()),
 
-    path("api/user/assigned-tags/list/", AssignTagCreateView.as_view()),
+    path("api/user/assigned-tags/list/", AssignTagListView.as_view()),
+    path("api/user/assigned-tags/create/", AssignTagCreateView.as_view()),
 
     path("api/notifications/list/", NotificationMasterListView.as_view()),
     path("api/notifications/create/", NotificationMasterCreateView.as_view()),

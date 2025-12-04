@@ -2,9 +2,11 @@ from rest_framework import generics
 from rest_framework.response import Response
 # from django.contrib.auth.models import User
 from rest_framework.decorators import api_view
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 from rest_framework import status
 from django.utils import timezone
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.views import APIView
 from api.models import TagMaster, AssignTags, NotificationMaster, NotificationQueue
 from api.notification_serializers import (
@@ -26,10 +28,14 @@ class TagMasterListView(generics.ListAPIView):
     serializer_class = TagMasterSerializer
 
 
-class AssignTagCreateView(generics.ListAPIView):
+class AssignTagListView(generics.ListAPIView):
     queryset = AssignTags.objects.all()
     serializer_class = AssignTagsSerializer
 
+@method_decorator(csrf_exempt, name='dispatch')
+class AssignTagCreateView(generics.CreateAPIView):
+    queryset = AssignTags.objects.all()
+    serializer_class = AssignTagsSerializer
 
 class NotificationMasterCreateView(generics.CreateAPIView):
     queryset = NotificationMaster.objects.all()
