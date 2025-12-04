@@ -61,6 +61,7 @@ urlpatterns = [
 
     # Noftifications api start
 
+
     path("api/tags/list/", TagMasterListView.as_view()),
     path("api/tags/create/", TagMasterCreateView.as_view()),
 
@@ -194,6 +195,7 @@ urlpatterns = [
     path('api/test/', trigger_background_task),
 
     re_path(r'^(?!media/).*$', ReactAppView.as_view(), name='react-app'),
+
 
 
 ]
