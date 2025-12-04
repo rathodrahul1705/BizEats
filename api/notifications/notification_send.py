@@ -9,7 +9,6 @@ from firebase_admin import messaging
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from api.models import NotificationQueue, Device
-from api.notifications.notification_payload import track_order_function
 
 User = get_user_model()
 MAX_ATTEMPTS = 5
@@ -44,7 +43,7 @@ def send_push_notification(tokens, title, body, data=None):
 def send_email_notification(email, subject, body, username, offer=None):
 
     html_body = build_email_html(
-        logo_url="https://eatoorprod.s3.amazonaws.com/eatoor-logo/fwdeatoorlogofiles/5.png",
+        logo_url="https://eatoorprod.s3.amazonaws.com/uploads/80645c4afd0d47dea9c05b0091714778.jpg",
         title=subject,
         message=body,
         button_text="Order Now",
@@ -73,7 +72,7 @@ def process_notification_queue(request):
     qs = (
         NotificationQueue.objects
         .filter(next_try_at__lte=timezone.now())
-        .exclude(status__in=["sent"])
+        .exclude(status__in=["sent", "cancelled"])   # FIXED
         .select_related("template", "user")
     )
 
@@ -82,6 +81,9 @@ def process_notification_queue(request):
     for queue in qs:
         template = queue.template
 
+        # ------------------------------
+        # 1. Target users
+        # ------------------------------
         if queue.user:
             users = [queue.user]
         else:
@@ -98,13 +100,15 @@ def process_notification_queue(request):
             queue.save()
             continue
 
+        # ------------------------------
+        # 2. Send per user
+        # ------------------------------
         for user in users:
             dynamic = queue.payload or {}
             dynamic["username"] = user.full_name
+
             subject = template.subject
-            body = template.body
-            status = "sent"
-            errors = []
+            body = template.body.replace("{{username}}", user.full_name)
 
             devices = list(
                 Device.objects.filter(
@@ -113,16 +117,12 @@ def process_notification_queue(request):
                 ).values_list("token", flat=True)
             )
 
-            if template.key == "SIGNUP_OFFER":
-                body = body.replace("{{username}}", user.full_name)
+            status = "sent"
+            errors = []
 
-            if template.key == "ORDER_STATUS_NOTIFICATION":
-                body = track_order_function(queue.payload, body)
-            
             # ------------------------------
             # EMAIL
             # ------------------------------
-
             if queue.channel in ["email", "both"]:
                 ok, msg = send_email_notification(
                     email=user.email,
@@ -138,7 +138,6 @@ def process_notification_queue(request):
             # ------------------------------
             # PUSH
             # ------------------------------
-            
             if queue.channel in ["push", "both"]:
                 ok, msg = send_push_notification(
                     tokens=devices,
@@ -150,6 +149,9 @@ def process_notification_queue(request):
                     status = "failed"
                     errors.append("Push: " + msg)
 
+            # ------------------------------
+            # 3. Update Queue Logic
+            # ------------------------------
             queue.attempts += 1
             queue.sent_at = timezone.now()
 
