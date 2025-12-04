@@ -11,7 +11,6 @@ from api.notification_serializers import (
     DeviceSerializer, TagMasterSerializer, AssignTagsSerializer,
     NotificationMasterSerializer, NotificationQueueSerializer,Device
 )
-
 # --------------------------
 # CRUD APIs
 # --------------------------
