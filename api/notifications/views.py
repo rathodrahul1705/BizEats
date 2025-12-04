@@ -32,6 +32,7 @@ class AssignTagListView(generics.ListAPIView):
     queryset = AssignTags.objects.all()
     serializer_class = AssignTagsSerializer
 
+
 @method_decorator(csrf_exempt, name='dispatch')
 class AssignTagCreateView(generics.CreateAPIView):
     queryset = AssignTags.objects.all()
