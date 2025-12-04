@@ -61,6 +61,7 @@ urlpatterns = [
 
     # Noftifications api start
 
+
     path("api/tags/list/", TagMasterListView.as_view()),
     path("api/tags/create/", TagMasterCreateView.as_view()),
 

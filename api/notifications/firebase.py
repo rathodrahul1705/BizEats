@@ -9,3 +9,4 @@ def initialize_firebase():
         cred = credentials.Certificate("eatoor-firebase-configuration.json")
         firebase_admin.initialize_app(cred)
         print("Firebase initialized successfully!")
+
