@@ -1,7 +1,6 @@
 from api.models import Device
 from api.notification_serializers import DeviceSerializer
 
-
 def register_device_for_user(user, token, platform):
     """
     Registers or updates a device token for a user.
