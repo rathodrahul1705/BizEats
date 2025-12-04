@@ -197,6 +197,7 @@ urlpatterns = [
     re_path(r'^(?!media/).*$', ReactAppView.as_view(), name='react-app'),
 
 
+
 ]
 
 if settings.DEBUG:

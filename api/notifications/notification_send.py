@@ -11,6 +11,7 @@ from rest_framework.response import Response
 from api.models import NotificationQueue, Device
 from api.notifications.notification_payload import track_order_function
 
+
 User = get_user_model()
 MAX_ATTEMPTS = 5
 
