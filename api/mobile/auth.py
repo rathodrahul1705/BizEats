@@ -16,8 +16,9 @@ from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
 from django.conf import settings
-from api.models import FavouriteKitchen, Order, OrderReview
+from api.models import FavouriteKitchen, Order, OrderReview, Wallet
 from api.notifications.device_utils import register_device_for_user
+from api.wallet.services import credit_wallet
 
 
 User = get_user_model()
@@ -298,6 +299,10 @@ class UserProfileUpdates(APIView):
 
     def put(self, request, *args, **kwargs):
         user = request.user
+
+        if user:
+            give_signup_bonus_if_needed(user)
+
         data = request.data
         logger.info(f"UserProfileUpdates request received for user {user.id} with data: {data}")
 
@@ -524,3 +529,21 @@ class GetUserDetails(APIView):
 
         except User.DoesNotExist:
             return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
+def give_signup_bonus_if_needed(user):
+    wallet, created = Wallet.objects.get_or_create(user=user)
+
+    # Already given?
+    if wallet.signup_bonus_given:
+        return
+    
+    # Give bonus
+    credit_wallet(
+        wallet=wallet,
+        amount=100,
+        source="promo_credit",
+        note="Signup Bonus"
+    )
+    
+    wallet.signup_bonus_given = True
+    wallet.save()

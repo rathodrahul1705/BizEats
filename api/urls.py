@@ -9,6 +9,7 @@ from api.payment.payment import create_order, verify_payment
 from api.search.searchcontent import search_results, search_suggestions
 from api.storage_backends import GetSingleImageFromS3, ListImagesFromS3, UploadImageToS3
 from api.vendor.Coupon import CouponCreateView, CouponDeleteView, CouponDetailView, CouponListView, CouponUpdateView
+from api.wallet.views import AddMoneySuccessView, AdminAdjustWalletView, CreateRazorpayOrderView, DebitWalletForOrder, RefundWalletView, TransactionHistoryView, WalletView
 from .vendor.Vendor import GetVendorWiseCounts
 from .views import CustomTokenRefreshView, FetchReviewView, FetchUserList, FetchCartList, UserProfileUpdate, UserProfileView, UserRegistrationView, OTPVerificationView, UserLoginView, ContactUsView, ReactAppView, SubmitOrderReviewView
 from .restaurent.registration_process import RestaurantStatusUpdate, RestaurantStoreStepOne, RestaurantStoreStepTwo, RestaurantStoreStepThree, RestaurantStoreStepFour, RestaurantByUserAPIView, RestaurantByRestauranrtAPIView, RestaurantMenueStore, RestaurantMenueList,RestaurantMenueDetails,RestaurantMenueUpdate,RestaurantMenueDelete, RestaurantListAPI, RestaurantDetailMenuView
@@ -84,6 +85,19 @@ urlpatterns = [
     path('api/device/remove/', RemoveDeviceToken.as_view(), name='device-remove'),
     
     # Noftifications api end
+
+
+    # wallet Management start
+
+    path("api/wallet/", WalletView.as_view()),
+    path("api/wallet/create-order/", CreateRazorpayOrderView.as_view()),
+    path("api/wallet/add-money-success/", AddMoneySuccessView.as_view()),
+    path("api/wallet/debit/", DebitWalletForOrder.as_view()),
+    path("api/wallet/refund/", RefundWalletView.as_view()),
+    path("api/wallet/transactions/", TransactionHistoryView.as_view()),
+    path("api/wallet/admin-adjust/", AdminAdjustWalletView.as_view()),
+
+     # wallet Management end
 
     path("api/contact-us/", ContactUsView.as_view(), name="contact-us"), 
     path("api/user-profile-update/", UserProfileUpdate.as_view(), name="user-profile-update"), 
