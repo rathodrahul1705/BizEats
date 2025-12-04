@@ -514,6 +514,7 @@ class LiveLocationDetails(APIView):
             "porter_agent_assign_status": porter_agent_status,
             "porter_tracking_details": porter_tracking_details
         }, status=status.HTTP_200_OK)
+    
 @method_decorator(csrf_exempt, name='dispatch')
 class UpdateOrderLiveLocationView(APIView):
     """

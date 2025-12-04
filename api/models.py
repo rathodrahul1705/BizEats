@@ -669,6 +669,7 @@ class RestaurantCategory(models.Model):
 
     def __str__(self):
         return self.category_name
+    
 class OfferDetail(models.Model):
     OFFER_TYPE_CHOICES = [
         ('coupon_code', 'Coupon Code'),
@@ -937,3 +938,52 @@ class Device(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.platform}"
+
+class Wallet(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="wallet")
+    balance = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    signup_bonus_given = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.user.username} Wallet"
+
+
+class WalletTransaction(models.Model):
+
+    TRANSACTION_TYPES = (
+        ("credit", "Credit"),
+        ("debit", "Debit"),
+    )
+
+    TRANSACTION_SOURCES = (
+        ("add_money", "Add Money"),
+        ("order_payment", "Order Payment"),
+        ("order_refund", "Order Refund"),
+        ("promo_credit", "Promo Credit"),
+        ("manual_adjustment", "Manual Adjustment"),
+    )
+
+    STATUS_CHOICES = (
+        ("pending", "Pending"),
+        ("success", "Success"),
+        ("failed", "Failed"),
+    )
+
+    wallet = models.ForeignKey(Wallet, on_delete=models.CASCADE, related_name="transactions")
+    txn_type = models.CharField(max_length=10, choices=TRANSACTION_TYPES)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    balance_before = models.DecimalField(max_digits=10, decimal_places=2)
+    balance_after = models.DecimalField(max_digits=10, decimal_places=2)
+    txn_source = models.CharField(max_length=30, choices=TRANSACTION_SOURCES)
+    order = models.ForeignKey("api.Order", null=True, blank=True, on_delete=models.SET_NULL)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default="success")
+    note = models.CharField(max_length=255, blank=True)
+    razorpay_payment_id = models.CharField(max_length=100, null=True, blank=True)
+    razorpay_order_id = models.CharField(max_length=100, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.txn_type} {self.amount}"

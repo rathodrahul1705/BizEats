@@ -161,7 +161,7 @@ const API_ENDPOINTS = {
   },
 
   ASSIGNED_TAGS: {
-    CREATE: `${BASE_URL}/user/assign-tags/`,
+    CREATE: `${BASE_URL}/user/assign-tags/create/`,
     FETCH_ALL: `${BASE_URL}/user/assigned-tags/list/`,
   },
 
