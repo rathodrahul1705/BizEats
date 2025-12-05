@@ -2,7 +2,7 @@
 from rest_framework import serializers
 from api.models import OfferDetail
 from api.serializers import RestaurantMasterSerializer
-
+from django.core.exceptions import ValidationError
 class OfferSerializer(serializers.ModelSerializer):
     restaurant_details = RestaurantMasterSerializer(source='restaurant', read_only=True)
     is_valid = serializers.BooleanField(read_only=True)
@@ -171,3 +171,132 @@ class OfferSerializer(serializers.ModelSerializer):
             validated_data['minimum_order_amount'] = instance.minimum_order_amount or 0
             
         return super().update(instance, validated_data)
+
+def validate_offer_payload(data, is_update=False, instance=None, user=None):
+    """
+    Universal validation function for OfferDetail.
+    Works for:
+        - coupon_code
+        - free_delivery
+        - auto_discount
+        - restaurant_deal
+        - credit
+    """
+
+    offer_type = data.get('offer_type') or (instance.offer_type if instance else None)
+    sub_filter = data.get('sub_filter') or (instance.sub_filter if instance else None)
+
+    errors = {}
+
+    # --------------------------------------
+    # BASIC OFFER TYPE CHECK
+    # --------------------------------------
+    if not offer_type:
+        errors['offer_type'] = "Offer type is required"
+
+    # --------------------------------------
+    # COUPON CODE VALIDATION
+    # --------------------------------------
+    if offer_type == 'coupon_code':
+        code = data.get('code') or (instance.code if instance else None)
+
+        if not code:
+            errors['code'] = "Coupon code is required"
+        elif len(code) > 20:
+            errors['code'] = "Coupon code cannot exceed 20 characters"
+
+    # --------------------------------------
+    # RESTAURANT VALIDATION
+    # --------------------------------------
+    if offer_type == 'restaurant_deal' and not data.get('restaurant'):
+        errors['restaurant'] = "Restaurant is required for restaurant deals"
+
+    if sub_filter == 'specific_restaurant' and not data.get('restaurant'):
+        errors['restaurant'] = "Restaurant required when sub_filter is specific_restaurant"
+
+    # Non-admin users must provide restaurant
+    if user and getattr(user, 'role', None) != 2:
+        if not instance and not data.get('restaurant'):
+            errors['restaurant'] = "Restaurant is required for restaurant users"
+
+    # --------------------------------------
+    # DISCOUNT VALIDATION (common for coupon, auto_discount, credit)
+    # --------------------------------------
+    discount_required_types = ['coupon_code', 'auto_discount', 'credit']
+    if offer_type in discount_required_types:
+        discount_type = data.get('discount_type') or (instance.discount_type if instance else None)
+        discount_value = data.get('discount_value') or (instance.discount_value if instance else None)
+
+        if not discount_type:
+            errors['discount_type'] = "Discount type is required"
+
+        if not discount_value:
+            errors['discount_value'] = "Discount value is required"
+        else:
+            if discount_type == 'percentage' and float(discount_value) > 100:
+                errors['discount_value'] = "Percentage discount cannot exceed 100%"
+
+    # --------------------------------------
+    # FREE DELIVERY VALIDATION
+    # --------------------------------------
+    if offer_type == 'free_delivery':
+
+        # Minimum Amount Filter
+        if sub_filter == 'minimum_amount':
+            if not data.get('minimum_order_amount'):
+                errors['minimum_order_amount'] = "Minimum order amount is required"
+
+        # Location Based Filter
+        if sub_filter == 'location_based':
+            max_dist = data.get('max_delivery_distance')
+            max_fee = data.get('max_delivery_fee')
+
+            if not max_dist:
+                errors['max_delivery_distance'] = "Maximum delivery distance is required"
+            elif float(max_dist) <= 0:
+                errors['max_delivery_distance'] = "Maximum delivery distance must be positive"
+
+            if max_fee is None:
+                errors['max_delivery_fee'] = "Maximum delivery fee is required"
+            elif float(max_fee) < 0:
+                errors['max_delivery_fee'] = "Maximum delivery fee cannot be negative"
+
+    # --------------------------------------
+    # CREDIT OFFER VALIDATION
+    # --------------------------------------
+    if offer_type == 'credit':
+        credit_amount = data.get('credit_amount') or (instance.credit_amount if instance else None)
+        credit_expiry = data.get('credit_expiry_days') or (instance.credit_expiry_days if instance else None)
+
+        if not credit_amount and not data.get('discount_value'):
+            errors['credit_amount'] = "Credit amount or discount value is required"
+
+        if credit_amount and float(credit_amount) <= 0:
+            errors['credit_amount'] = "Credit amount must be positive"
+
+        if credit_expiry and not (1 <= int(credit_expiry) <= 365):
+            errors['credit_expiry_days'] = "Credit expiry must be between 1 and 365 days"
+
+    # --------------------------------------
+    # DATE VALIDATION
+    # --------------------------------------
+    valid_from = data.get('valid_from')
+    valid_to = data.get('valid_to')
+
+    if valid_from and valid_to and valid_from >= valid_to:
+        errors['valid_to'] = "End date must be after start date"
+
+    # --------------------------------------
+    # MINIMUM ORDER AMOUNT
+    # --------------------------------------
+    if data.get('minimum_order_amount') is not None:
+        if float(data['minimum_order_amount']) < 0:
+            errors['minimum_order_amount'] = "Minimum order amount cannot be negative"
+
+    # --------------------------------------
+    # RAISE ERRORS IF ANY
+    # --------------------------------------
+    if errors:
+        raise ValidationError(errors)
+
+    return True  # All validations passed

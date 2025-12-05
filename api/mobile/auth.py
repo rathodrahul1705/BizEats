@@ -18,6 +18,7 @@ from django.core.mail import send_mail
 from django.conf import settings
 from api.models import FavouriteKitchen, Order, OrderReview, Wallet
 from api.notifications.device_utils import register_device_for_user
+from api.offer.view import check_credit_offer
 from api.wallet.services import credit_wallet
 
 
@@ -556,14 +557,27 @@ class GetUserDetails(APIView):
 def give_signup_bonus_if_needed(user):
     wallet, created = Wallet.objects.get_or_create(user=user)
 
-    # Already given?
     if wallet.signup_bonus_given:
         return
     
-    # Give bonus
+    offer_response = check_credit_offer(offer_type="credit",sub_filter="new_user")
+
+    offer_data = offer_response.get("data")
+
+    if not offer_data:
+        return
+    
+    amount = offer_data.get("credit_amount") or offer_data.get("discount_value")
+    
+    if not amount:
+        return
+    
+
+    amount = float(amount)
+
     credit_wallet(
         wallet=wallet,
-        amount=100,
+        amount=amount,
         source="promo_credit",
         note="Signup Bonus"
     )

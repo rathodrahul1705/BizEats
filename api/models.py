@@ -670,11 +670,6 @@ class RestaurantCategory(models.Model):
     def __str__(self):
         return self.category_name
     
-from django.db import models
-from django.core.validators import MinValueValidator
-from django.utils import timezone
-from django.core.exceptions import ValidationError
-
 class OfferDetail(models.Model):
     # ------------------------------
     # OFFER TYPES
