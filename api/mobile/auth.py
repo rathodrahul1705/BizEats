@@ -24,7 +24,7 @@ from api.wallet.services import credit_wallet
 User = get_user_model()
 logger = logging.getLogger(__name__)
 
-# Constants (should be moved to settings.py or environment variables in production)
+# Constants (should be moved to settings.py or environment variables in prod)
 TWILIO_ACCOUNT_SID = f"{settings.TWILIO_ACCOUNT_SID}"
 TWILIO_AUTH_TOKEN = f"{settings.TWILIO_AUTH_TOKEN}"
 TWILIO_PHONE_NUMBER = f"{settings.TWILIO_PHONE_NUMBER}"
@@ -81,11 +81,16 @@ class BaseOTPView(APIView):
         return otp
     
     def update_user_otp(self, user):
-        otp = self.generate_otp()
+
+        if getattr(settings, "APP_ENV", "prod") == "local":
+            otp = 123456
+        else:
+            otp = self.generate_otp()
+
         user.otp = otp
-        # user.otp = 123456
         user.otp_expiry = now() + timedelta(seconds=OTP_EXPIRY_SECONDS)
         user.save(update_fields=["otp", "otp_expiry"])
+
         logger.info(f"Updated OTP for user {user.id} (expires at {user.otp_expiry})")
         return otp
 
@@ -127,9 +132,19 @@ class MobileLoginSendOTP(BaseOTPView):
 
         otp = self.update_user_otp(user)
 
+        
         try:
-            send_otp_via_twilio(contact, otp, app_hash=app_hash if platform == 'android' else None)
-            logger.info(f"OTP sent successfully to {contact}")
+
+            if getattr(settings, "APP_ENV", "prod") == "prod":
+                send_otp_via_twilio(
+                    contact,
+                    otp,
+                    app_hash=app_hash if platform == 'android' else None
+                )
+                logger.info(f"OTP sent successfully to {contact}")
+            else:
+                logger.info(f"OTP sending skipped (APP_ENV={settings.APP_ENV})")
+
         except Exception as e:
             logger.error(f"Failed to send OTP to {contact}: {str(e)}")
             return Response(
@@ -271,8 +286,16 @@ class MobileLoginResendOTP(BaseOTPView):
         otp = self.update_user_otp(user)
 
         try:
-            send_otp_via_twilio(contact, otp, app_hash=app_hash if platform == 'android' else None)
-            logger.info(f"OTP resent successfully to {contact}")
+            if getattr(settings, "APP_ENV", "prod") == "prod":
+                send_otp_via_twilio(
+                    contact,
+                    otp,
+                    app_hash=app_hash if platform == 'android' else None
+                )
+                logger.info(f"OTP resent successfully to {contact}")
+            else:
+                logger.info(f"OTP resend skipped (APP_ENV={settings.APP_ENV})")
+
         except Exception as e:
             logger.error(f"Failed to resend OTP to {contact}: {str(e)}")
             return Response(
