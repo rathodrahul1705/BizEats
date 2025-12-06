@@ -671,68 +671,115 @@ class RestaurantCategory(models.Model):
         return self.category_name
     
 class OfferDetail(models.Model):
+    # ------------------------------
+    # OFFER TYPES
+    # ------------------------------
     OFFER_TYPE_CHOICES = [
         ('coupon_code', 'Coupon Code'),
-        ('automatic_discount', 'Automatic Discount'),
-        ('first_time_user', 'First-time User Offer'),
         ('free_delivery', 'Free Delivery'),
-        ('vendor_specific', 'Vendor-specific Deal'),
+        ('credit', 'Credit'),
+        ('restaurant_deal', 'Restaurant Deal'),
+        ('auto_discount', 'Auto Discount'),
     ]
-    
+
+    # ------------------------------
+    # SUB FILTERS
+    # ------------------------------
+    SUB_FILTER_CHOICES = [
+        ('new_user', 'New User'),
+        ('minimum_amount', 'Minimum Amount'),
+        ('specific_restaurant', 'Specific Restaurant'),
+        ('location_based', 'Location Based'),
+        ('referral_bonus', 'Referral Bonus'),
+        ('cashback', 'Cashback'),
+    ]
+
+    # ------------------------------
+    # DISCOUNT TYPE
+    # ------------------------------
     DISCOUNT_TYPE_CHOICES = [
         ('percentage', 'Percentage'),
         ('fixed', 'Fixed Amount'),
     ]
-    
+
+    # ------------------------------
+    # CREDIT TYPE
+    # ------------------------------
+    CREDIT_TYPE_CHOICES = [
+        ('fixed_amount', 'Fixed Amount'),
+    ]
+
+    # ------------------------------
+    # STATUS
+    # ------------------------------
     INACTIVE = 0
     APPROVED = 1
     PENDING_APPROVAL = 2
 
     STATUS_CHOICES = [
-        (INACTIVE, 'Reject'),
+        (INACTIVE, 'Rejected'),
         (APPROVED, 'Approved'),
         (PENDING_APPROVAL, 'Pending Approval'),
     ]
 
-    # Basic fields
+    # ------------------------------
+    # BASIC DETAILS
+    # ------------------------------
     offer_type = models.CharField(max_length=30, choices=OFFER_TYPE_CHOICES)
+    sub_filter = models.CharField(
+        max_length=30,
+        choices=SUB_FILTER_CHOICES,
+        blank=True,
+        null=True
+    )
     is_active = models.IntegerField(choices=STATUS_CHOICES, default=PENDING_APPROVAL)
+    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    # Code - Only required for coupon_code offers
+    # ------------------------------
+    # COUPON CODE
+    # ------------------------------
     code = models.CharField(
         max_length=20,
         unique=True,
         blank=True,
-        null=True
+        null=True,
+        help_text="Required for coupon_code offer type"
     )
-    
-    # Discount details
+
+    # ------------------------------
+    # DISCOUNT DETAILS
+    # ------------------------------
     discount_type = models.CharField(
         max_length=15,
         choices=DISCOUNT_TYPE_CHOICES,
         blank=True,
-        null=True
+        null=True,
+        help_text="Required for coupon_code, auto_discount, and credit"
     )
     discount_value = models.DecimalField(
-        max_digits=6,
+        max_digits=10,
         decimal_places=2,
         validators=[MinValueValidator(0.01)],
         blank=True,
-        null=True
+        null=True,
+        help_text="Required for coupon_code, auto_discount, and credit"
     )
-    
-    # Free delivery
+
+    # ------------------------------
+    # MINIMUM ORDER AMOUNT
+    # ------------------------------
     minimum_order_amount = models.DecimalField(
         max_digits=10,
         decimal_places=2,
         validators=[MinValueValidator(0)],
-        blank=True,
-        null=True
+        default=0
     )
-    
-    # Restaurant (for vendor-specific deals)
+
+    # ------------------------------
+    # RESTAURANT
+    # ------------------------------
     restaurant = models.ForeignKey(
         'RestaurantMaster',
         on_delete=models.CASCADE,
@@ -741,61 +788,184 @@ class OfferDetail(models.Model):
         null=True,
         to_field='restaurant_id'
     )
-    
-    # Validity
+
+    # ------------------------------
+    # VALIDITY
+    # ------------------------------
     valid_from = models.DateTimeField(blank=True, null=True)
     valid_to = models.DateTimeField(blank=True, null=True)
-    
-    # Usage limits
+
+    # ------------------------------
+    # USAGE LIMITS
+    # ------------------------------
     max_uses = models.PositiveIntegerField(blank=True, null=True)
     max_uses_per_user = models.PositiveIntegerField(blank=True, null=True)
     times_used = models.PositiveIntegerField(default=0)
-    
+
+    # ------------------------------
+    # FREE DELIVERY FIELDS
+    # ------------------------------
+    max_delivery_distance = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        blank=True,
+        null=True,
+        help_text="Maximum delivery distance in km for location-based free delivery"
+    )
+    max_delivery_fee = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        blank=True,
+        null=True,
+        help_text="Maximum delivery fee covered for free delivery offers"
+    )
+
+    # ------------------------------
+    # CREDIT FIELDS
+    # ------------------------------
+    credit_amount = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        blank=True,
+        null=True,
+        help_text="Credit amount (used when offer_type is 'credit')"
+    )
+    credit_type = models.CharField(
+        max_length=20,
+        choices=CREDIT_TYPE_CHOICES,
+        blank=True,
+        null=True,
+        default='fixed_amount',
+        help_text="Type of credit offer"
+    )
+    credit_expiry_days = models.PositiveIntegerField(
+        blank=True,
+        null=True,
+        default=30,
+        help_text="Credit expiry in days from first use"
+    )
+
     class Meta:
         db_table = "offer_details"
-    
+        ordering = ['-created_at']
+        verbose_name = "Offer Detail"
+        verbose_name_plural = "Offer Details"
+
     def __str__(self):
         return f"{self.get_offer_type_display()} - {self.code or 'No Code'}"
 
+    @property
     def is_valid(self):
+        """Check if offer is currently valid"""
         now = timezone.now()
-        if not self.is_active:
+        
+        if self.is_active != self.APPROVED:
             return False
+        
         if self.valid_from and now < self.valid_from:
             return False
+        
         if self.valid_to and now > self.valid_to:
             return False
+        
         if self.max_uses is not None and self.times_used >= self.max_uses:
             return False
+        
         return True
 
     def clean(self):
-        """Custom field validation"""
         errors = {}
 
-        # Coupon code required for coupon_code offers
+        # --- Offer type validation ---
+        if not self.offer_type:
+            errors['offer_type'] = 'Offer type is required'
+
+        # --- Coupon Code validation ---
         if self.offer_type == 'coupon_code':
             if not self.code:
-                errors['code'] = 'Coupon code is required for coupon code offers'
+                errors['code'] = 'Coupon code is required for coupon_code offer type'
+            elif len(self.code) > 20:
+                errors['code'] = 'Coupon code cannot exceed 20 characters'
 
-        # Restaurant is mandatory for vendor_specific offer type
-        if self.offer_type == 'vendor_specific' and not self.restaurant:
-            errors['restaurant'] = 'Restaurant is required for vendor-specific offers'
+        # --- Restaurant validation ---
+        if self.offer_type == 'restaurant_deal' and not self.restaurant:
+            errors['restaurant'] = 'Restaurant is required for restaurant deals'
 
-        # Discount type and value are mandatory for specific offer types
-        if self.offer_type in ['coupon_code', 'automatic_discount', 'first_time_user']:
+        if self.sub_filter == 'specific_restaurant' and not self.restaurant:
+            errors['restaurant'] = 'Restaurant required when sub_filter is specific_restaurant'
+
+        # --- Discount validation for applicable offer types ---
+        discount_required_types = ['coupon_code', 'auto_discount', 'credit']
+        if self.offer_type in discount_required_types:
             if not self.discount_type:
-                errors['discount_type'] = 'Discount type is required for this offer type'
+                errors['discount_type'] = 'Discount type is required'
             if not self.discount_value:
-                errors['discount_value'] = 'Discount value is required for this offer type'
+                errors['discount_value'] = 'Discount value is required'
+            
+            if self.discount_type == 'percentage' and self.discount_value > 100:
+                errors['discount_value'] = 'Percentage discount cannot exceed 100%'
 
-        # Validity check
+        # --- Free Delivery validation ---
+        if self.offer_type == 'free_delivery':
+            if self.sub_filter == 'minimum_amount' and not self.minimum_order_amount:
+                errors['minimum_order_amount'] = 'Minimum order amount is required for this filter'
+            
+            if self.sub_filter == 'location_based':
+                if not self.max_delivery_distance:
+                    errors['max_delivery_distance'] = 'Maximum delivery distance is required for location-based free delivery'
+                elif self.max_delivery_distance <= 0:
+                    errors['max_delivery_distance'] = 'Maximum delivery distance must be positive'
+                
+                if not self.max_delivery_fee:
+                    errors['max_delivery_fee'] = 'Maximum delivery fee is required for location-based free delivery'
+                elif self.max_delivery_fee < 0:
+                    errors['max_delivery_fee'] = 'Maximum delivery fee cannot be negative'
+
+        # --- Credit validation ---
+        if self.offer_type == 'credit':
+            if not self.credit_amount and not self.discount_value:
+                errors['credit_amount'] = 'Credit amount or discount value is required for credit offers'
+            elif self.credit_amount and self.credit_amount <= 0:
+                errors['credit_amount'] = 'Credit amount must be positive'
+            
+            if self.credit_expiry_days and (self.credit_expiry_days < 1 or self.credit_expiry_days > 365):
+                errors['credit_expiry_days'] = 'Credit expiry days must be between 1 and 365'
+
+        # --- Date validation ---
         if self.valid_from and self.valid_to and self.valid_from >= self.valid_to:
-            errors['valid_to'] = 'End date must be after the start date'
+            errors['valid_to'] = 'End date must be after start date'
+
+        # --- Usage limits validation ---
+        if self.max_uses is not None and self.max_uses <= 0:
+            errors['max_uses'] = 'Maximum uses must be positive or empty'
+        
+        if self.max_uses_per_user is not None and self.max_uses_per_user <= 0:
+            errors['max_uses_per_user'] = 'Maximum uses per user must be positive or empty'
+        
+        if self.times_used < 0:
+            errors['times_used'] = 'Times used cannot be negative'
+
+        # --- Minimum order amount validation ---
+        if self.minimum_order_amount is not None and self.minimum_order_amount < 0:
+            errors['minimum_order_amount'] = 'Minimum order amount cannot be negative'
 
         if errors:
             raise ValidationError(errors)
-         
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        
+        # Set default values
+        if self.offer_type == 'credit':
+            if not self.credit_type:
+                self.credit_type = 'fixed_amount'
+            if not self.credit_expiry_days:
+                self.credit_expiry_days = 30
+        
+        if not self.minimum_order_amount:
+            self.minimum_order_amount = 0
+            
+        super().save(*args, **kwargs)
 class FavouriteKitchen(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     restaurant = models.ForeignKey(RestaurantMaster, on_delete=models.CASCADE)

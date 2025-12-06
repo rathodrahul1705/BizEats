@@ -16,6 +16,8 @@ if not firebase_admin._apps:
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+APP_ENV = config('APP_ENV')
+
 SECRET_KEY = config("SECRET_KEY")
 REACT_APP_BASE_URL = config("REACT_APP_BASE_URL")
 DEBUG = config("DEBUG", default=False, cast=bool)

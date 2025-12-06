@@ -30,6 +30,7 @@ from django.conf import settings
 from django.utils.html import strip_tags
 from django.contrib.auth import get_user_model
 from django.utils.timezone import now
+from rest_framework.decorators import action
 
 
 logger = logging.getLogger(__name__)
@@ -319,110 +320,257 @@ class RestaurantCategoryViewSet(viewsets.ModelViewSet):
         restaurant_id = self.request.query_params.get('restaurant_id')
         if restaurant_id:
             return self.queryset.filter(restaurant_id=restaurant_id)
-        return self.queryset
-    
+        return self.queryset    
 class OfferViewSet(viewsets.ModelViewSet):
     serializer_class = OfferSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         user = self.request.user
-        restaurant = self.request.query_params.get('restaurant_id')
         code = self.request.query_params.get('code')
 
-        queryset = OfferDetail.objects.all().order_by('-id')
+        queryset = OfferDetail.objects.all().order_by('-created_at')
 
+        # Filter by code if provided
         if code:
             queryset = queryset.filter(code=code)
 
-        if hasattr(user, 'role') and user.role == 2:  # Admin
-            if restaurant:
-                return queryset.filter(restaurant_id=restaurant)
+        # ✅ ADMIN: SHOW ALL OFFERS (NO FILTER)
+        if hasattr(user, 'role') and user.role == 2:
             return queryset
 
-        if restaurant:
-            return queryset.filter(restaurant_id=restaurant)
+        # ✅ NON-ADMIN: SHOW ONLY THEIR RESTAURANT OFFERS
+        user_restaurants = []
+
+        if hasattr(user, 'restaurants'):
+            user_restaurants = user.restaurants.all()
+
+        if user_restaurants:
+            restaurant_ids = [r.restaurant_id for r in user_restaurants]
+            return queryset.filter(restaurant_id__in=restaurant_ids)
 
         return queryset.none()
 
     def perform_create(self, serializer):
+        user = self.request.user
+        restaurant_id = self.request.data.get('restaurant')
+        query_restaurant_id = self.request.query_params.get('restaurant_id')
+
+        # ✅ ADMIN CAN CREATE ANY OFFER OR GLOBAL OFFER
+        if hasattr(user, 'role') and user.role == 2:
+            if restaurant_id:
+                try:
+                    restaurant = RestaurantMaster.objects.get(restaurant_id=restaurant_id)
+                    serializer.validated_data['restaurant'] = restaurant
+                except RestaurantMaster.DoesNotExist:
+                    serializer.validated_data['restaurant'] = None
+            else:
+                serializer.validated_data['restaurant'] = None
+
+        else:
+            # NON-ADMIN MUST CREATE ONLY IN THEIR RESTAURANT
+            if restaurant_id:
+                user_restaurants = getattr(user, "restaurants", [])
+                if user_restaurants and user_restaurants.filter(restaurant_id=restaurant_id).exists():
+                    restaurant = RestaurantMaster.objects.get(restaurant_id=restaurant_id)
+                    serializer.validated_data['restaurant'] = restaurant
+                else:
+                    raise serializers.ValidationError({'restaurant': 'You do not have permission for this restaurant'})
+
+            elif query_restaurant_id:
+                try:
+                    restaurant = RestaurantMaster.objects.get(restaurant_id=query_restaurant_id)
+                    serializer.validated_data['restaurant'] = restaurant
+                except RestaurantMaster.DoesNotExist:
+                    raise serializers.ValidationError({'restaurant': 'Restaurant not found'})
+
+            else:
+                if hasattr(user, 'restaurants') and user.restaurants.exists():
+                    serializer.validated_data['restaurant'] = user.restaurants.first()
+                else:
+                    raise serializers.ValidationError({'restaurant': 'No restaurant associated with your account'})
+
         instance = serializer.save()
 
+        # Send email only for coupon_code type
         if instance.offer_type == 'coupon_code' and instance.code:
             self.send_coupon_email(instance)
 
     def update(self, request, *args, **kwargs):
-        partial = kwargs.pop('partial', False)
+        user = request.user
         instance = self.get_object()
-        prev_status = instance.is_active  # Capture status before update
+        prev_status = instance.is_active
 
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        # Permission check for non-admin
+        if not (hasattr(user, 'role') and user.role == 2):
+            if instance.restaurant:
+                user_restaurants = getattr(user, "restaurants", [])
+                if not user_restaurants.filter(restaurant_id=instance.restaurant.restaurant_id).exists():
+                    return Response(
+                        {'error': 'You do not have permission to update this offer.'},
+                        status=status.HTTP_403_FORBIDDEN
+                    )
+
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         updated_instance = serializer.save()
 
         new_status = updated_instance.is_active
 
-        # Check if status changed to Approved (1) or Rejected (0)
+        # Send status update email
         if (
-            prev_status != new_status and 
-            updated_instance.offer_type == 'coupon_code' and 
-            new_status in [0, 1]  # Assuming 0 = Rejected, 1 = Approved
+            prev_status != new_status and
+            updated_instance.offer_type == 'coupon_code' and
+            new_status in [OfferDetail.INACTIVE, OfferDetail.APPROVED]
         ):
             self.send_coupon_status_update_email(updated_instance)
 
         return Response(serializer.data)
 
+    def destroy(self, request, *args, **kwargs):
+        user = request.user
+        instance = self.get_object()
+
+        if not (hasattr(user, 'role') and user.role == 2):
+            if instance.restaurant:
+                user_restaurants = getattr(user, "restaurants", [])
+                if not user_restaurants.filter(restaurant_id=instance.restaurant.restaurant_id).exists():
+                    return Response(
+                        {'error': 'You do not have permission to delete this offer.'},
+                        status=status.HTTP_403_FORBIDDEN
+                    )
+
+        return super().destroy(request, *args, **kwargs)
+
+    @action(detail=False, methods=['get'])
+    def global_offers(self, request):
+        queryset = OfferDetail.objects.filter(restaurant__isnull=True)
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def restaurant_offers(self, request):
+        restaurant_id = request.query_params.get('restaurant_id')
+        if not restaurant_id:
+            return Response({'error': 'restaurant_id parameter is required'}, status=400)
+
+        queryset = OfferDetail.objects.filter(restaurant_id=restaurant_id)
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    # EMAIL METHODS
     def send_coupon_email(self, coupon):
-        """Send email when coupon is created (Pending Approval)"""
-        vendor_html = generate_coupon_html(coupon, is_vendor=True)
+        try:
+            vendor_html = self.generate_coupon_html(coupon, is_vendor=True)
+            vendor_recipient_list = []
+            if coupon.restaurant and coupon.restaurant.owner_details:
+                vendor_email = getattr(coupon.restaurant.owner_details, "owner_email_address", None)
+                if vendor_email:
+                    vendor_recipient_list.append(vendor_email)
 
-        vendor_recipient_list = list(filter(None, [
-            getattr(coupon.restaurant.owner_details, "owner_email_address", None)
-        ]))
+            if vendor_recipient_list:
+                send_mail(
+                    subject=f"Your coupon {coupon.code} is pending approval",
+                    message=strip_tags(vendor_html),
+                    html_message=vendor_html,
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=vendor_recipient_list,
+                    fail_silently=False,
+                )
 
-        send_mail(
-            subject=f"Your coupon {coupon.code} is pending approval",
-            message=strip_tags(vendor_html),
-            html_message=vendor_html,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=vendor_recipient_list,
-            fail_silently=False,
-        )
+            User = get_user_model()
+            admin_emails = User.objects.filter(role=2).values_list('email', flat=True)
+            admin_recipients = list(filter(None, admin_emails))
 
-        User = get_user_model()
-        admin_emails = User.objects.filter(role=2).values_list('email', flat=True)
-        admin_recipients = list(filter(None, admin_emails))
-
-        if admin_recipients:
-            admin_html = generate_coupon_html(coupon, is_vendor=False)
-            send_mail(
-                subject=f"Approval needed for coupon {coupon.code}",
-                message=strip_tags(admin_html),
-                html_message=admin_html,
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=admin_recipients,
-                fail_silently=False,
-            )
+            if admin_recipients:
+                admin_html = self.generate_coupon_html(coupon, is_vendor=False)
+                send_mail(
+                    subject=f"Approval needed for coupon {coupon.code}",
+                    message=strip_tags(admin_html),
+                    html_message=admin_html,
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=admin_recipients,
+                    fail_silently=False,
+                )
+        except Exception as e:
+            print(f"Error sending coupon email: {e}")
 
     def send_coupon_status_update_email(self, coupon):
-        """Send email when coupon status is changed to Approved or Rejected"""
+        try:
+            if not coupon.restaurant or not coupon.restaurant.owner_details:
+                return
 
-        vendor_email = getattr(coupon.restaurant.owner_details, "owner_email_address", None)
-        if not vendor_email:
-            return
+            vendor_email = getattr(coupon.restaurant.owner_details, "owner_email_address", None)
+            if not vendor_email:
+                return
 
-        status_text = "approved" if coupon.is_active == 1 else "rejected"
-        subject = f"Your coupon {coupon.code} has been {status_text}"
-        body_html = generate_coupon_status_html(coupon)  # You can create a different HTML for this
-        
-        send_mail(
-            subject=subject,
-            message=strip_tags(body_html),
-            html_message=body_html,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[vendor_email],
-            fail_silently=False,
-        )
+            status_text = "approved" if coupon.is_active == OfferDetail.APPROVED else "rejected"
+            subject = f"Your coupon {coupon.code} has been {status_text}"
+            body_html = self.generate_coupon_status_html(coupon)
+
+            send_mail(
+                subject=subject,
+                message=strip_tags(body_html),
+                html_message=body_html,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[vendor_email],
+                fail_silently=False,
+            )
+        except Exception as e:
+            print(f"Error sending status update email: {e}")
+
+    def generate_coupon_html(self, coupon, is_vendor=True):
+        status_display = coupon.get_is_active_display()
+        restaurant_name = coupon.restaurant.restaurant_name if coupon.restaurant else "Global Offer"
+
+        if is_vendor:
+            return f"""
+            <html>
+            <body>
+                <h2>Coupon Created Successfully!</h2>
+                <p>Your coupon has been created and is pending approval.</p>
+                <div style="background:#f8f9fa;padding:20px;border-radius:5px">
+                    <p><strong>Code:</strong> {coupon.code}</p>
+                    <p><strong>Status:</strong> {status_display}</p>
+                    <p><strong>Restaurant:</strong> {restaurant_name}</p>
+                    <p><strong>Discount:</strong> {coupon.discount_value}{'%' if coupon.discount_type == 'percentage' else '₹'}</p>
+                </div>
+            </body>
+            </html>
+            """
+
+        else:
+            return f"""
+            <html>
+            <body>
+                <h2>Coupon Approval Required</h2>
+                <div style="background:#f8f9fa;padding:20px;border-radius:5px">
+                    <p><strong>Code:</strong> {coupon.code}</p>
+                    <p><strong>Type:</strong> {coupon.get_offer_type_display()}</p>
+                    <p><strong>Restaurant:</strong> {restaurant_name}</p>
+                </div>
+            </body>
+            </html>
+            """
+
+    def generate_coupon_status_html(self, coupon):
+        status_text = "approved" if coupon.is_active == OfferDetail.APPROVED else "rejected"
+        restaurant_name = coupon.restaurant.restaurant_name if coupon.restaurant else "Global Offer"
+
+        return f"""
+        <html>
+        <body>
+            <h2>Coupon Status Update</h2>
+            <p>Your coupon has been {status_text}.</p>
+            <div style="background:#f8f9fa;padding:20px;border-radius:5px">
+                <p><strong>Code:</strong> {coupon.code}</p>
+                <p><strong>Status:</strong> {coupon.get_is_active_display()}</p>
+                <p><strong>Restaurant:</strong> {restaurant_name}</p>
+            </div>
+        </body>
+        </html>
+        """
+
 class RestaurantListView(viewsets.ReadOnlyModelViewSet):
     """Endpoint to list restaurants for the dropdown"""
     queryset = RestaurantMaster.objects.filter(restaurant_status=1)  # Active restaurants
@@ -433,3 +581,4 @@ class RestaurantListView(viewsets.ReadOnlyModelViewSet):
 def trigger_background_task(request):
     update_order_statuses()  # schedules the task
     return JsonResponse({'status': 'Task scheduled'})
+    
