@@ -9,7 +9,7 @@ from rest_framework.response import Response
 from rest_framework import status, generics, permissions
 from api.delivery.helper import helper
 from api.delivery.porter_views import porter_track_booking
-from api.models import Cart, OfferDetail, Order, OrderReview, OrderStatusLog, PorterOrder, RestaurantLocation, RestaurantMenu, User, UserDeliveryAddress, OrderLiveLocation, Payment, Coupon
+from api.models import Cart, OfferDetail, Order, OrderReview, OrderStatusLog, PorterOrder, RestaurantLocation, RestaurantMenu, User, UserDeliveryAddress, OrderLiveLocation, Payment, Coupon, WalletTransaction
 from math import radians, sin, cos, sqrt, atan2
 from django.db import transaction
 from django.db.models import Q 
@@ -23,6 +23,8 @@ from xhtml2pdf import pisa
 from io import BytesIO
 import os
 from django.conf import settings
+
+from api.utils.utils import get_final_payment_checks
 
 @method_decorator(csrf_exempt, name='dispatch')
 class TrackOrder(APIView):
@@ -44,12 +46,6 @@ class TrackOrder(APIView):
             for order in orders:
                 # Get delivery address
                 delivery_address = UserDeliveryAddress.objects.filter(id=order.delivery_address_id).first()
-                payment_details = Payment.objects.filter(order_id=order.id).first()
-
-                if payment_details:
-                    transaction_id = payment_details.razorpay_payment_id
-                else:
-                    transaction_id = None
 
                 if delivery_address:
                     address_parts = [
@@ -93,8 +89,6 @@ class TrackOrder(APIView):
                         coupon = Coupon.objects.get(id=order.coupon_id)
                         coupon_code = coupon.code
                         coupon_code_text = f"Discount coupon ({coupon_code})"
-                        # You can apply the actual discount logic based on coupon details here
-                        # Example (optional): discount = coupon.discount_amount
                     except Coupon.DoesNotExist:
                         coupon_code = None
                         coupon_code_text = f"Discount"
@@ -119,28 +113,41 @@ class TrackOrder(APIView):
                 location = restaurant.restaurant_location
                 restaurant_address_line = f"{location.shop_no_building or ''} {location.floor_tower or ''} {location.area_sector_locality}, {location.city}, {location.nearby_locality or ''}".strip().replace("  ", " ")
             
-                order_data = {
-                    "order_number": order.order_number,
-                    "restaurant_id": order.restaurant_id,
+                payment_method_checks = get_final_payment_checks(order.id, order.get_payment_method_display())
+
+                payment_details = {
+                    "subtotal": str(subtotal),
                     "delivery_fee": order.delivery_fee,
+                    "total": str(order.total_amount),
+                    "payment_status": order.get_payment_status_display(),
+                    "order_status": order.get_status_display(),
+                }
+
+                coupon_details_details = {
+                    "coupon_code": coupon_code,
+                    "coupon_discount": order.coupon_discount if order.coupon_discount else round(discount),
+                    "coupon_code_text": coupon_code_text,
+                }
+
+                restaurant_details = {
+                    "restaurant_id": order.restaurant_id,
                     "restaurant_name": order.restaurant.restaurant_name,
                     "restaurant_address_line": restaurant_address_line,
                     "restaurant_image": order.restaurant.profile_image.url,
                     "restaurant_contact": order.restaurant.owner_details.owner_contact,
-                    "status": order.get_status_display(),
-                    "payment_status": order.get_payment_status_display(),
-                    "payment_method": order.get_payment_method_display(),
+                }
+
+                order_data = {
+                    "order_number": order.order_number,
                     "placed_on": order.created_at.strftime("%Y-%m-%d %H:%M:%S"),
-                    "delivery_address": address_details,
                     "estimated_delivery": order.delivery_date.strftime("%Y-%m-%d %H:%M:%S") if order.delivery_date else "Not available",
-                    "items": item_details,
-                    "subtotal": str(subtotal),
-                    "total": str(order.total_amount),
-                    "coupon_code": coupon_code,
-                    "coupon_discount": order.coupon_discount if order.coupon_discount else round(discount),
-                    "coupon_code_text": coupon_code_text,
-                    "transaction_id": transaction_id,
                     "review_present": review_exists,
+                    "items": item_details,
+                    "delivery_address": address_details,
+                    "restaurant_details":restaurant_details,
+                    "payment_details":payment_details,
+                    "coupon_details_details":coupon_details_details,
+                    "payment_method_checks": payment_method_checks,
                 }
 
                 data.append(order_data)
