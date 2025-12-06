@@ -16,6 +16,8 @@ if not firebase_admin._apps:
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+APP_ENV = config('APP_ENV')
+
 SECRET_KEY = config("SECRET_KEY")
 REACT_APP_BASE_URL = config("REACT_APP_BASE_URL")
 DEBUG = config("DEBUG", default=False, cast=bool)
@@ -118,7 +120,7 @@ AWS_QUERYSTRING_AUTH = config('AWS_QUERYSTRING_AUTH')
 
 AWS_S3_CUSTOM_DOMAIN = f"{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com"
 DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
-MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/media/"
+MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/"
 
 # MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "public")

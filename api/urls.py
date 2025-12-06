@@ -8,6 +8,7 @@ from api.notifications.views import AssignTagCreateView, AssignTagListView, Devi
 from api.payment.payment import create_order, verify_payment
 from api.search.searchcontent import search_results, search_suggestions
 from api.storage_backends import GetSingleImageFromS3, ListImagesFromS3, UploadImageToS3
+from api.offer.view import check_credit_offer
 from api.vendor.Coupon import CouponCreateView, CouponDeleteView, CouponDetailView, CouponListView, CouponUpdateView
 from api.wallet.views import AddMoneySuccessView, AdminAdjustWalletView, CreateRazorpayOrderView, DebitWalletForOrder, RefundWalletView, TransactionHistoryView, WalletView
 from .vendor.Vendor import GetVendorWiseCounts
@@ -99,6 +100,8 @@ urlpatterns = [
     path("api/wallet/admin-adjust/", AdminAdjustWalletView.as_view()),
 
      # wallet Management end
+
+    path('api/offers/check/', check_credit_offer, name='check_credit_offer'),
 
     path("api/contact-us/", ContactUsView.as_view(), name="contact-us"), 
     path("api/user-profile-update/", UserProfileUpdate.as_view(), name="user-profile-update"), 
@@ -195,7 +198,6 @@ urlpatterns = [
     path('api/test/', trigger_background_task),
 
     re_path(r'^(?!media/).*$', ReactAppView.as_view(), name='react-app'),
-
 ]
 
 if settings.DEBUG:

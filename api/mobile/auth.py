@@ -18,13 +18,14 @@ from django.core.mail import send_mail
 from django.conf import settings
 from api.models import FavouriteKitchen, Order, OrderReview, Wallet
 from api.notifications.device_utils import register_device_for_user
+from api.offer.view import check_credit_offer
 from api.wallet.services import credit_wallet
 
 
 User = get_user_model()
 logger = logging.getLogger(__name__)
 
-# Constants (should be moved to settings.py or environment variables in production)
+# Constants (should be moved to settings.py or environment variables in prod)
 TWILIO_ACCOUNT_SID = f"{settings.TWILIO_ACCOUNT_SID}"
 TWILIO_AUTH_TOKEN = f"{settings.TWILIO_AUTH_TOKEN}"
 TWILIO_PHONE_NUMBER = f"{settings.TWILIO_PHONE_NUMBER}"
@@ -81,11 +82,16 @@ class BaseOTPView(APIView):
         return otp
     
     def update_user_otp(self, user):
-        otp = self.generate_otp()
+
+        if getattr(settings, "APP_ENV", "prod") == "local":
+            otp = 123456
+        else:
+            otp = self.generate_otp()
+
         user.otp = otp
-        # user.otp = 123456
         user.otp_expiry = now() + timedelta(seconds=OTP_EXPIRY_SECONDS)
         user.save(update_fields=["otp", "otp_expiry"])
+
         logger.info(f"Updated OTP for user {user.id} (expires at {user.otp_expiry})")
         return otp
 
@@ -127,9 +133,19 @@ class MobileLoginSendOTP(BaseOTPView):
 
         otp = self.update_user_otp(user)
 
+        
         try:
-            send_otp_via_twilio(contact, otp, app_hash=app_hash if platform == 'android' else None)
-            logger.info(f"OTP sent successfully to {contact}")
+
+            if getattr(settings, "APP_ENV", "prod") == "prod":
+                send_otp_via_twilio(
+                    contact,
+                    otp,
+                    app_hash=app_hash if platform == 'android' else None
+                )
+                logger.info(f"OTP sent successfully to {contact}")
+            else:
+                logger.info(f"OTP sending skipped (APP_ENV={settings.APP_ENV})")
+
         except Exception as e:
             logger.error(f"Failed to send OTP to {contact}: {str(e)}")
             return Response(
@@ -271,8 +287,16 @@ class MobileLoginResendOTP(BaseOTPView):
         otp = self.update_user_otp(user)
 
         try:
-            send_otp_via_twilio(contact, otp, app_hash=app_hash if platform == 'android' else None)
-            logger.info(f"OTP resent successfully to {contact}")
+            if getattr(settings, "APP_ENV", "prod") == "prod":
+                send_otp_via_twilio(
+                    contact,
+                    otp,
+                    app_hash=app_hash if platform == 'android' else None
+                )
+                logger.info(f"OTP resent successfully to {contact}")
+            else:
+                logger.info(f"OTP resend skipped (APP_ENV={settings.APP_ENV})")
+
         except Exception as e:
             logger.error(f"Failed to resend OTP to {contact}: {str(e)}")
             return Response(
@@ -533,14 +557,27 @@ class GetUserDetails(APIView):
 def give_signup_bonus_if_needed(user):
     wallet, created = Wallet.objects.get_or_create(user=user)
 
-    # Already given?
     if wallet.signup_bonus_given:
         return
     
-    # Give bonus
+    offer_response = check_credit_offer(offer_type="credit",sub_filter="new_user")
+
+    offer_data = offer_response.get("data")
+
+    if not offer_data:
+        return
+    
+    amount = offer_data.get("credit_amount") or offer_data.get("discount_value")
+    
+    if not amount:
+        return
+    
+
+    amount = float(amount)
+
     credit_wallet(
         wallet=wallet,
-        amount=100,
+        amount=amount,
         source="promo_credit",
         note="Signup Bonus"
     )
