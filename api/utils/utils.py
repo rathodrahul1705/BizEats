@@ -164,6 +164,7 @@ def get_final_payment_checks(order_id, payment_method_display):
     wallet_payment_method = None
     online_payment_method = None
     online_payment_amount = None
+    online_payment_used = False
 
     if wallet_details:
         eatoor_wallet_used = True
@@ -174,9 +175,11 @@ def get_final_payment_checks(order_id, payment_method_display):
         online_transaction_id = payment_details.razorpay_payment_id
         online_payment_amount = payment_details.amount
         online_payment_method = payment_method_display
+        online_payment_used = True
 
     return {
         "eatoor_wallet_used": eatoor_wallet_used,
+        "online_payment_used": online_payment_used,
         "wallet_payment_amount": wallet_used_amount,
         "wallet_payment_method": wallet_payment_method,
         "online_payment_method": online_payment_method,

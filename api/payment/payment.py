@@ -222,7 +222,7 @@ def verify_payment(request):
         # Update order status
         try:
             order.payment_method = payment_method_code
-            order.payment_status = 2  # Mark as paid
+            order.payment_status = 5  # Mark as paid
             order.save()
         except Exception as e:
             logger.error(f"Order update failed: {str(e)}")
