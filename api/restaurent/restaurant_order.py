@@ -19,6 +19,7 @@ from django.db.models import Q
 from django.db.models import Sum, Count
 from django.db.models.functions import Coalesce
 from api.models import RestaurantMaster, RestaurantCuisine, RestaurantDeliveryTiming, RestaurantDocuments, RestaurantOwnerDetail, RestaurantLocation, RestaurantMenu, UserDeliveryAddress
+from api.offer.view import check_credit_offer
 from api.serializers import OrderPlacementSerializer, RestaurantMasterSerializer, RestaurantSerializerByStatus, RestaurantDetailSerializer, RestaurantMasterNewSerializer, RestaurantMenuSerializer, RestaurantListSerializer, UserDeliveryAddressSerializer
 from api.utils.utils import calculate_distance_and_cost
 
@@ -466,6 +467,19 @@ class CartWithRestaurantDetails(APIView):
                 "currency": "INR"
             }
 
+            offer_response = check_credit_offer(
+                offer_type="free_delivery",
+                sub_filter="new_user"
+            )
+
+            order_count = Order.objects.filter(user_id=user_id).count()
+            offer_data = offer_response.get("data", None)
+
+            # A "new user" free-delivery offer is valid only if:
+            # 1. The offer exists (offer_data not empty)
+            # 2. User has placed less than 3 orders
+            delivery_offer_exist = bool(offer_data) and order_count < 3
+            
             response_data = {
                 "status": "success",
                 "restaurant_name": restaurant.restaurant_name,
@@ -473,7 +487,9 @@ class CartWithRestaurantDetails(APIView):
                 "suggestion_cart_items": suggestion_cart_items,
                 "delivery_address_details": delivery_address_details,
                 "delivery_time": delivery_time,
-                "billing_details": billing_details
+                "billing_details": billing_details,
+                "delivery_offer_exist": delivery_offer_exist,
+                "order_count": order_count
             }
 
             return Response(response_data, status=status.HTTP_200_OK)
