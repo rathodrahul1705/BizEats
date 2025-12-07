@@ -405,7 +405,8 @@ class Order(models.Model):
         (2, 'Debit Card'),
         (3, 'UPI'),
         (4, 'Net Banking'),
-        (5, 'Cash on Delivery')
+        (5, 'Cash on Delivery'),
+        (6, 'Eatoor Money')
     )
 
     PAYMENT_TYPE = (

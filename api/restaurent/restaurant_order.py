@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from decimal import Decimal, ROUND_UP
+import logging
 import math
 from django.conf import settings
 from django.http import JsonResponse
@@ -18,8 +19,11 @@ from django.db.models import Q
 from django.db.models import Sum, Count
 from django.db.models.functions import Coalesce
 from api.models import RestaurantMaster, RestaurantCuisine, RestaurantDeliveryTiming, RestaurantDocuments, RestaurantOwnerDetail, RestaurantLocation, RestaurantMenu, UserDeliveryAddress
+from api.offer.view import check_credit_offer
 from api.serializers import OrderPlacementSerializer, RestaurantMasterSerializer, RestaurantSerializerByStatus, RestaurantDetailSerializer, RestaurantMasterNewSerializer, RestaurantMenuSerializer, RestaurantListSerializer, UserDeliveryAddressSerializer
 from api.utils.utils import calculate_distance_and_cost
+
+logger = logging.getLogger(__name__)
 
 @method_decorator(csrf_exempt, name='dispatch')
 class RestaurantCartAddOrRemove(APIView):
@@ -463,6 +467,19 @@ class CartWithRestaurantDetails(APIView):
                 "currency": "INR"
             }
 
+            offer_response = check_credit_offer(
+                offer_type="free_delivery",
+                sub_filter="new_user"
+            )
+
+            order_count = Order.objects.filter(user_id=user_id).count()
+            offer_data = offer_response.get("data", None)
+
+            # A "new user" free-delivery offer is valid only if:
+            # 1. The offer exists (offer_data not empty)
+            # 2. User has placed less than 3 orders
+            delivery_offer_exist = bool(offer_data) and order_count < 3
+            
             response_data = {
                 "status": "success",
                 "restaurant_name": restaurant.restaurant_name,
@@ -470,7 +487,9 @@ class CartWithRestaurantDetails(APIView):
                 "suggestion_cart_items": suggestion_cart_items,
                 "delivery_address_details": delivery_address_details,
                 "delivery_time": delivery_time,
-                "billing_details": billing_details
+                "billing_details": billing_details,
+                "delivery_offer_exist": delivery_offer_exist,
+                "order_count": order_count
             }
 
             return Response(response_data, status=status.HTTP_200_OK)
@@ -763,66 +782,64 @@ class RestaurantOrderDetailsAPI(APIView):
             **({"error_details": error_detail} if error_detail else {})
         }
         return Response(response, status=status_code)
+
 @method_decorator(csrf_exempt, name='dispatch')
 class PlaceOrderAPI(APIView):
-    """
-    API to place an order from cart items
-    Required POST data:
-    {
-        "user_id": 1,
-        "restaurant_id": "BIZ23154878",
-        "payment_method": 3,
-        "delivery_address_id": 1,
-        "is_takeaway": false,
-        "special_instructions": "Less spicy please"
-    }
-    """
 
     def post(self, request, *args, **kwargs):
+        logger.info("PlaceOrderAPI called with data: %s", request.data)
+
         try:
             with transaction.atomic():
+
                 # Validate input data
                 serializer = OrderPlacementSerializer(data=request.data)
-                serializer.is_valid(raise_exception=True)
+                if not serializer.is_valid():
+                    logger.error("OrderPlacementSerializer errors: %s", serializer.errors)
+                    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
                 data = serializer.validated_data
+                logger.info("Validated input data: %s", data)
 
                 # Get user's cart items
                 cart_items = Cart.objects.filter(
                     user_id=data['user_id'],
                     restaurant_id=data['restaurant_id'],
-                    cart_status__in=[1, 2, 3, 4]  # Only non-completed items
+                    cart_status__in=[1, 2, 3, 4]
                 ).select_related('item')
 
                 if not cart_items.exists():
+                    logger.warning("No cart items found for user %s", data['user_id'])
                     return Response(
                         {"status": "error", "message": "No items in cart to order"},
                         status=status.HTTP_400_BAD_REQUEST
                     )
 
-                if data['code']:
-
-                    coupon = Coupon.objects.get(code=data['code'])
-                    if coupon:
+                # Coupon validation
+                coupon_id = None
+                if data.get('code'):
+                    try:
+                        coupon = Coupon.objects.get(code=data['code'])
                         coupon_id = coupon.id
-                    else:
-                        coupon_id = None
-                else:
-                    coupon_id = None
-            
-                # Calculate order totals
+                        logger.info("Coupon applied: %s (ID: %s)", data['code'], coupon.id)
+                    except Coupon.DoesNotExist:
+                        logger.warning("Invalid coupon code provided: %s", data['code'])
+
+                # Calculate totals
                 subtotal = sum(item.item_price for item in cart_items)
-                tax = subtotal * Decimal('0.00')  # Example 5% tax
+                tax = subtotal * Decimal('0.00')
                 delivery_fee = data['delivery_fee']
                 total = data['total_amount']
 
-                if data['payment_type'] == 1: # COD
-                    payment_status = 2 # Pending
-                else:
-                    payment_status = 5 # Completed
+                logger.info(
+                    "Order totals calculated: subtotal=%s, tax=%s, delivery_fee=%s, total=%s",
+                    subtotal, tax, delivery_fee, total
+                )
 
                 # Create order
                 current_time = datetime.now()
                 future_time = current_time + timedelta(minutes=45)
+
                 order = Order.objects.create(
                     coupon_id=coupon_id,
                     coupon_discount=data['discount_amount'],
@@ -830,13 +847,13 @@ class PlaceOrderAPI(APIView):
                     restaurant_id=data['restaurant_id'],
                     order_number=self._generate_order_number(),
                     status=1,
-                    payment_status= payment_status,
-                    payment_method= data['payment_method'],
+                    payment_status=data['payment_status'],
+                    payment_method=data['payment_method'],
                     payment_type=data['payment_type'],
                     subtotal=subtotal,
                     delivery_fee=delivery_fee,
                     tax=tax,
-                    delivery_date= future_time,
+                    delivery_date=future_time,
                     quantity=1,
                     total_amount=total,
                     delivery_address_id=data['delivery_address_id'],
@@ -845,13 +862,19 @@ class PlaceOrderAPI(APIView):
                     preparation_time=self._estimate_prep_time(cart_items)
                 )
 
-                # Create initial status log
+                logger.info("Order created successfully: OrderID=%s, OrderNo=%s",
+                            order.id, order.order_number)
+
+                # Create initial order log
                 OrderStatusLog.objects.create(
                     order=order,
                     status=1,
                     notes="Order placed successfully"
                 )
 
+                logger.info("OrderStatusLog created for OrderNo=%s", order.order_number)
+
+                # Update cart items
                 Cart.objects.filter(
                     Q(user_id=data['user_id']) &
                     ~Q(cart_status=5) &
@@ -861,10 +884,12 @@ class PlaceOrderAPI(APIView):
                     order_number=order.order_number
                 )
 
-                # Send email via common function
-                send_order_status_email(order)
+                logger.info("Cart updated for user %s", data['user_id'])
 
-                # Prepare response
+                # Send email
+                send_order_status_email(order)
+                logger.info("Order email sent for OrderNo=%s", order.order_number)
+
                 response_data = {
                     "status": "success",
                     "order_number": order.order_number,
@@ -876,6 +901,7 @@ class PlaceOrderAPI(APIView):
                 return Response(response_data, status=status.HTTP_201_CREATED)
 
         except Exception as e:
+            logger.exception("Error while placing order: %s", e)
             return Response(
                 {"status": "error", "message": str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -883,26 +909,31 @@ class PlaceOrderAPI(APIView):
 
     def _generate_order_number(self):
         from django.utils.timezone import now, timedelta
-
-        """Generate unique order number (e.g. ORD20230715-0001)"""
+        """Generate unique order number"""
         today_str = now().strftime('%Y%m%d')
         last_order = Order.objects.filter(
             order_number__startswith=f'ORD{today_str}-'
         ).order_by('-order_number').first()
-        
+
         if last_order:
             last_seq = int(last_order.order_number.split('-')[-1])
             new_seq = last_seq + 1
         else:
             new_seq = 1
-            
-        return f'ORD{today_str}-{new_seq:04d}'
+
+        order_no = f'ORD{today_str}-{new_seq:04d}'
+        logger.info("Generated order number: %s", order_no)
+        return order_no
 
     def _estimate_prep_time(self, cart_items):
         """Estimate preparation time based on items"""
-        base_time = 15  # minutes
+        base_time = 15
         item_time = sum(item.item.preparation_time * item.quantity for item in cart_items)
-        return min(base_time + item_time, 120)  # Cap at 2 hours
+        prep_time = min(base_time + item_time, 120)
+
+        logger.info("Estimated preparation time: %s minutes", prep_time)
+        return prep_time
+    
 # class GetAddressByFilter(APIView):
 #     permission_classes = [permissions.IsAuthenticated]
 

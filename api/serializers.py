@@ -264,6 +264,12 @@ class OrderPlacementSerializer(serializers.Serializer):
         choices=Order.PAYMENT_METHOD_CHOICES,
         required=True
     )
+
+    payment_status = serializers.ChoiceField(
+        choices=Order.PAYMENT_STATUS_CHOICES,
+        required=True
+    )
+
     is_takeaway = serializers.BooleanField(default=False)
     delivery_fee = serializers.DecimalField(
         max_digits=10,

@@ -14,6 +14,7 @@ from rest_framework.permissions import IsAuthenticated
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.shortcuts import get_object_or_404
+from api.offer.view import get_active_offers
 from api.serializers import RestaurantMasterSerializer, RestaurantSerializerByStatus, RestaurantDetailSerializer, RestaurantMasterNewSerializer, RestaurantMenuSerializer, RestaurantListSerializer
 from api.models import RestaurantMaster, RestaurantCuisine, RestaurantDeliveryTiming, RestaurantDocuments, RestaurantOwnerDetail, RestaurantLocation, RestaurantMenu
 from django.utils.text import slugify
@@ -744,6 +745,8 @@ class RestaurantDetailMenuView(APIView):
                 else:
                     processed_items.append(item)
 
+            active_offer_list = get_active_offers()
+            
             response_data = {
                 "time_required_to_reach_loc": time_required_to_reach_loc,
                 "restaurant_image": image_profile,
@@ -762,6 +765,7 @@ class RestaurantDetailMenuView(APIView):
                 "closing_time": today_end_time.strftime("%H:%M") if today_end_time else None,
                 "itemlist": processed_items,
                 "fssai_number": restaurant_document.fssai_number,
+                "active_offer_list": active_offer_list,
                 "delivery_timings": delivery_timings,
             }
 

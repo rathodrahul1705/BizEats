@@ -1,7 +1,7 @@
 import math
 import requests
 from api.delivery.porter_service import get_fare_estimate
-from api.models import RestaurantMaster, UserDeliveryAddress
+from api.models import Payment, RestaurantMaster, UserDeliveryAddress, WalletTransaction
 import os
 import logging
 from typing import Dict, Union, Optional, Tuple
@@ -153,3 +153,36 @@ def calculate_delivery_cost(distance_km):
     else:
         extra_cost = distance_km * 15  # Remaining km at ₹11/km
         return extra_cost
+    
+def get_final_payment_checks(order_id, payment_method_display):
+    wallet_details = WalletTransaction.objects.filter(order_id=order_id).first()
+    payment_details = Payment.objects.filter(order_id=order_id).first()
+
+    eatoor_wallet_used = False
+    wallet_used_amount = 0
+    online_transaction_id = None
+    wallet_payment_method = None
+    online_payment_method = None
+    online_payment_amount = None
+    online_payment_used = False
+
+    if wallet_details:
+        eatoor_wallet_used = True
+        wallet_used_amount = wallet_details.amount
+        wallet_payment_method = "Eatoor Money"
+
+    if payment_details:
+        online_transaction_id = payment_details.razorpay_payment_id
+        online_payment_amount = payment_details.amount
+        online_payment_method = payment_method_display
+        online_payment_used = True
+
+    return {
+        "eatoor_wallet_used": eatoor_wallet_used,
+        "online_payment_used": online_payment_used,
+        "wallet_payment_amount": wallet_used_amount,
+        "wallet_payment_method": wallet_payment_method,
+        "online_payment_method": online_payment_method,
+        "online_payment_amount": online_payment_amount,
+        "online_transaction_id": online_transaction_id,
+    }
