@@ -199,6 +199,3 @@ urlpatterns = [
 
     re_path(r'^(?!media/).*$', ReactAppView.as_view(), name='react-app'),
 ]
-
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

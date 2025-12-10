@@ -5,6 +5,7 @@ from rest_framework import status
 from django.views import View
 from django.http import JsonResponse
 from rest_framework.views import APIView
+from api.aws.s3_client import get_s3_client
 from api.models import CustomImage, FavouriteKitchen, RestaurantCategory, User
 from django.conf import settings
 from django.core.files.storage import default_storage
@@ -52,7 +53,6 @@ class RestaurantStoreStepOne(APIView):
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
-
 @method_decorator(csrf_exempt, name="dispatch")
 class RestaurantStoreStepTwo(View):
     """
@@ -64,33 +64,64 @@ class RestaurantStoreStepTwo(View):
 
     def post(self, request, *args, **kwargs):
         try:
-            # Extract form data
             restaurant_id = request.POST.get("restaurant_id")
             profile_image = request.FILES.get("profile_image")
-            cuisines = json.loads(request.POST.get("cuisines"))  # Parse JSON string
-            delivery_timings = json.loads(request.POST.get("delivery_timings"))  # Parse JSON string
+            cuisines = json.loads(request.POST.get("cuisines"))
+            delivery_timings = json.loads(request.POST.get("delivery_timings"))
 
-            # Fetch the restaurant
+            # Fetch restaurant
             restaurant = RestaurantMaster.objects.get(restaurant_id=restaurant_id)
 
-            # Save the profile image (if provided, with optimization)
+            # ------------------- 🔥 PROFILE IMAGE S3 UPLOAD -------------------
             if profile_image:
-                optimized_image = optimize_image(profile_image)
-                restaurant.profile_image = optimized_image
+
+                # 1️⃣ Optimize image
+                optimized_file = optimize_image(profile_image)
+
+                # 2️⃣ Define S3 folder + file name
+                file_key = f"restaurant_profile_images/{optimized_file.name}"
+
+                # 3️⃣ Upload to S3
+                s3 = get_s3_client()
+                s3.upload_fileobj(
+                    Fileobj=optimized_file.file,
+                    Bucket=settings.AWS_STORAGE_BUCKET_NAME,
+                    Key=file_key,
+                    ExtraArgs={"ContentType": "image/jpeg"}
+                )
+
+                # 4️⃣ Save S3 key or URL into DB
+                restaurant.profile_image = file_key
                 restaurant.save()
 
-            # Save cuisines (delete existing cuisines and create new ones)
+            # ------------------- 🔥 SAVE CUISINES -------------------
             RestaurantCuisine.objects.filter(restaurant=restaurant).delete()
             for cuisine_data in cuisines:
-                RestaurantCuisine.objects.create(restaurant=restaurant, **cuisine_data)
+                RestaurantCuisine.objects.create(
+                    restaurant=restaurant,
+                    **cuisine_data
+                )
 
-            # Save delivery timings (delete existing timings and create new ones)
+            # ------------------- 🔥 SAVE DELIVERY TIMINGS -------------------
             RestaurantDeliveryTiming.objects.filter(restaurant=restaurant).delete()
             for timing_data in delivery_timings:
-                RestaurantDeliveryTiming.objects.create(restaurant=restaurant, **timing_data)
+                RestaurantDeliveryTiming.objects.create(
+                    restaurant=restaurant,
+                    **timing_data
+                )
+
+            # Build final S3 URL for frontend
+            image_url = (
+                f"https://{settings.AWS_STORAGE_BUCKET_NAME}.s3."
+                f"{settings.AWS_S3_REGION_NAME}.amazonaws.com/{restaurant.profile_image}"
+                if restaurant.profile_image else None
+            )
 
             return JsonResponse(
-                {"message": "Step 2 data saved successfully"},
+                {
+                    "message": "Step 2 data saved successfully",
+                    "profile_image_url": image_url
+                },
                 status=201,
             )
 
@@ -99,6 +130,7 @@ class RestaurantStoreStepTwo(View):
                 {"detail": "Restaurant not found. Please complete Step 1 first."},
                 status=404,
             )
+
         except Exception as e:
             return JsonResponse(
                 {"detail": str(e)},
@@ -114,32 +146,66 @@ class RestaurantStoreStepThree(View):
             pan_number = request.POST.get("pan_number")
             name_as_per_pan = request.POST.get("name_as_per_pan")
             registered_business_address = request.POST.get("registered_business_address")
+
             pan_image = request.FILES.get("pan_image")
             fssai_number = request.POST.get("fssai_number")
             fssai_expiry_date = request.POST.get("fssai_expiry_date")
+
             fssai_licence_image = request.FILES.get("fssai_licence_image")
+
             bank_account_number = request.POST.get("bank_account_number")
             bank_account_ifsc_code = request.POST.get("bank_account_ifsc_code")
             bank_account_type = request.POST.get("bank_account_type")
 
-            # Fetch the restaurant
+            # Fetch restaurant
             restaurant = RestaurantMaster.objects.get(restaurant_id=restaurant_id)
 
-            # Optimize images (if provided)
-            optimized_pan_image = optimize_image(pan_image) if pan_image else None
-            optimized_fssai_image = optimize_image(fssai_licence_image) if fssai_licence_image else None
+            # ------------------- 🔥 S3 PAN IMAGE UPLOAD -------------------
+            pan_image_key = None
 
-            # Create or update restaurant documents
+            if pan_image:
+                optimized_pan = optimize_image(pan_image)
+                file_key = f"pan_images/{optimized_pan.name}"
+
+                s3 = get_s3_client()
+                s3.upload_fileobj(
+                    Fileobj=optimized_pan.file,
+                    Bucket=settings.AWS_STORAGE_BUCKET_NAME,
+                    Key=file_key,
+                    ExtraArgs={"ContentType": "image/jpeg"}
+                )
+
+                pan_image_key = file_key  # Store S3 key in DB
+
+            # ------------------- 🔥 S3 FSSAI IMAGE UPLOAD -------------------
+            fssai_image_key = None
+
+            if fssai_licence_image:
+                optimized_fssai = optimize_image(fssai_licence_image)
+                file_key = f"fssai_images/{optimized_fssai.name}"
+
+                s3 = get_s3_client()
+                s3.upload_fileobj(
+                    Fileobj=optimized_fssai.file,
+                    Bucket=settings.AWS_STORAGE_BUCKET_NAME,
+                    Key=file_key,
+                    ExtraArgs={"ContentType": "image/jpeg"}
+                )
+
+                fssai_image_key = file_key  # Store S3 key in DB
+
+            # ------------------- 🔥 SAVE DOCUMENTS IN DB -------------------
+
             RestaurantDocuments.objects.update_or_create(
                 restaurant=restaurant,
                 defaults={
                     "pan_number": pan_number,
                     "name_as_per_pan": name_as_per_pan,
                     "registered_business_address": registered_business_address,
-                    "pan_image": optimized_pan_image if optimized_pan_image else None,
+                    "pan_image": pan_image_key,
                     "fssai_number": fssai_number,
                     "fssai_expiry_date": fssai_expiry_date,
-                    "fssai_licence_image": optimized_fssai_image if optimized_fssai_image else None,
+                    "fssai_licence_image": fssai_image_key,
                     "bank_account_number": bank_account_number,
                     "bank_account_ifsc_code": bank_account_ifsc_code,
                     "bank_account_type": bank_account_type,
@@ -156,6 +222,7 @@ class RestaurantStoreStepThree(View):
                 {"detail": "Restaurant not found. Please complete Step 1 first."},
                 status=404,
             )
+
         except Exception as e:
             return JsonResponse(
                 {"detail": str(e)},
@@ -228,15 +295,14 @@ class RestaurantByRestauranrtAPIView(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         except RestaurantMaster.DoesNotExist:
             return Response({"error": "Restaurant not found"}, status=status.HTTP_404_NOT_FOUND)
-
+        
 class RestaurantMenueStore(APIView):
     parser_classes = (MultiPartParser, FormParser)
 
     def post(self, request, restaurant_id, *args, **kwargs):
-        # Get the restaurant instance
         restaurant = get_object_or_404(RestaurantMaster, restaurant_id=restaurant_id)
 
-        # Extract form data
+        # Collect form fields
         item_name = request.data.get('item_name')
         item_price = request.data.get('item_price')
         description = request.data.get('description')
@@ -244,28 +310,38 @@ class RestaurantMenueStore(APIView):
         spice_level = request.data.get('spice_level')
         preparation_time = request.data.get('preparation_time')
         serving_size = request.data.get('serving_size')
-        availability = request.data.get('availability') == 'true'  # Convert to boolean
+        availability = request.data.get('availability') == 'true'
         stock_quantity = request.data.get('stock_quantity')
         start_time = request.data.get('start_time')
         end_time = request.data.get('end_time')
         food_type = request.data.get('food_type')
         discount_percent = request.data.get('discount_percent')
         discount_active = request.data.get('discount_active')
-        cuisines = request.data.get('cuisines', '').split(',')  # Split cuisines by comma
+        cuisines = request.data.get('cuisines', '').split(',')
 
-        # Handle image upload
+        # --------------------- 🔥 S3 IMAGE UPLOAD ----------------------------
         item_image = request.FILES.get('item_image')
-        image_path = None  # Default image path to None
+        file_key = None
 
         if item_image:
-            # Define image directory inside media
-            image_directory = os.path.join(settings.MEDIA_ROOT, 'menu_images')
-            # Ensure directory exists
-            os.makedirs(image_directory, exist_ok=True)
-            # Save image and get the relative path
-            image_path = default_storage.save(os.path.join('menu_images', item_image.name), item_image)
+            # 1️⃣ Optimize image
+            optimized_file = optimize_image(item_image)
 
-        # Create the menu item
+            # 2️⃣ Define S3 path
+            file_key = f"menu_images/{optimized_file.name}"
+
+            # 3️⃣ Upload to S3
+            s3 = get_s3_client()
+            s3.upload_fileobj(
+                Fileobj=optimized_file.file,
+                Bucket=settings.AWS_STORAGE_BUCKET_NAME,
+                Key=file_key,
+                ExtraArgs={"ContentType": "image/jpeg"}
+            )
+
+        # --------------------------------------------------------------------
+
+        # Create menu item
         menu_item = RestaurantMenu.objects.create(
             restaurant=restaurant,
             item_name=item_name,
@@ -282,21 +358,30 @@ class RestaurantMenueStore(APIView):
             start_time=start_time,
             end_time=end_time,
             food_type=food_type,
-            item_image=image_path  # Save the relative image path
+            item_image=file_key  # Save S3 key (NOT a file)
         )
 
-        # Associate cuisines with the menu item
+        # Save cuisines
         for cuisine_name in cuisines:
-            cuisine, _ = RestaurantCuisine.objects.get_or_create(restaurant=restaurant, cuisine_name=cuisine_name.strip())
+            cuisine, _ = RestaurantCuisine.objects.get_or_create(
+                restaurant=restaurant, cuisine_name=cuisine_name.strip()
+            )
             menu_item.cuisines.add(cuisine)
 
         menu_item.save()
+
+        # Build S3 public URL to return
+        image_url = (
+            f"https://{settings.AWS_STORAGE_BUCKET_NAME}.s3."
+            f"{settings.AWS_S3_REGION_NAME}.amazonaws.com/{file_key}"
+            if file_key else None
+        )
 
         return Response(
             {
                 "message": "Menu item added successfully",
                 "menu_item_id": menu_item.id,
-                "image_path": image_path  # Return saved image path
+                "image_url": image_url
             },
             status=status.HTTP_201_CREATED
         )
@@ -366,98 +451,10 @@ class RestaurantMenueDetails(APIView):
         }
 
         return Response(menu_data, status=status.HTTP_200_OK)
-
-# class RestaurantMenueUpdate(APIView):
-#     parser_classes = (MultiPartParser, FormParser)
-
-#     def put(self, request, restaurant_id, menu_id, *args, **kwargs):
-#         # Get the restaurant and menu item instances
-#         restaurant = get_object_or_404(RestaurantMaster, restaurant_id=restaurant_id)
-#         menu_item = get_object_or_404(RestaurantMenu, id=menu_id, restaurant=restaurant)
-
-#         # Extract form data
-#         item_name = request.data.get('item_name', menu_item.item_name)
-#         item_price = request.data.get('item_price', menu_item.item_price)
-#         description = request.data.get('description', menu_item.description)
-#         category_id = request.data.get('category_id')
-#         category = request.data.get('category', menu_item.category)
-#         spice_level = request.data.get('spice_level', menu_item.spice_level)
-#         preparation_time = request.data.get('preparation_time', menu_item.preparation_time)
-#         serving_size = request.data.get('serving_size', menu_item.serving_size)
-#         buy_one_get_one_free = request.data.get('buy_one_get_one_free')
-#         availability = request.data.get('availability')
-#         stock_quantity = request.data.get('stock_quantity', menu_item.stock_quantity)
-#         food_type = request.data.get('food_type', menu_item.food_type)
-#         cuisines = request.data.get('cuisines', '').split(',')  # Split cuisines by comma
-#         start_time = request.data.get('start_time', '')
-#         end_time = request.data.get('end_time', '')
-#         # discount_percent = request.data.get('discount_percent', '0.00')
-#         discount_active = request.data.get('discount_active', '')
-
-#         raw_discount = request.data.get('discount_percent', '0.00')
-#         try:
-#             discount_percent = Decimal(raw_discount.strip()) if raw_discount.strip() else Decimal('0.00')
-#         except (InvalidOperation, AttributeError):
-#             discount_percent = Decimal('0.00')
-
-#         # Handle image update
-#         item_image = request.FILES.get('item_image')
-
-#         if item_image:
-#             # Define image directory inside media
-#             image_directory = os.path.join(settings.MEDIA_ROOT, 'menu_images')
-#             os.makedirs(image_directory, exist_ok=True)  # Ensure directory exists
-
-#             # Delete old image if it exists
-#             if menu_item.item_image:
-#                 old_image_path = menu_item.item_image.path  # Use .path to get the file path
-#                 if os.path.exists(old_image_path):
-#                     os.remove(old_image_path)
-
-#             # Save new image
-#             image_path = default_storage.save(os.path.join('menu_images', item_image.name), item_image)
-#             menu_item.item_image = image_path  # Update image field
-
-#         # Update menu item fields
-#         menu_item.item_name = item_name
-#         menu_item.item_price = item_price
-#         menu_item.description = description
-#         menu_item.category = category_id
-#         menu_item.spice_level = spice_level
-#         menu_item.preparation_time = preparation_time
-#         menu_item.serving_size = serving_size
-#         menu_item.availability = availability
-#         menu_item.stock_quantity = stock_quantity
-#         menu_item.food_type = food_type
-#         menu_item.buy_one_get_one_free = buy_one_get_one_free
-#         menu_item.start_time = start_time
-#         menu_item.end_time = end_time
-#         menu_item.discount_percent=discount_percent
-#         menu_item.discount_active=discount_active
-
-#         # Update cuisines
-#         if cuisines:
-#             menu_item.cuisines.clear()  # Remove existing cuisines
-#             for cuisine_name in cuisines:
-#                 cuisine, _ = RestaurantCuisine.objects.get_or_create(restaurant=restaurant, cuisine_name=cuisine_name.strip())
-#                 menu_item.cuisines.add(cuisine)
-
-#         menu_item.save()
-
-#         return Response(
-#             {
-#                 "message": "Menu item updated successfully",
-#                 "menu_item_id": menu_item.id,
-#                 "image_path": menu_item.item_image.url if menu_item.item_image else None  # Return URL of the image
-#             },
-#             status=status.HTTP_200_OK
-#         )
-
 class RestaurantMenueUpdate(APIView):
     parser_classes = (MultiPartParser, FormParser)
 
     def put(self, request, restaurant_id, menu_id, *args, **kwargs):
-        # Get the restaurant and menu item instances
         restaurant = get_object_or_404(RestaurantMaster, restaurant_id=restaurant_id)
         menu_item = get_object_or_404(RestaurantMenu, id=menu_id, restaurant=restaurant)
 
@@ -473,7 +470,9 @@ class RestaurantMenueUpdate(APIView):
         availability = request.data.get('availability')
         stock_quantity = request.data.get('stock_quantity', menu_item.stock_quantity)
         food_type = request.data.get('food_type', menu_item.food_type)
-        cuisines = request.data.get('cuisines', '').split(',')  # Split cuisines by comma
+
+        cuisines = request.data.get('cuisines', '').split(',')
+
         start_time = request.data.get('start_time', '')
         end_time = request.data.get('end_time', '')
         discount_active = request.data.get('discount_active', '')
@@ -481,31 +480,55 @@ class RestaurantMenueUpdate(APIView):
         raw_discount = request.data.get('discount_percent', '0.00')
         try:
             discount_percent = Decimal(raw_discount.strip()) if raw_discount.strip() else Decimal('0.00')
-        except (InvalidOperation, AttributeError):
+        except Exception:
             discount_percent = Decimal('0.00')
 
-        # Handle image update
-        item_image = request.FILES.get('item_image')
-        if item_image:
-            # ✅ Optimize and generate unique filename
-            optimized_image = optimize_image(item_image)
+        # --------------------- 🔥 S3 IMAGE UPDATE PROCESS ---------------------
 
-            # Delete old image from storage if exists
+        item_image = request.FILES.get('item_image')
+
+        if item_image:
+            # 1️⃣ Optimize the uploaded image
+            optimized_file = optimize_image(item_image)
+
+            # 2️⃣ Generate S3 key
+            file_key = f"menu_images/{optimized_file.name}"
+
+            # 3️⃣ Get S3 client
+            s3 = get_s3_client()
+
+            # 4️⃣ Upload to S3
+            s3.upload_fileobj(
+                Fileobj=optimized_file.file,
+                Bucket=settings.AWS_STORAGE_BUCKET_NAME,
+                Key=file_key,
+                ExtraArgs={"ContentType": "image/jpeg"}
+            )
+
+            # 5️⃣ Generate Public URL
+            file_url = (
+                f"https://{settings.AWS_STORAGE_BUCKET_NAME}.s3."
+                f"{settings.AWS_S3_REGION_NAME}.amazonaws.com/{file_key}"
+            )
+
+            # 6️⃣ Remove old image from S3 (optional)
             if menu_item.item_image:
                 try:
-                    old_image_path = menu_item.item_image.path
-                    if os.path.exists(old_image_path):
-                        os.remove(old_image_path)
+                    old_key = str(menu_item.item_image)
+                    if old_key:
+                        s3.delete_object(
+                            Bucket=settings.AWS_STORAGE_BUCKET_NAME,
+                            Key=old_key.replace(settings.AWS_S3_BASE_URL, "")
+                        )
                 except Exception:
-                    pass  # Ignore if storage is remote (like S3)
+                    pass
 
-            # Save optimized image
-            image_path = default_storage.save(
-                os.path.join('menu_images', optimized_image.name), optimized_image
-            )
-            menu_item.item_image = image_path
+            # 7️⃣ Save the new S3 key in the model (NOT FileField)
+            menu_item.item_image = file_key
 
-        # Update menu item fields
+        # --------------------------------------------------------------------
+
+        # Update normal fields
         menu_item.item_name = item_name
         menu_item.item_price = item_price
         menu_item.description = description
@@ -522,9 +545,9 @@ class RestaurantMenueUpdate(APIView):
         menu_item.discount_percent = discount_percent
         menu_item.discount_active = discount_active
 
-        # Update cuisines
+        # Update cuisines list
         if cuisines:
-            menu_item.cuisines.clear()  # Remove existing cuisines
+            menu_item.cuisines.clear()
             for cuisine_name in cuisines:
                 cuisine, _ = RestaurantCuisine.objects.get_or_create(
                     restaurant=restaurant,
@@ -538,7 +561,11 @@ class RestaurantMenueUpdate(APIView):
             {
                 "message": "Menu item updated successfully",
                 "menu_item_id": menu_item.id,
-                "image_url": menu_item.item_image.url if menu_item.item_image else None
+                "image_url": (
+                    f"https://{settings.AWS_STORAGE_BUCKET_NAME}.s3."
+                    f"{settings.AWS_S3_REGION_NAME}.amazonaws.com/{menu_item.item_image}"
+                    if menu_item.item_image else None
+                )
             },
             status=status.HTTP_200_OK
         )    
