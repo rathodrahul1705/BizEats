@@ -113,9 +113,8 @@ class TrackOrder(APIView):
                 location = restaurant.restaurant_location
                 restaurant_address_line = f"{location.shop_no_building or ''} {location.floor_tower or ''} {location.area_sector_locality}, {location.city}, {location.nearby_locality or ''}".strip().replace("  ", " ")
             
-                payment_method_checks = get_final_payment_checks(order.id, order.get_payment_method_display())
 
-                payment_details = {
+                order_payment_details = {
                     "subtotal": str(subtotal),
                     "delivery_fee": order.delivery_fee,
                     "total": str(order.total_amount),
@@ -137,6 +136,8 @@ class TrackOrder(APIView):
                     "restaurant_contact": order.restaurant.owner_details.owner_contact,
                 }
 
+                payment_method_checks = get_final_payment_checks(order.id, order.get_payment_method_display(),order_payment_details)
+
                 order_data = {
                     "order_number": order.order_number,
                     "placed_on": order.created_at.strftime("%Y-%m-%d %H:%M:%S"),
@@ -145,7 +146,7 @@ class TrackOrder(APIView):
                     "items": item_details,
                     "delivery_address": address_details,
                     "restaurant_details":restaurant_details,
-                    "payment_details":payment_details,
+                    "payment_details":order_payment_details,
                     "coupon_details_details":coupon_details_details,
                     "payment_method_checks": payment_method_checks,
                 }
@@ -295,7 +296,7 @@ class OrderStatusUpdate(APIView):
                 }, status=status.HTTP_400_BAD_REQUEST)
 
             order = Order.objects.get(order_number=order_number)
-
+            
             if new_status == 4:
                helper.create_delivery_request(order_number,order)
 

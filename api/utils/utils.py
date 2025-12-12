@@ -1,3 +1,4 @@
+from decimal import Decimal
 import math
 import requests
 from api.delivery.porter_service import get_fare_estimate
@@ -154,9 +155,9 @@ def calculate_delivery_cost(distance_km):
         extra_cost = distance_km * 15  # Remaining km at ₹11/km
         return extra_cost
     
-def get_final_payment_checks(order_id, payment_method_display):
+def get_final_payment_checks(order_id, payment_method_display, order_payment_details):
     wallet_details = WalletTransaction.objects.filter(order_id=order_id).first()
-    payment_details = Payment.objects.filter(order_id=order_id).first()
+    online_payment_details = Payment.objects.filter(order_id=order_id).first()
 
     eatoor_wallet_used = False
     wallet_used_amount = 0
@@ -165,17 +166,23 @@ def get_final_payment_checks(order_id, payment_method_display):
     online_payment_method = None
     online_payment_amount = None
     online_payment_used = False
+    cod_payment_used = False
+    cod_payment_pending = None
 
     if wallet_details:
         eatoor_wallet_used = True
         wallet_used_amount = wallet_details.amount
         wallet_payment_method = "Eatoor Money"
 
-    if payment_details:
-        online_transaction_id = payment_details.razorpay_payment_id
-        online_payment_amount = payment_details.amount
+    if online_payment_details:
+        online_transaction_id = online_payment_details.razorpay_payment_id
+        online_payment_amount = online_payment_details.amount
         online_payment_method = payment_method_display
         online_payment_used = True
+    
+    if payment_method_display == "Cash on Delivery":
+        cod_payment_used = True
+        cod_payment_pending =  Decimal(order_payment_details.get('total', 0)) - Decimal(wallet_used_amount)
 
     return {
         "eatoor_wallet_used": eatoor_wallet_used,
@@ -185,4 +192,6 @@ def get_final_payment_checks(order_id, payment_method_display):
         "online_payment_method": online_payment_method,
         "online_payment_amount": online_payment_amount,
         "online_transaction_id": online_transaction_id,
+        "cod_payment_used": cod_payment_used,
+        "cod_payment_pending": cod_payment_pending,
     }
