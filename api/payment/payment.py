@@ -81,7 +81,8 @@ def create_order(request):
                 'offer_id': order.get('offer_id'),
                 'status': order.get('status', 'created'),
                 'attempts': order.get('attempts', 0),
-                'created_at': order.get('created_at')
+                'created_at': order.get('created_at'),
+                'key': settings.RAZORPAY_API_KEY
             }
         }
 
