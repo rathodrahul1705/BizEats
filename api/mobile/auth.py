@@ -138,7 +138,7 @@ class MobileLoginSendOTP(BaseOTPView):
         
         try:
 
-            if getattr(settings, "APP_ENV", "prod") == "prod":
+            if getattr(settings, "APP_ENV", "prod") == "prod" and user.contact_number != "8108662484":
                 send_otp_via_twilio(
                     contact,
                     otp,
@@ -289,7 +289,7 @@ class MobileLoginResendOTP(BaseOTPView):
         otp = self.update_user_otp(user)
 
         try:
-            if getattr(settings, "APP_ENV", "prod") == "prod":
+            if getattr(settings, "APP_ENV", "prod") == "prod" and user.contact_number != "8108662484":
                 send_otp_via_twilio(
                     contact,
                     otp,
