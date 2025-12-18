@@ -60,9 +60,9 @@ def calculate_distance_and_cost(restaurant_id: int, delivery_address_id: int, co
             return {"error": f"Invalid coordinate values: {str(e)}"}
 
         # Calculate distance
-        distance_km, eta_minutes, display_distance = _get_routing_distance(r_lat, r_lon, u_lat, u_lon)
+        distance_km = _get_routing_distance(r_lat, r_lon, u_lat, u_lon)
 
-        if display_distance <= 0:
+        if distance_km <= 0:
             return {"error": "Could not calculate valid distance between locations."}
 
         # Prepare payload for fare estimate
@@ -80,7 +80,7 @@ def calculate_distance_and_cost(restaurant_id: int, delivery_address_id: int, co
         
         logger.info("Porter get api quote for payload: %s", payload)
         
-        delivery_cost = calculate_delivery_cost(display_distance)
+        delivery_cost = calculate_delivery_cost(distance_km)
         # Get fare estimate from external service
         # delivery_cost = round(distance_km * cost_per_km, 2)
         # if distance_km > 5:
@@ -96,9 +96,8 @@ def calculate_distance_and_cost(restaurant_id: int, delivery_address_id: int, co
         return {
             "restaurant_coordinates": {"latitude": r_lat, "longitude": r_lon},
             "user_coordinates": {"latitude": u_lat, "longitude": u_lon},
-            "distance_km": round(display_distance, 2),
-            "estimated_delivery_cost": round(delivery_cost),
-            "eta_minutes": round(eta_minutes)
+            "distance_km": round(distance_km, 2),
+            "estimated_delivery_cost": round(delivery_cost)
         }
 
     except Exception as e:
@@ -116,7 +115,6 @@ def _get_routing_distance(
         distance_km      -> accurate backend distance
         eta_seconds      -> backend ETA (seconds)
         display_distance -> UI distance (actual - 500m)
-        eta_minutes      -> UI ETA (minutes, rounded up)
     """
 
     base_url = "https://maps.googleapis.com/maps/api/directions/json"
@@ -143,27 +141,17 @@ def _get_routing_distance(
         distance_meters = sum(leg["distance"]["value"] for leg in legs)
         duration_seconds = sum(leg["duration"]["value"] for leg in legs)
 
-        distance_km = round(distance_meters / 1000, 2)
-
-        # ETA buffer for bike delivery
-        eta_seconds = int(duration_seconds * 1.15)
+        distance_km_original = round(distance_meters / 1000, 2)
 
         # Display distance = actual - 500m
-        display_distance = max(distance_km - 0.5, 0)
-
-        # display_distance = f"{display_km:.1f}"
-
-        # ⏱️ ETA in minutes (always round up)
-        eta_minutes = max(1, math.ceil(eta_seconds / 60))
+        distance_km = max(distance_km_original - 0.5, 0)
 
         logger.info(
             "Distance: %.2f km | Display: %s | ETA: %s mins",
             distance_km,
-            display_distance,
-            eta_minutes
         )
 
-        return distance_km, eta_minutes, display_distance
+        return distance_km
 
     except Exception as e:
         logger.error("Routing failed: %s", str(e))

@@ -437,7 +437,6 @@ class CartWithRestaurantDetails(APIView):
                     
                     delivery_amount = location_data["estimated_delivery_cost"]
                     distance_km = location_data["distance_km"]
-                    eta_minutes = location_data["eta_minutes"]
                     
                 except UserDeliveryAddress.DoesNotExist:
                     delivery_address_details = {
@@ -466,7 +465,6 @@ class CartWithRestaurantDetails(APIView):
                 "tax": tax,
                 "total": round(total),
                 "currency": "INR",
-                "eta_minutes": eta_minutes
             }
 
             offer_response = check_credit_offer(
