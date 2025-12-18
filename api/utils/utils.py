@@ -1,11 +1,13 @@
 from decimal import Decimal
 import math
 import requests
+from BizEats import settings
 from api.delivery.porter_service import get_fare_estimate
 from api.models import Payment, RestaurantMaster, UserDeliveryAddress, WalletTransaction
 import os
 import logging
 from typing import Dict, Union, Optional, Tuple
+from math import radians, sin, cos, sqrt, atan2
 
 logger = logging.getLogger(__name__)
 
@@ -58,8 +60,9 @@ def calculate_distance_and_cost(restaurant_id: int, delivery_address_id: int, co
             return {"error": f"Invalid coordinate values: {str(e)}"}
 
         # Calculate distance
-        distance_km = _get_routing_distance(r_lat, r_lon, u_lat, u_lon)
-        if distance_km <= 0:
+        distance_km, eta_minutes, display_distance = _get_routing_distance(r_lat, r_lon, u_lat, u_lon)
+
+        if display_distance <= 0:
             return {"error": "Could not calculate valid distance between locations."}
 
         # Prepare payload for fare estimate
@@ -77,7 +80,7 @@ def calculate_distance_and_cost(restaurant_id: int, delivery_address_id: int, co
         
         logger.info("Porter get api quote for payload: %s", payload)
         
-        delivery_cost = calculate_delivery_cost(distance_km)
+        delivery_cost = calculate_delivery_cost(display_distance)
         # Get fare estimate from external service
         # delivery_cost = round(distance_km * cost_per_km, 2)
         # if distance_km > 5:
@@ -93,64 +96,82 @@ def calculate_distance_and_cost(restaurant_id: int, delivery_address_id: int, co
         return {
             "restaurant_coordinates": {"latitude": r_lat, "longitude": r_lon},
             "user_coordinates": {"latitude": u_lat, "longitude": u_lon},
-            "distance_km": round(distance_km, 2),
-            "estimated_delivery_cost": round(delivery_cost)
+            "distance_km": round(display_distance, 2),
+            "estimated_delivery_cost": round(delivery_cost),
+            "eta_minutes": round(eta_minutes)
         }
 
     except Exception as e:
         logger.exception("Error in calculate_distance_and_cost")
         return {"error": str(e)}
 
-def _get_routing_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+def _get_routing_distance(
+    lat1: float,
+    lon1: float,
+    lat2: float,
+    lon2: float
+) -> Tuple[float, int, str, int]:
     """
-    Get routing distance between two points using OLA Maps API.
-    
-    Args:
-        lat1, lon1: Origin coordinates
-        lat2, lon2: Destination coordinates
-        
     Returns:
-        Distance in kilometers (rounded to 2 decimal places) or 0.0 if failed
+        distance_km      -> accurate backend distance
+        eta_seconds      -> backend ETA (seconds)
+        display_distance -> UI distance (actual - 500m)
+        eta_minutes      -> UI ETA (minutes, rounded up)
     """
-    base_url = os.environ.get("OLA_MAPS_URL", "https://api.olamaps.io")
-    api_key = os.environ.get("OLA_MAP_API_KEY", "cVMkjEbmY4Qu0FfAbUOa7CWfzUOyR00wMNS6F7hT")
-    
-    url = f"{base_url}/routing/v1/directions"
-    headers = {"X-Request-Id": "EATOOR-DISTANCE-CALC"}
+
+    base_url = "https://maps.googleapis.com/maps/api/directions/json"
+    api_key = settings.GOOGLE_MAP_API_KEY
+
     params = {
         "origin": f"{lat1},{lon1}",
         "destination": f"{lat2},{lon2}",
-        "api_key": api_key
+        "mode": "two_wheeler",
+        "key": api_key
     }
 
-    logger.info("Calculating distance between (%s, %s) and (%s, %s)", lat1, lon1, lat2, lon2)
-
     try:
-        response = requests.post(url, headers=headers, params=params, timeout=5)
+        response = requests.get(base_url, params=params, timeout=5)
         response.raise_for_status()
         data = response.json()
 
-        # Safely navigate the response structure
-        distance_meters = data.get("routes", [{}])[0].get("legs", [{}])[0].get("distance")
-        
-        if distance_meters is not None and distance_meters > 0:
-            distance_km = round(distance_meters / 1000, 2)
-            logger.info("Calculated distance: %s km", distance_km)
-            return distance_km
-        
-        logger.warning("Invalid or zero distance returned from API")
-        return 0.0
+        if data.get("status") != "OK":
+            return 0.0, 0, "0 km", 0
 
-    except requests.exceptions.RequestException as e:
-        logger.error("Request failed: %s", str(e))
-        return 0.0
-    except (ValueError, KeyError, IndexError) as e:
-        logger.error("Failed to parse API response: %s", str(e))
-        return 0.0
-    
+        legs = data["routes"][0]["legs"]
+
+        # Accurate backend distance & duration
+        distance_meters = sum(leg["distance"]["value"] for leg in legs)
+        duration_seconds = sum(leg["duration"]["value"] for leg in legs)
+
+        distance_km = round(distance_meters / 1000, 2)
+
+        # ETA buffer for bike delivery
+        eta_seconds = int(duration_seconds * 1.15)
+
+        # Display distance = actual - 500m
+        display_distance = max(distance_km - 0.5, 0)
+
+        # display_distance = f"{display_km:.1f}"
+
+        # ⏱️ ETA in minutes (always round up)
+        eta_minutes = max(1, math.ceil(eta_seconds / 60))
+
+        logger.info(
+            "Distance: %.2f km | Display: %s | ETA: %s mins",
+            distance_km,
+            display_distance,
+            eta_minutes
+        )
+
+        return distance_km, eta_minutes, display_distance
+
+    except Exception as e:
+        logger.error("Routing failed: %s", str(e))
+        return 0.0, 0, "0 km", 0
+
 def calculate_delivery_cost(distance_km):
-    if distance_km <= 5:
-        return distance_km * 15
+    if distance_km <= 2:
+        return distance_km * 10
     else:
         extra_cost = distance_km * 15  # Remaining km at ₹11/km
         return extra_cost
