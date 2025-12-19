@@ -1111,7 +1111,6 @@ class RestaurantCartReOrder(APIView):
                 "status": "error",
                 "message": str(e)
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
 class UserDataDelete(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -1122,24 +1121,42 @@ class UserDataDelete(APIView):
         - Admin can delete any user
         """
 
+        logger.info(
+            "UserDataDelete request initiated | requested_by=%s | target_user_pk=%s",
+            request.user.id,
+            pk
+        )
+
         try:
             # ---------- Identify user ----------
             if pk:
                 if not request.user.is_staff:
+                    logger.warning(
+                        "Permission denied for hard delete | requested_by=%s | target_user_pk=%s",
+                        request.user.id,
+                        pk
+                    )
                     return Response(
                         {"success": False, "message": "Permission denied"},
                         status=status.HTTP_403_FORBIDDEN
                     )
+
                 user_to_delete = User.objects.get(pk=pk)
             else:
                 user_to_delete = request.user
 
+            logger.info(
+                "User identified for deletion | user_id=%s | email=%s",
+                user_to_delete.id,
+                user_to_delete.email
+            )
+
             # ---------- Capture reason ----------
             reason_text = request.data.get("reason", "")
-            reason_type = request.data.get("reason_type", None)
+            reason_type = request.data.get("reason_type")
 
             # ---------- Store delete request (AUDIT) ----------
-            response_create = DeleteAccountDetails.objects.create(
+            DeleteAccountDetails.objects.create(
                 user_id=user_to_delete.id,
                 reason_text=reason_text,
                 reason_type=reason_type,
@@ -1147,7 +1164,12 @@ class UserDataDelete(APIView):
                 requested_at=datetime.now(),
                 processed_at=datetime.now(),
                 user_email=user_to_delete.email,
-                user_phone=user_to_delete.contact_number
+                user_phone=getattr(user_to_delete, "contact_number", None)
+            )
+
+            logger.info(
+                "DeleteAccountDetails audit created | user_id=%s",
+                user_to_delete.id
             )
 
             deleted_user_data = {
@@ -1159,6 +1181,11 @@ class UserDataDelete(APIView):
             # ---------- HARD DELETE ----------
             user_to_delete.delete()
 
+            logger.info(
+                "User account hard deleted successfully | user_id=%s",
+                deleted_user_data["id"]
+            )
+
             return Response(
                 {
                     "success": True,
@@ -1169,12 +1196,22 @@ class UserDataDelete(APIView):
             )
 
         except User.DoesNotExist:
+            logger.error(
+                "User not found for deletion | requested_by=%s | target_user_pk=%s",
+                request.user.id,
+                pk
+            )
             return Response(
                 {"success": False, "message": "User not found"},
                 status=status.HTTP_404_NOT_FOUND
             )
 
         except Exception as e:
+            logger.exception(
+                "Unexpected error during user deletion | requested_by=%s | error=%s",
+                request.user.id,
+                str(e)
+            )
             return Response(
                 {"success": False, "message": "Failed to delete account"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
