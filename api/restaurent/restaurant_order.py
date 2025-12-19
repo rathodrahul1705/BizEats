@@ -334,20 +334,36 @@ class CartWithRestaurantDetails(APIView):
     """
 
     def post(self, request, *args, **kwargs):
+        logger.info("CartWithRestaurantDetails API called")
+
         try:
             data = json.loads(request.body)
-            user_id = data.get("user_id")  # Can be null for guest users
-            session_id = data.get("session_id")  # For guest users
+            user_id = data.get("user_id")
+            session_id = data.get("session_id")
             restaurant_id = data.get("restaurant_id")
             address_id = data.get("address_id")
 
+            logger.debug(
+                f"Request Data | user_id={user_id}, session_id={session_id}, "
+                f"restaurant_id={restaurant_id}, address_id={address_id}"
+            )
+
             restaurant = RestaurantMaster.objects.get(restaurant_id=restaurant_id)
+            logger.info(f"Restaurant found: {restaurant.restaurant_name}")
 
             # Fetch cart items
             if user_id:
-                cart_items = Cart.objects.filter(user_id=user_id, restaurant_id=restaurant_id).exclude(cart_status=5)
+                cart_items = Cart.objects.filter(
+                    user_id=user_id,
+                    restaurant_id=restaurant_id
+                ).exclude(cart_status=5)
+                logger.debug(f"Cart fetched for user_id={user_id}")
             else:
-                cart_items = Cart.objects.filter(session_id=session_id, restaurant_id=restaurant_id).exclude(cart_status=5)
+                cart_items = Cart.objects.filter(
+                    session_id=session_id,
+                    restaurant_id=restaurant_id
+                ).exclude(cart_status=5)
+                logger.debug(f"Cart fetched for session_id={session_id}")
 
             cart_details = []
             subtotal = 0
@@ -356,7 +372,12 @@ class CartWithRestaurantDetails(APIView):
                 restaurant_menu = RestaurantMenu.objects.filter(id=item.item_id).first()
                 item_total_price = float(item.item_price)
                 subtotal += item_total_price
-                
+
+                logger.debug(
+                    f"Cart Item | item_id={item.item_id}, "
+                    f"qty={item.quantity}, price={item_total_price}"
+                )
+
                 cart_details.append({
                     "item_id": item.item_id,
                     "id": item.id,
@@ -366,14 +387,16 @@ class CartWithRestaurantDetails(APIView):
                     "discount_active": item.discount_active,
                     "type": restaurant_menu.food_type if restaurant_menu else None,
                     "discount_percent": item.discount_percent,
-                    "item_price": float(item.item_price),
+                    "item_price": item_total_price,
                     "original_item_price": float(restaurant_menu.item_price * item.quantity) if restaurant_menu else 0,
                     "buy_one_get_one_free": item.buy_one_get_one_free,
                     "quantity": item.quantity,
                     "item_image": request.build_absolute_uri(item.item.item_image.url) if item.item.item_image else None,
                 })
 
-            # Fetch suggestion items (from same restaurant, excluding already in cart)
+            logger.info(f"Cart subtotal calculated: {subtotal}")
+
+            # Suggestions
             cart_item_ids = [item.item_id for item in cart_items]
 
             suggestion_items_qs = RestaurantMenu.objects.filter(
@@ -384,13 +407,12 @@ class CartWithRestaurantDetails(APIView):
 
             for item in suggestion_items_qs:
                 original_price = float(item.item_price)
-                discount_percent = float(item.discount_percent or 0)  # convert to float safely
+                discount_percent = float(item.discount_percent or 0)
 
-                # Apply discount logic
-                if discount_percent > 0:
-                    discounted_price = original_price - (original_price * (discount_percent / 100))
-                else:
-                    discounted_price = original_price
+                discounted_price = (
+                    original_price - (original_price * discount_percent / 100)
+                    if discount_percent > 0 else original_price
+                )
 
                 suggestion_cart_items.append({
                     "item_name": item.item_name,
@@ -401,63 +423,49 @@ class CartWithRestaurantDetails(APIView):
                     "original_item_price": original_price,
                     "buy_one_get_one_free": item.buy_one_get_one_free,
                     "quantity": 1,
-                    "item_price": round(discounted_price, 2),  # final discounted price
+                    "item_price": round(discounted_price, 2),
                     "type": item.food_type,
                     "item_image": request.build_absolute_uri(item.item_image.url) if item.item_image else None
                 })
 
-            # Get delivery address dynamically from UserDeliveryAddress table
+            logger.debug(f"Suggestion items count: {len(suggestion_cart_items)}")
+
+            # Delivery Address & Distance
             delivery_address_details = {}
             delivery_amount = 0
             distance_km = 0
-            if address_id:
 
+            if address_id:
                 try:
                     if user_id:
                         address_obj = UserDeliveryAddress.objects.get(id=address_id, user_id=user_id)
                     else:
-                        # Optional: if guest, address lookup can be skipped or handled differently
                         address_obj = UserDeliveryAddress.objects.get(id=address_id)
-                    
-                    # Compose single address line (you can customize the format)
-                    address_line = f"{address_obj.street_address}, "
-                    if address_obj.near_by_landmark:
-                        address_line += f"Near {address_obj.near_by_landmark}, "
-                    address_line += f"{address_obj.city}, {address_obj.state} - {address_obj.zip_code}, {address_obj.country}"
-                    
-                    delivery_address_details = {
-                        "id": address_obj.id,
-                        "address": address_line,
-                        "home_type": address_obj.home_type,
-                        "name_of_location": address_obj.name_of_location,
-                        "latitude": float(address_obj.latitude) if address_obj.latitude else None,
-                        "longitude": float(address_obj.longitude) if address_obj.longitude else None,
-                    }
+
+                    logger.info(f"Delivery address found: address_id={address_id}")
 
                     location_data = calculate_distance_and_cost(restaurant_id, address_id)
+
                     if "error" in location_data:
-                        return self._error_response(location_data["error"], status.HTTP_400_BAD_REQUEST)
-                    
+                        logger.error(f"Distance calculation error: {location_data['error']}")
+                        return self._error_response(
+                            location_data["error"],
+                            status.HTTP_400_BAD_REQUEST
+                        )
+
                     delivery_amount = location_data["estimated_delivery_cost"]
                     distance_km = location_data["distance_km"]
-                    
+
+                    logger.info(
+                        f"Distance calculated | distance_km={distance_km}, "
+                        f"delivery_amount={delivery_amount}"
+                    )
+
                 except UserDeliveryAddress.DoesNotExist:
-                    delivery_address_details = {
-                        "error": "Address not found"
-                    }
-            else:
-                # If no address_id provided, you can send empty or default value
-                delivery_address_details = {
-                    "address": None
-                }
+                    logger.warning(f"Address not found | address_id={address_id}")
+                    delivery_address_details = {"error": "Address not found"}
 
-
-            # Static delivery time (you can update as needed)
-            delivery_time = {
-                "estimated_time": "30-45 mins",
-                "is_express_available": True
-            }
-
+            # Billing
             tax = 0
             total = subtotal + delivery_amount + tax
 
@@ -470,37 +478,49 @@ class CartWithRestaurantDetails(APIView):
                 "currency": "INR",
             }
 
+            logger.info(f"Billing calculated | total={total}")
+
+            order_count = Order.objects.filter(user_id=user_id).count()
             offer_response = check_credit_offer(
                 offer_type="free_delivery",
                 sub_filter="new_user"
             )
 
-            order_count = Order.objects.filter(user_id=user_id).count()
-            offer_data = offer_response.get("data", None)
+            delivery_offer_exist = bool(offer_response.get("data")) and order_count < 3
 
-            # A "new user" free-delivery offer is valid only if:
-            # 1. The offer exists (offer_data not empty)
-            # 2. User has placed less than 3 orders
-            delivery_offer_exist = bool(offer_data) and order_count < 3
-            
-            response_data = {
+            logger.info(
+                f"Offer check | order_count={order_count}, "
+                f"delivery_offer_exist={delivery_offer_exist}"
+            )
+
+            return Response({
                 "status": "success",
                 "restaurant_name": restaurant.restaurant_name,
                 "cart_details": cart_details,
                 "suggestion_cart_items": suggestion_cart_items,
                 "delivery_address_details": delivery_address_details,
-                "delivery_time": delivery_time,
+                "delivery_time": {
+                    "estimated_time": "30-45 mins",
+                    "is_express_available": True
+                },
                 "billing_details": billing_details,
                 "delivery_offer_exist": delivery_offer_exist,
                 "order_count": order_count
-            }
-
-            return Response(response_data, status=status.HTTP_200_OK)
+            }, status=status.HTTP_200_OK)
 
         except RestaurantMaster.DoesNotExist:
-            return Response({"status": "error", "message": "Restaurant not found"}, status=404)
+            logger.error(f"Restaurant not found | restaurant_id={restaurant_id}")
+            return Response(
+                {"status": "error", "message": "Restaurant not found"},
+                status=404
+            )
+
         except Exception as e:
-            return Response({"status": "error", "message": str(e)}, status=status.HTTP_400_BAD_REQUEST)        
+            logger.exception("Unexpected error in CartWithRestaurantDetails API")
+            return Response(
+                {"status": "error", "message": str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )      
 @method_decorator(csrf_exempt, name='dispatch')
 class CartWithRestaurantDetailsClear(APIView):
     """
