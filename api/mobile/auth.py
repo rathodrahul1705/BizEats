@@ -97,7 +97,7 @@ class BaseOTPView(APIView):
 
         logger.info(f"Updated OTP for user {user.id} (expires at {user.otp_expiry})")
         return otp
-
+        
 class MobileLoginSendOTP(BaseOTPView):
     """
     Step 1: Accept mobile number, generate and send OTP.

@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal, ROUND_UP
 import logging
 import math
@@ -11,7 +11,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, generics, permissions
 from api.emailer.email_notifications import send_order_status_email
-from api.models import Cart, Coupon, Order, OrderStatusLog, RestaurantMenu, User
+from api.models import Cart, Coupon, Order, OrderStatusLog, RestaurantMenu, User, DeleteAccountDetails
 import json
 from django.utils.timezone import now
 from django.db import transaction, IntegrityError
@@ -22,6 +22,9 @@ from api.models import RestaurantMaster, RestaurantCuisine, RestaurantDeliveryTi
 from api.offer.view import check_credit_offer
 from api.serializers import OrderPlacementSerializer, RestaurantMasterSerializer, RestaurantSerializerByStatus, RestaurantDetailSerializer, RestaurantMasterNewSerializer, RestaurantMenuSerializer, RestaurantListSerializer, UserDeliveryAddressSerializer
 from api.utils.utils import calculate_distance_and_cost
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.authentication import TokenAuthentication
+
 
 logger = logging.getLogger(__name__)
 
@@ -1026,6 +1029,7 @@ class GetAddressByFilter(APIView):
 
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
 @method_decorator(csrf_exempt, name='dispatch')
 class RestaurantCartReOrder(APIView):
     """
@@ -1078,5 +1082,70 @@ class RestaurantCartReOrder(APIView):
                 "message": str(e)
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-class userDataDelete(APIView):
-    print("====")
+class UserDataDelete(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, pk=None):
+        """
+        HARD DELETE user account.
+        - User can delete their own account
+        - Admin can delete any user
+        """
+
+        try:
+            # ---------- Identify user ----------
+            if pk:
+                if not request.user.is_staff:
+                    return Response(
+                        {"success": False, "message": "Permission denied"},
+                        status=status.HTTP_403_FORBIDDEN
+                    )
+                user_to_delete = User.objects.get(pk=pk)
+            else:
+                user_to_delete = request.user
+
+            # ---------- Capture reason ----------
+            reason_text = request.data.get("reason", "")
+            reason_type = request.data.get("reason_type", None)
+
+            # ---------- Store delete request (AUDIT) ----------
+            response_create = DeleteAccountDetails.objects.create(
+                user_id=user_to_delete.id,
+                reason_text=reason_text,
+                reason_type=reason_type,
+                status="completed",
+                requested_at=datetime.now(),
+                processed_at=datetime.now(),
+                user_email=user_to_delete.email,
+                user_phone=user_to_delete.contact_number
+            )
+
+            deleted_user_data = {
+                "id": user_to_delete.id,
+                "email": user_to_delete.email,
+                "contact_number": getattr(user_to_delete, "contact_number", None),
+            }
+
+            # ---------- HARD DELETE ----------
+            user_to_delete.delete()
+
+            return Response(
+                {
+                    "success": True,
+                    "message": "Account deleted permanently",
+                    "deleted_user": deleted_user_data
+                },
+                status=status.HTTP_200_OK
+            )
+
+        except User.DoesNotExist:
+            return Response(
+                {"success": False, "message": "User not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        except Exception as e:
+            return Response(
+                {"success": False, "message": "Failed to delete account"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )

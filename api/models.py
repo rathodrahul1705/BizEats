@@ -1,4 +1,5 @@
 # from datetime import timezone
+from django.conf import settings
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.utils.timezone import now, timedelta
@@ -1158,3 +1159,58 @@ class WalletTransaction(models.Model):
 
     def __str__(self):
         return f"{self.txn_type} {self.amount}"
+    
+class DeleteAccountDetails(models.Model):
+    STATUS_CHOICES = (
+        ("requested", "Requested"),
+        ("processing", "Processing"),
+        ("completed", "Completed"),
+        ("failed", "Failed"),
+    )
+
+    REASON_CHOICES = (
+        ("found_alternative", "Found a better alternative"),
+        ("privacy", "Privacy concerns"),
+        ("notifications", "Too many notifications"),
+        ("inactive", "Don't use the app anymore"),
+        ("technical", "Technical issues"),
+        ("support", "Customer service problems"),
+        ("other", "Other"),
+    )
+
+    user_id = models.BigIntegerField(db_index=True)
+
+    reason_type = models.CharField(
+        max_length=30,
+        choices=REASON_CHOICES,
+        blank=True,
+        null=True
+    )
+
+    reason_text = models.TextField(
+        blank=True,
+        null=True,
+        help_text="Exact reason sent from mobile app"
+    )
+
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default="requested"
+    )
+
+    requested_at = models.DateTimeField(auto_now_add=True)
+    processed_at = models.DateTimeField(blank=True, null=True)
+
+    # Snapshot for audit (VERY IMPORTANT for Apple)
+    user_email = models.EmailField(blank=True, null=True)
+    user_phone = models.CharField(max_length=20, blank=True, null=True)
+
+    class Meta:
+        db_table = "delete_account_details"
+        verbose_name = "Delete Account Request"
+        verbose_name_plural = "Delete Account Requests"
+        ordering = ["-requested_at"]
+
+    def __str__(self):
+        return f"DeleteAccountRequest(user={self.user_id}, status={self.status})"
