@@ -11,93 +11,95 @@ from math import radians, sin, cos, sqrt, atan2
 
 logger = logging.getLogger(__name__)
 
-def calculate_distance_and_cost(restaurant_id: int, delivery_address_id: int, cost_per_km: float = 15.0) -> Dict[str, Union[float, str, Dict]]:
+DEFAULT_DISTANCE_KM = 1.0
+
+def calculate_distance_and_cost(
+    restaurant_id: int,
+    delivery_address_id: int,
+    cost_per_km: float = 15.0
+) -> Dict[str, Union[float, str, Dict]]:
     """
     Calculates distance in km and estimated delivery cost between restaurant and user address.
-    Returns a dictionary with coordinates, distance, and cost or error message.
-    
-    Args:
-        restaurant_id: ID of the restaurant
-        delivery_address_id: ID of the user's delivery address
-        cost_per_km: Base cost per kilometer (default: 12.0)
-        
-    Returns:
-        Dictionary containing:
-        - restaurant_coordinates: {latitude, longitude}
-        - user_coordinates: {latitude, longitude}
-        - distance_km: rounded to 2 decimal places
-        - estimated_delivery_cost: rounded to nearest integer
-        OR
-        - error: error message if something went wrong
+    Returns a dictionary with coordinates, distance, and cost.
+    Uses fallback values if routing distance fails.
     """
+
     try:
-        # Fetch data in a single query each
-        restaurant = RestaurantMaster.objects.filter(
-            restaurant_id=restaurant_id
-        ).select_related('restaurant_location').only(
-            'restaurant_id', 'restaurant_location__latitude', 'restaurant_location__longitude'
-        ).first()
+        # Fetch restaurant
+        restaurant = (
+            RestaurantMaster.objects
+            .filter(restaurant_id=restaurant_id)
+            .select_related("restaurant_location")
+            .only(
+                "restaurant_id",
+                "restaurant_location__latitude",
+                "restaurant_location__longitude"
+            )
+            .first()
+        )
 
         if not restaurant or not restaurant.restaurant_location:
             return {"error": "Invalid restaurant or missing location."}
 
-        user_address = UserDeliveryAddress.objects.filter(
-            id=delivery_address_id
-        ).select_related('user').only(
-            'latitude', 'longitude', 'user__full_name', 'user__contact_number'
-        ).first()
+        # Fetch user address
+        user_address = (
+            UserDeliveryAddress.objects
+            .filter(id=delivery_address_id)
+            .select_related("user")
+            .only(
+                "latitude",
+                "longitude",
+                "user__full_name",
+                "user__contact_number"
+            )
+            .first()
+        )
 
         if not user_address:
             return {"error": "User delivery address not found."}
 
-        # Extract coordinates with validation
+        # Extract coordinates
         try:
             r_lat = float(restaurant.restaurant_location.latitude)
             r_lon = float(restaurant.restaurant_location.longitude)
             u_lat = float(user_address.latitude)
             u_lon = float(user_address.longitude)
-        except (TypeError, ValueError) as e:
-            return {"error": f"Invalid coordinate values: {str(e)}"}
+        except (TypeError, ValueError):
+            return {"error": "Invalid latitude or longitude values."}
 
-        # Calculate distance
+        # Calculate routing distance
         distance_km = _get_routing_distance(r_lat, r_lon, u_lat, u_lon)
 
-        if distance_km <= 0:
-            return {"error": "Could not calculate valid distance between locations."}
+        # ===============================
+        # FALLBACK LOGIC
+        # ===============================
+        fallback_used = False
 
-        # Prepare payload for fare estimate
-        payload = {
-            "pickup_details": {"lat": r_lat, "lng": r_lon},
-            "drop_details": {"lat": u_lat, "lng": u_lon},
-            "customer": {
-                "name": user_address.user.full_name,
-                "mobile": {
-                    "country_code": "+91",
-                    "number": user_address.user.contact_number
-                }
-            }
-        }
-        
-        logger.info("Porter get api quote for payload: %s", payload)
-        
+        if not distance_km or distance_km <= 0:
+            logger.warning(
+                "Routing distance failed. Using fallback distance. "
+                "restaurant_id=%s, address_id=%s",
+                restaurant_id,
+                delivery_address_id
+            )
+            distance_km = DEFAULT_DISTANCE_KM
+            fallback_used = True
+
+        # Calculate delivery cost
         delivery_cost = calculate_delivery_cost(distance_km)
-        # Get fare estimate from external service
-        # delivery_cost = round(distance_km * cost_per_km, 2)
-        # if distance_km > 5:
-        #     response = get_fare_estimate(payload)
-        #     if response and 'vehicles' in response:
-        #         two_wheeler = next(
-        #             (v for v in response['vehicles'] if v.get("type") in ("2 Wheeler", "Scooter")),
-        #             None
-        #         )
-        #         if two_wheeler and 'fare' in two_wheeler and 'minor_amount' in two_wheeler['fare']:
-        #             delivery_cost = two_wheeler['fare']['minor_amount'] / 100
 
         return {
-            "restaurant_coordinates": {"latitude": r_lat, "longitude": r_lon},
-            "user_coordinates": {"latitude": u_lat, "longitude": u_lon},
+            "restaurant_coordinates": {
+                "latitude": r_lat,
+                "longitude": r_lon
+            },
+            "user_coordinates": {
+                "latitude": u_lat,
+                "longitude": u_lon
+            },
             "distance_km": round(distance_km, 2),
-            "estimated_delivery_cost": round(delivery_cost)
+            "estimated_delivery_cost": round(delivery_cost),
+            "fallback_used": fallback_used
         }
 
     except Exception as e:
