@@ -1116,13 +1116,13 @@ class UserDataDelete(APIView):
 
     def delete(self, request, pk=None):
         """
-        HARD DELETE user account.
-        - User can delete their own account
-        - Admin can delete any user
+        SOFT DELETE user account.
+        - User can delete own account
+        - Admin can delete any account
         """
 
         logger.info(
-            "UserDataDelete request initiated | requested_by=%s | target_user_pk=%s",
+            "Account delete requested | requested_by=%s | target_pk=%s",
             request.user.id,
             pk
         )
@@ -1132,7 +1132,7 @@ class UserDataDelete(APIView):
             if pk:
                 if not request.user.is_staff:
                     logger.warning(
-                        "Permission denied for hard delete | requested_by=%s | target_user_pk=%s",
+                        "Permission denied | requested_by=%s | target_pk=%s",
                         request.user.id,
                         pk
                     )
@@ -1140,78 +1140,59 @@ class UserDataDelete(APIView):
                         {"success": False, "message": "Permission denied"},
                         status=status.HTTP_403_FORBIDDEN
                     )
-
-                user_to_delete = User.objects.get(pk=pk)
+                user = User.objects.get(pk=pk)
             else:
-                user_to_delete = request.user
+                user = request.user
 
-            logger.info(
-                "User identified for deletion | user_id=%s | email=%s",
-                user_to_delete.id,
-                user_to_delete.email
-            )
+            if user.is_deleted:
+                return Response(
+                    {"success": False, "message": "Account already deleted"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
 
             # ---------- Capture reason ----------
             reason_text = request.data.get("reason", "")
             reason_type = request.data.get("reason_type")
 
-            # ---------- Store delete request (AUDIT) ----------
+            # ---------- Soft delete ----------
+            user.is_deleted = True
+            user.is_active = False
+            user.deleted_at = datetime.now()
+            user.save(update_fields=["is_deleted", "is_active", "deleted_at"])
+
+            logger.info("User soft deleted | user_id=%s", user.id)
+
+            # ---------- Audit ----------
             DeleteAccountDetails.objects.create(
-                user_id=user_to_delete.id,
+                user_id=user.id,
                 reason_text=reason_text,
                 reason_type=reason_type,
-                status="completed",
+                status="processing",  # important
                 requested_at=datetime.now(),
-                processed_at=datetime.now(),
-                user_email=user_to_delete.email,
-                user_phone=getattr(user_to_delete, "contact_number", None)
-            )
-
-            logger.info(
-                "DeleteAccountDetails audit created | user_id=%s",
-                user_to_delete.id
-            )
-
-            deleted_user_data = {
-                "id": user_to_delete.id,
-                "email": user_to_delete.email,
-                "contact_number": getattr(user_to_delete, "contact_number", None),
-            }
-
-            # ---------- HARD DELETE ----------
-            user_to_delete.delete()
-
-            logger.info(
-                "User account hard deleted successfully | user_id=%s",
-                deleted_user_data["id"]
+                user_email=user.email,
+                user_phone=getattr(user, "contact_number", None)
             )
 
             return Response(
                 {
                     "success": True,
-                    "message": "Account deleted permanently",
-                    "deleted_user": deleted_user_data
+                    "message": "Account deactivated successfully. It will be permanently deleted after 30 days.",
+                    "permanent_delete_after": (
+                        user.deleted_at + timedelta(days=30)
+                    ).date()
                 },
                 status=status.HTTP_200_OK
             )
 
         except User.DoesNotExist:
-            logger.error(
-                "User not found for deletion | requested_by=%s | target_user_pk=%s",
-                request.user.id,
-                pk
-            )
+            logger.error("User not found | pk=%s", pk)
             return Response(
                 {"success": False, "message": "User not found"},
                 status=status.HTTP_404_NOT_FOUND
             )
 
         except Exception as e:
-            logger.exception(
-                "Unexpected error during user deletion | requested_by=%s | error=%s",
-                request.user.id,
-                str(e)
-            )
+            logger.exception("Account delete failed | error=%s", str(e))
             return Response(
                 {"success": False, "message": "Failed to delete account"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR

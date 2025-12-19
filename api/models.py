@@ -54,7 +54,9 @@ class User(AbstractBaseUser, PermissionsMixin):
     updated_at = models.DateTimeField(auto_now=True)
     role = models.PositiveSmallIntegerField(choices=ROLE_CHOICES, default=CUSTOMER)
     is_active = models.BooleanField(default=True)
-
+    is_deleted = models.BooleanField(default=False)
+    deleted_at = models.DateTimeField(null=True, blank=True)
+    
     # OTP-based authentication
     otp = models.CharField(max_length=6, null=True, blank=True)
     otp_expiry = models.DateTimeField(null=True, blank=True)
