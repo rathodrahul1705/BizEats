@@ -452,7 +452,7 @@ class CartWithRestaurantDetails(APIView):
                             location_data["error"],
                             status.HTTP_400_BAD_REQUEST
                         )
-
+                    
                     delivery_amount = location_data["estimated_delivery_cost"]
                     distance_km = location_data["distance_km"]
 
@@ -521,6 +521,16 @@ class CartWithRestaurantDetails(APIView):
                 {"status": "error", "message": str(e)},
                 status=status.HTTP_400_BAD_REQUEST
             )      
+        
+    def _error_response(self, message, status_code, error_detail=None):
+        """Helper for consistent error responses"""
+        response = {
+            "status": "error",
+            "message": message,
+            **({"error_details": error_detail} if error_detail else {})
+        }
+        return Response(response, status=status_code)
+    
 @method_decorator(csrf_exempt, name='dispatch')
 class CartWithRestaurantDetailsClear(APIView):
     """
