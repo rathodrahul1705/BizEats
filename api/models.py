@@ -47,7 +47,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     ]
 
     full_name = models.CharField(max_length=255)
-    email = models.EmailField()
+    email = models.EmailField(unique=True)
     contact_number = models.CharField(max_length=15, null=True, blank=True)  # Optional
     user_verified = models.BooleanField(default=False)
     created_at = models.DateTimeField(default=now)

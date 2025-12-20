@@ -2,6 +2,7 @@
 import logging
 import random
 from datetime import timedelta
+import uuid
 from django.utils.timezone import now
 from django.contrib.auth import get_user_model
 from rest_framework.views import APIView
@@ -198,7 +199,7 @@ class MobileLoginSendOTP(BaseOTPView):
                 user = User.objects.create(
                     contact_number=contact,
                     full_name="",
-                    email=f"{contact}@eatoor.com",
+                    email=f"{contact}_{uuid.uuid4().hex[:8]}@eatoor.com",
                     user_verified=False,
                     is_active=True,
                     is_deleted=False,
@@ -211,7 +212,7 @@ class MobileLoginSendOTP(BaseOTPView):
                 user = User.objects.create(
                     contact_number=contact,
                     full_name="",
-                    email=f"{contact}@eatoor.com",
+                    email=f"{contact}_{uuid.uuid4().hex[:8]}@eatoor.com",
                     user_verified=False,
                 )
                 created = True
