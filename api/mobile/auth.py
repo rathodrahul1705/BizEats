@@ -98,17 +98,86 @@ class BaseOTPView(APIView):
         logger.info(f"Updated OTP for user {user.id} (expires at {user.otp_expiry})")
         return otp
         
+# class MobileLoginSendOTP(BaseOTPView):
+#     """
+#     Step 1: Accept mobile number, generate and send OTP.
+#     """
+#     def post(self, request, *args, **kwargs):
+#         contact = request.data.get("contact_number")
+#         platform = request.data.get("platform")
+#         app_hash = request.data.get("app_hash")
+
+#         logger.info(f"MobileLoginSendOTP request received for contact: {contact} | platform: {platform} | app_hash: {app_hash}")
+        
+#         if not contact:
+#             logger.warning("MobileLoginSendOTP: Contact number missing in request")
+#             return Response(
+#                 {"error": "Contact number is required."},
+#                 status=status.HTTP_400_BAD_REQUEST
+#             )
+
+#         try:
+#             user, created = User.objects.get_or_create(
+#                 contact_number=contact,
+#                 defaults={
+#                     "full_name": "",
+#                     "email": f"{contact}@eatoor.com",
+#                     "user_verified": False,
+#                 }
+#             )
+#             logger.info(f"User {'created' if created else 'found'} with contact: {contact}")
+#         except Exception as e:
+#             logger.error(f"Error in get_or_create for contact {contact}: {str(e)}")
+#             return Response(
+#                 {"error": "Unable to process your request."},
+#                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
+#             )
+
+#         otp = self.update_user_otp(user)
+
+        
+#         try:
+
+#             if getattr(settings, "APP_ENV", "prod") == "prod" and user.contact_number != "8108662484":
+#                 send_otp_via_twilio(
+#                     contact,
+#                     otp,
+#                     app_hash=app_hash if platform == 'android' else None
+#                 )
+#                 logger.info(f"OTP sent successfully to {contact}")
+#             else:
+#                 logger.info(f"OTP sending skipped (APP_ENV={settings.APP_ENV})")
+
+#         except Exception as e:
+#             logger.error(f"Failed to send OTP to {contact}: {str(e)}")
+#             return Response(
+#                 {"error": f"OTP sending failed: {str(e)}"},
+#                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
+#             )
+
+#         logger.info(f"MobileLoginSendOTP completed successfully for {contact}")
+#         return Response({
+#             "message": "OTP sent successfully.",
+#             "user_exists": not created,
+#             "expiry_seconds": OTP_EXPIRY_SECONDS
+#         }, status=status.HTTP_200_OK)
+
+
 class MobileLoginSendOTP(BaseOTPView):
     """
     Step 1: Accept mobile number, generate and send OTP.
     """
+
     def post(self, request, *args, **kwargs):
         contact = request.data.get("contact_number")
         platform = request.data.get("platform")
         app_hash = request.data.get("app_hash")
 
-        logger.info(f"MobileLoginSendOTP request received for contact: {contact} | platform: {platform} | app_hash: {app_hash}")
-        
+        logger.info(
+            f"MobileLoginSendOTP request received for contact: {contact} | "
+            f"platform: {platform} | app_hash: {app_hash}"
+        )
+
         if not contact:
             logger.warning("MobileLoginSendOTP: Contact number missing in request")
             return Response(
@@ -117,36 +186,65 @@ class MobileLoginSendOTP(BaseOTPView):
             )
 
         try:
-            user, created = User.objects.get_or_create(
-                contact_number=contact,
-                defaults={
-                    "full_name": "",
-                    "email": f"{contact}@eatoor.com",
-                    "user_verified": False,
-                }
-            )
-            logger.info(f"User {'created' if created else 'found'} with contact: {contact}")
+            user = User.objects.filter(contact_number=contact).order_by("-id").first()
+            created = False
+
+            # ✅ CASE 1: User exists but was deleted → create new user
+            if user and not user.is_active and user.is_deleted:
+                logger.info(
+                    f"Deleted user found for contact {contact}. Creating new user."
+                )
+
+                user = User.objects.create(
+                    contact_number=contact,
+                    full_name="",
+                    email=f"{contact}@eatoor.com",
+                    user_verified=False,
+                    is_active=True,
+                    is_deleted=False,
+                    deleted_at=None,
+                )
+                created = True
+
+            # ✅ CASE 2: User does not exist → create new
+            elif not user:
+                user = User.objects.create(
+                    contact_number=contact,
+                    full_name="",
+                    email=f"{contact}@eatoor.com",
+                    user_verified=False,
+                )
+                created = True
+
+            # ✅ CASE 3: Existing active user → reuse
+            else:
+                logger.info(f"Active user found for contact: {contact}")
+
         except Exception as e:
-            logger.error(f"Error in get_or_create for contact {contact}: {str(e)}")
+            logger.error(f"Error while processing user for contact {contact}: {str(e)}")
             return Response(
                 {"error": "Unable to process your request."},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
+        # ✅ Generate / Update OTP
         otp = self.update_user_otp(user)
 
-        
         try:
-
-            if getattr(settings, "APP_ENV", "prod") == "prod" and user.contact_number != "8108662484":
+            if (
+                getattr(settings, "APP_ENV", "prod") == "prod"
+                and user.contact_number != "8108662484"
+            ):
                 send_otp_via_twilio(
                     contact,
                     otp,
-                    app_hash=app_hash if platform == 'android' else None
+                    app_hash=app_hash if platform == "android" else None
                 )
                 logger.info(f"OTP sent successfully to {contact}")
             else:
-                logger.info(f"OTP sending skipped (APP_ENV={settings.APP_ENV})")
+                logger.info(
+                    f"OTP sending skipped (APP_ENV={settings.APP_ENV}, contact={contact})"
+                )
 
         except Exception as e:
             logger.error(f"Failed to send OTP to {contact}: {str(e)}")
@@ -156,11 +254,15 @@ class MobileLoginSendOTP(BaseOTPView):
             )
 
         logger.info(f"MobileLoginSendOTP completed successfully for {contact}")
-        return Response({
-            "message": "OTP sent successfully.",
-            "user_exists": not created,
-            "expiry_seconds": OTP_EXPIRY_SECONDS
-        }, status=status.HTTP_200_OK)
+
+        return Response(
+            {
+                "message": "OTP sent successfully.",
+                "user_exists": not created,
+                "expiry_seconds": OTP_EXPIRY_SECONDS,
+            },
+            status=status.HTTP_200_OK
+        )
 
 class MobileLoginVerifyOTP(BaseOTPView):
     """
@@ -182,7 +284,7 @@ class MobileLoginVerifyOTP(BaseOTPView):
             )
 
         try:
-            user = User.objects.get(contact_number=contact)
+            user = User.objects.get(contact_number=contact, is_active=True)
             logger.info(f"User found for contact: {contact}")
         except User.DoesNotExist:
             logger.warning(f"User not found for contact: {contact}")
@@ -277,7 +379,7 @@ class MobileLoginResendOTP(BaseOTPView):
             )
 
         try:
-            user = User.objects.get(contact_number=contact)
+            user = User.objects.get(contact_number=contact, is_active=True)
             logger.info(f"User found for contact: {contact}")
         except User.DoesNotExist:
             logger.warning(f"User not found for contact: {contact}")

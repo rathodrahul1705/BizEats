@@ -1157,8 +1157,7 @@ class UserDataDelete(APIView):
             # ---------- Soft delete ----------
             user.is_deleted = True
             user.is_active = False
-            user.deleted_at = datetime.now()
-            user.save(update_fields=["is_deleted", "is_active", "deleted_at"])
+            user.save(update_fields=["is_deleted", "is_active"])
 
             logger.info("User soft deleted | user_id=%s", user.id)
 
@@ -1177,9 +1176,6 @@ class UserDataDelete(APIView):
                 {
                     "success": True,
                     "message": "Account deactivated successfully. It will be permanently deleted after 30 days.",
-                    "permanent_delete_after": (
-                        user.deleted_at + timedelta(days=30)
-                    ).date()
                 },
                 status=status.HTTP_200_OK
             )
