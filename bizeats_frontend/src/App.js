@@ -13,6 +13,7 @@ import RestHome from './restaurent/RestHome';
 import RestaurantRegistration from './restaurent/RestaurantRegistration';
 import DashboardOverview from './vendor/DashboardOverview';
 import MenuManagement from './vendor/MenuManagement';
+import PayoutManagement from './vendor/PayoutManagement';
 import CustomerManagement from './vendor/CustomerManagement';
 import CartManagement from './vendor/CartManagement';
 import RestaurantManagement from './vendor/RestaurantManagement';
@@ -182,6 +183,11 @@ const App = () => {
           <Route path="/vendor-dashboard/menu/:restaurant_id" element={
             <VendorPrivateRoute user={user}>
               <MenuManagement user={user} setUser={setUser} />
+            </VendorPrivateRoute>
+          } />
+          <Route path="/vendor-dashboard/payouts/:restaurant_id" element={
+            <VendorPrivateRoute user={user}>
+              <PayoutManagement user={user} setUser={setUser} />
             </VendorPrivateRoute>
           } />
           <Route path="/vendor-dashboard/customer" element={

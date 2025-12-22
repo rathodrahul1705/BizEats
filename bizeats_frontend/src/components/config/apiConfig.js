@@ -175,6 +175,10 @@ const API_ENDPOINTS = {
     SEND_IMMEDIATE: `${BASE_URL}/queue/prepare/`,
   },
 
+  VENDOR_PAYOUT: {
+    FETCH_DATA: (restaurant_id) => `${BASE_URL}/vendor/payouts/${restaurant_id}/`,
+  },
+
 };
 
 export default API_ENDPOINTS;

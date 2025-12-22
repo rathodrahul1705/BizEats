@@ -473,6 +473,17 @@ const DashboardOverview = ({ user, setUser }) => {
                 <h3>Quick Actions</h3>
                 <p className="subtitle">Manage your home Kitchen operations</p>
                 <div className="links-grid">
+                  <Link
+                  to={`/vendor-dashboard/payouts/${selectedRestaurant.restaurant_id}`}
+                  className="link-card"
+                >
+                  <div className="link-icon">💰</div>
+                  <div className="link-content">
+                    <h4>Vendor Payout</h4>
+                    <p>Settlement, Earnings & Payment History</p>
+                  </div>
+                  <div className="link-arrow">→</div>
+                </Link>
                   <Link 
                     to={`/vendor-dashboard/menu/${selectedRestaurant.restaurant_id}`} 
                     className="link-card"

@@ -10,6 +10,7 @@ from api.search.searchcontent import search_results, search_suggestions
 from api.storage_backends import GetSingleImageFromS3, ListImagesFromS3, UploadImageToS3
 from api.offer.view import check_credit_offer
 from api.vendor.Coupon import CouponCreateView, CouponDeleteView, CouponDetailView, CouponListView, CouponUpdateView
+from api.vendorpayout.view import PayoutManagementAPI, RequestWithdrawalAPI
 from api.wallet.views import AddMoneySuccessView, AdminAdjustWalletView, CreateRazorpayOrderView, DebitWalletForOrder, RefundWalletView, TransactionHistoryView, WalletView
 from .vendor.Vendor import GetVendorWiseCounts
 from .views import CustomTokenRefreshView, FetchReviewView, FetchUserList, FetchCartList, UserProfileUpdate, UserProfileView, UserRegistrationView, OTPVerificationView, UserLoginView, ContactUsView, ReactAppView, SubmitOrderReviewView
@@ -100,6 +101,14 @@ urlpatterns = [
     path("api/wallet/admin-adjust/", AdminAdjustWalletView.as_view()),
 
      # wallet Management end
+
+
+     # payment settlement start
+
+    path('api/vendor/payouts/<str:restaurant_id>/', PayoutManagementAPI.as_view(), name='payout-management'),
+    path('api/vendor/payouts/<str:restaurant_id>/withdraw/', RequestWithdrawalAPI.as_view(), name='request-withdrawal'),
+
+     # payment settlement end
 
     path('api/offers/check/', check_credit_offer, name='check_credit_offer'),
 
