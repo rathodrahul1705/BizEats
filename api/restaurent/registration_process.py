@@ -652,6 +652,8 @@ class RestaurantListAPI(APIView):
                 })
 
             category_list_images = CustomImage.objects.filter(type_of_images=5)
+            banner_images = CustomImage.objects.filter(type_of_images=3).first()
+
             final_category_image = [
                 {
                     "id": img.id,
@@ -661,6 +663,13 @@ class RestaurantListAPI(APIView):
                     for img in category_list_images
             ]
 
+            
+            final_banner_image = {
+                "id": banner_images.id,
+                "name": banner_images.title,
+                "icon": banner_images.image.url  # S3 URL
+            }
+
             # Feature Kitchen List (Top 10 by avg_price_range)
             feature_kitchen_list = sorted(final_data, key=lambda r: r.get("avg_price_range", 0), reverse=True)[:10]
 
@@ -669,7 +678,8 @@ class RestaurantListAPI(APIView):
                 "data": {
                     "CategoryList": final_category_image,
                     "FeatureKitchenList": feature_kitchen_list,
-                    "KitchenList": final_data
+                    "KitchenList": final_data,
+                    "final_banner_image": final_banner_image
                 }
             }, status=status.HTTP_200_OK)
 

@@ -619,7 +619,7 @@ class SetDefaultAddressView(generics.UpdateAPIView):
     
 class UserDeliveryAddressListCreateView(generics.ListCreateAPIView):
     serializer_class = UserDeliveryAddressSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    # permission_classes = [permissions.IsAuthenticated]
     
     def get_queryset(self):
         """Return only addresses that belong to the authenticated user."""
@@ -1001,13 +1001,73 @@ class PlaceOrderAPI(APIView):
 
 #         except Exception as e:
 #             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+# class GetAddressByFilter(APIView):
+#     # permission_classes = [permissions.IsAuthenticated]
+
+#     def post(self, request):
+#         try:
+#             lat = request.data.get("lat")
+#             long = request.data.get("long")
+#             session_id = request.data.get("session_id")
+
+#             if not lat or not long:
+#                 return Response(
+#                     {"detail": "Latitude and Longitude are required"},
+#                     status=status.HTTP_400_BAD_REQUEST
+#                 )
+
+#             latitude = Decimal(lat)
+#             longitude = Decimal(long)
+
+#             # Check if address exists in DB
+#             address = UserDeliveryAddress.objects.filter(
+#                 user=request.user,
+#                 latitude=latitude,
+#                 longitude=longitude
+#             ).first()
+
+#             if address:
+#                 serializer = UserDeliveryAddressSerializer(address)
+#                 data = serializer.data
+
+#                 if address.home_type == "Other" and address.name_of_location:
+#                     data["home_type"] = address.name_of_location
+
+#                 return Response(data, status=status.HTTP_200_OK)
+
+#             else:
+
+#                 GOOGLE_API_KEY = settings.GOOGLE_MAP_API_KEY
+#                 url = (
+#                     f"https://maps.googleapis.com/maps/api/geocode/json"
+#                     f"?latlng={latitude},{longitude}&key={GOOGLE_API_KEY}"
+#                 )
+
+#                 response = requests.get(url)
+#                 if response.status_code == 200:
+#                     results = response.json().get("results")
+#                     if results:
+#                         full_address = results[0].get("formatted_address")
+#                         return Response(
+#                             {"detail": "Address not found in DB", "full_address": full_address},
+#                             status=status.HTTP_200_OK
+#                         )
+
+#                 return Response(
+#                     {"detail": "Address not found and unable to fetch from Google"},
+#                     status=status.HTTP_200_OK
+#                 )
+
+#         except Exception as e:
+#             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 class GetAddressByFilter(APIView):
-    permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
         try:
             lat = request.data.get("lat")
             long = request.data.get("long")
+            isGuest = request.data.get("isGuest")
 
             if not lat or not long:
                 return Response(
@@ -1015,10 +1075,37 @@ class GetAddressByFilter(APIView):
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
-            latitude = Decimal(lat)
-            longitude = Decimal(long)
+            latitude = Decimal(str(lat))
+            longitude = Decimal(str(long))
 
-            # Check if address exists in DB
+            # ---------------------------------------
+            # 1️⃣ SESSION USER (GUEST USER)
+            # ---------------------------------------
+            if isGuest:
+                full_address = self.get_address_from_google(latitude, longitude)
+
+                return Response(
+                    {
+                        "is_guest": True,
+                        "isGuest": isGuest,
+                        "latitude": latitude,
+                        "longitude": longitude,
+                        "full_address": full_address,
+                        "home_type": "Delivering",
+                        "detail": "Default location for guest user"
+                    },
+                    status=status.HTTP_200_OK
+                )
+
+            # ---------------------------------------
+            # 2️⃣ LOGGED-IN USER
+            # ---------------------------------------
+            if not request.user.is_authenticated:
+                return Response(
+                    {"detail": "Authentication required"},
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+
             address = UserDeliveryAddress.objects.filter(
                 user=request.user,
                 latitude=latitude,
@@ -1034,31 +1121,47 @@ class GetAddressByFilter(APIView):
 
                 return Response(data, status=status.HTTP_200_OK)
 
-            else:
+            # ---------------------------------------
+            # 3️⃣ FALLBACK → GOOGLE MAPS
+            # ---------------------------------------
+            full_address = self.get_address_from_google(latitude, longitude)
 
-                GOOGLE_API_KEY = settings.GOOGLE_MAP_API_KEY
-                url = (
-                    f"https://maps.googleapis.com/maps/api/geocode/json"
-                    f"?latlng={latitude},{longitude}&key={GOOGLE_API_KEY}"
-                )
-
-                response = requests.get(url)
-                if response.status_code == 200:
-                    results = response.json().get("results")
-                    if results:
-                        full_address = results[0].get("formatted_address")
-                        return Response(
-                            {"detail": "Address not found in DB", "full_address": full_address},
-                            status=status.HTTP_200_OK
-                        )
-
-                return Response(
-                    {"detail": "Address not found and unable to fetch from Google"},
-                    status=status.HTTP_200_OK
-                )
+            return Response(
+                {
+                    "detail": "Address not found in DB",
+                    "latitude": latitude,
+                    "longitude": longitude,
+                    "full_address": full_address
+                },
+                status=status.HTTP_200_OK
+            )
 
         except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+    # ---------------------------------------
+    # GOOGLE REVERSE GEOCODING
+    # ---------------------------------------
+    def get_address_from_google(self, latitude, longitude):
+        try:
+            GOOGLE_API_KEY = settings.GOOGLE_MAP_API_KEY
+            url = (
+                "https://maps.googleapis.com/maps/api/geocode/json"
+                f"?latlng={latitude},{longitude}&key={GOOGLE_API_KEY}"
+            )
+
+            response = requests.get(url, timeout=5)
+            if response.status_code == 200:
+                results = response.json().get("results")
+                if results:
+                    return results[0].get("formatted_address")
+        except Exception:
+            pass
+
+        return None
         
 @method_decorator(csrf_exempt, name='dispatch')
 class RestaurantCartReOrder(APIView):
