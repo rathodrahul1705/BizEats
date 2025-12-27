@@ -667,7 +667,8 @@ class RestaurantListAPI(APIView):
             final_banner_image = {
                 "id": banner_images.id,
                 "name": banner_images.title,
-                "icon": banner_images.image.url  # S3 URL
+                "icon": banner_images.image.url,  # S3 URL
+                "document_type": banner_images.document_type  # S3 URL
             }
 
             # Feature Kitchen List (Top 10 by avg_price_range)
