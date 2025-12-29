@@ -999,6 +999,7 @@ class CustomImage(models.Model):
 
     title = models.CharField(max_length=100)
     image = models.ImageField(upload_to="uploads/", blank=True, null=True)
+    thumbnail = models.ImageField(upload_to="uploads/", blank=True, null=True)
     type_of_images = models.PositiveSmallIntegerField(choices=IMAGE_TYPES, default=6)
     document_type = models.PositiveSmallIntegerField(choices=DOCUMENT_TYPES, default=1)
 
