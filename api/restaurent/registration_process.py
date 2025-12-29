@@ -667,10 +667,11 @@ class RestaurantListAPI(APIView):
             final_banner_image = {
                 "id": banner_images.id,
                 "name": banner_images.title,
-                "icon": banner_images.image.url,  # S3 URL
-                "document_type": banner_images.document_type,  # S3 URL
-                "thumbnail": banner_images.thumbnail.url
+                "icon": banner_images.image.url if banner_images.image else None,
+                "document_type": banner_images.document_type,
+                "thumbnail": banner_images.thumbnail.url if banner_images.thumbnail else None
             }
+
 
             # Feature Kitchen List (Top 10 by avg_price_range)
             feature_kitchen_list = sorted(final_data, key=lambda r: r.get("avg_price_range", 0), reverse=True)[:10]
