@@ -1224,3 +1224,23 @@ class DeleteAccountDetails(models.Model):
 
     def __str__(self):
         return f"DeleteAccountRequest(user={self.user_id}, status={self.status})"
+class PaymentMethod(models.Model):
+    COD = 1
+    ONLINE = 2
+    WALLET = 3
+
+    METHOD_CHOICES = (
+        (COD, "Pay on Delivery"),
+        (ONLINE, "Online Payment"),
+        (WALLET, "Eatoor Money Wallet"),
+    )
+
+    name = models.CharField(max_length=50)
+    code = models.PositiveSmallIntegerField(choices=METHOD_CHOICES, unique=True)
+    is_active = models.BooleanField(default=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.name
+

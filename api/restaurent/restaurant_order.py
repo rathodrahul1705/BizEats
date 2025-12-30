@@ -11,7 +11,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, generics, permissions
 from api.emailer.email_notifications import send_order_status_email
-from api.models import Cart, Coupon, Order, OrderStatusLog, RestaurantMenu, User, DeleteAccountDetails
+from api.models import Cart, Coupon, Order, OrderStatusLog, PaymentMethod, RestaurantMenu, User, DeleteAccountDetails
 import json
 from django.utils.timezone import now
 from django.db import transaction, IntegrityError
@@ -493,6 +493,14 @@ class CartWithRestaurantDetails(APIView):
                 f"delivery_offer_exist={delivery_offer_exist}"
             )
 
+            payment_method_details = PaymentMethod.objects.filter(is_active=True).values(
+                'id',
+                'name',
+                'code',
+                'is_active',
+                'created_at'
+            )
+
             return Response({
                 "status": "success",
                 "restaurant_name": restaurant.restaurant_name,
@@ -505,7 +513,8 @@ class CartWithRestaurantDetails(APIView):
                 },
                 "billing_details": billing_details,
                 "delivery_offer_exist": delivery_offer_exist,
-                "order_count": order_count
+                "order_count": order_count,
+                "payment_method_details":payment_method_details
             }, status=status.HTTP_200_OK)
 
         except RestaurantMaster.DoesNotExist:
@@ -641,22 +650,20 @@ class UserDeliveryAddressDetailView(generics.RetrieveUpdateDestroyAPIView):
     def perform_update(self, serializer):
         """Ensure only user's address is updated."""
         serializer.save(user=self.request.user)
-
-@method_decorator(csrf_exempt, name='dispatch')
 class CartWithRestaurantUserUpdate(APIView):
     """
     Merges guest cart (session_id) with logged-in user's cart (user_id).
-    1. First checks if user has any active cart items
-    2. Only deletes existing items if they're from a different session
-    3. Preserves cart items when merging empty guest cart
+
+    Logic:
+    1. Get guest cart items
+    2. If guest cart exists:
+        - Find duplicate item_id for the user
+        - Delete user's cart rows where payment is NOT completed
+    3. Assign guest cart items to user
     """
 
     def post(self, request, *args, **kwargs):
-        """
-        Handles POST requests to merge guest cart with logged-in user's cart.
-        """
         try:
-
             user_id = request.data.get("user_id")
             session_id = request.data.get("session_id")
             cart_status = request.data.get("cart_status")
@@ -669,18 +676,33 @@ class CartWithRestaurantUserUpdate(APIView):
                 )
 
             with transaction.atomic():
-                guest_cart_items = Cart.objects.filter(session_id=session_id)
-                                
+
+                # Guest cart items for this session + restaurant
+                guest_cart_items = Cart.objects.filter(
+                    session_id=session_id,
+                    restaurant_id=restaurant_id
+                )
+
                 if guest_cart_items.exists():
+
+                    # Get item_ids from guest cart
+                    guest_item_ids = guest_cart_items.values_list(
+                        "item_id", flat=True
+                    )
+
+                    # Delete duplicate user cart items (payment NOT completed)
                     Cart.objects.filter(
-                        Q(user_id=user_id) & 
-                        ~Q(cart_status=5) &
-                        ~Q(session_id=session_id) &
-                        ~Q(restaurant_id=restaurant_id)
+                        user_id=user_id,
+                        item_id__in=guest_item_ids,
+                        restaurant_id=restaurant_id
+                    ).exclude(
+                        cart_status=5  # keep payment completed carts
                     ).delete()
 
+                # Assign guest cart items to user
                 updated_count = Cart.objects.filter(
-                    session_id=session_id
+                    session_id=session_id,
+                    restaurant_id=restaurant_id
                 ).update(
                     user_id=user_id,
                     cart_status=cart_status,
@@ -690,7 +712,7 @@ class CartWithRestaurantUserUpdate(APIView):
                 return Response(
                     {
                         "status": "success",
-                        "message": f"Cart merged successfully. {updated_count} items updated.",
+                        "message": "Cart merged successfully",
                         "updated_count": updated_count
                     },
                     status=status.HTTP_200_OK,
@@ -701,7 +723,6 @@ class CartWithRestaurantUserUpdate(APIView):
                 {"status": "error", "message": str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
-        
 @method_decorator(csrf_exempt, name='dispatch')
 class RestaurantOrderDetailsAPI(APIView):
     """
