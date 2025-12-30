@@ -651,16 +651,6 @@ class UserDeliveryAddressDetailView(generics.RetrieveUpdateDestroyAPIView):
         """Ensure only user's address is updated."""
         serializer.save(user=self.request.user)
 class CartWithRestaurantUserUpdate(APIView):
-    """
-    Merges guest cart (session_id) with logged-in user's cart (user_id).
-
-    Logic:
-    1. Get guest cart items
-    2. If guest cart exists:
-        - Find duplicate item_id for the user
-        - Delete user's cart rows where payment is NOT completed
-    3. Assign guest cart items to user
-    """
 
     def post(self, request, *args, **kwargs):
         try:
@@ -669,15 +659,15 @@ class CartWithRestaurantUserUpdate(APIView):
             cart_status = request.data.get("cart_status")
             restaurant_id = request.data.get("restaurant_id")
 
-            if not user_id or not session_id:
+            if not user_id or not session_id or not restaurant_id:
                 return Response(
-                    {"status": "error", "message": "user_id and session_id are required"},
+                    {"status": "error", "message": "Required fields missing"},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
             with transaction.atomic():
 
-                # Guest cart items for this session + restaurant
+                # 1️⃣ Guest cart items
                 guest_cart_items = Cart.objects.filter(
                     session_id=session_id,
                     restaurant_id=restaurant_id
@@ -685,21 +675,25 @@ class CartWithRestaurantUserUpdate(APIView):
 
                 if guest_cart_items.exists():
 
-                    # Get item_ids from guest cart
                     guest_item_ids = guest_cart_items.values_list(
                         "item_id", flat=True
                     )
 
-                    # Delete duplicate user cart items (payment NOT completed)
-                    Cart.objects.filter(
+                    # 2️⃣ Find duplicate user cart items
+                    duplicate_user_items = Cart.objects.filter(
                         user_id=user_id,
-                        item_id__in=guest_item_ids,
-                        restaurant_id=restaurant_id
+                        restaurant_id=restaurant_id,
+                        item_id__in=guest_item_ids
                     ).exclude(
-                        cart_status=5  # keep payment completed carts
-                    ).delete()
+                        cart_status=5  # keep paid items
+                    ).order_by("-id")  # newest first
 
-                # Assign guest cart items to user
+                    # 3️⃣ Delete ONLY ONE duplicate
+                    if duplicate_user_items.count() > 0:
+                        duplicate_user_items.last().delete()
+                        # 👆 deletes ONLY one record
+
+                # 4️⃣ Assign guest cart to user
                 updated_count = Cart.objects.filter(
                     session_id=session_id,
                     restaurant_id=restaurant_id
