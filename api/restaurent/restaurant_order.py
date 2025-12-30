@@ -659,69 +659,75 @@ class CartWithRestaurantUserUpdate(APIView):
             cart_status = request.data.get("cart_status")
             restaurant_id = request.data.get("restaurant_id")
 
-            if not user_id or not session_id or not restaurant_id:
+            if not restaurant_id or (not user_id and not session_id):
                 return Response(
-                    {"status": "error", "message": "Missing required fields"},
+                    {"status": "error", "message": "Invalid request"},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
             with transaction.atomic():
 
-                # 1️⃣ Get guest cart items
-                guest_cart_items = Cart.objects.filter(
-                    session_id=session_id,
-                    restaurant_id=restaurant_id
+                # ---------- 1️⃣ CLEAN DUPLICATES IN GUEST CART (session wise) ----------
+                guest_duplicates = (
+                    Cart.objects
+                    .filter(
+                        session_id=session_id,
+                        restaurant_id=restaurant_id
+                    )
+                    .exclude(cart_status=5)
+                    .values("item_id")
+                    .annotate(cnt=Count("id"))
+                    .filter(cnt__gt=1)
                 )
 
-                if guest_cart_items.exists():
+                for dup in guest_duplicates:
+                    rows = Cart.objects.filter(
+                        session_id=session_id,
+                        restaurant_id=restaurant_id,
+                        item_id=dup["item_id"]
+                    ).exclude(cart_status=5).order_by("id")
 
-                    guest_item_ids = guest_cart_items.values_list(
-                        "item_id", flat=True
-                    )
+                    # keep first, delete rest
+                    rows.exclude(id=rows.first().id).delete()
 
-                    # 2️⃣ Find duplicates in user cart
-                    duplicates = (
+                # ---------- 2️⃣ CLEAN DUPLICATES IN USER CART (user wise) ----------
+                if user_id:
+                    user_duplicates = (
                         Cart.objects
                         .filter(
                             user_id=user_id,
-                            restaurant_id=restaurant_id,
-                            item_id__in=guest_item_ids
+                            restaurant_id=restaurant_id
                         )
                         .exclude(cart_status=5)
                         .values("item_id")
-                        .annotate(item_count=Count("id"))
-                        .filter(item_count__gt=1)  # ONLY real duplicates
+                        .annotate(cnt=Count("id"))
+                        .filter(cnt__gt=1)
                     )
 
-                    # 3️⃣ Delete extra records (keep one)
-                    for dup in duplicates:
-                        item_id = dup["item_id"]
-
-                        # get all rows for this item
+                    for dup in user_duplicates:
                         rows = Cart.objects.filter(
                             user_id=user_id,
                             restaurant_id=restaurant_id,
-                            item_id=item_id
+                            item_id=dup["item_id"]
                         ).exclude(cart_status=5).order_by("id")
 
-                        # keep first, delete rest
                         rows.exclude(id=rows.first().id).delete()
 
-                # 4️⃣ Assign guest cart to user
-                updated_count = Cart.objects.filter(
-                    session_id=session_id,
-                    restaurant_id=restaurant_id
-                ).update(
-                    user_id=user_id,
-                    cart_status=cart_status,
-                    session_id=None
-                )
+                # ---------- 3️⃣ MERGE GUEST CART INTO USER ----------
+                if user_id and session_id:
+                    Cart.objects.filter(
+                        session_id=session_id,
+                        restaurant_id=restaurant_id
+                    ).update(
+                        user_id=user_id,
+                        session_id=None,
+                        cart_status=cart_status
+                    )
 
                 return Response(
                     {
                         "status": "success",
-                        "message": "Cart merged successfully",
-                        "updated_count": updated_count
+                        "message": "Duplicates handled and cart merged successfully"
                     },
                     status=status.HTTP_200_OK,
                 )
