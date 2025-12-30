@@ -661,13 +661,13 @@ class CartWithRestaurantUserUpdate(APIView):
 
             if not user_id or not session_id or not restaurant_id:
                 return Response(
-                    {"status": "error", "message": "Required fields missing"},
+                    {"status": "error", "message": "Missing required fields"},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
             with transaction.atomic():
 
-                # 1️⃣ Guest cart items
+                # 1️⃣ Get guest cart items
                 guest_cart_items = Cart.objects.filter(
                     session_id=session_id,
                     restaurant_id=restaurant_id
@@ -679,19 +679,33 @@ class CartWithRestaurantUserUpdate(APIView):
                         "item_id", flat=True
                     )
 
-                    # 2️⃣ Find duplicate user cart items
-                    duplicate_user_items = Cart.objects.filter(
-                        user_id=user_id,
-                        restaurant_id=restaurant_id,
-                        item_id__in=guest_item_ids
-                    ).exclude(
-                        cart_status=5  # keep paid items
-                    ).order_by("-id")  # newest first
+                    # 2️⃣ Find duplicates in user cart
+                    duplicates = (
+                        Cart.objects
+                        .filter(
+                            user_id=user_id,
+                            restaurant_id=restaurant_id,
+                            item_id__in=guest_item_ids
+                        )
+                        .exclude(cart_status=5)
+                        .values("item_id")
+                        .annotate(item_count=Count("id"))
+                        .filter(item_count__gt=1)  # ONLY real duplicates
+                    )
 
-                    # 3️⃣ Delete ONLY ONE duplicate
-                    if duplicate_user_items.count() > 0:
-                        duplicate_user_items.last().delete()
-                        # 👆 deletes ONLY one record
+                    # 3️⃣ Delete extra records (keep one)
+                    for dup in duplicates:
+                        item_id = dup["item_id"]
+
+                        # get all rows for this item
+                        rows = Cart.objects.filter(
+                            user_id=user_id,
+                            restaurant_id=restaurant_id,
+                            item_id=item_id
+                        ).exclude(cart_status=5).order_by("id")
+
+                        # keep first, delete rest
+                        rows.exclude(id=rows.first().id).delete()
 
                 # 4️⃣ Assign guest cart to user
                 updated_count = Cart.objects.filter(
