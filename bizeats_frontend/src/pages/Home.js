@@ -391,7 +391,7 @@ const Home = () => {
                     <img src={PlayStoreBadge} alt="Get on Google Play" />
                   </a>
                   <a 
-                    href="https://apps.apple.com/in/app/eatoor-food-delivery-app/id6479472712" 
+                    href="https://apps.apple.com/in/app/eatoor/id6756539381" 
                     className="store-badge"
                     target="_blank"
                     rel="noopener noreferrer"
@@ -577,7 +577,7 @@ const Home = () => {
                   <img src={PlayStoreBadge} alt="Get on Google Play" />
                 </a>
                 <a 
-                  href="https://apps.apple.com/in/app/eatoor-food-delivery-app/id6479472712" 
+                  href="https://apps.apple.com/in/app/eatoor/id6756539381" 
                   className="download-button"
                   target="_blank"
                   rel="noopener noreferrer"

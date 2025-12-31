@@ -79,7 +79,7 @@ const Footer = () => {
             </p>
             <div className="footer__app-downloads">
               <a 
-                href="https://apps.apple.com/app/eatoor" 
+                href="https://apps.apple.com/in/app/eatoor/id6756539381" 
                 target="_blank" 
                 rel="noopener noreferrer" 
                 className="footer__app-link"
