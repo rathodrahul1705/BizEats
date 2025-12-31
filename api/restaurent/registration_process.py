@@ -836,7 +836,7 @@ class RestaurantStatusUpdate(APIView):
             )
 
         restaurant = get_object_or_404(RestaurantMaster, restaurant_id=restaurant_id)
-
+            
         if restaurant.user != request.user:
             return Response(
                 {"detail": "You do not have permission to update this restaurant."},

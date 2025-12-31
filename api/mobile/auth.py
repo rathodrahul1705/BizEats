@@ -17,7 +17,7 @@ from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
 from django.conf import settings
-from api.models import FavouriteKitchen, Order, OrderReview, Wallet
+from api.models import FavouriteKitchen, Order, OrderReview, RestaurantMaster, Wallet
 from api.notifications.device_utils import register_device_for_user
 from api.offer.view import check_credit_offer
 from api.wallet.services import credit_wallet
@@ -189,7 +189,7 @@ class MobileLoginSendOTP(BaseOTPView):
         try:
             user = User.objects.filter(contact_number=contact).order_by("-id").first()
             created = False
-
+                        
             # ✅ CASE 1: User exists but was deleted → create new user
             if user and not user.is_active and user.is_deleted:
                 logger.info(
@@ -339,6 +339,9 @@ class MobileLoginVerifyOTP(BaseOTPView):
             logger.info(f"User {user.id} has complete profile")
 
         logger.info(f"MobileLoginVerifyOTP successful for user {user.id}")
+
+        is_restaurant_register = RestaurantMaster.objects.filter(user=user).exists()
+
         return Response({
             "message": "Login successful.",
             "user": {
@@ -358,7 +361,8 @@ class MobileLoginVerifyOTP(BaseOTPView):
                 "access": str(refresh.access_token),
             },
             "navigate_to": navigate_to,
-            "device_registered":True if device_token else False
+            "device_registered":True if device_token else False,
+            "is_restaurant_register":is_restaurant_register,
         }, status=status.HTTP_200_OK)
 
 class MobileLoginResendOTP(BaseOTPView):

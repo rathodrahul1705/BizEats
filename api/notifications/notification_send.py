@@ -15,14 +15,24 @@ User = get_user_model()
 MAX_ATTEMPTS = 5
 
 def send_push_notification(tokens, title, body, data=None):
-    """Send push notification using Firebase Admin SDK."""
     if not tokens:
         return False, "No tokens provided"
 
-    # Ensure data is a dictionary with string values
-    clean_data = {str(k): str(v) for k, v in (data or {}).items()}
+    # Base navigation data (default)
+    base_data = {
+        "click_action": "TRACK_ORDER",
+        "action_screen": "TrackOrder",
+        "action_button": "Track Order",
+    }
 
-    # Build list of messages for each token
+    # Merge dynamic data safely (all values must be strings)
+    dynamic_data = {str(k): str(v) for k, v in (data or {}).items()}
+
+    final_data = {
+        **base_data,
+        **dynamic_data,
+    }
+
     messages = []
 
     for token in tokens:
@@ -31,12 +41,16 @@ def send_push_notification(tokens, title, body, data=None):
                 title=title,
                 body=body,
             ),
+            data=final_data,
+            android=messaging.AndroidConfig(
+                notification=messaging.AndroidNotification(
+                    click_action="TRACK_ORDER"
+                )
+            ),
             token=token,
-            data=clean_data,
         )
         messages.append(message)
 
-    # Send messages in bulk
     response = messaging.send_each(messages)
 
     return True, f"Sent: {response.success_count}, Failed: {response.failure_count}"
@@ -117,23 +131,27 @@ def process_notification_queue(request):
                 body = body.replace("{{username}}", user.full_name)
 
             if template.key == "ORDER_STATUS_NOTIFICATION":
-                body = track_order_function(queue.payload, body)
-            
+                response_body = track_order_function(queue.payload, body)
+                body = None
+                if response_body['status'] == "success":
+                    body = response_body['body']
+                    template.title = response_body['title']
+
             # ------------------------------
             # EMAIL
             # ------------------------------
 
-            if queue.channel in ["email", "both"]:
-                ok, msg = send_email_notification(
-                    email=user.email,
-                    subject=subject,
-                    body=body,
-                    username=user.full_name,
-                    offer=dynamic.get("offer")
-                )
-                if not ok:
-                    status = "failed"
-                    errors.append("Email: " + msg)
+            # if queue.channel in ["email", "both"]:
+            #     ok, msg = send_email_notification(
+            #         email=user.email,
+            #         subject=subject,
+            #         body=body,
+            #         username=user.full_name,
+            #         offer=dynamic.get("offer")
+            #     )
+            #     if not ok:
+            #         status = "failed"
+            #         errors.append("Email: " + msg)
 
             # ------------------------------
             # PUSH
