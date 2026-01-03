@@ -227,10 +227,12 @@ def send_order_received_notification(tokens, order):
 
     data_payload = {
         "click_action": "ORDER_RECEIVED",
+        "action_type": "navigate",
         "order_number": str(order_number),
         "restaurant_id": str(restaurant_id),
         "action_screen": "PartnerScreen",
-        "action_type": "navigate",
+        "orderId": str(order_number),
+        "type": "new_order",
     }
 
     # ✅ Firebase message
