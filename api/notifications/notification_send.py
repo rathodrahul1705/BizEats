@@ -14,7 +14,7 @@ from api.notifications.notification_payload import track_order_function
 User = get_user_model()
 MAX_ATTEMPTS = 5
 
-def send_push_notification(tokens, title, body, data=None):
+def send_push_notification(tokens, title, body, order_number, data=None):
     if not tokens:
         return False, "No tokens provided"
 
@@ -23,6 +23,7 @@ def send_push_notification(tokens, title, body, data=None):
         "click_action": "TRACK_ORDER",
         "action_screen": "TrackOrder",
         "action_button": "Track Order",
+        "order_number": order_number,
     }
 
     # Merge dynamic data safely (all values must be strings)
