@@ -986,9 +986,10 @@ class PlaceOrderAPI(APIView):
                 if response_body['status'] == "success":
                     customer_body = response_body['body']
                     title = response_body['title']
+                    order_number = response_body['order_number']
 
                 restaurant_response = send_order_received_notification(restaurant_token, order)
-                customer_response = send_push_notification(tokens=[customer_token],title= title ,body= customer_body,data= None)
+                customer_response = send_push_notification(tokens=[customer_token],title= title ,body= customer_body,order_number= order_number,data= None)
             
                 response_data = {
                     "status": "success",
