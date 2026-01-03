@@ -11,7 +11,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, generics, permissions
 from api.emailer.email_notifications import send_order_status_email
-from api.models import Cart, Coupon, Order, OrderStatusLog, PaymentMethod, RestaurantMenu, User, DeleteAccountDetails
+from api.models import Cart, Coupon, Device, Order, OrderStatusLog, PaymentMethod, RestaurantMenu, User, DeleteAccountDetails
 import json
 from django.utils.timezone import now
 from django.db import transaction, IntegrityError
@@ -19,6 +19,8 @@ from django.db.models import Q
 from django.db.models import Sum, Count
 from django.db.models.functions import Coalesce
 from api.models import RestaurantMaster, RestaurantCuisine, RestaurantDeliveryTiming, RestaurantDocuments, RestaurantOwnerDetail, RestaurantLocation, RestaurantMenu, UserDeliveryAddress
+from api.notifications.notification_payload import track_order_function
+from api.notifications.notification_send import send_order_received_notification, send_push_notification
 from api.offer.view import check_credit_offer
 from api.serializers import OrderPlacementSerializer, RestaurantMasterSerializer, RestaurantSerializerByStatus, RestaurantDetailSerializer, RestaurantMasterNewSerializer, RestaurantMenuSerializer, RestaurantListSerializer, UserDeliveryAddressSerializer
 from api.utils.utils import calculate_distance_and_cost
@@ -929,7 +931,7 @@ class PlaceOrderAPI(APIView):
                     is_takeaway=data['is_takeaway'],
                     preparation_time=self._estimate_prep_time(cart_items)
                 )
-
+            
                 logger.info("Order created successfully: OrderID=%s, OrderNo=%s",
                             order.id, order.order_number)
 
@@ -954,16 +956,47 @@ class PlaceOrderAPI(APIView):
 
                 logger.info("Cart updated for user %s", data['user_id'])
 
-                # Send email
-                send_order_status_email(order)
+                # send_order_status_email(order)
                 logger.info("Order email sent for OrderNo=%s", order.order_number)
 
+                payload ={
+                    "user_id":data['user_id'],
+                    "order_number":order.order_number
+                }
+                customer_body = None
+                
+                restaurant_token = (
+                    Device.objects
+                    .filter(user_id=order.restaurant.user_id)
+                    .order_by('-id')   # latest device
+                    .values_list('token', flat=True)
+                    .first()
+                )
+
+                customer_token = (
+                    Device.objects
+                    .filter(user_id=order.user_id)
+                    .order_by('-id')   # latest device
+                    .values_list('token', flat=True)
+                    .first()
+                )
+
+                response_body = track_order_function(payload,customer_body)
+
+                if response_body['status'] == "success":
+                    customer_body = response_body['body']
+                    title = response_body['title']
+
+                restaurant_response = send_order_received_notification(restaurant_token, order)
+                customer_response = send_push_notification(tokens=[customer_token],title= title ,body= customer_body,data= None)
+            
                 response_data = {
                     "status": "success",
                     "order_number": order.order_number,
                     "order_id": order.id,
                     "total_amount": str(order.total_amount),
-                    "estimated_prep_time": order.preparation_time,
+                    "restaurant_response": restaurant_response,
+                    "customer_response": customer_response,
                 }
 
                 return Response(response_data, status=status.HTTP_201_CREATED)

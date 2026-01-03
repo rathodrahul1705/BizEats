@@ -3,7 +3,7 @@ from api.delivery import porter_views, porter_webhook
 from api.delivery.porter_admin import admin_porter_orders
 from api.favourites import FavouriteKitchenListView, FavouriteKitchenToggleView
 from api.mobile.home import HomeKitchenList
-from api.notifications.notification_send import process_notification_queue, send_fcm_notification
+from api.notifications.notification_send import process_notification_queue, send_fcm_notification, send_order_received_notification
 from api.notifications.views import AssignTagCreateView, AssignTagListView, DeviceDeleteView, DeviceListView, DeviceRegisterView, NotificationMasterCreateView, NotificationMasterListView, NotificationQueueCreateView, NotificationQueueListView, RemoveDeviceToken, TagMasterCreateView, TagMasterListView
 from api.payment.payment import create_order, verify_payment
 from api.search.searchcontent import search_results, search_suggestions
@@ -81,6 +81,7 @@ urlpatterns = [
     # test notification api
 
     path("api/notification/test/", send_fcm_notification),
+    path("api/notification/order_notification/", send_order_received_notification),
 
     path('api/device/register/', DeviceRegisterView.as_view(), name='device-register'),
     path('api/device/list/', DeviceListView.as_view(), name='device-list'),

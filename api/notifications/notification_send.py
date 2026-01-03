@@ -87,7 +87,7 @@ def process_notification_queue(request):
     qs = (
         NotificationQueue.objects
         .filter(next_try_at__lte=timezone.now())
-        .exclude(status__in=["sent"])
+        # .exclude(status__in=["sent"])
         .select_related("template", "user")
     )
 
@@ -204,56 +204,262 @@ def process_notification_queue(request):
         "processed": len(results),
     })
 
+def send_order_received_notification(tokens, order):
+    """
+    Send order received push notification to vendor devices.
+
+    :param tokens: str | list[str]  (FCM token or list of tokens)
+    :param order: Order model instance
+    :return: dict (success / failure counts)
+    """
+
+    # ✅ Normalize tokens
+    if isinstance(tokens, str):
+        tokens = [tokens]
+
+    if not isinstance(tokens, list) or not tokens:
+        raise ValueError("Invalid FCM tokens provided")
+
+    # ✅ Order data
+    order_number = order.order_number
+    restaurant_id = order.restaurant_id
+
+    data_payload = {
+        "click_action": "ORDER_RECEIVED",
+        "order_number": str(order_number),
+        "restaurant_id": str(restaurant_id),
+        "action_screen": "PartnerScreen",
+        "action_type": "navigate",
+    }
+
+    # ✅ Firebase message
+    message = messaging.MulticastMessage(
+        notification=messaging.Notification(
+            title="🛎 New Order Received",
+            body=f"Order #{order_number} awaiting confirmation",
+        ),
+        data=data_payload,
+        android=messaging.AndroidConfig(
+            priority="high",
+            notification=messaging.AndroidNotification(
+                channel_id="order_alerts",
+                sound="order_alert",
+            ),
+        ),
+        apns=messaging.APNSConfig(
+            payload=messaging.APNSPayload(
+                aps=messaging.Aps(
+                    sound="order_alert.wav",
+                    category="ORDER_ACTION",
+                )
+            )
+        ),
+        tokens=tokens,
+    )
+
+    # ✅ Send notification
+    response = messaging.send_each_for_multicast(message)
+
+    return {
+        "success": response.success_count,
+        "failed": response.failure_count,
+    }
+
+
 @api_view(["POST"])
 def send_fcm_notification(request):
+    import json
+    from firebase_admin import messaging
+    
     body = request.data
-
     device_token = body.get("device_token")
 
     if not device_token:
         return Response({"error": "device_token is required"}, status=400)
 
     image_url = "https://eatoorprod.s3.amazonaws.com/menu_images/173660591bbc4c8a9a2a0dcb85bdc173.jpg"
+    
+    # Get title and body from request
+    title = body.get("title", "Aloo Paratha Set")
+    notification_body = body.get("body", "Get in 10 rs only")
+    
+    # Prepare data payload for navigation
+    data_payload = {
+        "title": title,
+        "body": notification_body,
+        "image": image_url,
+        "click_action": "FLUTTER_NOTIFICATION_CLICK",  # Important for Flutter/React Native
+        "action_type": "navigate",
+        "action_screen": "HomeTabs",
+        "action_button": "Order Now",
+        "type": body.get("type", "general"),  # Add type for handling different notifications
+        "timestamp": "ssss",  # Current timestamp in milliseconds
+        # Add any other data from body
+    }
+    
+    # Add any extra data from request body
+    for key, value in body.items():
+        if key not in ["device_token", "title", "body", "image"]:
+            data_payload[key] = str(value)  # Ensure all values are strings
 
-    message = messaging.Message(
-        notification=messaging.Notification(
-            title=body.get("title", "Aloo Paratha Set"),
-            body=body.get("body", "Get in 10 rs only"),
-            image=image_url
-        ),
-        token=device_token,
-
-        data={
-            **body,
-            "image": image_url,
-            "click_action": "FLUTTER_NOTIFICATION_CLICK",
-            "action_type": "navigate",
-            "action_screen": "HomeTabs",
-            "action_button": "Order Now",
-        },
-
-        android=messaging.AndroidConfig(
-            priority="high",
-            notification=messaging.AndroidNotification(
-                sound="default",
-                channel_id="default",
-                image=image_url,
-                click_action="OPEN_KITCHEN_PAGE",
-            )
-        ),
-
-        apns=messaging.APNSConfig(
-            payload=messaging.APNSPayload(
-                aps=messaging.Aps(
-                    sound="default",
-                    content_available=True
-                ),
+    try:
+        # Build the message
+        message = messaging.Message(
+            notification=messaging.Notification(
+                title=title,
+                body=notification_body,
+                image=image_url  # This works for both iOS and Android
             ),
-            fcm_options=messaging.APNSFCMOptions(
-                image=image_url
+            token=device_token,
+            
+            # Data payload for handling in app
+            data=data_payload,
+            
+            # Android specific configuration
+            android=messaging.AndroidConfig(
+                priority="high",
+                notification=messaging.AndroidNotification(
+                    sound="default",
+                    channel_id="default",  # Make sure this channel exists in Android app
+                    image=image_url,
+                    color="#E65C00",  # Add color for better appearance
+                    click_action="FLUTTER_NOTIFICATION_CLICK",
+                    tag="food_order",  # Group notifications by tag
+                ),
+                # TTL (Time to Live) in seconds - optional
+                ttl=3600,  # 1 hour
+            ),
+            
+            # iOS specific configuration (APNS)
+            apns=messaging.APNSConfig(
+                payload=messaging.APNSPayload(
+                    aps=messaging.Aps(
+                        alert=messaging.ApsAlert(
+                            title=title,
+                            body=notification_body,
+                        ),
+                        sound="default",
+                        badge=1,  # Increment badge count
+                        content_available=True,  # Enable background notification
+                        mutable_content=True,  # Required for image display
+                    ),
+                ),
+                headers={
+                    "apns-priority": "10",  # High priority for immediate delivery
+                },
+                fcm_options=messaging.APNSFCMOptions(
+                    image=image_url
+                )
+            ),
+            
+            # Webpush configuration (optional)
+            webpush=messaging.WebpushConfig(
+                notification=messaging.WebpushNotification(
+                    title=title,
+                    body=notification_body,
+                    icon=image_url,  # Icon for web notifications
+                    image=image_url,
+                )
             )
         )
-    )
+        
+        # Send the message
+        response = messaging.send(message)
+        
+        # Log successful delivery
+        print(f"✅ Successfully sent message: {response}")
+        
+        return Response({
+            "success": True,
+            "message_id": response,
+            "message": "Notification sent successfully"
+        })
+        
+    except messaging.UnregisteredError as e:
+        # Token is no longer valid
+        print(f"❌ Device token is no longer valid: {e}")
+        return Response({
+            "error": "Device token is no longer valid",
+            "code": "TOKEN_UNREGISTERED"
+        }, status=400)
+        
+    except messaging.SenderIdMismatchError as e:
+        print(f"❌ Sender ID mismatch: {e}")
+        return Response({
+            "error": "Sender ID mismatch",
+            "code": "SENDER_ID_MISMATCH"
+        }, status=400)
+        
+    except messaging.ThirdPartyAuthError as e:
+        print(f"❌ Third party auth error: {e}")
+        return Response({
+            "error": "Authentication error with FCM",
+            "code": "AUTH_ERROR"
+        }, status=500)
+        
+    except messaging.InvalidArgumentError as e:
+        print(f"❌ Invalid argument: {e}")
+        return Response({
+            "error": "Invalid argument in message",
+            "code": "INVALID_ARGUMENT"
+        }, status=400)
+        
+    except Exception as e:
+        print(f"❌ Error sending notification: {e}")
+        return Response({
+            "error": f"Failed to send notification: {str(e)}",
+            "code": "UNKNOWN_ERROR"
+        }, status=500)
+    
+# def send_fcm_notification(request):
+#     body = request.data
 
-    response = messaging.send(message)
-    return Response({"message_id": response})
+#     device_token = body.get("device_token")
+
+#     if not device_token:
+#         return Response({"error": "device_token is required"}, status=400)
+
+#     image_url = "https://eatoorprod.s3.amazonaws.com/menu_images/173660591bbc4c8a9a2a0dcb85bdc173.jpg"
+
+#     message = messaging.Message(
+#         notification=messaging.Notification(
+#             title=body.get("title", "Aloo Paratha Set"),
+#             body=body.get("body", "Get in 10 rs only"),
+#             image=image_url
+#         ),
+#         token=device_token,
+
+#         data={
+#             **body,
+#             "image": image_url,
+#             "click_action": "HOMENAVIGATE",
+#             "action_type": "navigate",
+#             "action_screen": "HomeTabs",
+#             "action_button": "Order Now",
+#         },
+
+#         android=messaging.AndroidConfig(
+#             priority="high",
+#             notification=messaging.AndroidNotification(
+#                 sound="default",
+#                 channel_id="default",
+#                 image=image_url,
+#                 click_action="OPEN_KITCHEN_PAGE",
+#             )
+#         ),
+
+#         apns=messaging.APNSConfig(
+#             payload=messaging.APNSPayload(
+#                 aps=messaging.Aps(
+#                     sound="default",
+#                     content_available=True
+#                 ),
+#             ),
+#             fcm_options=messaging.APNSFCMOptions(
+#                 image=image_url
+#             )
+#         )
+#     )
+
+#     response = messaging.send(message)
+#     return Response({"message_id": response})

@@ -168,9 +168,14 @@ class TrackOrder(APIView):
 class RestaurantOrders(APIView):
     def post(self, request, *args, **kwargs):
         try:
-
+            
+            seven_days_ago = timezone.now() - timedelta(days=7)
             restaurant_id = request.data.get('restaurant_id')
-            orders = Order.objects.filter(restaurant_id=restaurant_id)
+            # orders = Order.objects.filter(restaurant_id=restaurant_id)
+            orders = Order.objects.filter(
+                restaurant_id=restaurant_id,
+                created_at__gte=seven_days_ago
+            )
 
             data = []
             for order in orders:
