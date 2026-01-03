@@ -9,12 +9,14 @@ from rest_framework.response import Response
 from rest_framework import status, generics, permissions
 from api.delivery.helper import helper
 from api.delivery.porter_views import porter_track_booking
-from api.models import Cart, OfferDetail, Order, OrderReview, OrderStatusLog, PorterOrder, RestaurantLocation, RestaurantMenu, User, UserDeliveryAddress, OrderLiveLocation, Payment, Coupon, WalletTransaction
+from api.models import Cart, Device, OfferDetail, Order, OrderReview, OrderStatusLog, PorterOrder, RestaurantLocation, RestaurantMenu, User, UserDeliveryAddress, OrderLiveLocation, Payment, Coupon, WalletTransaction
 from math import radians, sin, cos, sqrt, atan2
 from django.db import transaction
 from django.db.models import Q 
 from django.db.models import Sum, Count
 from django.db.models.functions import Coalesce
+from api.notifications.notification_payload import track_order_function
+from api.notifications.notification_send import send_push_notification
 from api.serializers import OrderPlacementSerializer, OrderLiveLocationSerializer
 from api.emailer.email_notifications import get_invoice_html, get_order_full_details, send_order_status_email
 from decouple import config
@@ -312,12 +314,33 @@ class OrderStatusUpdate(APIView):
             order.status = int(new_status)
             order.save()          
 
-            # Send email via common function
+            customer_body = None
+            payload ={
+                "user_id":order.user_id,
+                "order_number":order_number
+            }
+            customer_token = (
+                Device.objects
+                .filter(user_id=order.user_id)
+                .order_by('-id')   # latest device
+                .values_list('token', flat=True)
+                .first()
+            )
+
+            response_body = track_order_function(payload,customer_body)
+            if response_body['status'] == "success":
+                customer_body = response_body['body']
+                title = response_body['title']
+                order_number = response_body['order_number']
+            
+            customer_response = send_push_notification(tokens=[customer_token],title= title ,body= customer_body,order_number= order_number,data= None)
+            
             send_order_status_email(order)
 
             return Response({
                 "status": "success",
-                "message": f"Order #{order_number} status updated and customer notified."
+                "message": f"Order #{order_number} status updated and customer notified.",
+                "customer_response":customer_response
             })
 
         except Order.DoesNotExist:
