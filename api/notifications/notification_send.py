@@ -230,9 +230,7 @@ def send_order_received_notification(tokens, order):
         "action_type": "navigate",
         "order_number": str(order_number),
         "restaurant_id": str(restaurant_id),
-        "restaurantId": str(restaurant_id),
         "action_screen": "PartnerScreen",
-        "orderId": str(order_number),
         "type": "new_order",
     }
 

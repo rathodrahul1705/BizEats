@@ -327,7 +327,7 @@ class OrderStatusUpdate(APIView):
                 .first()
             )
 
-            response_body = track_order_function(payload,customer_body)
+            response_body = track_order_function(payload,customer_body)            
             if response_body['status'] == "success":
                 customer_body = response_body['body']
                 title = response_body['title']
