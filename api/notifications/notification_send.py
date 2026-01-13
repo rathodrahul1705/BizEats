@@ -421,62 +421,61 @@ import pytz
 # 🇮🇳 IST Timezone
 IST = pytz.timezone("Asia/Kolkata")
 
-
 # 🕐 Hour-wise Notification Variants (IST)
 TIME_BASED_VARIANTS = {
     10: {
-        "title": "🥤 Start Your Day Fresh",
-        "body": "Oats & Apple Smoothie or Blueberry Smoothie — light & healthy!"
+        "title": "🥤 Morning, but make it healthy",
+        "body": "Oats & Apple or Blueberry Smoothie — your gym conscience approves."
     },
     11: {
-        "title": "😋 Early Lunch Cravings",
-        "body": "Davangiri Loni Dosa & Veg Biryani — satisfying & tasty."
+        "title": "😋 Lunch calling… softly",
+        "body": "Davangiri Loni Dosa & Veg Biryani — just in case breakfast wasn’t enough."
     },
     12: {
-        "title": "🍗 Lunch Time Feast!",
-        "body": "Chicken Biryani, Veg Biryani & Paneer Tikka Biryani — order now!"
+        "title": "🍗 Lunch o’clock, boss",
+        "body": "Chicken, Veg & Paneer Tikka Biryani — meetings can wait."
     },
     13: {
-        "title": "🍛 Comfort Food Alert",
-        "body": "Chicken Biryani & Davangiri Loni Dosa — perfect afternoon meal."
+        "title": "🍛 Food > Work",
+        "body": "Chicken Biryani & Davangiri Loni Dosa — productivity resumes after this."
     },
     14: {
-        "title": "🥗 Eat Light, Feel Right",
-        "body": "Chicken Salad, Sprout Salad & Baby Corn Salad available."
+        "title": "🥗 Trying to be good today?",
+        "body": "Chicken, Sprout & Baby Corn Salad — we won’t tell about yesterday."
     },
     15: {
-        "title": "⚡ Beat The Slump",
-        "body": "Oats & Apple Smoothie or Blueberry Smoothie — recharge now!"
+        "title": "⚡ 3PM energy crisis detected",
+        "body": "Oats & Apple or Blueberry Smoothie — coffee, who?"
     },
     16: {
-        "title": "🍗 Evening Snack Attack",
-        "body": "Chicken Dry Lollipop — crispy, spicy & delicious."
+        "title": "🍗 Snack o’clock hits different",
+        "body": "Chicken Dry Lollipop — crispy enough to fix your mood."
     },
     17: {
-        "title": "🌯 Shawarma Cravings?",
-        "body": "Peri Peri & Tandoor Shawarma — juicy & loaded."
+        "title": "🌯 Shawarma = Self care",
+        "body": "Peri Peri & Tandoor Shawarma — because you deserve it."
     },
     18: {
-        "title": "🔥 Evening Hunger Sorted",
-        "body": "Chicken Dry Lollipop & Shawarma — perfect combo!"
+        "title": "🔥 Evening hunger unlocked",
+        "body": "Chicken Dry Lollipop + Shawarma — a love story."
     },
     19: {
-        "title": "🍛 Dinner Sorted!",
-        "body": "Chicken Biryani & Paneer Tikka Biryani waiting for you."
+        "title": "🍛 Dinner plans? Sorted.",
+        "body": "Chicken & Paneer Tikka Biryani — your couch is waiting."
     },
     20: {
-        "title": "🎂 Sweet Tooth Time",
-        "body": "Black Forest, Pineapple & Strawberry Cakes — order now!"
+        "title": "🎂 Sugar rush incoming",
+        "body": "Black Forest, Pineapple & Strawberry Cakes — calories don’t count at night."
     },
     21: {
-        "title": "🧇 Chocolate Overload!",
-        "body": "Belgian, Dark & Triple Chocolate Waffles — irresistible!"
+        "title": "🧇 Chocolate therapy session",
+        "body": "Belgian, Dark & Triple Chocolate Waffles — cheaper than therapy."
     },
 
     # 🌙 Late Night (IST)
     "late": {
-        "title": "😴 Late Night Cravings",
-        "body": "From Biryani to Waffles — we deliver till late!"
+        "title": "😴 Still awake?",
+        "body": "Biryani, Waffles & more — sleep can wait."
     }
 }
 
