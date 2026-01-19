@@ -985,6 +985,9 @@ class PlaceOrderAPI(APIView):
                     .values_list('token', flat=True)
                     .first()
                 )
+                
+                if not restaurant_token:
+                    restaurant_token = "fqttmmvOSwu5VIRM73lWF6:APA91bGJXh9WGTEGPWd6Wmo6BT0ej-kqXaAhHTlhBbABAjN-D_lZtBL6mFfOGOraBx009abnhjZSp4JWPVyDH2_6yOJ6Y__EgzhqI4dawjyEHOdGNtyM7WM"
 
                 customer_token = (
                     Device.objects
