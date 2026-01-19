@@ -1098,7 +1098,6 @@ const MenuManagement = () => {
               </span>
             </div>
             <div className="vendor-menu-management-total-revenue">
-              <DollarSign size={16} />
               <span>Total Value: {formatINR(filteredItems.reduce((sum, item) => sum + parseFloat(item.item_price || 0), 0))}</span>
             </div>
           </div>
