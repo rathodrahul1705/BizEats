@@ -6,6 +6,7 @@ from api.mobile.home import HomeKitchenList
 from api.notifications.notification_send import process_notification_queue, send_fcm_notification, send_order_received_notification
 from api.notifications.views import AssignTagCreateView, AssignTagListView, DeviceDeleteView, DeviceListView, DeviceRegisterView, NotificationMasterCreateView, NotificationMasterListView, NotificationQueueCreateView, NotificationQueueListView, RemoveDeviceToken, TagMasterCreateView, TagMasterListView
 from api.payment.payment import create_order, verify_payment
+from api.restaurent.menue_views import AddonGroupViewSet, AddonViewSet
 from api.search.searchcontent import search_results, search_suggestions
 from api.storage_backends import GetSingleImageFromS3, ListImagesFromS3, UploadImageToS3
 from api.offer.view import check_credit_offer
@@ -29,6 +30,12 @@ router = DefaultRouter()
 router.register(r'categories', RestaurantCategoryViewSet)
 router.register(r'offers', OfferViewSet, basename='offer')
 router.register(r'restaurants', views.RestaurantListView, basename='restaurant')
+
+addon_group_router = DefaultRouter()
+addon_group_router.register(r'addon-groups', AddonGroupViewSet, basename='addon-group')
+
+addon_router = DefaultRouter()
+addon_router.register(r'addons', AddonViewSet, basename='addon')
 
 urlpatterns = [
 
@@ -60,6 +67,12 @@ urlpatterns = [
     path("api/login/", UserLoginView.as_view(), name="user-login"),
     path("api/user/", UserProfileView.as_view(), name="user-profile"), 
     path('api/token/refresh/', CustomTokenRefreshView.as_view(), name='custom_token_refresh'),
+
+    path('api/restaurants/<str:restaurant_id>/', include(addon_group_router.urls)),
+    path(
+    'api/restaurants/<str:restaurant_id>/addon-groups/<int:group_id>/', 
+    include(addon_router.urls)
+    ),
 
     # Noftifications api start
 
@@ -112,6 +125,25 @@ urlpatterns = [
      # payment settlement end
 
     path('api/offers/check/', check_credit_offer, name='check_credit_offer'),
+
+
+
+    # urlpatterns = [
+    #     # Global endpoints
+    #     path('api/', include(router.urls)),
+        
+    #     # Restaurant menu management
+    #     path('api/restaurants/<str:restaurant_id>/', include(menu_router.urls)),
+        
+    #     # Addon groups under restaurant
+    #     path('api/restaurants/<str:restaurant_id>/', include(addon_group_router.urls)),
+        
+    #     # Addons under addon groups
+    #     path(
+    #         'api/restaurants/<str:restaurant_id>/addon-groups/<int:group_id>/', 
+    #         include(addon_router.urls)
+    #     ),
+    # ]
 
     path("api/contact-us/", ContactUsView.as_view(), name="contact-us"), 
     path("api/user-profile-update/", UserProfileUpdate.as_view(), name="user-profile-update"), 

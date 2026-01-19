@@ -1243,4 +1243,76 @@ class PaymentMethod(models.Model):
 
     def __str__(self):
         return self.name
+class AddonGroup(models.Model):
+    """Addon Group Model"""
+    restaurant = models.ForeignKey('RestaurantMaster', on_delete=models.CASCADE, related_name='addon_groups')
+    name = models.CharField(max_length=100)
+    description = models.TextField(blank=True, null=True)
+    allow_multiple_selection = models.BooleanField(default=False)
+    min_selection = models.IntegerField(default=0)
+    max_selection = models.IntegerField(default=1)
+    allow_multiple_quantity = models.BooleanField(default=False)
+    min_quantity = models.IntegerField(default=1)
+    max_quantity = models.IntegerField(default=10)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(default=now)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        db_table = "addon_groups"
+        ordering = ['name']
+    
+    def __str__(self):
+        return f"{self.name} - {self.restaurant.restaurant_name}"
+    
+    def clean(self):
+        """Validate addon group constraints"""
+        if self.allow_multiple_selection:
+            if self.min_selection > self.max_selection:
+                raise ValidationError({'min_selection': 'Minimum selection cannot be greater than maximum selection'})
+            if self.min_selection < 0:
+                raise ValidationError({'min_selection': 'Minimum selection cannot be negative'})
+        
+        if self.allow_multiple_quantity:
+            if self.min_quantity > self.max_quantity:
+                raise ValidationError({'min_quantity': 'Minimum quantity cannot be greater than maximum quantity'})
+            if self.min_quantity < 1:
+                raise ValidationError({'min_quantity': 'Minimum quantity must be at least 1'})
 
+class Addon(models.Model):
+    """Individual Addon Model"""
+    DIETARY_TYPES = [
+        ('Veg', 'Vegetarian'),
+        ('Non-Veg', 'Non-Vegetarian'),
+        ('Egg', 'Contains Egg'),
+    ]
+    
+    group = models.ForeignKey('AddonGroup', on_delete=models.CASCADE, related_name='addons')
+    name = models.CharField(max_length=100)
+    price = models.DecimalField(max_digits=6, decimal_places=2)
+    dietary_type = models.CharField(max_length=20, choices=DIETARY_TYPES, default='Veg')
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(default=now)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        db_table = "addons"
+        ordering = ['name']
+    
+    def __str__(self):
+        return f"{self.name} - {self.group.name}"
+
+class MenuItemAddonGroup(models.Model):
+    """Many-to-Many relationship between MenuItems and AddonGroups"""
+    menu_item = models.ForeignKey('RestaurantMenu', on_delete=models.CASCADE, related_name='addon_groups_link')
+    addon_group = models.ForeignKey('AddonGroup', on_delete=models.CASCADE, related_name='menu_items_link')
+    is_required = models.BooleanField(default=False)
+    created_at = models.DateTimeField(default=now)
+    
+    class Meta:
+        db_table = "menu_item_addon_groups"
+        unique_together = ['menu_item', 'addon_group']
+    
+    def __str__(self):
+        return f"{self.menu_item.item_name} - {self.addon_group.name}"
+    

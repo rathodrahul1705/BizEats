@@ -6,7 +6,7 @@ from django.views import View
 from django.http import JsonResponse
 from rest_framework.views import APIView
 from api.aws.s3_client import get_s3_client
-from api.models import CustomImage, FavouriteKitchen, RestaurantCategory, User
+from api.models import CustomImage, FavouriteKitchen, MenuItemAddonGroup, RestaurantCategory, User
 from django.conf import settings
 from django.core.files.storage import default_storage
 from rest_framework.parsers import MultiPartParser, FormParser
@@ -316,8 +316,12 @@ class RestaurantMenueStore(APIView):
         end_time = request.data.get('end_time')
         food_type = request.data.get('food_type')
         discount_percent = request.data.get('discount_percent')
+        addon_groups = request.data.get('addon_groups')
         discount_active = request.data.get('discount_active')
         cuisines = request.data.get('cuisines', '').split(',')
+        
+
+        print("addon_groups===",addon_groups)
 
         # --------------------- 🔥 S3 IMAGE UPLOAD ----------------------------
         item_image = request.FILES.get('item_image')
@@ -391,7 +395,13 @@ class RestaurantMenueList(APIView):
         menu_items = RestaurantMenu.objects.filter(restaurant_id=restaurant_id)
         menu_data = []
         for item in menu_items:
-            category = RestaurantCategory.objects.filter(id=item.category).first()
+            
+            addon_list_id = MenuItemAddonGroup.objects.filter(
+                menu_item_id=item.id,
+                is_required=True
+            ).values('id', 'addon_group_id')
+
+            category = RestaurantCategory.objects.filter(id=item.category).first()            
             menu_data.append({
                 "id": item.id,
                 "restaurant_id": item.restaurant.restaurant_id,
@@ -416,6 +426,7 @@ class RestaurantMenueList(APIView):
                 "item_image": request.build_absolute_uri(item.item_image.url) if item.item_image else "/food_image_eatoor.png",
                 "created_at": item.created_at,
                 "updated_at": item.updated_at,
+                "addon_list_id": addon_list_id,
             })
 
         return Response(menu_data, status=status.HTTP_200_OK)
@@ -470,8 +481,14 @@ class RestaurantMenueUpdate(APIView):
         availability = request.data.get('availability')
         stock_quantity = request.data.get('stock_quantity', menu_item.stock_quantity)
         food_type = request.data.get('food_type', menu_item.food_type)
+        food_type = request.data.get('food_type', menu_item.food_type)
 
         cuisines = request.data.get('cuisines', '').split(',')
+        addon_groups = request.data.getlist("addon_groups[]")
+        
+        # print("addon_groups===",addon_groups)
+
+
 
         start_time = request.data.get('start_time', '')
         end_time = request.data.get('end_time', '')
@@ -544,6 +561,23 @@ class RestaurantMenueUpdate(APIView):
         menu_item.end_time = end_time
         menu_item.discount_percent = discount_percent
         menu_item.discount_active = discount_active
+        
+
+        for addon_group_id in addon_groups:
+            MenuItemAddonGroup.objects.update_or_create(
+                menu_item_id=menu_id,
+                addon_group_id=addon_group_id,
+                defaults={
+                    "is_required": True
+                }
+            )
+
+        # Set all other addon groups as not required
+        MenuItemAddonGroup.objects.filter(
+            menu_item_id=menu_id
+        ).exclude(
+            addon_group_id__in=addon_groups
+        ).update(is_required=False)
 
         # Update cuisines list
         if cuisines:

@@ -179,6 +179,26 @@ const API_ENDPOINTS = {
     FETCH_DATA: (restaurant_id) => `${BASE_URL}/vendor/payouts/${restaurant_id}/`,
   },
 
-};
 
+  ADDON: {
+    // Addon Group Management
+    ADDON_GROUPS: (restaurant_id) => `${BASE_URL}/restaurants/${restaurant_id}/addon-groups/`,
+    ADDON_GROUP_STORE: (restaurant_id) => `${BASE_URL}/restaurants/${restaurant_id}/addon-groups/`,
+    ADDON_GROUP_UPDATE: (group_id, restaurant_id) => `${BASE_URL}/restaurants/${restaurant_id}/addon-groups/${group_id}/`,
+    ADDON_GROUP_DELETE: (group_id, restaurant_id) => `${BASE_URL}/restaurants/${restaurant_id}/addon-groups/${group_id}/`,
+    ADDON_GROUP_TOGGLE_STATUS: (group_id, restaurant_id) => `${BASE_URL}/restaurants/${restaurant_id}/addon-groups/${group_id}/toggle_status/`,
+    
+    // Addon Management (nested under groups)
+    ADDONS_LIST: (group_id, restaurant_id) => `${BASE_URL}/restaurants/${restaurant_id}/addon-groups/${group_id}/addons/`,
+    ADDON_STORE: (group_id, restaurant_id) => `${BASE_URL}/restaurants/${restaurant_id}/addon-groups/${group_id}/addons/`,
+    ADDON_UPDATE: (addon_id, group_id, restaurant_id) => `${BASE_URL}/restaurants/${restaurant_id}/addon-groups/${group_id}/addons/${addon_id}/`,
+    ADDON_DELETE: (addon_id, group_id, restaurant_id) => `${BASE_URL}/restaurants/${restaurant_id}/addon-groups/${group_id}/addons/${addon_id}/`,
+    ADDON_TOGGLE_STATUS: (addon_id, group_id, restaurant_id) => `${BASE_URL}/restaurants/${restaurant_id}/addon-groups/${group_id}/addons/${addon_id}/toggle_status/`,
+    
+    // Menu Item - Addon Group Association
+    MENU_ITEM_ADD_ADDON_GROUP: (menu_item_id, restaurant_id) => `${BASE_URL}/restaurants/${restaurant_id}/menu-items/${menu_item_id}/add_addon_group/`,
+    MENU_ITEM_REMOVE_ADDON_GROUP: (menu_item_id, restaurant_id) => `${BASE_URL}/restaurants/${restaurant_id}/menu-items/${menu_item_id}/remove_addon_group/`,
+  }
+
+};
 export default API_ENDPOINTS;
