@@ -652,93 +652,104 @@ class UserDeliveryAddressDetailView(generics.RetrieveUpdateDestroyAPIView):
     def perform_update(self, serializer):
         """Ensure only user's address is updated."""
         serializer.save(user=self.request.user)
+# class CartWithRestaurantUserUpdate(APIView):
+
+#     def post(self, request, *args, **kwargs):
+#         try:
+#             user_id = request.data.get("user_id")
+#             session_id = request.data.get("session_id")
+#             cart_status = request.data.get("cart_status")
+#             restaurant_id = request.data.get("restaurant_id")
+
+#             if not restaurant_id or (not user_id and not session_id):
+#                 return Response(
+#                     {"status": "error", "message": "Invalid request"},
+#                     status=status.HTTP_400_BAD_REQUEST,
+#                 )
+
+#             with transaction.atomic():
+
+#                 # ---------- 1️⃣ CLEAN DUPLICATES IN GUEST CART (session wise) ----------
+#                 guest_duplicates = (
+#                     Cart.objects
+#                     .filter(
+#                         session_id=session_id,
+#                         restaurant_id=restaurant_id
+#                     )
+#                     .exclude(cart_status=5)
+#                     .values("item_id")
+#                     .annotate(cnt=Count("id"))
+#                     .filter(cnt__gt=1)
+#                 )
+
+#                 for dup in guest_duplicates:
+#                     rows = Cart.objects.filter(
+#                         session_id=session_id,
+#                         restaurant_id=restaurant_id,
+#                         item_id=dup["item_id"]
+#                     ).exclude(cart_status=5).order_by("id")
+
+#                     # keep first, delete rest
+#                     rows.exclude(id=rows.first().id).delete()
+
+#                 # ---------- 2️⃣ CLEAN DUPLICATES IN USER CART (user wise) ----------
+#                 if user_id:
+#                     user_duplicates = (
+#                         Cart.objects
+#                         .filter(
+#                             user_id=user_id,
+#                             restaurant_id=restaurant_id
+#                         )
+#                         .exclude(cart_status=5)
+#                         .values("item_id")
+#                         .annotate(cnt=Count("id"))
+#                         .filter(cnt__gt=1)
+#                     )
+
+#                     for dup in user_duplicates:
+#                         rows = Cart.objects.filter(
+#                             user_id=user_id,
+#                             restaurant_id=restaurant_id,
+#                             item_id=dup["item_id"]
+#                         ).exclude(cart_status=5).order_by("id")
+
+#                         rows.exclude(id=rows.first().id).delete()
+
+#                 # ---------- 3️⃣ MERGE GUEST CART INTO USER ----------
+#                 if user_id and session_id:
+#                     Cart.objects.filter(
+#                         session_id=session_id,
+#                         restaurant_id=restaurant_id
+#                     ).update(
+#                         user_id=user_id,
+#                         session_id=None,
+#                         cart_status=cart_status
+#                     )
+
+#                 return Response(
+#                     {
+#                         "status": "success",
+#                         "message": "Duplicates handled and cart merged successfully"
+#                     },
+#                     status=status.HTTP_200_OK,
+#                 )
+
+#         except Exception as e:
+#             return Response(
+#                 {"status": "error", "message": str(e)},
+#                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+#             )
+
 class CartWithRestaurantUserUpdate(APIView):
 
     def post(self, request, *args, **kwargs):
-        try:
-            user_id = request.data.get("user_id")
-            session_id = request.data.get("session_id")
-            cart_status = request.data.get("cart_status")
-            restaurant_id = request.data.get("restaurant_id")
-
-            if not restaurant_id or (not user_id and not session_id):
-                return Response(
-                    {"status": "error", "message": "Invalid request"},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-
-            with transaction.atomic():
-
-                # ---------- 1️⃣ CLEAN DUPLICATES IN GUEST CART (session wise) ----------
-                guest_duplicates = (
-                    Cart.objects
-                    .filter(
-                        session_id=session_id,
-                        restaurant_id=restaurant_id
-                    )
-                    .exclude(cart_status=5)
-                    .values("item_id")
-                    .annotate(cnt=Count("id"))
-                    .filter(cnt__gt=1)
-                )
-
-                for dup in guest_duplicates:
-                    rows = Cart.objects.filter(
-                        session_id=session_id,
-                        restaurant_id=restaurant_id,
-                        item_id=dup["item_id"]
-                    ).exclude(cart_status=5).order_by("id")
-
-                    # keep first, delete rest
-                    rows.exclude(id=rows.first().id).delete()
-
-                # ---------- 2️⃣ CLEAN DUPLICATES IN USER CART (user wise) ----------
-                if user_id:
-                    user_duplicates = (
-                        Cart.objects
-                        .filter(
-                            user_id=user_id,
-                            restaurant_id=restaurant_id
-                        )
-                        .exclude(cart_status=5)
-                        .values("item_id")
-                        .annotate(cnt=Count("id"))
-                        .filter(cnt__gt=1)
-                    )
-
-                    for dup in user_duplicates:
-                        rows = Cart.objects.filter(
-                            user_id=user_id,
-                            restaurant_id=restaurant_id,
-                            item_id=dup["item_id"]
-                        ).exclude(cart_status=5).order_by("id")
-
-                        rows.exclude(id=rows.first().id).delete()
-
-                # ---------- 3️⃣ MERGE GUEST CART INTO USER ----------
-                if user_id and session_id:
-                    Cart.objects.filter(
-                        session_id=session_id,
-                        restaurant_id=restaurant_id
-                    ).update(
-                        user_id=user_id,
-                        session_id=None,
-                        cart_status=cart_status
-                    )
-
-                return Response(
-                    {
-                        "status": "success",
-                        "message": "Duplicates handled and cart merged successfully"
-                    },
-                    status=status.HTTP_200_OK,
-                )
-
-        except Exception as e:
-            return Response(
-                {"status": "error", "message": str(e)},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
+        return Response(
+            {
+                "status": "success",
+                "message": "Dummy response"
+            },
+            status=status.HTTP_200_OK
+        )
 @method_decorator(csrf_exempt, name='dispatch')
 class RestaurantOrderDetailsAPI(APIView):
     """
@@ -956,13 +967,15 @@ class PlaceOrderAPI(APIView):
 
                 logger.info("Cart updated for user %s", data['user_id'])
 
-                # send_order_status_email(order)
+                send_order_status_email(order)
+                
                 logger.info("Order email sent for OrderNo=%s", order.order_number)
 
                 payload ={
                     "user_id":data['user_id'],
                     "order_number":order.order_number
                 }
+
                 customer_body = None
                 
                 restaurant_token = (
