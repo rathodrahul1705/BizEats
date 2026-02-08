@@ -171,7 +171,7 @@ class RestaurantOrders(APIView):
     def post(self, request, *args, **kwargs):
         try:
             
-            seven_days_ago = timezone.now() - timedelta(days=7)
+            seven_days_ago = timezone.now() - timedelta(days=30)
             restaurant_id = request.data.get('restaurant_id')
             # orders = Order.objects.filter(restaurant_id=restaurant_id)
             orders = Order.objects.filter(
