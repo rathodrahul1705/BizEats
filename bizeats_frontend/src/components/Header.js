@@ -124,13 +124,13 @@ const Header = ({ user, setUser }) => {
                   </Link>
                 </li>
 
-                <li className="header__nav-item">
+                {/* <li className="header__nav-item">
                   <Link to="/cart" className={`header__nav-link ${isActive('/cart') ? 'active' : ''}`}>
                     <ShoppingCart size={20} className="header__icon" />
                     <span className="header__nav-text">Cart</span>
                     {cartCount > 0 && <span className="header__cart-count">{cartCount}</span>}
                   </Link>
-                </li>
+                </li> */}
                 
                 <li className="header__auth-item">
                   {user ? (
@@ -216,7 +216,7 @@ const Header = ({ user, setUser }) => {
               <span className="mobile-bottom-nav__label">Partner</span>
             </Link>
             
-            <Link 
+            {/* <Link 
               to="/cart" 
               className={`mobile-bottom-nav__item ${isActive('/cart') ? 'active' : ''}`}
               onClick={() => setShowDropdown(false)}
@@ -226,7 +226,7 @@ const Header = ({ user, setUser }) => {
                 {cartCount > 0 && <span className="mobile-bottom-nav__cart-count">{cartCount}</span>}
               </div>
               <span className="mobile-bottom-nav__label">Cart</span>
-            </Link>
+            </Link> */}
             
             {user ? (
               <div 
