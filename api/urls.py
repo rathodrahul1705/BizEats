@@ -25,6 +25,7 @@ from rest_framework.routers import DefaultRouter
 from .views import RestaurantCategoryViewSet, OfferViewSet, trigger_background_task
 from api import views
 from .mobile.auth import EmailLoginVerifyOTP, GetUserDetails, MobileLoginResendOTP, MobileLoginSendOTP, MobileLoginVerifyOTP, SendEmailOTP, UserProfileUpdates
+from .eatmart.views import get_eatmart_home_data
 
 router = DefaultRouter()
 router.register(r'categories', RestaurantCategoryViewSet)
@@ -117,7 +118,14 @@ urlpatterns = [
      # wallet Management end
 
 
-     # payment settlement start
+     # Eatmart start
+
+    path('api/eatoor/home/list/', get_eatmart_home_data, name='eatmart-home'),
+
+    # Eatmart end
+
+
+    # payment settlement start
 
     path('api/vendor/payouts/<str:restaurant_id>/', PayoutManagementAPI.as_view(), name='payout-management'),
     path('api/vendor/payouts/<str:restaurant_id>/withdraw/', RequestWithdrawalAPI.as_view(), name='request-withdrawal'),
