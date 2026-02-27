@@ -49,9 +49,9 @@ def get_eatmart_home_data(request):
             {
                 "id": "banner3",
                 "name": "Smart and Fresh",
-                "icon": "https://eatoorprod.s3.eu-north-1.amazonaws.com/uploads/samrt_and_fresh.png",
+                "icon": "https://eatoorprod.s3.eu-north-1.amazonaws.com/uploads/shop_smart.png",
                 "document_type": 1,
-                "thumbnail": "https://eatoorprod.s3.eu-north-1.amazonaws.com/uploads/samrt_and_fresh.png"
+                "thumbnail": "https://eatoorprod.s3.eu-north-1.amazonaws.com/uploads/shop_smart.png"
             }
             ],
 
