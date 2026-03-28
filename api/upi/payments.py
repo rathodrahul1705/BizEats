@@ -45,7 +45,7 @@ def create_order_cashfree(request):
         
         # Extract values from request with validation
         amount = data.get('amount')
-        customer_id = data.get('customer_id')
+        customer_id = data.get('customer_phone')
         customer_phone = data.get('customer_phone')
         customer_email = data.get('customer_email')
         customer_name = data.get('customer_name', '')
