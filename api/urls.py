@@ -27,7 +27,7 @@ from api import views
 from .mobile.auth import EmailLoginVerifyOTP, GetUserDetails, MobileLoginResendOTP, MobileLoginSendOTP, MobileLoginVerifyOTP, SendEmailOTP, UserProfileUpdates
 from .eatmart.views import get_eatmart_home_data
 from api.upi.upi import create_transaction, payment_callback, transaction_status, get_all_transactions
-from api.upi.payments import create_order_cashfree, check_order_status, cashfree_webhook, create_upi_session, create_complete_payment
+from api.upi.payments import create_order_cashfree, check_order_status, cashfree_webhook, create_upi_session
 
 router = DefaultRouter()
 router.register(r'categories', RestaurantCategoryViewSet)
@@ -50,8 +50,7 @@ urlpatterns = [
     path('api/payment/status/<str:order_id>/', transaction_status, name='transaction_status'),
     path('api/payment/transactions/', get_all_transactions, name='get_all_transactions'),
 
-    # path("api/create-order/", create_order_cashfree),
-    path("api/create-order/", create_complete_payment),
+    path("api/create-order/", create_order_cashfree),
     path('api/payment/create-upi-session/', create_upi_session, name='create_upi_session'),
     path("api/check-status/<str:order_id>/", check_order_status),
     path("api/webhook/cashfree/", cashfree_webhook),
