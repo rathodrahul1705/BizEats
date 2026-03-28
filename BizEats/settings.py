@@ -91,6 +91,7 @@ DATABASES = {
 
 RAZORPAY_API_KEY = config('RAZORPAY_API_KEY')
 RAZORPAY_API_SECRET = config('RAZORPAY_API_SECRET')
+RAZORPAY_WEBHOOK_SECRET = config('RAZORPAY_WEBHOOK_SECRET')
 
 PORTER_API_KEY = config('PORTER_API_KEY')
 PORTER_BASE_URL = config('PORTER_BASE_URL')
@@ -126,6 +127,24 @@ MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/"
 
 # MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "public")
+
+
+# PAYTM_MERCHANT_ID = "SghfVi61537633348220"
+# PAYTM_SECRET_KEY = "52IsMFcrmcOp5WFr"
+# PAYTM_WEBSITE = "WEBSTAGING"
+# PAYTM_CALLBACK_URL = "https://eatoor.com/api/paytm/callback/"
+# PAYTM_TXN_URL = "https://securegw-stage.paytm.in/theia/api/v1/initiateTransaction"
+# PAYTM_STATUS_URL = "https://securegw-stage.paytm.in/v3/order/status"
+
+
+# Paytm Configuration
+PAYTM_MERCHANT_ID = 'SghfVi61537633348220'  # Get from Paytm dashboard
+PAYTM_SECRET_KEY = '52IsMFcrmcOp5WFr'    # Get from Paytm dashboard
+PAYTM_WEBSITE = 'WEBSTAGING'            # Use 'WEB' for production
+PAYTM_CHANNEL_ID = 'WEB'
+PAYTM_INDUSTRY_TYPE_ID = 'Retail'
+PAYTM_STAGING_URL = 'https://securegw-stage.paytm.in/order/process/'
+PAYTM_PRODUCTION_URL = 'https://securegw.paytm.in/order/process/'
 
 TEMPLATES = [
     {

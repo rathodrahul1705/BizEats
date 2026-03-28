@@ -5,7 +5,7 @@ from api.favourites import FavouriteKitchenListView, FavouriteKitchenToggleView
 from api.mobile.home import HomeKitchenList
 from api.notifications.notification_send import process_notification_queue, send_fcm_notification, send_order_received_notification
 from api.notifications.views import AssignTagCreateView, AssignTagListView, DeviceDeleteView, DeviceListView, DeviceRegisterView, NotificationMasterCreateView, NotificationMasterListView, NotificationQueueCreateView, NotificationQueueListView, RemoveDeviceToken, TagMasterCreateView, TagMasterListView
-from api.payment.payment import create_order, verify_payment
+from api.payment.payment import create_order, verify_payment, backup_payment_details
 from api.restaurent.menue_views import AddonGroupViewSet, AddonViewSet
 from api.search.searchcontent import search_results, search_suggestions
 from api.storage_backends import GetSingleImageFromS3, ListImagesFromS3, UploadImageToS3
@@ -26,6 +26,8 @@ from .views import RestaurantCategoryViewSet, OfferViewSet, trigger_background_t
 from api import views
 from .mobile.auth import EmailLoginVerifyOTP, GetUserDetails, MobileLoginResendOTP, MobileLoginSendOTP, MobileLoginVerifyOTP, SendEmailOTP, UserProfileUpdates
 from .eatmart.views import get_eatmart_home_data
+from api.upi.upi import create_transaction, payment_callback, transaction_status, get_all_transactions
+from api.upi.payments import create_order, check_status, razorpay_webhook
 
 router = DefaultRouter()
 router.register(r'categories', RestaurantCategoryViewSet)
@@ -41,6 +43,16 @@ addon_router.register(r'addons', AddonViewSet, basename='addon')
 urlpatterns = [
 
     # path('api/', include('your_api_urls')),
+
+    # UPI
+    path('api/payment/create/', create_transaction, name='create_transaction'),
+    path('api/payment/callback/', payment_callback, name='payment_callback'),
+    path('api/payment/status/<str:order_id>/', transaction_status, name='transaction_status'),
+    path('api/payment/transactions/', get_all_transactions, name='get_all_transactions'),
+
+    path("api/create-order/", create_order),
+    path("api/check-status/<str:order_id>/", check_status),
+    path("api/webhook/razorpay/", razorpay_webhook),
 
     # Mobile app Signin API
     path("api/login/send-otp/", MobileLoginSendOTP.as_view(), name="send-otp-code"),
@@ -208,6 +220,7 @@ urlpatterns = [
     
     path('api/restaurant/order/create-order/', create_order, name='create_order'),
     path('api/restaurant/order/verify-payment/', verify_payment, name='verify_payment'),
+    path('api/restaurant/order/backup-payment-details/', backup_payment_details, name='backup_payment_details'),
 
     path('api/order/track-order-details/', TrackOrder.as_view(), name='track_order_details'),
     path('api/restaurant/orders/details', RestaurantOrders.as_view(), name='restaurant_orders_details'),
@@ -241,7 +254,6 @@ urlpatterns = [
     path('api/porter/webhook/', porter_webhook.porter_webhook),
     path('api/porter-orders/', admin_porter_orders),
     path('api/', include(router.urls)),
-
 
     path('api/user/user_list/', FetchUserList.as_view()),
     path('api/cart/cart_list/', FetchCartList.as_view()),

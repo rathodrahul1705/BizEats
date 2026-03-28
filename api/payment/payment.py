@@ -7,6 +7,8 @@ from api.models import Payment, Order
 from django.utils.timezone import now
 import logging
 import json
+from django.db import connection
+from django.db.utils import ProgrammingError
 
 logger = logging.getLogger(__name__)
 client = razorpay.Client(auth=(settings.RAZORPAY_API_KEY, settings.RAZORPAY_API_SECRET))
@@ -241,4 +243,128 @@ def verify_payment(request):
 
     except Exception as e:
         logger.error(f"Unexpected error in verify_payment: {str(e)}")
+        return Response({'error': 'Internal server error'}, status=500)
+
+
+@csrf_exempt
+@api_view(['POST'])
+def backup_payment_details(request):
+    """
+    Stores incoming payment payload as a backup row in `payment_backup_Details`.
+    """
+    try:
+        try:
+            data = json.loads(request.body) if isinstance(request.body, bytes) else request.data
+        except json.JSONDecodeError:
+            return Response({'error': 'Invalid JSON data'}, status=400)
+
+        if not isinstance(data, dict):
+            return Response({'error': 'Payment details must be a JSON object'}, status=400)
+        if not data:
+            return Response({'error': 'Payment details cannot be empty'}, status=400)
+
+        backup_table = "payment_backup_Details"
+        raw_json = json.dumps(data, default=str)
+
+        with connection.cursor() as cursor:
+            # Discover columns so we don't depend on a Django model existing for the backup table.
+            cursor.execute(
+                """
+                SELECT column_name
+                FROM information_schema.columns
+                WHERE LOWER(table_name) = LOWER(%s)
+                """,
+                [backup_table],
+            )
+            columns = [row[0] for row in cursor.fetchall()]
+
+            if not columns:
+                return Response({'error': f'Backup table `{backup_table}` not found'}, status=500)
+
+            # Pick a "raw payload" column if present; otherwise fall back to the first non-id column.
+            raw_payload_candidates = {
+                'raw_response',
+                'payment_details',
+                'details',
+                'payload',
+                'request_body',
+                'backup_payload',
+                'payment_payload',
+            }
+            raw_col = next((c for c in columns if c.lower() in raw_payload_candidates), None)
+            if raw_col is None:
+                raw_col = next((c for c in columns if c.lower() not in ('id',)), None)
+
+            created_col = 'created_at' if 'created_at' in columns else None
+
+            insert_cols = []
+            insert_vals = []
+
+            if raw_col:
+                insert_cols.append(raw_col)
+                insert_vals.append(raw_json)
+
+            if created_col:
+                insert_cols.append(created_col)
+                insert_vals.append(now())
+
+            # Optionally populate some well-known fields if matching columns exist.
+            # We use a case-insensitive lookup because client payload keys may vary.
+            lower_data_map = {str(k).lower(): v for k, v in data.items()}
+
+            # Map: backup_table_column -> list of acceptable payload keys.
+            known_field_map = {
+                "payment_id": ["payment_id", "razorpay_payment_id"],
+                "razorpay_payment_id": ["razorpay_payment_id", "payment_id"],
+                "amount": ["amount", "payment_amount"],
+                "currency": ["currency"],
+                "billing_date": ["billing_date", "billingDate", "captured_at", "capturedAt", "created_at", "createdAt"],
+                "invoice_number": ["invoice_number", "invoiceNumber"],
+                "razorpay_order_id": ["razorpay_order_id", "razorpayOrderId", "order_id"],
+                "razorpay_signature": ["razorpay_signature", "razorpaySignature"],
+                "eatoor_order_id": ["eatoor_order_id", "eatoorOrderId", "order_id", "orderId"],
+                "payment_gateway": ["payment_gateway", "paymentGateway"],
+                "payment_method": ["payment_method", "paymentMethod"],
+                "payment_type": ["payment_type", "paymentType"],
+                "status": ["status"],
+                "gateway_fee": ["gateway_fee", "gatewayFee"],
+                "tax_on_fee": ["tax_on_fee", "taxOnFee", "tax"],
+                "captured_at": ["captured_at", "capturedAt"],
+                "notes": ["notes", "note"],
+            }
+
+            def get_payload_value(payload_keys):
+                for k in payload_keys:
+                    if str(k).lower() in lower_data_map:
+                        return lower_data_map[str(k).lower()]
+                return None
+
+            for col in columns:
+                if col in insert_cols:
+                    continue
+                col_lower = col.lower()
+                if col_lower in known_field_map:
+                    val = get_payload_value(known_field_map[col_lower])
+                    if val is not None:
+                        insert_cols.append(col)
+                        insert_vals.append(val)
+
+            if not insert_cols:
+                return Response({'error': 'No writable columns found on backup table'}, status=500)
+
+            quoted_cols = ", ".join(connection.ops.quote_name(c) for c in insert_cols)
+            placeholders = ", ".join(["%s"] * len(insert_vals))
+
+            cursor.execute(
+                f"INSERT INTO {connection.ops.quote_name(backup_table)} ({quoted_cols}) VALUES ({placeholders})",
+                insert_vals,
+            )
+
+        return Response({'status': 'success', 'backup_saved': True}, status=200)
+
+    except ProgrammingError as e:
+        logger.error(f"Programming error in backup_payment_details: {str(e)}")
+        return Response({'error': 'Failed to write payment backup'}, status=500)
+    except Exception as e:
+        logger.error(f"Unexpected error in backup_payment_details: {str(e)}")
         return Response({'error': 'Internal server error'}, status=500)
