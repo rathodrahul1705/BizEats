@@ -1,40 +1,260 @@
-# views.py
-import requests
+import json
 import uuid
 import logging
-import hmac
-import hashlib
-import json
 from datetime import datetime
+
+import requests
 from django.conf import settings
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
-# Configure logger
 logger = logging.getLogger(__name__)
 
-# Temporary store - In production, use database
+# Temporary storage for orders (replace with database in production)
 PAYMENTS = {}
 
 
-def verify_webhook_signature(payload, signature, secret_key):
-    """Verify Cashfree webhook signature"""
+@csrf_exempt
+@require_http_methods(["POST"])
+def create_complete_payment(request):
+    """
+    Complete payment flow: Create order and UPI session in one API call
+    """
     try:
-        # Sort keys and create string for signature verification
-        sorted_payload = json.dumps(payload, sort_keys=True)
-        expected_signature = hmac.new(
-            secret_key.encode('utf-8'),
-            sorted_payload.encode('utf-8'),
-            hashlib.sha256
-        ).hexdigest()
-        return hmac.compare_digest(expected_signature, signature)
+        # Parse request data
+        data = json.loads(request.body)
+        
+        # Extract values from request with validation
+        amount = data.get('amount')
+        customer_phone = data.get('customer_phone')
+        customer_email = data.get('customer_email')
+        customer_name = data.get('customer_name', '')
+        
+        # Validate required fields
+        if not amount:
+            return JsonResponse({"error": "amount is required"}, status=400)
+        if not customer_phone:
+            return JsonResponse({"error": "customer_phone is required"}, status=400)
+        
+        # Validate amount is numeric and positive
+        try:
+            amount = float(amount)
+            if amount <= 0:
+                raise ValueError("Amount must be positive")
+        except (ValueError, TypeError):
+            return JsonResponse({
+                "error": "Invalid amount. Must be a positive number"
+            }, status=400)
+        
+        # Validate phone number format
+        phone_str = str(customer_phone).strip()
+        if not phone_str.isdigit() or len(phone_str) < 10:
+            return JsonResponse({
+                "error": "Invalid phone number. Must be at least 10 digits"
+            }, status=400)
+        
+        # Step 1: Create Order with Cashfree
+        logger.info(f"Creating order for customer: {customer_phone}")
+        
+        # Generate unique order ID
+        order_id = f"ORD_{uuid.uuid4().hex[:12].upper()}"
+        
+        # Prepare customer details
+        customer_details = {
+            "customer_id": str(customer_phone),
+            "customer_phone": phone_str
+        }
+        
+        # Add optional customer details
+        if customer_email:
+            customer_details["customer_email"] = customer_email
+        if customer_name:
+            customer_details["customer_name"] = customer_name
+        
+        # Prepare order payload
+        order_payload = {
+            "order_id": order_id,
+            "order_amount": amount,
+            "order_currency": data.get('currency', 'INR'),
+            "customer_details": customer_details,
+            "order_meta": {
+                "return_url": data.get('return_url', 'eatoor://CartScreen'),
+                "notify_url": data.get('webhook_url', f"{settings.REACT_APP_BASE_URL}/api/payment/webhook/")
+            }
+        }
+        
+        # Add optional fields to order
+        if data.get('order_note'):
+            order_payload["order_note"] = data.get('order_note')
+        if data.get('order_tags'):
+            order_payload["order_tags"] = data.get('order_tags')
+        
+        # Set up headers for Cashfree API
+        headers = {
+            "x-client-id": settings.CASHFREE_APP_ID,
+            "x-client-secret": settings.CASHFREE_SECRET_KEY,
+            "x-api-version": getattr(settings, 'CASHFREE_API_VERSION', '2025-01-01'),
+            "Content-Type": "application/json"
+        }
+        
+        # Make order creation request
+        order_response = requests.post(
+            f"{settings.CASHFREE_BASE_URL}/orders",
+            json=order_payload,
+            headers=headers,
+            timeout=30
+        )
+        
+        # Handle order creation error
+        if order_response.status_code != 200:
+            logger.error(f"Cashfree order API error {order_response.status_code}: {order_response.text}")
+            error_message = {}
+            try:
+                error_message = order_response.json() if order_response.text else {"message": "Unknown error"}
+            except:
+                error_message = {"message": order_response.text}
+            
+            return JsonResponse({
+                "error": "Failed to create order with payment gateway",
+                "step": "create_order",
+                "status_code": order_response.status_code,
+                "message": error_message
+            }, status=order_response.status_code)
+        
+        order_data = order_response.json()
+        payment_session_id = order_data.get("payment_session_id")
+        
+        if not payment_session_id:
+            logger.error(f"No payment_session_id in order response: {order_data}")
+            return JsonResponse({
+                "error": "Payment session ID not received from payment gateway",
+                "step": "create_order"
+            }, status=500)
+        
+        # Step 2: Create UPI Session using payment_session_id
+        logger.info(f"Creating UPI session for payment_session_id: {payment_session_id}")
+        
+        upi_payload = {
+            "payment_session_id": payment_session_id,
+            "payment_method": {
+                "upi": {
+                    "channel": "link"
+                }
+            }
+        }
+        
+        upi_response = requests.post(
+            f"{settings.CASHFREE_BASE_URL}/orders/sessions",
+            headers=headers,
+            json=upi_payload,
+            timeout=30
+        )
+        
+        # Handle UPI session creation error
+        if upi_response.status_code not in [200, 201]:
+            logger.error(f"Cashfree UPI API error {upi_response.status_code}: {upi_response.text}")
+            error_details = {}
+            try:
+                error_details = upi_response.json() if upi_response.text else {"message": "Unknown error"}
+            except:
+                error_details = {"message": upi_response.text}
+            
+            # Store order info even if UPI session fails
+            PAYMENTS[order_id] = {
+                "status": "ORDER_CREATED_UPI_FAILED",
+                "amount": amount,
+                "customer_id": customer_phone,
+                "customer_phone": phone_str,
+                "customer_email": customer_email,
+                "customer_name": customer_name,
+                "created_at": datetime.now().isoformat(),
+                "payment_session_id": payment_session_id,
+                "order_data": order_data
+            }
+            
+            return JsonResponse({
+                "error": "Failed to create UPI session",
+                "step": "create_upi_session",
+                "status_code": upi_response.status_code,
+                "details": error_details,
+                "order_id": order_id,
+                "payment_session_id": payment_session_id
+            }, status=upi_response.status_code)
+        
+        upi_data = upi_response.json()
+        
+        # Extract UPI links safely
+        payload_data = upi_data.get("data", {}).get("payload", {})
+        
+        upi_urls = {
+            "bhim": payload_data.get("bhim"),
+            "gpay": payload_data.get("gpay"),
+            "paytm": payload_data.get("paytm"),
+            "phonepe": payload_data.get("phonepe"),
+            "web": payload_data.get("web"),
+            "default": payload_data.get("default"),
+        }
+        
+        # Store complete order information
+        PAYMENTS[order_id] = {
+            "status": "UPI_SESSION_CREATED",
+            "amount": amount,
+            "customer_id": customer_phone,
+            "customer_phone": phone_str,
+            "customer_email": customer_email,
+            "customer_name": customer_name,
+            "created_at": datetime.now().isoformat(),
+            "payment_session_id": payment_session_id,
+            "order_data": order_data,
+            "upi_data": upi_data
+        }
+        
+        logger.info(f"Complete payment flow successful for order: {order_id}")
+        
+        # Return combined response
+        return JsonResponse({
+            "success": True,
+            "order_id": order_id,
+            "payment_session_id": payment_session_id,
+            "payment_link": order_data.get("payment_link"),
+            "amount": amount,
+            "currency": order_payload["order_currency"],
+            "customer_id": customer_phone,
+            "customer_phone": phone_str,
+            "customer_email": customer_email,
+            "customer_name": customer_name,
+            "order_status": order_data.get("order_status", "PENDING"),
+            "upi_urls": upi_urls,
+            "payment_methods": {
+                "gpay": upi_urls.get("gpay") is not None,
+                "phonepe": upi_urls.get("phonepe") is not None,
+                "paytm": upi_urls.get("paytm") is not None,
+                "bhim": upi_urls.get("bhim") is not None
+            }
+        })
+        
+    except json.JSONDecodeError as e:
+        logger.error(f"Invalid JSON in request: {e}")
+        return JsonResponse({"error": "Invalid JSON in request body"}, status=400)
+        
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Payment gateway communication error: {e}")
+        return JsonResponse({
+            "error": "Payment gateway communication error",
+            "step": "communication",
+            "details": str(e) if settings.DEBUG else "Please try again later"
+        }, status=503)
+        
     except Exception as e:
-        logger.error(f"Signature verification error: {e}")
-        return False
+        logger.error(f"Unexpected error: {e}", exc_info=True)
+        return JsonResponse({
+            "error": "Internal server error",
+            "details": str(e) if settings.DEBUG else "Please contact support"
+        }, status=500)
 
 
-# ✅ Create Order
+# Keep original endpoints for backward compatibility if needed
 @csrf_exempt
 @require_http_methods(["POST"])
 def create_order_cashfree(request):
@@ -114,7 +334,7 @@ def create_order_cashfree(request):
         headers = {
             "x-client-id": settings.CASHFREE_APP_ID,
             "x-client-secret": settings.CASHFREE_SECRET_KEY,
-            "x-api-version": "2023-08-01",
+            "x-api-version": getattr(settings, 'CASHFREE_API_VERSION', '2025-01-01'),
             "Content-Type": "application/json"
         }
         
@@ -131,10 +351,16 @@ def create_order_cashfree(request):
         # Handle API response
         if response.status_code != 200:
             logger.error(f"Cashfree API error {response.status_code}: {response.text}")
+            error_message = {}
+            try:
+                error_message = response.json() if response.text else {"message": "Unknown error"}
+            except:
+                error_message = {"message": response.text}
+            
             return JsonResponse({
                 "error": "Failed to create order with payment gateway",
                 "status_code": response.status_code,
-                "message": response.json() if response.text else "Unknown error"
+                "message": error_message
             }, status=response.status_code)
         
         response_data = response.json()
@@ -185,7 +411,104 @@ def create_order_cashfree(request):
         }, status=500)
 
 
-# ✅ Check Order Status
+@csrf_exempt
+@require_http_methods(["POST"])
+def create_upi_session(request):
+    """
+    Create UPI session using existing payment_session_id
+    (Cashfree PG v2025 API)
+    """
+    try:
+        data = json.loads(request.body)
+
+        payment_session_id = data.get("payment_session_id")
+
+        if not payment_session_id:
+            return JsonResponse(
+                {"error": "payment_session_id is required"},
+                status=400
+            )
+
+        # Correct payload as per Cashfree docs
+        payload = {
+            "payment_session_id": payment_session_id,
+            "payment_method": {
+                "upi": {
+                    "channel": "link"
+                }
+            }
+        }
+
+        logger.debug(f"UPI session payload: {json.dumps(payload, indent=2)}")
+
+        headers = {
+            "Content-Type": "application/json",
+            "x-api-version": getattr(settings, 'CASHFREE_API_VERSION', '2025-01-01'),
+            "x-client-id": settings.CASHFREE_APP_ID,
+            "x-client-secret": settings.CASHFREE_SECRET_KEY,
+        }
+
+        response = requests.post(
+            f"{settings.CASHFREE_BASE_URL}/orders/sessions",
+            headers=headers,
+            json=payload,
+            timeout=30
+        )
+
+        if response.status_code not in [200, 201]:
+            logger.error(f"Cashfree error: {response.text}")
+            error_details = {}
+            try:
+                error_details = response.json() if response.text else {"message": "Unknown error"}
+            except:
+                error_details = {"message": response.text}
+                
+            return JsonResponse(
+                {"error": "Failed to create UPI session", "details": error_details},
+                status=response.status_code
+            )
+
+        response_data = response.json()
+
+        # Extract UPI links safely
+        upi_urls = {}
+        payload_data = (
+            response_data.get("data", {})
+            .get("payload", {})
+        )
+
+        upi_urls = {
+            "bhim": payload_data.get("bhim"),
+            "gpay": payload_data.get("gpay"),
+            "paytm": payload_data.get("paytm"),
+            "phonepe": payload_data.get("phonepe"),
+            "web": payload_data.get("web"),
+            "default": payload_data.get("default"),
+        }
+
+        logger.info(f"UPI session created successfully for: {payment_session_id}")
+
+        return JsonResponse({
+            "success": True,
+            "payment_session_id": payment_session_id,
+            "upi_urls": upi_urls,
+        })
+
+    except json.JSONDecodeError as e:
+        logger.error(f"Invalid JSON in request: {e}")
+        return JsonResponse({"error": "Invalid JSON in request body"}, status=400)
+        
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Payment gateway communication error: {e}")
+        return JsonResponse({
+            "error": "Payment gateway communication error",
+            "details": str(e) if settings.DEBUG else "Please try again later"
+        }, status=503)
+        
+    except Exception as e:
+        logger.error(f"UPI session error: {str(e)}", exc_info=True)
+        return JsonResponse({"error": str(e)}, status=500)
+    
 @csrf_exempt
 @require_http_methods(["GET"])
 def check_order_status(request, order_id):
@@ -288,6 +611,31 @@ def check_order_status(request, order_id):
         return JsonResponse({"error": "Internal server error"}, status=500)
 
 
+# ✅ Check UPI Payment Status
+@csrf_exempt
+@require_http_methods(["GET"])
+def check_upi_payment_status(request, cf_payment_id):
+    """Check UPI payment status"""
+    try:
+        if cf_payment_id not in PAYMENTS:
+            return JsonResponse({"error": "Payment not found"}, status=404)
+        
+        payment_info = PAYMENTS[cf_payment_id]
+        status = payment_info.get("status", "PENDING")
+        
+        return JsonResponse({
+            "cf_payment_id": cf_payment_id,
+            "status": status,
+            "amount": payment_info.get("amount"),
+            "customer_phone": payment_info.get("customer_phone"),
+            "updated_at": payment_info.get("updated_at", payment_info.get("created_at"))
+        })
+        
+    except Exception as e:
+        logger.error(f"Error checking UPI status: {e}")
+        return JsonResponse({"error": str(e)}, status=500)
+
+
 # ✅ Webhook Handler
 @csrf_exempt
 @require_http_methods(["POST"])
@@ -326,14 +674,18 @@ def cashfree_webhook(request):
         payment_data = payload.get("data", {}).get("payment", {})
         
         order_id = order_data.get("order_id")
+        cf_payment_id = payment_data.get("cf_payment_id") or order_id
+        
         payment_status = payment_data.get("payment_status")
         order_status = order_data.get("order_status")
         
-        if not order_id:
-            logger.error("Webhook missing order_id in payload")
-            return JsonResponse({"error": "Missing order_id"}, status=400)
+        if not order_id and not cf_payment_id:
+            logger.error("Webhook missing order_id/cf_payment_id in payload")
+            return JsonResponse({"error": "Missing payment identifier"}, status=400)
         
-        logger.info(f"Processing webhook for order {order_id}")
+        # Use whichever ID is available
+        payment_id = order_id or cf_payment_id
+        logger.info(f"Processing webhook for payment {payment_id}")
         logger.info(f"Order status: {order_status}, Payment status: {payment_status}")
         
         # Update payment status based on webhook data
@@ -342,51 +694,52 @@ def cashfree_webhook(request):
             "FAILED": "FAILED",
             "PENDING": "PENDING",
             "CANCELLED": "FAILED",
-            "EXPIRED": "FAILED"
+            "EXPIRED": "FAILED",
+            "PAID": "SUCCESS",
+            "ACTIVE": "PENDING"
         }
         
         final_status = status_mapping.get(payment_status or order_status, "PENDING")
         
-        # Update local storage
-        if order_id in PAYMENTS:
-            PAYMENTS[order_id]["status"] = final_status
-            PAYMENTS[order_id]["updated_at"] = datetime.now().isoformat()
-            PAYMENTS[order_id]["webhook_data"] = payload
-            
-            logger.info(f"Updated order {order_id} status to: {final_status}")
-            
-            # TODO: Update database record
-            # TODO: Send notification to user
-            # TODO: Trigger business logic (e.g., activate subscription)
-            
-            # Business logic for successful payment
-            if final_status == "SUCCESS":
-                logger.info(f"Processing successful payment for order {order_id}")
-                # Add your business logic here
-                # - Update user subscription
-                # - Send confirmation email
-                # - Add to analytics
-                pass
-            
-            # Business logic for failed payment
-            elif final_status == "FAILED":
-                logger.warning(f"Processing failed payment for order {order_id}")
-                # Add your business logic for failed payments
-                # - Notify user
-                # - Retry logic
-                pass
-        else:
-            # Store order if not found (from webhook)
-            logger.warning(f"Order {order_id} not found in local storage, creating record")
-            PAYMENTS[order_id] = {
+        # Update local storage (try both IDs)
+        updated = False
+        for payment_key in [payment_id, order_id, cf_payment_id]:
+            if payment_key and payment_key in PAYMENTS:
+                PAYMENTS[payment_key]["status"] = final_status
+                PAYMENTS[payment_key]["updated_at"] = datetime.now().isoformat()
+                PAYMENTS[payment_key]["webhook_data"] = payload
+                updated = True
+                logger.info(f"Updated payment {payment_key} status to: {final_status}")
+        
+        if not updated:
+            # Store payment if not found (from webhook)
+            logger.warning(f"Payment {payment_id} not found in local storage, creating record")
+            PAYMENTS[payment_id] = {
                 "status": final_status,
-                "amount": order_data.get("order_amount"),
+                "amount": order_data.get("order_amount") or payment_data.get("payment_amount"),
                 "customer_id": order_data.get("customer_details", {}).get("customer_id"),
                 "customer_phone": order_data.get("customer_details", {}).get("customer_phone"),
                 "customer_email": order_data.get("customer_details", {}).get("customer_email"),
                 "created_at": datetime.now().isoformat(),
                 "webhook_data": payload
             }
+        
+        # Business logic for successful payment
+        if final_status == "SUCCESS":
+            logger.info(f"Processing successful payment for {payment_id}")
+            # Add your business logic here
+            # - Update user subscription
+            # - Send confirmation email
+            # - Add to analytics
+            pass
+        
+        # Business logic for failed payment
+        elif final_status == "FAILED":
+            logger.warning(f"Processing failed payment for {payment_id}")
+            # Add your business logic for failed payments
+            # - Notify user
+            # - Retry logic
+            pass
         
         # Return success response
         return JsonResponse({"ok": True, "status": "processed"})
