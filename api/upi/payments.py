@@ -14,6 +14,7 @@ PAYMENTS = {}
 
 
 # ✅ Create Order
+@csrf_exempt
 def create_order_cashfree(request):
     """Create a new order with Cashfree"""
     try:
@@ -29,7 +30,7 @@ def create_order_cashfree(request):
                 "customer_phone": "9999999999"
             },
             "order_meta": {
-                "return_url": "yourapp://payment"
+                "return_url": "eatoor://payment"
             }
         }
 
@@ -82,6 +83,7 @@ def create_order_cashfree(request):
 
 
 # ✅ Check status
+@csrf_exempt
 def check_status(request, order_id):
     """Check payment status for an order"""
     try:
