@@ -1,176 +1,400 @@
+# views.py
 import requests
 import uuid
 import logging
+import hmac
+import hashlib
 import json
+from datetime import datetime
 from django.conf import settings
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
 
 # Configure logger
 logger = logging.getLogger(__name__)
 
-# temp store
+# Temporary store - In production, use database
 PAYMENTS = {}
+
+
+def verify_webhook_signature(payload, signature, secret_key):
+    """Verify Cashfree webhook signature"""
+    try:
+        # Sort keys and create string for signature verification
+        sorted_payload = json.dumps(payload, sort_keys=True)
+        expected_signature = hmac.new(
+            secret_key.encode('utf-8'),
+            sorted_payload.encode('utf-8'),
+            hashlib.sha256
+        ).hexdigest()
+        return hmac.compare_digest(expected_signature, signature)
+    except Exception as e:
+        logger.error(f"Signature verification error: {e}")
+        return False
 
 
 # ✅ Create Order
 @csrf_exempt
+@require_http_methods(["POST"])
 def create_order_cashfree(request):
     """Create a new order with Cashfree"""
     try:
-        order_id = f"ORD_{uuid.uuid4().hex[:10]}"
-        logger.info(f"Creating new order with ID: {order_id}")
-
+        # Parse request data
+        data = json.loads(request.body)
+        
+        # Extract values from request with validation
+        amount = data.get('amount')
+        customer_id = data.get('customer_id')
+        customer_phone = data.get('customer_phone')
+        customer_email = data.get('customer_email')
+        customer_name = data.get('customer_name', '')
+        
+        # Validate required fields
+        if not amount:
+            return JsonResponse({"error": "amount is required"}, status=400)
+        if not customer_id:
+            return JsonResponse({"error": "customer_id is required"}, status=400)
+        if not customer_phone:
+            return JsonResponse({"error": "customer_phone is required"}, status=400)
+        
+        # Validate amount is numeric and positive
+        try:
+            amount = float(amount)
+            if amount <= 0:
+                raise ValueError("Amount must be positive")
+        except (ValueError, TypeError):
+            return JsonResponse({
+                "error": "Invalid amount. Must be a positive number"
+            }, status=400)
+        
+        # Validate phone number format
+        phone_str = str(customer_phone).strip()
+        if not phone_str.isdigit() or len(phone_str) < 10:
+            return JsonResponse({
+                "error": "Invalid phone number. Must be at least 10 digits"
+            }, status=400)
+        
+        # Generate unique order ID
+        order_id = f"ORD_{uuid.uuid4().hex[:12].upper()}"
+        logger.info(f"Creating new order with ID: {order_id} for customer: {customer_id}")
+        
+        # Prepare customer details
+        customer_details = {
+            "customer_id": str(customer_id),
+            "customer_phone": phone_str
+        }
+        
+        # Add optional customer details
+        if customer_email:
+            customer_details["customer_email"] = customer_email
+        if customer_name:
+            customer_details["customer_name"] = customer_name
+        
+        # Prepare order payload for Cashfree
         payload = {
             "order_id": order_id,
-            "order_amount": 100,
-            "order_currency": "INR",
-            "customer_details": {
-                "customer_id": "cust_001",
-                "customer_phone": "9999999999"
-            },
+            "order_amount": amount,
+            "order_currency": data.get('currency', 'INR'),
+            "customer_details": customer_details,
             "order_meta": {
-                "return_url": "eatoor://payment"
+                "return_url": data.get('return_url', 'eatoor://CartScreen'),
+                "notify_url": data.get('webhook_url', f"{settings.REACT_APP_BASE_URL}/api/payment/webhook/")
             }
         }
-
+        
+        # Add optional fields
+        if data.get('order_note'):
+            payload["order_note"] = data.get('order_note')
+        
+        if data.get('order_tags'):
+            payload["order_tags"] = data.get('order_tags')
+        
+        # Set up headers for Cashfree API
         headers = {
             "x-client-id": settings.CASHFREE_APP_ID,
             "x-client-secret": settings.CASHFREE_SECRET_KEY,
-            "x-api-version": "2022-09-01",
+            "x-api-version": "2023-08-01",
             "Content-Type": "application/json"
         }
-
-        logger.debug(f"Cashfree API request payload: {payload}")
         
-        res = requests.post(settings.CASHFREE_BASE_URL, json=payload, headers=headers)
+        logger.debug(f"Cashfree API request payload: {json.dumps(payload, indent=2)}")
         
-        if res.status_code != 200:
-            logger.error(f"Cashfree API returned status {res.status_code}: {res.text}")
+        # Make API request to Cashfree
+        response = requests.post(
+            f"{settings.CASHFREE_BASE_URL}/orders",
+            json=payload,
+            headers=headers,
+            timeout=30
+        )
+        
+        # Handle API response
+        if response.status_code != 200:
+            logger.error(f"Cashfree API error {response.status_code}: {response.text}")
             return JsonResponse({
-                "error": "Failed to create order",
-                "status_code": res.status_code
-            }, status=500)
-            
-        data = res.json()
-        PAYMENTS[order_id] = "pending"
+                "error": "Failed to create order with payment gateway",
+                "status_code": response.status_code,
+                "message": response.json() if response.text else "Unknown error"
+            }, status=response.status_code)
         
-        logger.info(f"Order created successfully: {order_id}, payment_session_id: {data.get('payment_session_id')}")
+        response_data = response.json()
         
+        # Store order in temporary storage
+        PAYMENTS[order_id] = {
+            "status": "PENDING",
+            "amount": amount,
+            "customer_id": customer_id,
+            "customer_phone": phone_str,
+            "customer_email": customer_email,
+            "customer_name": customer_name,
+            "created_at": datetime.now().isoformat(),
+            "payment_session_id": response_data.get("payment_session_id"),
+            "order_data": response_data
+        }
+        
+        logger.info(f"Order created successfully: {order_id}")
+        
+        # Return response with payment details
         return JsonResponse({
+            "success": True,
             "order_id": order_id,
-            "payment_session_id": data["payment_session_id"],
-            "amount": 100
+            "payment_session_id": response_data.get("payment_session_id"),
+            "payment_link": response_data.get("payment_link"),
+            "amount": amount,
+            "currency": payload["order_currency"],
+            "customer_id": customer_id,
+            "order_status": response_data.get("order_status", "PENDING")
         })
         
+    except json.JSONDecodeError as e:
+        logger.error(f"Invalid JSON in request: {e}")
+        return JsonResponse({"error": "Invalid JSON in request body"}, status=400)
+        
     except requests.exceptions.RequestException as e:
-        logger.error(f"Request error while creating order: {str(e)}", exc_info=True)
+        logger.error(f"Payment gateway communication error: {e}")
         return JsonResponse({
-            "error": "Payment gateway communication error"
+            "error": "Payment gateway communication error",
+            "details": str(e) if settings.DEBUG else "Please try again later"
         }, status=503)
         
-    except KeyError as e:
-        logger.error(f"Missing expected field in Cashfree response: {str(e)}")
-        return JsonResponse({
-            "error": "Invalid response from payment gateway"
-        }, status=502)
-        
     except Exception as e:
-        logger.error(f"Unexpected error in create_order_cashfree: {str(e)}", exc_info=True)
+        logger.error(f"Unexpected error: {e}", exc_info=True)
         return JsonResponse({
-            "error": "Internal server error"
+            "error": "Internal server error",
+            "details": str(e) if settings.DEBUG else "Please contact support"
         }, status=500)
 
 
-# ✅ Check status
+# ✅ Check Order Status
 @csrf_exempt
-def check_status(request, order_id):
+@require_http_methods(["GET"])
+def check_order_status(request, order_id):
     """Check payment status for an order"""
     try:
         logger.info(f"Checking status for order: {order_id}")
         
-        if order_id not in PAYMENTS:
-            logger.warning(f"Order not found: {order_id}")
-            return JsonResponse({
-                "status": "not_found",
-                "error": "Order ID not found"
-            }, status=404)
+        # Check in local storage first
+        if order_id in PAYMENTS:
+            order_data = PAYMENTS[order_id]
+            status = order_data.get("status", "PENDING")
             
-        status = PAYMENTS.get(order_id, "pending")
-        logger.info(f"Order {order_id} status: {status}")
+            # If status is still pending, verify with Cashfree
+            if status == "PENDING":
+                try:
+                    headers = {
+                        "x-client-id": settings.CASHFREE_APP_ID,
+                        "x-client-secret": settings.CASHFREE_SECRET_KEY,
+                        "x-api-version": "2023-08-01"
+                    }
+                    
+                    response = requests.get(
+                        f"{settings.CASHFREE_BASE_URL}/orders/{order_id}",
+                        headers=headers,
+                        timeout=10
+                    )
+                    
+                    if response.status_code == 200:
+                        cf_data = response.json()
+                        cf_status = cf_data.get("order_status")
+                        
+                        # Map Cashfree status to our status
+                        if cf_status == "PAID":
+                            PAYMENTS[order_id]["status"] = "SUCCESS"
+                            status = "SUCCESS"
+                        elif cf_status == "ACTIVE":
+                            status = "PENDING"
+                        elif cf_status in ["CANCELLED", "EXPIRED"]:
+                            PAYMENTS[order_id]["status"] = "FAILED"
+                            status = "FAILED"
+                            
+                except Exception as e:
+                    logger.error(f"Error checking with Cashfree: {e}")
+            
+            return JsonResponse({
+                "order_id": order_id,
+                "status": status,
+                "amount": order_data.get("amount"),
+                "customer_id": order_data.get("customer_id")
+            })
         
-        return JsonResponse({"status": status})
+        # If not found locally, check directly with Cashfree
+        try:
+            headers = {
+                "x-client-id": settings.CASHFREE_APP_ID,
+                "x-client-secret": settings.CASHFREE_SECRET_KEY,
+                "x-api-version": "2023-08-01"
+            }
+            
+            response = requests.get(
+                f"{settings.CASHFREE_BASE_URL}/orders/{order_id}",
+                headers=headers,
+                timeout=10
+            )
+            
+            if response.status_code == 200:
+                cf_data = response.json()
+                cf_status = cf_data.get("order_status")
+                
+                # Map Cashfree status
+                mapped_status = {
+                    "PAID": "SUCCESS",
+                    "ACTIVE": "PENDING",
+                    "CANCELLED": "FAILED",
+                    "EXPIRED": "FAILED"
+                }.get(cf_status, "PENDING")
+                
+                return JsonResponse({
+                    "order_id": order_id,
+                    "status": mapped_status,
+                    "amount": cf_data.get("order_amount"),
+                    "customer_id": cf_data.get("customer_details", {}).get("customer_id")
+                })
+            else:
+                logger.warning(f"Order not found: {order_id}")
+                return JsonResponse({
+                    "status": "NOT_FOUND",
+                    "error": "Order ID not found"
+                }, status=404)
+                
+        except Exception as e:
+            logger.error(f"Error checking with Cashfree: {e}")
+            return JsonResponse({
+                "status": "ERROR",
+                "error": "Unable to verify payment status"
+            }, status=500)
         
     except Exception as e:
-        logger.error(f"Error checking status for order {order_id}: {str(e)}", exc_info=True)
-        return JsonResponse({
-            "error": "Internal server error"
-        }, status=500)
+        logger.error(f"Error checking status for order {order_id}: {e}", exc_info=True)
+        return JsonResponse({"error": "Internal server error"}, status=500)
 
 
-# ✅ Webhook
+# ✅ Webhook Handler
 @csrf_exempt
+@require_http_methods(["POST"])
 def cashfree_webhook(request):
     """Handle Cashfree webhook callbacks"""
     try:
-        # Log raw request info
-        logger.info(f"Webhook received from: {request.META.get('REMOTE_ADDR')}")
-        logger.info(f"Webhook headers: {dict(request.headers)}")
+        # Get webhook signature
+        webhook_signature = request.headers.get('x-webhook-signature')
         
         # Parse payload
-        payload = json.loads(request.body)
-        logger.info(f"Webhook payload received: {json.dumps(payload, indent=2)}")
+        try:
+            payload = json.loads(request.body)
+        except json.JSONDecodeError as e:
+            logger.error(f"Invalid JSON in webhook payload: {e}")
+            logger.error(f"Raw body: {request.body}")
+            return JsonResponse({"error": "Invalid JSON"}, status=400)
+        
+        # Log webhook details
+        logger.info(f"Webhook received from: {request.META.get('REMOTE_ADDR')}")
+        logger.info(f"Webhook payload: {json.dumps(payload, indent=2)}")
+        
+        # Verify signature (recommended for production)
+        if webhook_signature and hasattr(settings, 'CASHFREE_WEBHOOK_SECRET'):
+            is_valid = verify_webhook_signature(
+                payload,
+                webhook_signature,
+                settings.CASHFREE_WEBHOOK_SECRET
+            )
+            
+            if not is_valid:
+                logger.warning("Invalid webhook signature")
+                return JsonResponse({"error": "Invalid signature"}, status=401)
         
         # Extract order and payment details
-        order_id = payload.get("data", {}).get("order", {}).get("order_id")
-        payment_status = payload.get("data", {}).get("payment", {}).get("payment_status")
+        order_data = payload.get("data", {}).get("order", {})
+        payment_data = payload.get("data", {}).get("payment", {})
+        
+        order_id = order_data.get("order_id")
+        payment_status = payment_data.get("payment_status")
+        order_status = order_data.get("order_status")
         
         if not order_id:
             logger.error("Webhook missing order_id in payload")
             return JsonResponse({"error": "Missing order_id"}, status=400)
-            
-        if not payment_status:
-            logger.error(f"Webhook missing payment_status for order {order_id}")
-            return JsonResponse({"error": "Missing payment_status"}, status=400)
         
-        # Update payment status
-        logger.info(f"Updating order {order_id} status to: {payment_status}")
+        logger.info(f"Processing webhook for order {order_id}")
+        logger.info(f"Order status: {order_status}, Payment status: {payment_status}")
         
-        if payment_status == "SUCCESS":
-            PAYMENTS[order_id] = "success"
-            logger.info(f"Payment successful for order {order_id}")
-            # TODO: Add business logic here (e.g., update database, send confirmation email)
+        # Update payment status based on webhook data
+        status_mapping = {
+            "SUCCESS": "SUCCESS",
+            "FAILED": "FAILED",
+            "PENDING": "PENDING",
+            "CANCELLED": "FAILED",
+            "EXPIRED": "FAILED"
+        }
+        
+        final_status = status_mapping.get(payment_status or order_status, "PENDING")
+        
+        # Update local storage
+        if order_id in PAYMENTS:
+            PAYMENTS[order_id]["status"] = final_status
+            PAYMENTS[order_id]["updated_at"] = datetime.now().isoformat()
+            PAYMENTS[order_id]["webhook_data"] = payload
             
-        elif payment_status == "FAILED":
-            PAYMENTS[order_id] = "failed"
-            logger.warning(f"Payment failed for order {order_id}")
-            # TODO: Add business logic for failed payments
+            logger.info(f"Updated order {order_id} status to: {final_status}")
             
+            # TODO: Update database record
+            # TODO: Send notification to user
+            # TODO: Trigger business logic (e.g., activate subscription)
+            
+            # Business logic for successful payment
+            if final_status == "SUCCESS":
+                logger.info(f"Processing successful payment for order {order_id}")
+                # Add your business logic here
+                # - Update user subscription
+                # - Send confirmation email
+                # - Add to analytics
+                pass
+            
+            # Business logic for failed payment
+            elif final_status == "FAILED":
+                logger.warning(f"Processing failed payment for order {order_id}")
+                # Add your business logic for failed payments
+                # - Notify user
+                # - Retry logic
+                pass
         else:
-            PAYMENTS[order_id] = payment_status.lower()
-            logger.info(f"Payment status for order {order_id}: {payment_status}")
+            # Store order if not found (from webhook)
+            logger.warning(f"Order {order_id} not found in local storage, creating record")
+            PAYMENTS[order_id] = {
+                "status": final_status,
+                "amount": order_data.get("order_amount"),
+                "customer_id": order_data.get("customer_details", {}).get("customer_id"),
+                "customer_phone": order_data.get("customer_details", {}).get("customer_phone"),
+                "customer_email": order_data.get("customer_details", {}).get("customer_email"),
+                "created_at": datetime.now().isoformat(),
+                "webhook_data": payload
+            }
         
-        # Verify signature if Cashfree provides one
-        webhook_signature = request.headers.get('x-webhook-signature')
-        if webhook_signature:
-            logger.debug(f"Webhook signature: {webhook_signature}")
-            # TODO: Implement signature verification
-            # if not verify_signature(payload, webhook_signature):
-            #     logger.warning(f"Invalid webhook signature for order {order_id}")
-            #     return JsonResponse({"error": "Invalid signature"}, status=401)
-        
-        logger.info(f"Webhook processed successfully for order {order_id}")
-        return JsonResponse({"ok": True})
-        
-    except json.JSONDecodeError as e:
-        logger.error(f"Invalid JSON in webhook payload: {str(e)}")
-        logger.error(f"Raw request body: {request.body}")
-        return JsonResponse({"error": "Invalid JSON"}, status=400)
+        # Return success response
+        return JsonResponse({"ok": True, "status": "processed"})
         
     except KeyError as e:
-        logger.error(f"Missing expected field in webhook payload: {str(e)}")
+        logger.error(f"Missing expected field in webhook: {e}")
         return JsonResponse({"error": "Invalid webhook format"}, status=400)
         
     except Exception as e:
-        logger.error(f"Unexpected error in webhook handler: {str(e)}", exc_info=True)
+        logger.error(f"Unexpected error in webhook: {e}", exc_info=True)
         return JsonResponse({"error": "Internal server error"}, status=500)
