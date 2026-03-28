@@ -27,7 +27,7 @@ from api import views
 from .mobile.auth import EmailLoginVerifyOTP, GetUserDetails, MobileLoginResendOTP, MobileLoginSendOTP, MobileLoginVerifyOTP, SendEmailOTP, UserProfileUpdates
 from .eatmart.views import get_eatmart_home_data
 from api.upi.upi import create_transaction, payment_callback, transaction_status, get_all_transactions
-from api.upi.payments import create_order, check_status, razorpay_webhook
+from api.upi.payments import create_order_cashfree, check_status, cashfree_webhook
 
 router = DefaultRouter()
 router.register(r'categories', RestaurantCategoryViewSet)
@@ -50,9 +50,9 @@ urlpatterns = [
     path('api/payment/status/<str:order_id>/', transaction_status, name='transaction_status'),
     path('api/payment/transactions/', get_all_transactions, name='get_all_transactions'),
 
-    path("api/create-order/", create_order),
+    path("api/create-order/", create_order_cashfree),
     path("api/check-status/<str:order_id>/", check_status),
-    path("api/webhook/razorpay/", razorpay_webhook),
+    path("api/webhook/razorpay/", cashfree_webhook),
 
     # Mobile app Signin API
     path("api/login/send-otp/", MobileLoginSendOTP.as_view(), name="send-otp-code"),

@@ -1,74 +1,66 @@
-import razorpay
+import requests
 import uuid
-import json
-import hmac
-import hashlib
-
 from django.conf import settings
-from django.http import JsonResponse, HttpResponse
+from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
-client = razorpay.Client(auth=(settings.RAZORPAY_API_KEY, settings.RAZORPAY_API_SECRET))
-
-# temp store (no DB)
+# temp store
 PAYMENTS = {}
 
 
 # ✅ Create Order
-def create_order(request):
-    order = client.order.create({
-        "amount": 10000,  # ₹100
-        "currency": "INR",
-        "payment_capture": 1
-    })
+def create_order_cashfree(request):
+    order_id = f"ORD_{uuid.uuid4().hex[:10]}"
 
-    PAYMENTS[order["id"]] = {
-        "status": "created"
+    payload = {
+        "order_id": order_id,
+        "order_amount": 100,
+        "order_currency": "INR",
+        "customer_details": {
+            "customer_id": "cust_001",
+            "customer_phone": "9999999999"
+        },
+        "order_meta": {
+            "return_url": "yourapp://payment"
+        }
     }
 
+    headers = {
+        "x-client-id": settings.CASHFREE_APP_ID,
+        "x-client-secret": settings.CASHFREE_SECRET_KEY,
+        "x-api-version": "2022-09-01",  # ✅ FIXED
+        "Content-Type": "application/json"
+    }
+
+    res = requests.post(settings.CASHFREE_BASE_URL, json=payload, headers=headers)
+    data = res.json()
+    PAYMENTS[order_id] = "pending"
+
     return JsonResponse({
-        "order_id": order["id"],
-        "amount": 100,
-        "currency": "INR",
-        "key": settings.RAZORPAY_API_KEY
+        "order_id": order_id,
+        "payment_session_id": data["payment_session_id"],
+        "amount": 100
     })
 
 
-# ✅ Check Status (polling)
+# ✅ Check status
 def check_status(request, order_id):
-    status = PAYMENTS.get(order_id, {}).get("status", "pending")
-
+    status = PAYMENTS.get(order_id, "pending")
     return JsonResponse({"status": status})
 
 
 # ✅ Webhook
 @csrf_exempt
-def razorpay_webhook(request):
-    body = request.body
-    signature = request.headers.get("X-Razorpay-Signature")
+def cashfree_webhook(request):
+    import json
+    payload = json.loads(request.body)
 
-    expected = hmac.new(
-        bytes(settings.RAZORPAY_WEBHOOK_SECRET, "utf-8"),
-        body,
-        hashlib.sha256
-    ).hexdigest()
+    order_id = payload["data"]["order"]["order_id"]
+    status = payload["data"]["payment"]["payment_status"]
 
-    if not hmac.compare_digest(expected, signature):
-        return HttpResponse(status=400)
+    if status == "SUCCESS":
+        PAYMENTS[order_id] = "success"
+    elif status == "FAILED":
+        PAYMENTS[order_id] = "failed"
 
-    payload = json.loads(body)
-    event = payload.get("event")
-
-    if event == "payment.captured":
-        order_id = payload["payload"]["payment"]["entity"]["order_id"]
-
-        if order_id in PAYMENTS:
-            PAYMENTS[order_id]["status"] = "success"
-
-    elif event == "payment.failed":
-        order_id = payload["payload"]["payment"]["entity"]["order_id"]
-
-        if order_id in PAYMENTS:
-            PAYMENTS[order_id]["status"] = "failed"
-
-    return HttpResponse(status=200)
+    return JsonResponse({"ok": True})
