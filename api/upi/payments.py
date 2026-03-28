@@ -21,25 +21,30 @@ def create_complete_payment(request):
     """
     Complete payment flow: Create order and UPI session in one API call
     """
+    # UPI app mapping for response
+    UPI_APP_MAPPING = {
+        'gpay': 'gpay',
+        'phonepe': 'phonepe',
+        'paytm': 'paytm',
+        'bhim': 'bhim',
+        'web': 'web'
+    }
+    
     try:
-        # Parse request data
+        # Parse and validate request data
         data = json.loads(request.body)
         
-        # Extract values from request with validation
-        amount = data.get('amount')
-        customer_phone = data.get('customer_phone')
-        customer_email = data.get('customer_email')
-        customer_name = data.get('customer_name', '')
+        # Extract and validate required fields
+        required_fields = ['amount', 'customer_phone']
+        missing_fields = [field for field in required_fields if not data.get(field)]
+        if missing_fields:
+            return JsonResponse({
+                "error": f"Required fields missing: {', '.join(missing_fields)}"
+            }, status=400)
         
-        # Validate required fields
-        if not amount:
-            return JsonResponse({"error": "amount is required"}, status=400)
-        if not customer_phone:
-            return JsonResponse({"error": "customer_phone is required"}, status=400)
-        
-        # Validate amount is numeric and positive
+        # Validate amount
         try:
-            amount = float(amount)
+            amount = float(data['amount'])
             if amount <= 0:
                 raise ValueError("Amount must be positive")
         except (ValueError, TypeError):
@@ -47,30 +52,29 @@ def create_complete_payment(request):
                 "error": "Invalid amount. Must be a positive number"
             }, status=400)
         
-        # Validate phone number format
-        phone_str = str(customer_phone).strip()
+        # Validate phone number
+        phone_str = str(data['customer_phone']).strip()
         if not phone_str.isdigit() or len(phone_str) < 10:
             return JsonResponse({
                 "error": "Invalid phone number. Must be at least 10 digits"
             }, status=400)
         
+        # Get app preference (default to None if not specified)
+        preferred_app = data.get('app', '').lower().strip()
+        
         # Step 1: Create Order with Cashfree
-        logger.info(f"Creating order for customer: {customer_phone}")
+        logger.info(f"Creating order for customer: {phone_str}")
         
         # Generate unique order ID
         order_id = f"ORD_{uuid.uuid4().hex[:12].upper()}"
         
-        # Prepare customer details
+        # Prepare customer details (optimized)
         customer_details = {
-            "customer_id": str(customer_phone),
-            "customer_phone": phone_str
+            "customer_id": phone_str,
+            "customer_phone": phone_str,
+            **({} if not data.get('customer_email') else {"customer_email": data['customer_email']}),
+            **({} if not data.get('customer_name') else {"customer_name": data['customer_name']})
         }
-        
-        # Add optional customer details
-        if customer_email:
-            customer_details["customer_email"] = customer_email
-        if customer_name:
-            customer_details["customer_name"] = customer_name
         
         # Prepare order payload
         order_payload = {
@@ -84,13 +88,13 @@ def create_complete_payment(request):
             }
         }
         
-        # Add optional fields to order
+        # Add optional fields if present
         if data.get('order_note'):
-            order_payload["order_note"] = data.get('order_note')
+            order_payload["order_note"] = data['order_note']
         if data.get('order_tags'):
-            order_payload["order_tags"] = data.get('order_tags')
+            order_payload["order_tags"] = data['order_tags']
         
-        # Set up headers for Cashfree API
+        # Setup headers
         headers = {
             "x-client-id": settings.CASHFREE_APP_ID,
             "x-client-secret": settings.CASHFREE_SECRET_KEY,
@@ -98,7 +102,7 @@ def create_complete_payment(request):
             "Content-Type": "application/json"
         }
         
-        # Make order creation request
+        # Create order
         order_response = requests.post(
             f"{settings.CASHFREE_BASE_URL}/orders",
             json=order_payload,
@@ -106,87 +110,59 @@ def create_complete_payment(request):
             timeout=30
         )
         
-        # Handle order creation error
         if order_response.status_code != 200:
-            logger.error(f"Cashfree order API error {order_response.status_code}: {order_response.text}")
-            error_message = {}
-            try:
-                error_message = order_response.json() if order_response.text else {"message": "Unknown error"}
-            except:
-                error_message = {"message": order_response.text}
-            
-            return JsonResponse({
-                "error": "Failed to create order with payment gateway",
-                "step": "create_order",
-                "status_code": order_response.status_code,
-                "message": error_message
-            }, status=order_response.status_code)
+            logger.error(f"Cashfree order API error: {order_response.status_code} - {order_response.text}")
+            return _handle_api_error(order_response, "create_order")
         
         order_data = order_response.json()
         payment_session_id = order_data.get("payment_session_id")
         
         if not payment_session_id:
-            logger.error(f"No payment_session_id in order response: {order_data}")
+            logger.error(f"No payment_session_id in response: {order_data}")
             return JsonResponse({
                 "error": "Payment session ID not received from payment gateway",
                 "step": "create_order"
             }, status=500)
         
-        # Step 2: Create UPI Session using payment_session_id
+        # Step 2: Create UPI Session
         logger.info(f"Creating UPI session for payment_session_id: {payment_session_id}")
-        
-        upi_payload = {
-            "payment_session_id": payment_session_id,
-            "payment_method": {
-                "upi": {
-                    "channel": "link"
-                }
-            }
-        }
         
         upi_response = requests.post(
             f"{settings.CASHFREE_BASE_URL}/orders/sessions",
             headers=headers,
-            json=upi_payload,
+            json={
+                "payment_session_id": payment_session_id,
+                "payment_method": {"upi": {"channel": "link"}}
+            },
             timeout=30
         )
         
-        # Handle UPI session creation error
+        # Store basic order info
+        order_info = {
+            "status": "UPI_SESSION_CREATED" if upi_response.status_code in [200, 201] else "ORDER_CREATED_UPI_FAILED",
+            "amount": amount,
+            "customer_id": phone_str,
+            "customer_phone": phone_str,
+            "customer_email": data.get('customer_email'),
+            "customer_name": data.get('customer_name'),
+            "created_at": datetime.now().isoformat(),
+            "payment_session_id": payment_session_id,
+            "order_data": order_data
+        }
+        
         if upi_response.status_code not in [200, 201]:
-            logger.error(f"Cashfree UPI API error {upi_response.status_code}: {upi_response.text}")
-            error_details = {}
-            try:
-                error_details = upi_response.json() if upi_response.text else {"message": "Unknown error"}
-            except:
-                error_details = {"message": upi_response.text}
-            
-            # Store order info even if UPI session fails
-            PAYMENTS[order_id] = {
-                "status": "ORDER_CREATED_UPI_FAILED",
-                "amount": amount,
-                "customer_id": customer_phone,
-                "customer_phone": phone_str,
-                "customer_email": customer_email,
-                "customer_name": customer_name,
-                "created_at": datetime.now().isoformat(),
-                "payment_session_id": payment_session_id,
-                "order_data": order_data
-            }
-            
-            return JsonResponse({
-                "error": "Failed to create UPI session",
-                "step": "create_upi_session",
-                "status_code": upi_response.status_code,
-                "details": error_details,
-                "order_id": order_id,
-                "payment_session_id": payment_session_id
-            }, status=upi_response.status_code)
+            logger.error(f"UPI session error: {upi_response.status_code} - {upi_response.text}")
+            PAYMENTS[order_id] = order_info
+            return _handle_api_error(upi_response, "create_upi_session", order_id, payment_session_id)
         
         upi_data = upi_response.json()
+        order_info["upi_data"] = upi_data
+        PAYMENTS[order_id] = order_info
         
-        # Extract UPI links safely
+        # Extract UPI URLs
         payload_data = upi_data.get("data", {}).get("payload", {})
         
+        # Build UPI URLs dictionary
         upi_urls = {
             "bhim": payload_data.get("bhim"),
             "gpay": payload_data.get("gpay"),
@@ -196,53 +172,68 @@ def create_complete_payment(request):
             "default": payload_data.get("default"),
         }
         
-        # Store complete order information
-        PAYMENTS[order_id] = {
-            "status": "UPI_SESSION_CREATED",
-            "amount": amount,
-            "customer_id": customer_phone,
-            "customer_phone": phone_str,
-            "customer_email": customer_email,
-            "customer_name": customer_name,
-            "created_at": datetime.now().isoformat(),
-            "payment_session_id": payment_session_id,
-            "order_data": order_data,
-            "upi_data": upi_data
-        }
+        # Determine which UPI URL to return based on app parameter
+        upi_url = None
+        payment_methods_available = {}
+        
+        if preferred_app and preferred_app in UPI_APP_MAPPING:
+            # Return only the specific app URL
+            upi_url = upi_urls.get(preferred_app)
+            if not upi_url:
+                logger.warning(f"Preferred app '{preferred_app}' not available, falling back to default")
+                upi_url = upi_urls.get("default")
+            
+            # Build available methods for response
+            payment_methods_available = {
+                app: upi_urls.get(app) is not None 
+                for app in UPI_APP_MAPPING.keys()
+            }
+        else:
+            # Return all URLs (backward compatibility)
+            upi_url = upi_urls.get("default") or next((url for url in upi_urls.values() if url), None)
+            payment_methods_available = {
+                "gpay": upi_urls.get("gpay") is not None,
+                "phonepe": upi_urls.get("phonepe") is not None,
+                "paytm": upi_urls.get("paytm") is not None,
+                "bhim": upi_urls.get("bhim") is not None,
+                "web": upi_urls.get("web") is not None
+            }
         
         logger.info(f"Complete payment flow successful for order: {order_id}")
         
-        # Return combined response
-        return JsonResponse({
+        # Build response
+        response_data = {
             "success": True,
             "order_id": order_id,
             "payment_session_id": payment_session_id,
             "payment_link": order_data.get("payment_link"),
             "amount": amount,
             "currency": order_payload["order_currency"],
-            "customer_id": customer_phone,
+            "customer_id": phone_str,
             "customer_phone": phone_str,
-            "customer_email": customer_email,
-            "customer_name": customer_name,
             "order_status": order_data.get("order_status", "PENDING"),
-            "upi_urls": upi_urls,
-            "payment_methods": {
-                "gpay": upi_urls.get("gpay") is not None,
-                "phonepe": upi_urls.get("phonepe") is not None,
-                "paytm": upi_urls.get("paytm") is not None,
-                "bhim": upi_urls.get("bhim") is not None
-            }
-        })
+            "payment_methods": payment_methods_available
+        }
         
-    except json.JSONDecodeError as e:
-        logger.error(f"Invalid JSON in request: {e}")
+        # Add upi_url if available
+        if upi_url:
+            response_data["upi_url"] = upi_url
+            response_data["selected_app"] = preferred_app if preferred_app else "default"
+        
+        # Add all upi_urls only if specifically requested or if no app specified
+        if not preferred_app or data.get('include_all_urls', False):
+            response_data["upi_urls"] = upi_urls
+        
+        return JsonResponse(response_data)
+        
+    except json.JSONDecodeError:
+        logger.error("Invalid JSON in request")
         return JsonResponse({"error": "Invalid JSON in request body"}, status=400)
         
     except requests.exceptions.RequestException as e:
         logger.error(f"Payment gateway communication error: {e}")
         return JsonResponse({
             "error": "Payment gateway communication error",
-            "step": "communication",
             "details": str(e) if settings.DEBUG else "Please try again later"
         }, status=503)
         
@@ -252,6 +243,29 @@ def create_complete_payment(request):
             "error": "Internal server error",
             "details": str(e) if settings.DEBUG else "Please contact support"
         }, status=500)
+
+
+def _handle_api_error(response, step, order_id=None, payment_session_id=None):
+    """Helper function to handle API errors consistently"""
+    error_message = {}
+    try:
+        error_message = response.json() if response.text else {"message": "Unknown error"}
+    except:
+        error_message = {"message": response.text or "Unknown error"}
+    
+    error_response = {
+        "error": f"Failed to {step.replace('_', ' ')}",
+        "step": step,
+        "status_code": response.status_code,
+        "message": error_message
+    }
+    
+    if order_id:
+        error_response["order_id"] = order_id
+    if payment_session_id:
+        error_response["payment_session_id"] = payment_session_id
+    
+    return JsonResponse(error_response, status=response.status_code)
 
 
 # Keep original endpoints for backward compatibility if needed
