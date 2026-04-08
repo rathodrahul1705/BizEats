@@ -3,6 +3,9 @@ from rest_framework import serializers
 from api.models import OfferDetail
 from api.serializers import RestaurantMasterSerializer
 from django.core.exceptions import ValidationError
+from api.models import OfferDetail, RestaurantMenu
+
+
 class OfferSerializer(serializers.ModelSerializer):
     restaurant_details = RestaurantMasterSerializer(source='restaurant', read_only=True)
     is_valid = serializers.BooleanField(read_only=True)
@@ -300,3 +303,17 @@ def validate_offer_payload(data, is_update=False, instance=None, user=None):
         raise ValidationError(errors)
 
     return True  # All validations passed
+
+
+class OfferMenuSerializer(serializers.ModelSerializer):
+    final_price = serializers.SerializerMethodField()
+
+    class Meta:
+        model = RestaurantMenu
+        fields = '__all__'
+
+    def get_final_price(self, obj):
+        if obj.discount_active == 1 and obj.discount_percent:
+            discount = (obj.item_price * obj.discount_percent) / 100
+            return round(obj.item_price - discount, 2)
+        return obj.item_price

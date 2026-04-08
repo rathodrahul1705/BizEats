@@ -540,3 +540,52 @@ def cashfree_webhook(request):
     except Exception as e:
         logger.error(f"Unexpected error in webhook: {e}", exc_info=True)
         return JsonResponse({"error": "Internal server error"}, status=500)
+
+
+import razorpay
+# from django.conf import settings
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework import status
+
+@api_view(['POST'])
+def create_upi_intent_payment(request):
+    try:
+        amount = request.data.get("amount")
+        order_id = request.data.get("order_id")
+        email = request.data.get("email")
+        contact = request.data.get("contact")
+
+        client = razorpay.Client(
+            auth=(settings.RAZORPAY_API_KEY, settings.RAZORPAY_API_SECRET)
+        )
+
+        payment_data = {
+            "amount": int(amount * 100),
+            "currency": "INR",
+            "order_id": order_id,
+            "email": email,
+            "contact": contact,
+            "method": "upi",
+            "ip": request.META.get('REMOTE_ADDR'),
+            "referer": request.META.get('HTTP_REFERER', ''),
+            "user_agent": request.META.get('HTTP_USER_AGENT'),
+            "description": "UPI Intent Payment",
+            "notes": {"platform": "EATOOR"},
+            "upi": {
+                "flow": "intent"
+            }
+        }
+
+        response = client.payment.createUpi(payment_data)
+
+        return Response({
+            "success": True,
+            "data": response
+        })
+
+    except Exception as e:
+        return Response({
+            "success": False,
+            "error": str(e)
+        }, status=status.HTTP_400_BAD_REQUEST)

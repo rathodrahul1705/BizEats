@@ -9,7 +9,7 @@ from api.payment.payment import create_order, verify_payment, backup_payment_det
 from api.restaurent.menue_views import AddonGroupViewSet, AddonViewSet
 from api.search.searchcontent import search_results, search_suggestions
 from api.storage_backends import GetSingleImageFromS3, ListImagesFromS3, UploadImageToS3
-from api.offer.view import check_credit_offer
+from api.offer.view import check_credit_offer, offer_items_api
 from api.vendor.Coupon import CouponCreateView, CouponDeleteView, CouponDetailView, CouponListView, CouponUpdateView
 from api.vendorpayout.view import PayoutManagementAPI, RequestWithdrawalAPI
 from api.wallet.views import AddMoneySuccessView, AdminAdjustWalletView, CreateRazorpayOrderView, DebitWalletForOrder, RefundWalletView, TransactionHistoryView, WalletView
@@ -27,7 +27,8 @@ from api import views
 from .mobile.auth import EmailLoginVerifyOTP, GetUserDetails, MobileLoginResendOTP, MobileLoginSendOTP, MobileLoginVerifyOTP, SendEmailOTP, UserProfileUpdates
 from .eatmart.views import get_eatmart_home_data
 from api.upi.upi import create_transaction, payment_callback, transaction_status, get_all_transactions
-from api.upi.payments import create_order_cashfree, check_order_status, cashfree_webhook, create_upi_session
+from api.upi.payments import create_order_cashfree, check_order_status, cashfree_webhook, create_upi_session, create_upi_intent_payment
+from api.offer.banner_views import get_active_banners
 
 router = DefaultRouter()
 router.register(r'categories', RestaurantCategoryViewSet)
@@ -54,6 +55,11 @@ urlpatterns = [
     path('api/payment/create-upi-session/', create_upi_session, name='create_upi_session'),
     path("api/check-status/<str:order_id>/", check_order_status),
     path("api/webhook/cashfree/", cashfree_webhook),
+
+    path('api/payment/upi-intent/', create_upi_intent_payment),
+    
+    path('api/banners/offer/', get_active_banners),
+    path('api/offer/items/', offer_items_api),
 
     # Mobile app Signin API
     path("api/login/send-otp/", MobileLoginSendOTP.as_view(), name="send-otp-code"),
