@@ -61,6 +61,8 @@ urlpatterns = [
     path('api/banners/offer/', get_active_banners),
     path('api/offer/items/', offer_items_api),
 
+    path('api/', include('api.offer_engine.offer_engine_urls')),
+
     # Mobile app Signin API
     path("api/login/send-otp/", MobileLoginSendOTP.as_view(), name="send-otp-code"),
     path("api/login/verify-otp/", MobileLoginVerifyOTP.as_view(), name="verify_otp"),
