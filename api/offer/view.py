@@ -151,6 +151,7 @@ def offer_items_api(request):
     bogo = request.GET.get('bogo')
     spice_level = request.GET.get('spice_level')
 
+
     # Filters
     if bogo == 'true':
         if bogo == 'true':
