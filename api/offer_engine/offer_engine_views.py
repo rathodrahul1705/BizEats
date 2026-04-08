@@ -76,7 +76,7 @@ def dynamic_offer_api(request):
         # =========================
 
         page = int(request.GET.get('page', 1))
-        limit = int(request.GET.get('limit', 10))
+        limit = int(request.GET.get('limit', 30))
 
         start = (page - 1) * limit
         end = start + limit
