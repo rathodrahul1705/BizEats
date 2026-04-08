@@ -20,6 +20,9 @@ def apply_offer_logic(queryset, offer_type):
     elif offer_type == "NEW":
         return queryset.order_by('-created_at')
 
+    elif offer_type == "ALL_OFFER":
+        return queryset.order_by('-created_at')
+    
     return queryset
 
 def is_banner_valid(banner):

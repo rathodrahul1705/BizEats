@@ -5,3 +5,4 @@ class OfferType:
     FREE_DELIVERY = "FREE_DELIVERY"
     TRENDING = "TRENDING"
     NEW = "NEW"
+    ALL_OFFER = "ALL_OFFER"
