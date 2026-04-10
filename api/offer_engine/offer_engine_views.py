@@ -28,6 +28,7 @@ def dynamic_offer_api(request):
         max_price = request.GET.get('max_price')
         restaurant_id = request.GET.get('restaurant_id')
         sort_by = request.GET.get('sort_by', 'item_price')
+        api_param = request.GET.get('api_param')
 
         queryset = RestaurantMenu.objects.filter(availability=True)
         logger.debug(f"Initial queryset count: {queryset.count()}")
