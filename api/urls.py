@@ -66,9 +66,9 @@ urlpatterns = [
 
 
     path('api/initiate/payment/', initiate_payment),
-    path('api/success/', payment_success),
-    path('api/failure/', payment_failure),
-    path('api/verify/', verify_payment_payu),
+    path('api/payment/success/', payment_success),
+    path('api/payment/failure/', payment_failure),
+    path('api/payment/verify/', verify_payment_payu),
 
     # Mobile app Signin API
     path("api/login/send-otp/", MobileLoginSendOTP.as_view(), name="send-otp-code"),

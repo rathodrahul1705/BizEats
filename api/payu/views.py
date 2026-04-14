@@ -9,23 +9,10 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 
-from .utils import generate_hash
+from .utils import create_payment_generate_hash, verify_payment_generate_hash
 
 
 # ✅ Logger setup
-logger = logging.getLogger(__name__)
-
-
-import uuid
-import requests
-import logging
-from django.conf import settings
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
-from rest_framework import status
-
-from .utils import generate_hash
-
 logger = logging.getLogger(__name__)
 
 
@@ -74,7 +61,7 @@ def initiate_payment(request):
 
         logger.debug(f"🔐 Hash params: {hash_params}")
 
-        hashh = generate_hash(hash_params, settings.PAYU_MERCHANT_SALT)
+        hashh = create_payment_generate_hash(hash_params, settings.PAYU_MERCHANT_SALT)
 
         logger.info(f"🔑 Hash generated successfully for txnid={txnid}")
 
@@ -141,7 +128,7 @@ def payment_success(request):
         logger.info(f"Payment SUCCESS callback received: {data}")
 
         # 🔥 Verify hash
-        is_valid = verify_hash(data)
+        is_valid = verify_payment_generate_hash(data)
 
         if not is_valid:
             logger.warning("Hash verification FAILED")
@@ -177,22 +164,32 @@ def payment_failure(request):
         logger.error(f"Failure callback error: {str(e)}")
         return Response({"error": "Callback error"}, status=500)
 
-
-# 🔍 4. VERIFY PAYMENT
 @api_view(['GET'])
 def verify_payment_payu(request):
+    txnid = request.GET.get("txnid")
+
+    if not txnid:
+        logger.warning("Verify Payment Failed | Missing txnid")
+        return Response({"error": "txnid required"}, status=400)
+
+    logger.info("Verify Payment Initiated", extra={"txnid": txnid})
+
     try:
-        txnid = request.GET.get("txnid")
-
-        if not txnid:
-            return Response({"error": "txnid required"}, status=400)
-
-        logger.info(f"Verifying payment | txnid={txnid}")
-
         command = "verify_payment"
-        hash_str = f"{settings.PAYU_MERCHANT_KEY}|{command}|{txnid}|{settings.PAYU_MERCHANT_SALT}"
-        hashh = hashlib.sha512(hash_str.encode()).hexdigest().lower()
 
+        # Step 1: Generate hash
+        hash_payload = {
+            "key": settings.PAYU_MERCHANT_KEY,
+            "txnid": txnid,
+            "command": command,
+        }
+
+        hashh = verify_payment_generate_hash(
+            hash_payload,
+            settings.PAYU_MERCHANT_SALT
+        )
+
+        # Step 2: Prepare request payload
         payload = {
             "key": settings.PAYU_MERCHANT_KEY,
             "command": command,
@@ -200,13 +197,72 @@ def verify_payment_payu(request):
             "hash": hashh
         }
 
-        url = "https://info.payu.in/merchant/postservice?form=2"
-        response = requests.post(url, data=payload)
+        url = f"{settings.PAYU_BASE_URL}/merchant/postservice?form=2"
 
-        logger.info(f"Verify API response: {response.text}")
+        logger.debug("PayU Verify Request", extra={
+            "txnid": txnid,
+            "url": url,
+            "payload_keys": list(payload.keys())  # avoid logging sensitive values
+        })
 
-        return Response(response.json(), status=200)
+        # Step 3: Call PayU API with timeout
+        response = requests.post(url, data=payload, timeout=10)
+
+        logger.info("PayU Verify Response Received", extra={
+            "txnid": txnid,
+            "status_code": response.status_code
+        })
+
+        # Step 4: Handle non-200 responses
+        if response.status_code != 200:
+            logger.error("PayU Verify API Failed", extra={
+                "txnid": txnid,
+                "status_code": response.status_code,
+                "response": response.text[:300]  # truncate large response
+            })
+            return Response({"error": "PayU API error"}, status=502)
+
+        # Step 5: Safe JSON parsing
+        try:
+            response_data = response.json()
+        except ValueError:
+            logger.error("Invalid JSON from PayU", extra={
+                "txnid": txnid,
+                "response": response.text[:300]
+            })
+            return Response({"error": "Invalid response from payment gateway"}, status=502)
+
+        # Step 6: Business validation (IMPORTANT)
+        if response_data.get("status") != 1:
+            logger.warning("Payment Verification Failed", extra={
+                "txnid": txnid,
+                "payu_status": response_data.get("status")
+            })
+            return Response({
+                "status": "failed",
+                "data": response_data
+            }, status=200)
+
+        logger.info("Payment Verified Successfully", extra={"txnid": txnid})
+
+        return Response({
+            "status": "success",
+            "data": response_data
+        }, status=200)
+
+    except requests.exceptions.Timeout:
+        logger.error("PayU Verify Timeout", extra={"txnid": txnid})
+        return Response({"error": "Gateway timeout"}, status=504)
+
+    except requests.exceptions.RequestException as e:
+        logger.error("PayU Request Exception", extra={
+            "txnid": txnid,
+            "error": str(e)
+        })
+        return Response({"error": "Payment verification failed"}, status=502)
 
     except Exception as e:
-        logger.error(f"Verify payment error: {str(e)}")
-        return Response({"error": "Verification failed"}, status=500)
+        logger.exception("Unexpected Verify Payment Error", extra={
+            "txnid": txnid
+        })
+        return Response({"error": "Internal server error"}, status=500)
