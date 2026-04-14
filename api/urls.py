@@ -6,7 +6,7 @@ from api.mobile.home import HomeKitchenList
 from api.notifications.notification_send import process_notification_queue, send_fcm_notification, send_order_received_notification
 from api.notifications.views import AssignTagCreateView, AssignTagListView, DeviceDeleteView, DeviceListView, DeviceRegisterView, NotificationMasterCreateView, NotificationMasterListView, NotificationQueueCreateView, NotificationQueueListView, RemoveDeviceToken, TagMasterCreateView, TagMasterListView
 from api.payment.payment import create_order, verify_payment, backup_payment_details
-from api.payu.views import initiate_payment, payment_failure, payment_success, verify_payment_payu
+from api.payu.views import initiate_payment, payment_failure, payment_method_details, payment_success, verify_payment_payu
 from api.restaurent.menue_views import AddonGroupViewSet, AddonViewSet
 from api.search.searchcontent import search_results, search_suggestions
 from api.storage_backends import GetSingleImageFromS3, ListImagesFromS3, UploadImageToS3
@@ -27,8 +27,6 @@ from .views import RestaurantCategoryViewSet, OfferViewSet, trigger_background_t
 from api import views
 from .mobile.auth import EmailLoginVerifyOTP, GetUserDetails, MobileLoginResendOTP, MobileLoginSendOTP, MobileLoginVerifyOTP, SendEmailOTP, UserProfileUpdates
 from .eatmart.views import get_eatmart_home_data
-from api.upi.upi import create_transaction, payment_callback, transaction_status, get_all_transactions
-from api.upi.payments import create_order_cashfree, check_order_status, cashfree_webhook, create_upi_session, create_upi_intent_payment
 from api.offer.banner_views import get_active_banners
 
 router = DefaultRouter()
@@ -45,30 +43,35 @@ addon_router.register(r'addons', AddonViewSet, basename='addon')
 urlpatterns = [
 
     # path('api/', include('your_api_urls')),
-
-    # UPI
-    path('api/payment/create/', create_transaction, name='create_transaction'),
-    path('api/payment/callback/', payment_callback, name='payment_callback'),
-    path('api/payment/status/<str:order_id>/', transaction_status, name='transaction_status'),
-    path('api/payment/transactions/', get_all_transactions, name='get_all_transactions'),
-
-    path("api/create-order/", create_order_cashfree),
-    path('api/payment/create-upi-session/', create_upi_session, name='create_upi_session'),
-    path("api/check-status/<str:order_id>/", check_order_status),
-    path("api/webhook/cashfree/", cashfree_webhook),
-
-    path('api/payment/upi-intent/', create_upi_intent_payment),
-    
     path('api/banners/offer/', get_active_banners),
     path('api/offer/items/', offer_items_api),
 
     path('api/', include('api.offer_engine.offer_engine_urls')),
 
 
+    # wallet Management start
+    path("api/wallet/", WalletView.as_view()),
+    path("api/wallet/create-order/", CreateRazorpayOrderView.as_view()),
+    path("api/wallet/add-money-success/", AddMoneySuccessView.as_view()),
+    path("api/wallet/debit/", DebitWalletForOrder.as_view()),
+    path("api/wallet/refund/", RefundWalletView.as_view()),
+    path("api/wallet/transactions/", TransactionHistoryView.as_view()),
+    path("api/wallet/admin-adjust/", AdminAdjustWalletView.as_view()),
+    # wallet Management end
+
+    #payU Payment start
     path('api/initiate/payment/', initiate_payment),
     path('api/payment/success/', payment_success),
     path('api/payment/failure/', payment_failure),
     path('api/payment/verify/', verify_payment_payu),
+    path('api/payment/methods/', payment_method_details),
+
+    path("api/restaurant/order/details/update/", PlaceOrderAPI.as_view(), name="restaurant-order-details-update"),
+    path('api/restaurant/order/create-order/', create_order, name='create_order'),
+    path('api/restaurant/order/verify-payment/', verify_payment, name='verify_payment'),
+
+    path('api/restaurant/order/backup-payment-details/', backup_payment_details, name='backup_payment_details'),
+    #payU Payment end
 
     # Mobile app Signin API
     path("api/login/send-otp/", MobileLoginSendOTP.as_view(), name="send-otp-code"),
@@ -104,8 +107,6 @@ urlpatterns = [
     ),
 
     # Noftifications api start
-
-
     path("api/tags/list/", TagMasterListView.as_view()),
     path("api/tags/create/", TagMasterCreateView.as_view()),
 
@@ -121,43 +122,23 @@ urlpatterns = [
     path("api/queue/prepare/", process_notification_queue),
 
     # test notification api
-
     path("api/notification/test/", send_fcm_notification),
     path("api/notification/order_notification/", send_order_received_notification),
-
     path('api/device/register/', DeviceRegisterView.as_view(), name='device-register'),
     path('api/device/list/', DeviceListView.as_view(), name='device-list'),
     path('api/device/delete/<int:pk>/', DeviceDeleteView.as_view(), name='device-delete'),
     path('api/device/remove/', RemoveDeviceToken.as_view(), name='device-remove'),
-    
     # Noftifications api end
 
 
-    # wallet Management start
-
-    path("api/wallet/", WalletView.as_view()),
-    path("api/wallet/create-order/", CreateRazorpayOrderView.as_view()),
-    path("api/wallet/add-money-success/", AddMoneySuccessView.as_view()),
-    path("api/wallet/debit/", DebitWalletForOrder.as_view()),
-    path("api/wallet/refund/", RefundWalletView.as_view()),
-    path("api/wallet/transactions/", TransactionHistoryView.as_view()),
-    path("api/wallet/admin-adjust/", AdminAdjustWalletView.as_view()),
-
-     # wallet Management end
-
-
      # Eatmart start
-
     path('api/eatoor/home/list/', get_eatmart_home_data, name='eatmart-home'),
-
     # Eatmart end
 
 
     # payment settlement start
-
     path('api/vendor/payouts/<str:restaurant_id>/', PayoutManagementAPI.as_view(), name='payout-management'),
     path('api/vendor/payouts/<str:restaurant_id>/withdraw/', RequestWithdrawalAPI.as_view(), name='request-withdrawal'),
-
      # payment settlement end
 
     path('api/offers/check/', check_credit_offer, name='check_credit_offer'),
@@ -232,11 +213,6 @@ urlpatterns = [
     path("api/user_address/delete/<int:pk>/", UserDeliveryAddressDeleteView.as_view(), name="delete_address"),
     path("api/addresses/list/", UserDeliveryAddressListCreateView.as_view(), name="address-list-create"),
     path("api/restaurant/order/details/", RestaurantOrderDetailsAPI.as_view(), name="restaurant-order-details"),
-    path("api/restaurant/order/details/update/", PlaceOrderAPI.as_view(), name="restaurant-order-details-update"),
-    
-    path('api/restaurant/order/create-order/', create_order, name='create_order'),
-    path('api/restaurant/order/verify-payment/', verify_payment, name='verify_payment'),
-    path('api/restaurant/order/backup-payment-details/', backup_payment_details, name='backup_payment_details'),
 
     path('api/order/track-order-details/', TrackOrder.as_view(), name='track_order_details'),
     path('api/restaurant/orders/details', RestaurantOrders.as_view(), name='restaurant_orders_details'),
