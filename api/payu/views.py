@@ -9,157 +9,260 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 
-from .utils import create_payment_generate_hash, verify_payment_generate_hash, verify_payment_update
+from api.models import Order
+
+from .utils import create_payment_generate_hash, order_create, verify_payment_generate_hash, verify_payment_update
 
 # ✅ Logger setup
 logger = logging.getLogger(__name__)
 
 
-@api_view(['GET'])
+# @api_view(['GET'])
+# def initiate_payment(request):
+#     """
+#     Initiate payment with PayU gateway
+#     """
+#     request_id = str(uuid.uuid4())[:8]
+    
+#     try:
+#         logger.info(f"[{request_id}] 🚀 Initiate payment API called from IP: {request.META.get('REMOTE_ADDR')}")
+
+#         # ✅ Get data from request
+#         amount = request.GET.get('amount')
+#         productinfo = request.GET.get('productinfo')
+#         firstname = request.GET.get('firstname')
+#         email = request.GET.get('email')
+#         phone = request.GET.get('phone')
+
+#         logger.debug(f"[{request_id}] 📥 Incoming params | amount={amount}, productinfo={productinfo}, firstname={firstname}, email={email}, phone={phone}")
+
+#         # ✅ Validation
+#         if not all([amount, productinfo, firstname, email, phone]):
+#             missing_params = []
+#             if not amount: missing_params.append('amount')
+#             if not productinfo: missing_params.append('productinfo')
+#             if not firstname: missing_params.append('firstname')
+#             if not email: missing_params.append('email')
+#             if not phone: missing_params.append('phone')
+            
+#             logger.warning(f"[{request_id}] ⚠️ Missing required parameters: {missing_params}")
+#             return Response({
+#                 "error": "Missing required parameters",
+#                 "missing": missing_params
+#             }, status=400)
+
+#         # ✅ Generate txnid
+#         txnid = str(uuid.uuid4())[:20]
+#         logger.info(f"[{request_id}] 🆔 Generated txnid: {txnid} for amount: {amount}")
+
+#         # ✅ URLs
+#         application_base_url = settings.REACT_APP_BASE_URL
+#         surl = f"{application_base_url}/api/payment/success/"
+#         furl = f"{application_base_url}/api/payment/failure/"
+
+#         logger.debug(f"[{request_id}] 🔗 Redirect URLs | surl={surl}, furl={furl}")
+
+#         # ✅ Hash params
+#         hash_params = {
+#             'key': settings.PAYU_MERCHANT_KEY,
+#             'txnid': txnid,
+#             'amount': amount,
+#             'productinfo': productinfo,
+#             'firstname': firstname,
+#             'email': email,
+#             'udf1': ''
+#         }
+
+#         logger.debug(f"[{request_id}] 🔐 Hash params prepared (key masked): key={settings.PAYU_MERCHANT_KEY[:6]}...")
+
+#         try:
+#             hashh = create_payment_generate_hash(hash_params, settings.PAYU_MERCHANT_SALT)
+#             logger.info(f"[{request_id}] 🔑 Hash generated successfully for txnid={txnid}")
+#         except Exception as hash_error:
+#             logger.error(f"[{request_id}] ❌ Hash generation failed: {str(hash_error)}")
+#             return Response({
+#                 "error": "Failed to generate payment hash"
+#             }, status=500)
+
+#         # ✅ Final PayU params
+#         api_params = {
+#             "key": settings.PAYU_MERCHANT_KEY,
+#             "txnid": txnid,
+#             "amount": amount,
+#             "productinfo": productinfo,
+#             "firstname": firstname,
+#             "lastname": "",
+#             "email": email,
+#             "phone": phone,
+#             "surl": surl,
+#             "furl": furl,
+#             "pg": "UPI",
+#             "bankcode": "INTENT",
+#             "txn_s2s_flow": "4",
+#             "hash": hashh,
+#             "udf1": "",
+#             "udf2": "",
+#             "udf3": "",
+#             "udf4": "",
+#             "udf5": ""
+#         }
+
+#         logger.debug(f"[{request_id}] 📤 PayU request payload prepared (hash masked): { {**api_params, 'hash': '***'} }")
+
+#         # ✅ PayU API URL
+#         endpoint = "_payment"
+#         base_url = settings.PAYU_BASE_URL
+#         url = f"{base_url}/{endpoint}"
+
+#         logger.info(f"[{request_id}] 🌐 Sending request to PayU | URL={url} | Timeout=30s")
+
+#         # ✅ Make POST request
+#         try:
+#             response = requests.post(url, data=api_params, timeout=30)
+#             logger.info(f"[{request_id}] 📡 PayU response received | status_code={response.status_code} | content_type={response.headers.get('content-type')}")
+#         except requests.exceptions.Timeout:
+#             logger.error(f"[{request_id}] ⏰ PayU request timeout after 30 seconds")
+#             return Response({
+#                 "error": "Payment gateway timeout"
+#             }, status=504)
+#         except requests.exceptions.ConnectionError:
+#             logger.error(f"[{request_id}] 🔌 Connection error to PayU gateway")
+#             return Response({
+#                 "error": "Cannot connect to payment gateway"
+#             }, status=502)
+#         except requests.exceptions.RequestException as req_error:
+#             logger.error(f"[{request_id}] 📡 Request exception: {str(req_error)}")
+#             return Response({
+#                 "error": "Payment gateway request failed"
+#             }, status=502)
+
+#         # Log response (trim large HTML)
+#         response_text_preview = response.text[:500] if response.text else "Empty response"
+#         logger.debug(f"[{request_id}] 📄 PayU response body preview: {response_text_preview}")
+
+#         # Parse response
+#         try:
+#             response_json = response.json()
+#             logger.info(f"[{request_id}] ✅ PayU response parsed successfully | Response keys: {list(response_json.keys())}")
+            
+#             # Check if PayU returned an error
+#             if response_json.get('status') == 0:
+#                 logger.warning(f"[{request_id}] ⚠️ PayU returned error status: {response_json.get('msg', 'Unknown error')}")
+#         except json.JSONDecodeError:
+#             logger.error(f"[{request_id}] ❌ Failed to parse PayU response as JSON")
+#             return Response({
+#                 "error": "Invalid response from payment gateway"
+#             }, status=502)
+        
+#         return Response({
+#             "status": "success",
+#             "payu_response": response_json,
+#             "txnid": txnid
+#         }, status=200)
+
+#     except Exception as e:
+#         logger.exception(f"[{request_id}] ❌ Initiate payment failed with unexpected exception: {str(e)}")
+#         return Response({
+#             "error": "Something went wrong",
+#             "details": str(e) if settings.DEBUG else "Internal server error"
+#         }, status=500)
+
+
+@api_view(['POST'])
 def initiate_payment(request):
     """
     Initiate payment with PayU gateway
-    """
-    request_id = str(uuid.uuid4())[:8]
-    
+    """    
     try:
-        logger.info(f"[{request_id}] 🚀 Initiate payment API called from IP: {request.META.get('REMOTE_ADDR')}")
-
-        # ✅ Get data from request
-        amount = request.GET.get('amount')
-        productinfo = request.GET.get('productinfo')
-        firstname = request.GET.get('firstname')
-        email = request.GET.get('email')
-        phone = request.GET.get('phone')
-
-        logger.debug(f"[{request_id}] 📥 Incoming params | amount={amount}, productinfo={productinfo}, firstname={firstname}, email={email}, phone={phone}")
-
-        # ✅ Validation
+        data = request.data
+        
+        # ✅ Extract required fields
+        amount = data.get('amount')
+        productinfo = data.get('productinfo')
+        firstname = data.get('firstname')
+        email = data.get('email')
+        phone = data.get('phone')
+        
+        # ✅ Validate payment fields
         if not all([amount, productinfo, firstname, email, phone]):
-            missing_params = []
-            if not amount: missing_params.append('amount')
-            if not productinfo: missing_params.append('productinfo')
-            if not firstname: missing_params.append('firstname')
-            if not email: missing_params.append('email')
-            if not phone: missing_params.append('phone')
-            
-            logger.warning(f"[{request_id}] ⚠️ Missing required parameters: {missing_params}")
-            return Response({
-                "error": "Missing required parameters",
-                "missing": missing_params
-            }, status=400)
-
+            missing = [f for f in ['amount', 'productinfo', 'firstname', 'email', 'phone'] if not data.get(f)]
+            return Response({"error": "Missing required parameters", "missing": missing}, status=400)
+        
+        # ✅ Validate order fields
+        required_order_fields = ['user_id', 'restaurant_id', 'delivery_address_id', 'subtotal', 'total_amount']
+        missing_order = [f for f in required_order_fields if not data.get(f)]
+        if missing_order:
+            return Response({"error": "Missing order parameters", "missing": missing_order}, status=400)
+        
+        # ✅ Create order
+        order_result = order_create(data)
+        
+        if not order_result.get('success'):
+            return Response({"error": "Failed to create order", "details": order_result.get('error')}, status=400)
+        
+        order_id = order_result['order_id']
+        order_number = order_result['order_number']
+        
         # ✅ Generate txnid
-        txnid = str(uuid.uuid4())[:20]
-        logger.info(f"[{request_id}] 🆔 Generated txnid: {txnid} for amount: {amount}")
-
-        # ✅ URLs
+        txnid = f"ORD{order_id}_{uuid.uuid4().hex[:8]}"
+        
+        # ✅ Prepare hash params
         application_base_url = settings.REACT_APP_BASE_URL
-        surl = f"{application_base_url}/api/payment/success/"
-        furl = f"{application_base_url}/api/payment/failure/"
-
-        logger.debug(f"[{request_id}] 🔗 Redirect URLs | surl={surl}, furl={furl}")
-
-        # ✅ Hash params
         hash_params = {
             'key': settings.PAYU_MERCHANT_KEY,
             'txnid': txnid,
-            'amount': amount,
+            'amount': str(amount),
             'productinfo': productinfo,
             'firstname': firstname,
             'email': email,
-            'udf1': ''
+            'udf1': str(order_id),
+            'udf2': order_number,
+            'udf3': str(data.get('user_id')),
+            'udf4': data.get('payment_gateway', 'UPI'),
+            'udf5': ''
         }
+        
+        hashh = create_payment_generate_hash(hash_params, settings.PAYU_MERCHANT_SALT)
 
-        logger.debug(f"[{request_id}] 🔐 Hash params prepared (key masked): key={settings.PAYU_MERCHANT_KEY[:6]}...")
-
-        try:
-            hashh = create_payment_generate_hash(hash_params, settings.PAYU_MERCHANT_SALT)
-            logger.info(f"[{request_id}] 🔑 Hash generated successfully for txnid={txnid}")
-        except Exception as hash_error:
-            logger.error(f"[{request_id}] ❌ Hash generation failed: {str(hash_error)}")
-            return Response({
-                "error": "Failed to generate payment hash"
-            }, status=500)
-
-        # ✅ Final PayU params
+        # ✅ Prepare PayU request
         api_params = {
             "key": settings.PAYU_MERCHANT_KEY,
             "txnid": txnid,
-            "amount": amount,
+            "amount": str(amount),
             "productinfo": productinfo,
             "firstname": firstname,
             "lastname": "",
             "email": email,
-            "phone": phone,
-            "surl": surl,
-            "furl": furl,
+            "phone": str(phone),
+            "surl": f"{application_base_url}/api/payment/success/",
+            "furl": f"{application_base_url}/api/payment/failure/",
             "pg": "UPI",
             "bankcode": "INTENT",
             "txn_s2s_flow": "4",
             "hash": hashh,
-            "udf1": "",
-            "udf2": "",
-            "udf3": "",
-            "udf4": "",
+            "udf1": str(order_id),
+            "udf2": order_number,
+            "udf3": str(data.get('user_id')),
+            "udf4": data.get('payment_gateway', 'UPI'),
             "udf5": ""
         }
+        
+        # ✅ Send request to PayU
+        url = f"{settings.PAYU_BASE_URL}/_payment"
+        response = requests.post(url, data=api_params, timeout=30)
+        response_json = response.json()
 
-        logger.debug(f"[{request_id}] 📤 PayU request payload prepared (hash masked): { {**api_params, 'hash': '***'} }")
-
-        # ✅ PayU API URL
-        endpoint = "_payment"
-        base_url = settings.PAYU_BASE_URL
-        url = f"{base_url}/{endpoint}"
-
-        logger.info(f"[{request_id}] 🌐 Sending request to PayU | URL={url} | Timeout=30s")
-
-        # ✅ Make POST request
-        try:
-            response = requests.post(url, data=api_params, timeout=30)
-            logger.info(f"[{request_id}] 📡 PayU response received | status_code={response.status_code} | content_type={response.headers.get('content-type')}")
-        except requests.exceptions.Timeout:
-            logger.error(f"[{request_id}] ⏰ PayU request timeout after 30 seconds")
-            return Response({
-                "error": "Payment gateway timeout"
-            }, status=504)
-        except requests.exceptions.ConnectionError:
-            logger.error(f"[{request_id}] 🔌 Connection error to PayU gateway")
-            return Response({
-                "error": "Cannot connect to payment gateway"
-            }, status=502)
-        except requests.exceptions.RequestException as req_error:
-            logger.error(f"[{request_id}] 📡 Request exception: {str(req_error)}")
-            return Response({
-                "error": "Payment gateway request failed"
-            }, status=502)
-
-        # Log response (trim large HTML)
-        response_text_preview = response.text[:500] if response.text else "Empty response"
-        logger.debug(f"[{request_id}] 📄 PayU response body preview: {response_text_preview}")
-
-        # Parse response
-        try:
-            response_json = response.json()
-            logger.info(f"[{request_id}] ✅ PayU response parsed successfully | Response keys: {list(response_json.keys())}")
-            
-            # Check if PayU returned an error
-            if response_json.get('status') == 0:
-                logger.warning(f"[{request_id}] ⚠️ PayU returned error status: {response_json.get('msg', 'Unknown error')}")
-        except json.JSONDecodeError:
-            logger.error(f"[{request_id}] ❌ Failed to parse PayU response as JSON")
-            return Response({
-                "error": "Invalid response from payment gateway"
-            }, status=502)
-
+        # ✅ Return response
         return Response({
             "status": "success",
-            "payu_response": response_json,
-            "txnid": txnid
+            "order_id": order_id,
+            "order_number": order_number,
+            "txnid": txnid,
+            "amount": amount,
+            "payu_response": response_json
         }, status=200)
-
+        
     except Exception as e:
-        logger.exception(f"[{request_id}] ❌ Initiate payment failed with unexpected exception: {str(e)}")
         return Response({
             "error": "Something went wrong",
             "details": str(e) if settings.DEBUG else "Internal server error"

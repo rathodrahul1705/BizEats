@@ -1,9 +1,12 @@
+from datetime import datetime, timedelta
+from decimal import Decimal
 import hashlib
 import logging
+from anyio import current_time
 from django.utils.timezone import now
 from django.db import transaction
 from django.core.exceptions import ObjectDoesNotExist
-from api.models import Order, Payment
+from api.models import Order, OrderStatusLog, Payment
 
 # ✅ Logger setup
 logger = logging.getLogger(__name__)
@@ -279,3 +282,100 @@ def verify_payment_update(response_data, payment_method, order_id):
             "success": False,
             "error": str(e)
         }
+
+def order_create(data):
+    """
+    Create Order with proper logging and calculations
+    """
+
+    try:
+        logger.info("Order creation started for user_id=%s", data.get("user_id"))
+
+        with transaction.atomic():
+
+            # ✅ Calculate totals
+            subtotal = Decimal(str(data.get('subtotal', 0)))
+            tax = subtotal * Decimal('0.00')  # modify if tax logic needed
+            delivery_fee = Decimal(str(data.get('delivery_fee', 0)))
+            total = Decimal(str(data.get('total_amount', subtotal + delivery_fee + tax)))
+
+            logger.info(
+                "Order totals calculated | subtotal=%s | tax=%s | delivery_fee=%s | total=%s",
+                subtotal, tax, delivery_fee, total
+            )
+
+            # ✅ Time calculations
+            current_time = datetime.now()
+            future_time = current_time + timedelta(minutes=45)
+
+            # ✅ Create Order
+            order = Order.objects.create(
+                coupon_id=data.get('coupon_id'),
+                coupon_discount=data.get('discount_amount', 0),
+                user_id=data.get('user_id'),
+                restaurant_id=data.get('restaurant_id'),
+                order_number=generate_order_number(),
+                status=1,  # Pending
+                payment_status=data.get('payment_status'),
+                payment_method=data.get('payment_method'),
+                payment_type=data.get('payment_type'),
+                subtotal=subtotal,
+                delivery_fee=delivery_fee,
+                tax=tax,
+                delivery_date=future_time,
+                quantity= data.get('quantity'),
+                total_amount=total,
+                delivery_address_id=data.get('delivery_address_id'),
+                special_instructions=data.get('special_instructions'),
+                is_takeaway=data.get('is_takeaway', False),
+                preparation_time=20
+            )
+
+            logger.info(
+                "Order created successfully | OrderID=%s | OrderNo=%s | UserID=%s",
+                order.id, order.order_number, data.get("user_id")
+            )
+
+            # ✅ Create Order Status Log
+            OrderStatusLog.objects.create(
+                order=order,
+                status=1,
+                notes="Order Created successfully"
+            )
+
+            logger.info(
+                "OrderStatusLog created | OrderNo=%s | Status=Placed",
+                order.order_number
+            )
+
+            return {
+                "success": True,
+                "order_id": order.id,
+                "order_number": order.order_number
+            }
+
+    except Exception as e:
+        logger.exception(
+            "Order creation failed for user_id=%s | error=%s",
+            data.get("user_id"), str(e)
+        )
+        return {"success": False, "error": "Failed to create order"}
+    
+
+def generate_order_number():
+    from django.utils.timezone import now, timedelta
+    """Generate unique order number"""
+    today_str = now().strftime('%Y%m%d')
+    last_order = Order.objects.filter(
+        order_number__startswith=f'ORD{today_str}-'
+    ).order_by('-order_number').first()
+
+    if last_order:
+        last_seq = int(last_order.order_number.split('-')[-1])
+        new_seq = last_seq + 1
+    else:
+        new_seq = 1
+
+    order_no = f'ORD{today_str}-{new_seq:04d}'
+    logger.info("Generated order number: %s", order_no)
+    return order_no
