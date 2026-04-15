@@ -368,7 +368,7 @@ def payment_method_details(request):
                 "method_id": PAYMENT_METHOD_MAP["wallet"],
                 "id": "eatoor_money",
                 "name": "Eatoor Money",
-                "icon": "https://eatoorprod.s3.eu-north-1.amazonaws.com/logo/paymt_image.webp",
+                "icon": "https://eatoorprod.s3.eu-north-1.amazonaws.com/logo/eatoor_round_trimmed.png",
                 "balance": 0,
                 "is_active": True
             }
