@@ -284,91 +284,91 @@ def payment_method_details(request):
         # ================= RAW DATA ================= #
 
         upi_apps = [
-            {
-                "method_id": PAYMENT_METHOD_MAP["upi"],
-                "id": "paytm",
-                "name": "Paytm",
-                "icon": f"{BASE_ICON_URL}paytm.png",
-                "packageName": "net.one97.paytm",
-                "scheme": "paytm://upi/pay?",
-                "iosScheme": "paytm://upi/pay?",
-                "priority": 1,
-                "is_active": True
-            },
-            {
-                "method_id": PAYMENT_METHOD_MAP["upi"],
-                "id": "phonepe",
-                "name": "PhonePe",
-                "icon": f"{BASE_ICON_URL}phonepe.png",
-                "packageName": "com.phonepe.app",
-                "scheme": "phonepe://upi/pay?",
-                "iosScheme": "phonepe://upi/pay?",
-                "priority": 2,
-                "is_active": True
-            },
-            {
-                "method_id": PAYMENT_METHOD_MAP["upi"],
-                "id": "googlepay",
-                "name": "Google Pay",
-                "icon": f"{BASE_ICON_URL}gpay.png",
-                "packageName": "com.google.android.apps.nbu.paisa.user",
-                "scheme": "gpay://upi/pay?",
-                "iosScheme": "gpay://upi/pay?",
-                "priority": 3,
-                "is_active": True
-            },
-            {
-                "method_id": PAYMENT_METHOD_MAP["upi"],
-                "id": "cred",
-                "name": "CRED",
-                "icon": f"{BASE_ICON_URL}cred.png",
-                "packageName": "com.cred.club",
-                "scheme": "credpay://upi/pay?",
-                "iosScheme": "credpay://upi/pay?",
-                "priority": 4,
-                "is_active": True
-            },
-            {
-                "method_id": PAYMENT_METHOD_MAP["upi"],
-                "id": "bhim",
-                "name": "BHIM",
-                "icon": f"{BASE_ICON_URL}bhim.png",
-                "packageName": "in.org.npci.upiapp",
-                "scheme": "bhim://upi/pay?",
-                "iosScheme": "bhim://upi/pay?",
-                "priority": 5,
-                "is_active": True
-            },
-            {
-                "method_id": PAYMENT_METHOD_MAP["upi"],
-                "id": "whatsapp",
-                "name": "WhatsApp Pay",
-                "icon": f"{BASE_ICON_URL}whatsapp.png",
-                "packageName": "",
-                "scheme": "upi://pay?",
-                "iosScheme": "upi://pay?",
-                "priority": 6,
-                "is_active": True
-            },
-            {
-                "method_id": PAYMENT_METHOD_MAP["upi"],
-                "id": "amazonpay",
-                "name": "Amazon Pay",
-                "icon": f"{BASE_ICON_URL}amazonpay.png",
-                "packageName": "in.amazon.mShop.android.shopping",
-                "scheme": "amazonpay://upi/pay?",
-                "iosScheme": "amazonpay://upi/pay?",
-                "priority": 7,
-                "is_active": True
-            }
-        ]
+                {
+                    "method_id": PAYMENT_METHOD_MAP["upi"],
+                    "id": "paytm",
+                    "name": "Paytm",
+                    "icon": "https://eatoorprod.s3.eu-north-1.amazonaws.com/logo/paymt_image.webp",
+                    "packageName": "net.one97.paytm",
+                    "scheme": "paytm://upi/pay?",
+                    "iosScheme": "paytm://upi/pay?",
+                    "priority": 1,
+                    "is_active": True
+                },
+                {
+                    "method_id": PAYMENT_METHOD_MAP["upi"],
+                    "id": "phonepe",
+                    "name": "PhonePe",
+                    "icon": "https://eatoorprod.s3.eu-north-1.amazonaws.com/logo/phonepe.png",
+                    "packageName": "com.phonepe.app",
+                    "scheme": "phonepe://upi/pay?",
+                    "iosScheme": "phonepe://upi/pay?",
+                    "priority": 2,
+                    "is_active": True
+                },
+                {
+                    "method_id": PAYMENT_METHOD_MAP["upi"],
+                    "id": "googlepay",
+                    "name": "Google Pay",
+                    "icon": "https://eatoorprod.s3.eu-north-1.amazonaws.com/logo/googlepay.jpg",
+                    "packageName": "com.google.android.apps.nbu.paisa.user",
+                    "scheme": "gpay://upi/pay?",
+                    "iosScheme": "gpay://upi/pay?",
+                    "priority": 3,
+                    "is_active": True
+                },
+                {
+                    "method_id": PAYMENT_METHOD_MAP["upi"],
+                    "id": "cred",
+                    "name": "CRED",
+                    "icon": "https://eatoorprod.s3.eu-north-1.amazonaws.com/logo/credlogo.webp",
+                    "packageName": "com.cred.club",
+                    "scheme": "credpay://upi/pay?",
+                    "iosScheme": "credpay://upi/pay?",
+                    "priority": 4,
+                    "is_active": True
+                },
+                {
+                    "method_id": PAYMENT_METHOD_MAP["upi"],
+                    "id": "bhim",
+                    "name": "BHIM",
+                    "icon": "https://eatoorprod.s3.eu-north-1.amazonaws.com/logo/bhimupilogo.jpg",
+                    "packageName": "in.org.npci.upiapp",
+                    "scheme": "bhim://upi/pay?",
+                    "iosScheme": "bhim://upi/pay?",
+                    "priority": 5,
+                    "is_active": True
+                },
+                {
+                    "method_id": PAYMENT_METHOD_MAP["upi"],
+                    "id": "whatsapp",
+                    "name": "WhatsApp Pay",
+                    "icon": "https://eatoorprod.s3.eu-north-1.amazonaws.com/logo/whatsapppaylogo.png",
+                    "packageName": "",
+                    "scheme": "upi://pay?",
+                    "iosScheme": "upi://pay?",
+                    "priority": 6,
+                    "is_active": True
+                },
+                {
+                    "method_id": PAYMENT_METHOD_MAP["upi"],
+                    "id": "amazonpay",
+                    "name": "Amazon Pay",
+                    "icon": "https://eatoorprod.s3.eu-north-1.amazonaws.com/logo/amazonpaylogo.png",
+                    "packageName": "in.amazon.mShop.android.shopping",
+                    "scheme": "amazonpay://upi/pay?",
+                    "iosScheme": "amazonpay://upi/pay?",
+                    "priority": 7,
+                    "is_active": True
+                }
+            ]
 
         wallets = [
             {
                 "method_id": PAYMENT_METHOD_MAP["wallet"],
                 "id": "eatoor_money",
                 "name": "Eatoor Money",
-                "icon": f"{BASE_ICON_URL}wallet.png",
+                "icon": "https://eatoorprod.s3.eu-north-1.amazonaws.com/logo/paymt_image.webp",
                 "balance": 0,
                 "is_active": True
             }
@@ -376,7 +376,7 @@ def payment_method_details(request):
 
         netbanking = {
             "method_id": PAYMENT_METHOD_MAP["netbanking"],
-            "is_active": True,
+            "is_active": False,
             "icon": f"{BASE_ICON_URL}netbanking.png",
             "supported_banks": [
                 {"code": "HDFC", "name": "HDFC Bank"},
@@ -387,7 +387,7 @@ def payment_method_details(request):
         }
 
         cards = {
-            "is_active": True,
+            "is_active": False,
             "icon": f"{BASE_ICON_URL}card.png",
             "supported": [
                 {
