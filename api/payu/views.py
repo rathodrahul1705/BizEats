@@ -9,7 +9,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 
-from .utils import create_payment_generate_hash, verify_payment_generate_hash
+from .utils import create_payment_generate_hash, verify_payment_generate_hash, verify_payment_update
 
 
 # ✅ Logger setup
@@ -167,6 +167,8 @@ def payment_failure(request):
 @api_view(['GET'])
 def verify_payment_payu(request):
     txnid = request.GET.get("txnid")
+    payment_mathod = request.GET.get("payment_mathod")
+    order_id = request.GET.get("order_id")
 
     if not txnid:
         logger.warning("Verify Payment Failed | Missing txnid")
@@ -225,6 +227,7 @@ def verify_payment_payu(request):
         # Step 5: Safe JSON parsing
         try:
             response_data = response.json()
+            verify_payment_update(response_data,payment_mathod,order_id)
         except ValueError:
             logger.error("Invalid JSON from PayU", extra={
                 "txnid": txnid,
@@ -368,7 +371,7 @@ def payment_method_details(request):
                 "method_id": PAYMENT_METHOD_MAP["wallet"],
                 "id": "eatoor_money",
                 "name": "Eatoor Money",
-                "icon": "https://eatoorprod.s3.eu-north-1.amazonaws.com/logo/eatoor_round_trimmed.png",
+                "icon": "https://eatoorprod.s3.eu-north-1.amazonaws.com/logo/paymt_image.webp",
                 "balance": 0,
                 "is_active": True
             }
