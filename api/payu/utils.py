@@ -212,12 +212,9 @@ def verify_payment_update(response_data, payment_method, order_id):
                     "payment_method": payment_method,
                     "payment_type": 2,  # online
                     "status": 5,  # captured
-                    "transaction_id": mihpayid,
-                    "bank_reference": bank_ref,
                     "amount": payment_amount,
                     "currency": "INR",
                     "gateway_fee": gateway_fee,
-                    "net_amount": net_amount,
                     "captured_at": now(),
                     "notes": (
                         f"App: {app_name} | "
