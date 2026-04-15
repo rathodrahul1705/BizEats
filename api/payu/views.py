@@ -293,7 +293,7 @@ def payment_method_details(request):
                 "scheme": "paytm://upi/pay?",
                 "iosScheme": "paytm://upi/pay?",
                 "priority": 1,
-                "is_active": False
+                "is_active": True
             },
             {
                 "method_id": PAYMENT_METHOD_MAP["upi"],
@@ -376,7 +376,7 @@ def payment_method_details(request):
 
         netbanking = {
             "method_id": PAYMENT_METHOD_MAP["netbanking"],
-            "is_active": False,
+            "is_active": True,
             "icon": f"{BASE_ICON_URL}netbanking.png",
             "supported_banks": [
                 {"code": "HDFC", "name": "HDFC Bank"},
