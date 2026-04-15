@@ -205,7 +205,7 @@ def verify_payment_update(response_data, payment_method, order_id):
         
         try:
             payment_obj, created = Payment.objects.update_or_create(
-                txn_id=txn_id,  # 🔥 Important for idempotency
+                razorpay_payment_id=txn_id,  # 🔥 Important for idempotency
                 defaults={
                     "order": order,
                     "payment_gateway": 2,  # PayU
