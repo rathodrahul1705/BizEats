@@ -281,132 +281,161 @@ def payment_method_details(request):
             "wallet": 6,
         }
 
-        data = {
-            "upi_apps": [
-                {
-                    "method_id": PAYMENT_METHOD_MAP["upi"],
-                    "id": "paytm",
-                    "name": "Paytm",
-                    "icon": f"{BASE_ICON_URL}paytm.png",
-                    "packageName": "net.one97.paytm",
-                    "scheme": "paytm://upi/pay?",
-                    "iosScheme": "paytm://upi/pay?",
-                    "priority": 1,
-                    "is_active": True
-                },
-                {
-                    "method_id": PAYMENT_METHOD_MAP["upi"],
-                    "id": "phonepe",
-                    "name": "PhonePe",
-                    "icon": f"{BASE_ICON_URL}phonepe.png",
-                    "packageName": "com.phonepe.app",
-                    "scheme": "phonepe://upi/pay?",
-                    "iosScheme": "phonepe://upi/pay?",
-                    "priority": 2,
-                    "is_active": True
-                },
-                {
-                    "method_id": PAYMENT_METHOD_MAP["upi"],
-                    "id": "googlepay",
-                    "name": "Google Pay",
-                    "icon": f"{BASE_ICON_URL}gpay.png",
-                    "packageName": "com.google.android.apps.nbu.paisa.user",
-                    "scheme": "gpay://upi/pay?",
-                    "iosScheme": "gpay://upi/pay?",
-                    "priority": 3,
-                    "is_active": True
-                },
-                {
-                    "method_id": PAYMENT_METHOD_MAP["upi"],
-                    "id": "cred",
-                    "name": "CRED",
-                    "icon": f"{BASE_ICON_URL}cred.png",
-                    "packageName": "com.cred.club",
-                    "scheme": "credpay://upi/pay?",
-                    "iosScheme": "credpay://upi/pay?",
-                    "priority": 4,
-                    "is_active": True
-                },
-                {
-                    "method_id": PAYMENT_METHOD_MAP["upi"],
-                    "id": "bhim",
-                    "name": "BHIM",
-                    "icon": f"{BASE_ICON_URL}bhim.png",
-                    "packageName": "in.org.npci.upiapp",
-                    "scheme": "bhim://upi/pay?",
-                    "iosScheme": "bhim://upi/pay?",
-                    "priority": 5,
-                    "is_active": True
-                },
-                {
-                    "method_id": PAYMENT_METHOD_MAP["upi"],
-                    "id": "whatsapp",
-                    "name": "WhatsApp Pay",
-                    "icon": f"{BASE_ICON_URL}whatsapp.png",
-                    "packageName": "",
-                    "scheme": "upi://pay?",
-                    "iosScheme": "upi://pay?",
-                    "priority": 6,
-                    "is_active": True
-                },
-                {
-                    "method_id": PAYMENT_METHOD_MAP["upi"],
-                    "id": "amazonpay",
-                    "name": "Amazon Pay",
-                    "icon": f"{BASE_ICON_URL}amazonpay.png",
-                    "packageName": "in.amazon.mShop.android.shopping",
-                    "scheme": "amazonpay://upi/pay?",
-                    "iosScheme": "amazonpay://upi/pay?",
-                    "priority": 7,
-                    "is_active": False
-                }
-            ],
+        # ================= RAW DATA ================= #
 
-            "wallets": [
-                {
-                    "method_id": PAYMENT_METHOD_MAP["wallet"],
-                    "id": "eatoor_money",
-                    "name": "Eatoor Money",
-                    "icon": f"{BASE_ICON_URL}wallet.png",
-                    "balance": 0,
-                    "is_active": True
-                }
-            ],
-
-            "netbanking": {
-                "method_id": PAYMENT_METHOD_MAP["netbanking"],
-                "is_active": False,
-                "icon": f"{BASE_ICON_URL}netbanking.png",
-                "supported_banks": [
-                    {"code": "HDFC", "name": "HDFC Bank"},
-                    {"code": "ICICI", "name": "ICICI Bank"},
-                    {"code": "SBI", "name": "State Bank of India"},
-                    {"code": "AXIS", "name": "Axis Bank"}
-                ]
+        upi_apps = [
+            {
+                "method_id": PAYMENT_METHOD_MAP["upi"],
+                "id": "paytm",
+                "name": "Paytm",
+                "icon": f"{BASE_ICON_URL}paytm.png",
+                "packageName": "net.one97.paytm",
+                "scheme": "paytm://upi/pay?",
+                "iosScheme": "paytm://upi/pay?",
+                "priority": 1,
+                "is_active": False
             },
-
-            "cards": {
-                "is_active": False,
-                "icon": f"{BASE_ICON_URL}card.png",
-                "supported": [
-                    {
-                        "type": "credit_card",
-                        "method_id": PAYMENT_METHOD_MAP["credit_card"]
-                    },
-                    {
-                        "type": "debit_card",
-                        "method_id": PAYMENT_METHOD_MAP["debit_card"]
-                    }
-                ]
+            {
+                "method_id": PAYMENT_METHOD_MAP["upi"],
+                "id": "phonepe",
+                "name": "PhonePe",
+                "icon": f"{BASE_ICON_URL}phonepe.png",
+                "packageName": "com.phonepe.app",
+                "scheme": "phonepe://upi/pay?",
+                "iosScheme": "phonepe://upi/pay?",
+                "priority": 2,
+                "is_active": True
             },
-
-            "cod": {
-                "method_id": PAYMENT_METHOD_MAP["cod"],
-                "is_active": True,
-                "icon": f"{BASE_ICON_URL}cod.png",
-                "message": "Cash on Delivery available"
+            {
+                "method_id": PAYMENT_METHOD_MAP["upi"],
+                "id": "googlepay",
+                "name": "Google Pay",
+                "icon": f"{BASE_ICON_URL}gpay.png",
+                "packageName": "com.google.android.apps.nbu.paisa.user",
+                "scheme": "gpay://upi/pay?",
+                "iosScheme": "gpay://upi/pay?",
+                "priority": 3,
+                "is_active": True
+            },
+            {
+                "method_id": PAYMENT_METHOD_MAP["upi"],
+                "id": "cred",
+                "name": "CRED",
+                "icon": f"{BASE_ICON_URL}cred.png",
+                "packageName": "com.cred.club",
+                "scheme": "credpay://upi/pay?",
+                "iosScheme": "credpay://upi/pay?",
+                "priority": 4,
+                "is_active": True
+            },
+            {
+                "method_id": PAYMENT_METHOD_MAP["upi"],
+                "id": "bhim",
+                "name": "BHIM",
+                "icon": f"{BASE_ICON_URL}bhim.png",
+                "packageName": "in.org.npci.upiapp",
+                "scheme": "bhim://upi/pay?",
+                "iosScheme": "bhim://upi/pay?",
+                "priority": 5,
+                "is_active": True
+            },
+            {
+                "method_id": PAYMENT_METHOD_MAP["upi"],
+                "id": "whatsapp",
+                "name": "WhatsApp Pay",
+                "icon": f"{BASE_ICON_URL}whatsapp.png",
+                "packageName": "",
+                "scheme": "upi://pay?",
+                "iosScheme": "upi://pay?",
+                "priority": 6,
+                "is_active": True
+            },
+            {
+                "method_id": PAYMENT_METHOD_MAP["upi"],
+                "id": "amazonpay",
+                "name": "Amazon Pay",
+                "icon": f"{BASE_ICON_URL}amazonpay.png",
+                "packageName": "in.amazon.mShop.android.shopping",
+                "scheme": "amazonpay://upi/pay?",
+                "iosScheme": "amazonpay://upi/pay?",
+                "priority": 7,
+                "is_active": True
             }
+        ]
+
+        wallets = [
+            {
+                "method_id": PAYMENT_METHOD_MAP["wallet"],
+                "id": "eatoor_money",
+                "name": "Eatoor Money",
+                "icon": f"{BASE_ICON_URL}wallet.png",
+                "balance": 0,
+                "is_active": True
+            }
+        ]
+
+        netbanking = {
+            "method_id": PAYMENT_METHOD_MAP["netbanking"],
+            "is_active": False,
+            "icon": f"{BASE_ICON_URL}netbanking.png",
+            "supported_banks": [
+                {"code": "HDFC", "name": "HDFC Bank"},
+                {"code": "ICICI", "name": "ICICI Bank"},
+                {"code": "SBI", "name": "State Bank of India"},
+                {"code": "AXIS", "name": "Axis Bank"}
+            ]
         }
+
+        cards = {
+            "is_active": True,
+            "icon": f"{BASE_ICON_URL}card.png",
+            "supported": [
+                {
+                    "type": "credit_card",
+                    "method_id": PAYMENT_METHOD_MAP["credit_card"]
+                },
+                {
+                    "type": "debit_card",
+                    "method_id": PAYMENT_METHOD_MAP["debit_card"]
+                }
+            ]
+        }
+
+        cod = {
+            "method_id": PAYMENT_METHOD_MAP["cod"],
+            "is_active": True,
+            "icon": f"{BASE_ICON_URL}cod.png",
+            "message": "Cash on Delivery available"
+        }
+
+        # ================= PROCESSING ================= #
+
+        # Filter & sort UPI apps
+        active_upi_apps = sorted(
+            [app for app in upi_apps if app.get("is_active")],
+            key=lambda x: x.get("priority", 999)
+        )
+
+        # Filter wallets
+        active_wallets = [w for w in wallets if w.get("is_active")]
+
+        # Build response dynamically
+        data = {}
+
+        if active_upi_apps:
+            data["upi_apps"] = active_upi_apps
+
+        if active_wallets:
+            data["wallets"] = active_wallets
+
+        if netbanking.get("is_active"):
+            data["netbanking"] = netbanking
+
+        if cards.get("is_active"):
+            data["cards"] = cards
+
+        if cod.get("is_active"):
+            data["cod"] = cod
 
         return Response({
             "success": True,
@@ -416,6 +445,9 @@ def payment_method_details(request):
     except Exception as e:
         logger.exception("Payment Method API Error")
         return Response(
-            {"success": False, "error": "Internal server error"},
+            {
+                "success": False,
+                "error": "Internal server error"
+            },
             status=500
         )
