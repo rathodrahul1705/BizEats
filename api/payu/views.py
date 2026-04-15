@@ -358,7 +358,7 @@ def payment_method_details(request):
                     "scheme": "amazonpay://upi/pay?",
                     "iosScheme": "amazonpay://upi/pay?",
                     "priority": 7,
-                    "is_active": True
+                    "is_active": False
                 }
             ],
 
@@ -375,7 +375,7 @@ def payment_method_details(request):
 
             "netbanking": {
                 "method_id": PAYMENT_METHOD_MAP["netbanking"],
-                "is_active": True,
+                "is_active": False,
                 "icon": f"{BASE_ICON_URL}netbanking.png",
                 "supported_banks": [
                     {"code": "HDFC", "name": "HDFC Bank"},
@@ -386,7 +386,7 @@ def payment_method_details(request):
             },
 
             "cards": {
-                "is_active": True,
+                "is_active": False,
                 "icon": f"{BASE_ICON_URL}card.png",
                 "supported": [
                     {
