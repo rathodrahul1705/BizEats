@@ -921,26 +921,50 @@ class PlaceOrderAPI(APIView):
                 current_time = datetime.now()
                 future_time = current_time + timedelta(minutes=45)
 
-                order = Order.objects.create(
-                    coupon_id=coupon_id,
-                    coupon_discount=data['discount_amount'],
-                    user_id=data['user_id'],
-                    restaurant_id=data['restaurant_id'],
-                    order_number=self._generate_order_number(),
-                    status=1,
-                    payment_status=data['payment_status'],
-                    payment_method=data['payment_method'],
-                    payment_type=data['payment_type'],
-                    subtotal=subtotal,
-                    delivery_fee=delivery_fee,
-                    tax=tax,
-                    delivery_date=future_time,
-                    quantity=1,
-                    total_amount=total,
-                    delivery_address_id=data['delivery_address_id'],
-                    special_instructions=data.get('special_instructions'),
-                    is_takeaway=data['is_takeaway'],
-                    preparation_time=self._estimate_prep_time(cart_items)
+                # order = Order.objects.create(
+                #     coupon_id=coupon_id,
+                #     coupon_discount=data['discount_amount'],
+                #     user_id=data['user_id'],
+                #     restaurant_id=data['restaurant_id'],
+                #     order_number=self._generate_order_number(),
+                #     status=1,
+                #     payment_status=data['payment_status'],
+                #     payment_method=data['payment_method'],
+                #     payment_type=data['payment_type'],
+                #     subtotal=subtotal,
+                #     delivery_fee=delivery_fee,
+                #     tax=tax,
+                #     delivery_date=future_time,
+                #     quantity=1,
+                #     total_amount=total,
+                #     delivery_address_id=data['delivery_address_id'],
+                #     special_instructions=data.get('special_instructions'),
+                #     is_takeaway=data['is_takeaway'],
+                #     preparation_time=self._estimate_prep_time(cart_items)
+                # )
+
+                order, created = Order.objects.update_or_create(
+                    order_number=data.get('order_number', 0),
+                    defaults={
+                        "coupon_id": coupon_id,
+                        "coupon_discount": data.get('discount_amount', 0),
+                        "user_id": data.get('user_id'),
+                        "restaurant_id": data.get('restaurant_id'),
+                        "status": 1,
+                        "payment_status": data.get('payment_status'),
+                        "payment_method": data.get('payment_method'),
+                        "payment_type": data.get('payment_type'),
+                        "subtotal": subtotal,
+                        "delivery_fee": delivery_fee,
+                        "tax": tax,
+                        "delivery_date": future_time,
+                        "quantity": 1,
+                        "total_amount": total,
+                        "delivery_address_id": data.get('delivery_address_id'),
+                        "special_instructions": data.get('special_instructions'),
+                        "is_takeaway": data.get('is_takeaway', False),
+                        "preparation_time": self._estimate_prep_time(cart_items),
+                    }
                 )
             
                 logger.info("Order created successfully: OrderID=%s, OrderNo=%s",
