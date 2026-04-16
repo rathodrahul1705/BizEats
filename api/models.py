@@ -392,7 +392,8 @@ class Order(models.Model):
         (5, 'On the Way'),
         (6, 'Delivered'),
         (7, 'Cancelled'),
-        (8, 'Refunded')
+        (8, 'Refunded'),
+        (9, 'In Progress')
     )
 
     PAYMENT_STATUS_CHOICES = (

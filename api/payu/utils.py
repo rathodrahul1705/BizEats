@@ -312,7 +312,7 @@ def order_create(data):
                 user_id=data.get('user_id'),
                 restaurant_id=data.get('restaurant_id'),
                 order_number=generate_order_number(),
-                status=1,  # Pending
+                status=9,  # Pending
                 payment_status=data.get('payment_status'),
                 payment_method=data.get('payment_method'),
                 payment_type=data.get('payment_type'),

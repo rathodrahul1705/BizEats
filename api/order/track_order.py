@@ -606,7 +606,7 @@ class GetActiveOrders(APIView):
             if not user:
                 return Response({"status": "error", "message": "User not found"}, status=status.HTTP_404_NOT_FOUND)
 
-            orders = Order.objects.filter(user_id=user_id).exclude(status__in=[6, 7, 8])
+            orders = Order.objects.filter(user_id=user_id).exclude(status__in=[6, 7, 8, 9])
             data = []
             for order in orders:
                 order_data = {
