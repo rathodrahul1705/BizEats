@@ -23,40 +23,60 @@ def initiate_payment(request):
     Initiate payment with PayU gateway
     """    
     try:
+        logger.info("Initiating payment request")
+
         data = request.data
-        
+        logger.debug(f"Incoming request data: {data}")
+
         # ✅ Extract required fields
         amount = data.get('amount')
         productinfo = data.get('productinfo')
         firstname = data.get('firstname')
         email = data.get('email')
         phone = data.get('phone')
-        
+
         # ✅ Validate payment fields
         if not all([amount, productinfo, firstname, email, phone]):
             missing = [f for f in ['amount', 'productinfo', 'firstname', 'email', 'phone'] if not data.get(f)]
-            return Response({"error": "Missing required parameters", "missing": missing}, status=400)
-        
+            logger.warning(f"Missing payment parameters: {missing}")
+            return Response(
+                {"error": "Missing required parameters", "missing": missing},
+                status=400
+            )
+
         # ✅ Validate order fields
         required_order_fields = ['user_id', 'restaurant_id', 'delivery_address_id', 'subtotal', 'total_amount']
         missing_order = [f for f in required_order_fields if not data.get(f)]
         if missing_order:
-            return Response({"error": "Missing order parameters", "missing": missing_order}, status=400)
-        
+            logger.warning(f"Missing order parameters: {missing_order}")
+            return Response(
+                {"error": "Missing order parameters", "missing": missing_order},
+                status=400
+            )
+
         # ✅ Create order
+        logger.info("Creating order...")
         order_result = order_create(data)
-        
+
         if not order_result.get('success'):
-            return Response({"error": "Failed to create order", "details": order_result.get('error')}, status=400)
-        
+            logger.error(f"Order creation failed: {order_result}")
+            return Response(
+                {"error": "Failed to create order", "details": order_result.get('error')},
+                status=400
+            )
+
         order_id = order_result['order_id']
         order_number = order_result['order_number']
-        
+
+        logger.info(f"Order created successfully: order_id={order_id}, order_number={order_number}")
+
         # ✅ Generate txnid
         txnid = f"ORD{order_id}_{uuid.uuid4().hex[:8]}"
-        
+        logger.debug(f"Generated txnid: {txnid}")
+
         # ✅ Prepare hash params
         application_base_url = settings.REACT_APP_BASE_URL
+
         hash_params = {
             'key': settings.PAYU_MERCHANT_KEY,
             'txnid': txnid,
@@ -70,11 +90,13 @@ def initiate_payment(request):
             'udf4': data.get('payment_gateway', 'UPI'),
             'udf5': ''
         }
-        
+
+        logger.debug(f"Hash params: {hash_params}")
+
         hashh = create_payment_generate_hash(hash_params, settings.PAYU_MERCHANT_SALT)
+        logger.debug(f"Generated hash: {hashh}")
 
         # ✅ Prepare PayU request
-
         api_params = {
             "key": settings.PAYU_MERCHANT_KEY,
             "txnid": txnid,
@@ -96,15 +118,26 @@ def initiate_payment(request):
             "udf5": ""
         }
 
-        if data.get('payment_mehotd_type') == "VPA":
+        # ⚠️ Fix typo: payment_mehotd_type → payment_method_type
+        if data.get('payment_method_type') == "VPA":
             api_params["vpa"] = data.get('vpa')
             api_params["bankcode"] = "UPI"
+            logger.info(f"Using VPA flow for txnid={txnid}, vpa={data.get('vpa')}")
         else:
             api_params["bankcode"] = data.get('INTENT')
-        
+            logger.info(f"Using Intent flow for txnid={txnid}, intent={data.get('INTENT')}")
+
+        logger.debug(f"Final PayU params: {api_params}")
+
         # ✅ Send request to PayU
         url = f"{settings.PAYU_BASE_URL}/_payment"
+        logger.info(f"Sending request to PayU: {url}")
+
         response = requests.post(url, data=api_params, timeout=30)
+        
+        logger.info(f"PayU response status: {response.status_code}")
+        logger.debug(f"PayU raw response: {response.text}")
+
         response_json = response.json()
 
         # ✅ Return response
@@ -116,8 +149,23 @@ def initiate_payment(request):
             "amount": amount,
             "payu_response": response_json
         }, status=200)
-        
+
+    except requests.exceptions.Timeout:
+        logger.error("PayU request timeout", exc_info=True)
+        return Response(
+            {"error": "Payment gateway timeout"},
+            status=504
+        )
+
+    except requests.exceptions.RequestException as e:
+        logger.error(f"PayU request failed: {str(e)}", exc_info=True)
+        return Response(
+            {"error": "Payment gateway error"},
+            status=502
+        )
+
     except Exception as e:
+        logger.exception("Unexpected error in initiate_payment")
         return Response({
             "error": "Something went wrong",
             "details": str(e) if settings.DEBUG else "Internal server error"
