@@ -1316,4 +1316,48 @@ class MenuItemAddonGroup(models.Model):
     
     def __str__(self):
         return f"{self.menu_item.item_name} - {self.addon_group.name}"
-    
+class UserPaymentMethod(models.Model):
+
+    PAYMENT_TYPE_CHOICES = [
+        ('UPI', 'UPI'),
+        ('CREDIT_CARD', 'Credit Card'),
+        ('DEBIT_CARD', 'Debit Card'),
+        ('WALLET', 'Wallet'),
+    ]
+
+    PROVIDER_CHOICES = [
+        ('RAZORPAY', 'Razorpay'),
+        ('PAYU', 'PayU'),
+        ('STRIPE', 'Stripe'),
+    ]
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='payment_methods'
+    )
+
+    payment_type = models.CharField(
+        max_length=20,
+        choices=PAYMENT_TYPE_CHOICES
+    )
+
+    provider = models.CharField(
+        max_length=50,
+        choices=PROVIDER_CHOICES,
+        null=True,
+        blank=True
+    )
+
+    is_default = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+    payment_data = models.JSONField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'user_payment_methods'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.user} - {self.payment_type}"

@@ -3,10 +3,11 @@ from decimal import Decimal
 import hashlib
 import logging
 from anyio import current_time
+from django.utils import timezone
 from django.utils.timezone import now
 from django.db import transaction
 from django.core.exceptions import ObjectDoesNotExist
-from api.models import Order, OrderStatusLog, Payment
+from api.models import Order, OrderStatusLog, Payment, UserPaymentMethod
 
 # ✅ Logger setup
 logger = logging.getLogger(__name__)
@@ -376,3 +377,83 @@ def generate_order_number():
     order_no = f'ORD{today_str}-{new_seq:04d}'
     logger.info("Generated order number: %s", order_no)
     return order_no
+
+def upsert_user_payment_method(
+    *,
+    user_id,
+    payment_type,
+    provider=None,
+    payment_identifier=None,  # e.g. VPA / card last4 / token
+    payment_data=None,
+    is_default=False,
+):
+    """
+    Create or update user payment method.
+
+    Args:
+        user: User instance
+        payment_type: UPI / CREDIT_CARD / DEBIT_CARD / WALLET
+        provider: PAYU / RAZORPAY / STRIPE
+        payment_identifier: unique identifier (UPI ID, card token etc.)
+        payment_data: dict (full response / metadata)
+        is_default: bool
+
+    Returns:
+        UserPaymentMethod instance
+    """
+
+    try:
+        with transaction.atomic():
+
+            logger.info(
+                "Upserting payment method | user=%s | type=%s | provider=%s",
+                user_id,
+                payment_type,
+                provider
+            )
+
+            # 🔹 Build lookup (unique condition)
+            lookup = {
+                "user_id": user_id,
+                "payment_type": payment_type,
+                "provider": provider,
+            }
+
+            # Optional identifier (important for UPI/card uniqueness)
+            if payment_identifier:
+                lookup["payment_data__identifier"] = payment_identifier
+
+            # 🔹 If default → unset previous defaults
+            if is_default:
+                UserPaymentMethod.objects.filter(
+                    user_id=user_id,
+                    is_default=True
+                ).update(is_default=False)
+
+            # 🔹 Prepare data
+            update_data = {
+                "payment_data": payment_data or {},
+                "is_active": True,
+                "updated_at": timezone.now(),
+            }
+
+            if is_default:
+                update_data["is_default"] = True
+
+            # 🔹 Update or Create
+            obj, created = UserPaymentMethod.objects.update_or_create(
+                defaults=update_data,
+                **lookup
+            )
+
+            logger.info(
+                "Payment method %s | ID=%s",
+                "created" if created else "updated",
+                obj.id
+            )
+
+            return obj
+
+    except Exception as e:
+        logger.exception("Error in upsert_user_payment_method")
+        raise e
