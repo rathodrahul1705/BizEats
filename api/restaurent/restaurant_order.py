@@ -865,6 +865,30 @@ class RestaurantOrderDetailsAPI(APIView):
         return Response(response, status=status_code)
 
 @method_decorator(csrf_exempt, name='dispatch')
+import logging
+from decimal import Decimal
+from datetime import timedelta
+
+from django.db import transaction
+from django.db.models import Q
+from django.utils import timezone
+
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+
+from .models import Cart, Order, Coupon, OrderStatusLog, Device
+from .serializers import OrderPlacementSerializer
+from .utils import (
+    send_order_status_email,
+    track_order_function,
+    send_order_received_notification,
+    send_push_notification
+)
+
+logger = logging.getLogger(__name__)
+
+
 class PlaceOrderAPI(APIView):
 
     def post(self, request, *args, **kwargs):
@@ -873,91 +897,76 @@ class PlaceOrderAPI(APIView):
         try:
             with transaction.atomic():
 
-                # Validate input data
+                # ✅ Validate input
                 serializer = OrderPlacementSerializer(data=request.data)
                 if not serializer.is_valid():
-                    logger.error("OrderPlacementSerializer errors: %s", serializer.errors)
+                    logger.error("Serializer errors: %s", serializer.errors)
                     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
                 data = serializer.validated_data
-                logger.info("Validated input data: %s", data)
+                logger.info("Validated data: %s", data)
 
-                # Get user's cart items
-                cart_items = Cart.objects.filter(
+                # ✅ Fetch cart items (STRICT filter)
+                cart_items = Cart.objects.select_related('item').filter(
                     user_id=data['user_id'],
                     restaurant_id=data['restaurant_id'],
                     cart_status__in=[1, 2, 3, 4]
-                ).select_related('item')
+                )
 
                 if not cart_items.exists():
-                    logger.warning("No cart items found for user %s", data['user_id'])
                     return Response(
-                        {"status": "error", "message": "No items in cart to order"},
+                        {"status": "error", "message": "No items in cart"},
                         status=status.HTTP_400_BAD_REQUEST
                     )
 
-                # Coupon validation
+                # ✅ Coupon validation
                 coupon_id = None
+                discount_amount = Decimal('0.00')
+
                 if data.get('code'):
                     try:
                         coupon = Coupon.objects.get(code=data['code'])
                         coupon_id = coupon.id
-                        logger.info("Coupon applied: %s (ID: %s)", data['code'], coupon.id)
+                        discount_amount = data.get('discount_amount', Decimal('0.00'))
+                        logger.info("Coupon applied: %s", coupon.code)
                     except Coupon.DoesNotExist:
-                        logger.warning("Invalid coupon code provided: %s", data['code'])
+                        logger.warning("Invalid coupon: %s", data['code'])
 
-                # Calculate totals
+                # ✅ Calculate totals (DO NOT trust frontend blindly)
                 subtotal = sum(item.item_price for item in cart_items)
                 tax = subtotal * Decimal('0.00')
-                delivery_fee = data['delivery_fee']
-                total = data['total_amount']
+                delivery_fee = Decimal(str(data['delivery_fee']))
 
-                logger.info(
-                    "Order totals calculated: subtotal=%s, tax=%s, delivery_fee=%s, total=%s",
-                    subtotal, tax, delivery_fee, total
-                )
+                calculated_total = subtotal + tax + delivery_fee - discount_amount
 
-                # Create order
-                current_time = datetime.now()
-                future_time = current_time + timedelta(minutes=45)
+                # Optional validation
+                if Decimal(str(data['total_amount'])) != calculated_total:
+                    logger.warning("Total mismatch! frontend=%s backend=%s",
+                                   data['total_amount'], calculated_total)
 
-                # order = Order.objects.create(
-                #     coupon_id=coupon_id,
-                #     coupon_discount=data['discount_amount'],
-                #     user_id=data['user_id'],
-                #     restaurant_id=data['restaurant_id'],
-                #     order_number=self._generate_order_number(),
-                #     status=1,
-                #     payment_status=data['payment_status'],
-                #     payment_method=data['payment_method'],
-                #     payment_type=data['payment_type'],
-                #     subtotal=subtotal,
-                #     delivery_fee=delivery_fee,
-                #     tax=tax,
-                #     delivery_date=future_time,
-                #     quantity=1,
-                #     total_amount=total,
-                #     delivery_address_id=data['delivery_address_id'],
-                #     special_instructions=data.get('special_instructions'),
-                #     is_takeaway=data['is_takeaway'],
-                #     preparation_time=self._estimate_prep_time(cart_items)
-                # )
+                total = calculated_total
 
+                # ✅ Order number (ALWAYS generate if missing)
+                order_number = data.get('order_number') or self._generate_order_number()
+
+                logger.info("Using order number: %s", order_number)
+
+                # ✅ Create / Update order
                 order, created = Order.objects.update_or_create(
-                    order_number=data.get('order_number', 0),
+                    order_number=order_number,
                     defaults={
                         "coupon_id": coupon_id,
-                        "coupon_discount": data.get('discount_amount', 0),
-                        "user_id": data.get('user_id'),
-                        "restaurant_id": data.get('restaurant_id'),
+                        "coupon_discount": discount_amount,
+                        "user_id": data['user_id'],
+                        "restaurant_id": data['restaurant_id'],
                         "status": 1,
-                        "payment_status": data.get('payment_status'),
-                        "payment_method": data.get('payment_method'),
-                        "payment_type": data.get('payment_type'),
+                        "payment_status": data['payment_status'],
+                        "payment_method": data['payment_method'],
+                        "payment_type": data['payment_type'],
                         "subtotal": subtotal,
                         "delivery_fee": delivery_fee,
                         "tax": tax,
-                        "delivery_date": future_time,
+                        "delivery_date": timezone.now() + timedelta(minutes=45),
                         "quantity": 1,
                         "total_amount": total,
                         "delivery_address_id": data.get('delivery_address_id'),
@@ -966,86 +975,108 @@ class PlaceOrderAPI(APIView):
                         "preparation_time": self._estimate_prep_time(cart_items),
                     }
                 )
-            
-                logger.info("Order created successfully: OrderID=%s, OrderNo=%s",
-                            order.id, order.order_number)
 
-                # Create initial order log
+                logger.info("Order saved: ID=%s, Number=%s, Created=%s",
+                            order.id, order.order_number, created)
+
+                # ✅ Order log
                 OrderStatusLog.objects.create(
                     order=order,
                     status=1,
                     notes="Order placed successfully"
                 )
 
-                logger.info("OrderStatusLog created for OrderNo=%s", order.order_number)
-
-                # Update cart items
+                # ✅ Update ONLY relevant cart items
                 Cart.objects.filter(
-                    Q(user_id=data['user_id']) &
-                    ~Q(cart_status=5) &
-                    (Q(order_number__isnull=True) | Q(order_number__exact=''))
+                    user_id=data['user_id'],
+                    restaurant_id=data['restaurant_id'],
+                    cart_status__in=[1, 2, 3, 4],
+                    order_number__isnull=True
                 ).update(
                     cart_status=5,
                     order_number=order.order_number
                 )
 
-                logger.info("Cart updated for user %s", data['user_id'])
+                logger.info("Cart updated")
 
-                send_order_status_email(order)
-                
-                logger.info("Order email sent for OrderNo=%s", order.order_number)
+                # ✅ Email
+                try:
+                    send_order_status_email(order)
+                except Exception as e:
+                    logger.warning("Email failed: %s", e)
 
-                payload ={
-                    "user_id":data['user_id'],
-                    "order_number":order.order_number
+                # ✅ Push notifications
+                payload = {
+                    "user_id": data['user_id'],
+                    "order_number": order.order_number
                 }
 
-                customer_body = None
-                
+                title = "Order Update"
+                customer_body = "Your order has been placed successfully"
+                order_no_for_push = order.order_number
+
+                try:
+                    response_body = track_order_function(payload, None)
+
+                    if response_body.get('status') == "success":
+                        customer_body = response_body.get('body', customer_body)
+                        title = response_body.get('title', title)
+                        order_no_for_push = response_body.get('order_number', order_no_for_push)
+
+                except Exception as e:
+                    logger.warning("Track order failed: %s", e)
+
+                # ✅ Tokens
                 restaurant_token = (
                     Device.objects
                     .filter(user_id=order.restaurant.user_id)
-                    .order_by('-id')   # latest device
+                    .order_by('-id')
                     .values_list('token', flat=True)
                     .first()
                 )
-                
-                if not restaurant_token:
-                    restaurant_token = "fqttmmvOSwu5VIRM73lWF6:APA91bGJXh9WGTEGPWd6Wmo6BT0ej-kqXaAhHTlhBbABAjN-D_lZtBL6mFfOGOraBx009abnhjZSp4JWPVyDH2_6yOJ6Y__EgzhqI4dawjyEHOdGNtyM7WM"
 
                 customer_token = (
                     Device.objects
                     .filter(user_id=order.user_id)
-                    .order_by('-id')   # latest device
+                    .order_by('-id')
                     .values_list('token', flat=True)
                     .first()
                 )
 
-                response_body = track_order_function(payload,customer_body)
+                # ✅ Send notifications safely
+                restaurant_response = None
+                customer_response = None
 
-                if response_body['status'] == "success":
-                    customer_body = response_body['body']
-                    title = response_body['title']
-                    order_number = response_body['order_number']
+                if restaurant_token:
+                    restaurant_response = send_order_received_notification(restaurant_token, order)
+                else:
+                    logger.warning("No restaurant token found")
 
-                restaurant_response = send_order_received_notification(restaurant_token, order)
-                customer_response = send_push_notification(tokens=[customer_token],title= title ,body= customer_body,order_number= order_number,data= None)
-            
-                response_data = {
+                if customer_token:
+                    customer_response = send_push_notification(
+                        tokens=[customer_token],
+                        title=title,
+                        body=customer_body,
+                        order_number=order_no_for_push,
+                        data=None
+                    )
+                else:
+                    logger.warning("No customer token found")
+
+                # ✅ Final response
+                return Response({
                     "status": "success",
                     "order_number": order.order_number,
                     "order_id": order.id,
                     "total_amount": str(order.total_amount),
                     "restaurant_response": restaurant_response,
                     "customer_response": customer_response,
-                }
-
-                return Response(response_data, status=status.HTTP_201_CREATED)
+                }, status=status.HTTP_201_CREATED)
 
         except Exception as e:
-            logger.exception("Error while placing order: %s", e)
+            logger.exception("Order creation failed: %s", e)
             return Response(
-                {"status": "error", "message": str(e)},
+                {"status": "error", "message": "Something went wrong"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
