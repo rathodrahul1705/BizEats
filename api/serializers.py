@@ -260,6 +260,13 @@ class OrderPlacementSerializer(serializers.Serializer):
         choices=Order.PAYMENT_TYPE,
         required=True
     )
+    # order_number = serializers.CharField(max_length=20)
+    order_number = serializers.CharField(
+        max_length=20,
+        required=False,
+        allow_blank=True
+    )
+    
     payment_method = serializers.ChoiceField(
         choices=Order.PAYMENT_METHOD_CHOICES,
         required=True

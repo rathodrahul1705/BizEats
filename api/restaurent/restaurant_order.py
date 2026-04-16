@@ -865,30 +865,6 @@ class RestaurantOrderDetailsAPI(APIView):
         return Response(response, status=status_code)
 
 @method_decorator(csrf_exempt, name='dispatch')
-import logging
-from decimal import Decimal
-from datetime import timedelta
-
-from django.db import transaction
-from django.db.models import Q
-from django.utils import timezone
-
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-
-from .models import Cart, Order, Coupon, OrderStatusLog, Device
-from .serializers import OrderPlacementSerializer
-from .utils import (
-    send_order_status_email,
-    track_order_function,
-    send_order_received_notification,
-    send_push_notification
-)
-
-logger = logging.getLogger(__name__)
-
-
 class PlaceOrderAPI(APIView):
 
     def post(self, request, *args, **kwargs):
@@ -899,6 +875,7 @@ class PlaceOrderAPI(APIView):
 
                 # ✅ Validate input
                 serializer = OrderPlacementSerializer(data=request.data)
+
                 if not serializer.is_valid():
                     logger.error("Serializer errors: %s", serializer.errors)
                     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -950,6 +927,10 @@ class PlaceOrderAPI(APIView):
                 order_number = data.get('order_number') or self._generate_order_number()
 
                 logger.info("Using order number: %s", order_number)
+                
+                # ✅ Time calculations
+                current_time = datetime.now()
+                future_time = current_time + timedelta(minutes=45)
 
                 # ✅ Create / Update order
                 order, created = Order.objects.update_or_create(
@@ -966,7 +947,7 @@ class PlaceOrderAPI(APIView):
                         "subtotal": subtotal,
                         "delivery_fee": delivery_fee,
                         "tax": tax,
-                        "delivery_date": timezone.now() + timedelta(minutes=45),
+                        "delivery_date":future_time,
                         "quantity": 1,
                         "total_amount": total,
                         "delivery_address_id": data.get('delivery_address_id'),
