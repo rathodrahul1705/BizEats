@@ -383,25 +383,10 @@ def upsert_user_payment_method(
     user_id,
     payment_type,
     provider=None,
-    payment_identifier=None,  # e.g. VPA / card last4 / token
+    payment_identifier=None,
     payment_data=None,
     is_default=False,
 ):
-    """
-    Create or update user payment method.
-
-    Args:
-        user: User instance
-        payment_type: UPI / CREDIT_CARD / DEBIT_CARD / WALLET
-        provider: PAYU / RAZORPAY / STRIPE
-        payment_identifier: unique identifier (UPI ID, card token etc.)
-        payment_data: dict (full response / metadata)
-        is_default: bool
-
-    Returns:
-        UserPaymentMethod instance
-    """
-
     try:
         with transaction.atomic():
 
@@ -412,25 +397,28 @@ def upsert_user_payment_method(
                 provider
             )
 
-            # 🔹 Build lookup (unique condition)
-            lookup = {
-                "user_id": user_id,
-                "payment_type": payment_type,
-                "provider": provider,
-            }
+            # 🔹 Base queryset
+            qs = UserPaymentMethod.objects.filter(
+                user_id=user_id,
+                payment_type=payment_type,
+                provider=provider,
+            )
 
-            # Optional identifier (important for UPI/card uniqueness)
+            # 🔹 Identifier check (JSON search)
             if payment_identifier:
-                lookup["payment_data__identifier"] = payment_identifier
+                qs = qs.filter(
+                    payment_data__identifier=payment_identifier
+                )
 
-            # 🔹 If default → unset previous defaults
+            existing_obj = qs.first()
+
+            # 🔹 Handle default logic
             if is_default:
                 UserPaymentMethod.objects.filter(
                     user_id=user_id,
                     is_default=True
                 ).update(is_default=False)
 
-            # 🔹 Prepare data
             update_data = {
                 "payment_data": payment_data or {},
                 "is_active": True,
@@ -440,18 +428,26 @@ def upsert_user_payment_method(
             if is_default:
                 update_data["is_default"] = True
 
-            # 🔹 Update or Create
-            obj, created = UserPaymentMethod.objects.update_or_create(
-                defaults=update_data,
-                **lookup
+            # 🔹 UPDATE if exists
+            if existing_obj:
+                for key, value in update_data.items():
+                    setattr(existing_obj, key, value)
+                existing_obj.save()
+
+                logger.info("Payment method updated | ID=%s", existing_obj.id)
+                return existing_obj
+
+            # 🔹 CREATE if not exists
+            obj = UserPaymentMethod.objects.create(
+                user_id=user_id,
+                payment_type=payment_type,
+                provider=provider,
+                payment_data=payment_data or {},
+                is_active=True,
+                is_default=is_default,
             )
 
-            logger.info(
-                "Payment method %s | ID=%s",
-                "created" if created else "updated",
-                obj.id
-            )
-
+            logger.info("Payment method created | ID=%s", obj.id)
             return obj
 
     except Exception as e:
