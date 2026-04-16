@@ -124,8 +124,8 @@ def initiate_payment(request):
             api_params["bankcode"] = "UPI"
             logger.info(f"Using VPA flow for txnid={txnid}, vpa={data.get('vpa')}")
         else:
-            api_params["bankcode"] = data.get('INTENT')
-            logger.info(f"Using Intent flow for txnid={txnid}, intent={data.get('INTENT')}")
+            api_params["bankcode"] = "INTENT"
+            logger.info(f"Using Intent flow for txnid={txnid}")
 
         logger.debug(f"Final PayU params: {api_params}")
 
