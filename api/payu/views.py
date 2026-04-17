@@ -9,7 +9,7 @@ from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
-
+from api.models import UserPaymentMethod
 from api.models import Order
 
 from .utils import create_payment_generate_hash, order_create, upsert_user_payment_method, verify_payment_generate_hash, verify_payment_update
@@ -378,17 +378,26 @@ def verify_payment_payu(request):
         logger.exception(f"[{request_id}] ❌ Unexpected error during payment verification | txnid={request.GET.get('txnid', 'Unknown')} | error={str(e)}")
         return Response({"error": "Internal server error"}, status=500)
 
+def mask_vpa(vpa):
+    if not vpa:
+        return None
+    try:
+        name, domain = vpa.split("@")
+        return name[:3] + "***@" + domain
+    except Exception:
+        return vpa
 
 @api_view(['GET'])
 def payment_method_details(request):
     """
-    Get available payment methods with their details
+    Get available payment methods with static + user saved methods
     """
     request_id = str(uuid.uuid4())[:8]
-    
+    user_id = request.query_params.get('user_id')
+
     try:
         logger.info(f"[{request_id}] 💳 Payment method details API called")
-        
+
         BASE_ICON_URL = "https://yourcdn.com/payment-icons/"
 
         PAYMENT_METHOD_MAP = {
@@ -400,9 +409,7 @@ def payment_method_details(request):
             "wallet": 6,
         }
 
-        logger.debug(f"[{request_id}] Loading payment methods configuration")
-
-        # ================= RAW DATA ================= #
+        # ================= STATIC DATA ================= #
 
         upi_apps = [
             {
@@ -529,62 +536,113 @@ def payment_method_details(request):
             "message": "Cash on Delivery available"
         }
 
-        logger.debug(f"[{request_id}] Raw payment data loaded | UPI apps: {len(upi_apps)} | Wallets: {len(wallets)}")
+        # ================= FILTER STATIC ================= #
 
-        # ================= PROCESSING ================= #
-
-        # Filter & sort UPI apps
         active_upi_apps = sorted(
             [app for app in upi_apps if app.get("is_active")],
             key=lambda x: x.get("priority", 999)
         )
-        logger.debug(f"[{request_id}] Active UPI apps after filtering: {len(active_upi_apps)}")
 
-        # Filter wallets
         active_wallets = [w for w in wallets if w.get("is_active")]
-        logger.debug(f"[{request_id}] Active wallets after filtering: {len(active_wallets)}")
 
-        # Build response dynamically
+        # ================= USER SAVED METHODS ================= #
+
+        saved_upi = []
+        saved_cards = []
+        saved_wallets_db = []
+
+        if user_id:
+            logger.debug(f"[{request_id}] Fetching saved methods for user {user_id}")
+
+            user_methods = UserPaymentMethod.objects.filter(
+                user_id=user_id,
+                is_active=True
+            )
+
+            logger.info(f"[{request_id}] Found {user_methods.count()} saved methods")
+
+            for method in user_methods:
+                payment_data = method.payment_data or {}
+
+                # UPI
+                if method.payment_type == "UPI":
+                    vpa = payment_data.get("identifier")
+
+                    saved_upi.append({
+                        "id": method.id,
+                        "method_id": PAYMENT_METHOD_MAP["upi"],
+                        "type": "saved_upi",
+                        "vpa": mask_vpa(vpa),
+                        "raw_vpa": vpa,
+                        "name": payment_data.get("payu_response", {}).get("payerAccountName"),
+                        "provider": method.provider,
+                        "is_default": method.is_default
+                    })
+
+                # Cards
+                elif method.payment_type in ["CREDIT_CARD", "DEBIT_CARD"]:
+                    saved_cards.append({
+                        "id": method.id,
+                        "method_id": PAYMENT_METHOD_MAP[
+                            "credit_card" if method.payment_type == "CREDIT_CARD" else "debit_card"
+                        ],
+                        "type": method.payment_type.lower(),
+                        "last4": payment_data.get("last4"),
+                        "card_network": payment_data.get("network"),
+                        "provider": method.provider,
+                        "is_default": method.is_default
+                    })
+
+                # Wallet
+                elif method.payment_type == "WALLET":
+                    saved_wallets_db.append({
+                        "id": method.id,
+                        "method_id": PAYMENT_METHOD_MAP["wallet"],
+                        "type": "saved_wallet",
+                        "balance": payment_data.get("balance", 0),
+                        "provider": method.provider,
+                        "is_default": method.is_default
+                    })
+
+        # Sort default first
+        saved_upi = sorted(saved_upi, key=lambda x: not x["is_default"])
+        saved_cards = sorted(saved_cards, key=lambda x: not x["is_default"])
+
+        # ================= BUILD RESPONSE ================= #
+
         data = {}
+
+        if saved_upi:
+            data["saved_upi"] = saved_upi
 
         if active_upi_apps:
             data["upi_apps"] = active_upi_apps
-            logger.info(f"[{request_id}] Added {len(active_upi_apps)} UPI apps to response")
 
-        if active_wallets:
-            data["wallets"] = active_wallets
-            logger.info(f"[{request_id}] Added {len(active_wallets)} wallets to response")
+        if saved_cards:
+            data["saved_cards"] = saved_cards
+
+        all_wallets = active_wallets + saved_wallets_db
+        if all_wallets:
+            data["wallets"] = all_wallets
 
         if netbanking.get("is_active"):
             data["netbanking"] = netbanking
-            logger.info(f"[{request_id}] Added netbanking to response")
 
         if cards.get("is_active"):
             data["cards"] = cards
-            logger.info(f"[{request_id}] Added cards to response")
 
         if cod.get("is_active"):
             data["cod"] = cod
-            logger.info(f"[{request_id}] Added COD to response")
 
         response_data = {
             "success": True,
             "data": data
         }
-        
-        logger.info(f"[{request_id}] ✅ Payment methods response prepared successfully | Total categories: {len(data)}")
-        
+
+        logger.info(f"[{request_id}] ✅ Payment methods loaded successfully")
+
         return Response(response_data)
 
-    except KeyError as key_error:
-        logger.error(f"[{request_id}] Key error in payment method mapping: {str(key_error)}")
-        return Response(
-            {
-                "success": False,
-                "error": "Configuration error"
-            },
-            status=500
-        )
     except Exception as e:
         logger.exception(f"[{request_id}] ❌ Payment Method API Error: {str(e)}")
         return Response(
