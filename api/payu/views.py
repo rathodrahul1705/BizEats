@@ -707,6 +707,8 @@ def payment_vpa_validate(request):
         response.raise_for_status()
         json_response = response.json()
 
+        logger.info("VPA validation successful response: %s", json_response)
+
         if json_response['status'] == "SUCCESS":  # PayU success case
 
             upsert_user_payment_method(
