@@ -119,7 +119,7 @@ def get_dummy_banners():
             "id": 3,
             "title": "Buy 1 Get 1 Free",
             "subtitle": "Double the food, same price 😍",
-            "image_url": "https://images.unsplash.com/photo-1604908176997-4311d99d73c0?w=800",
+            "image_url": "https://eatoorprod.s3.eu-north-1.amazonaws.com/uploads/buy_one_get_one_free.avif",
             "theme": {
                 "bg_color": "#00C853",
                 "text_color": "#FFFFFF",
