@@ -34,24 +34,10 @@ def get_eatmart_home_data(request):
             "banner_images": [
             {
                 "id": "banner1",
-                "name": "Happy Holi",
-                "icon": "https://eatoorprod.s3.eu-north-1.amazonaws.com/uploads/happy_holi.png",
+                "name": "Happy Akshaya Tritiya",
+                "icon": "https://eatoorprod.s3.amazonaws.com/uploads/62400317c9fd4c58a77da3aab2bb099b.jpg",
                 "document_type": 1,
                 "thumbnail": "https://eatoorprod.s3.eu-north-1.amazonaws.com/uploads/happy_holi.png"
-            },
-            {
-                "id": "banner2",
-                "name": "Free Peanut Chutney",
-                "icon": "https://eatoorprod.s3.eu-north-1.amazonaws.com/uploads/offer_free_peenut_chutney.png",
-                "document_type": 1,
-                "thumbnail": "https://eatoorprod.s3.eu-north-1.amazonaws.com/uploads/offer_free_peenut_chutney.png"
-            },
-            {
-                "id": "banner3",
-                "name": "Smart and Fresh",
-                "icon": "https://eatoorprod.s3.eu-north-1.amazonaws.com/uploads/shop_smart.png",
-                "document_type": 1,
-                "thumbnail": "https://eatoorprod.s3.eu-north-1.amazonaws.com/uploads/shop_smart.png"
             }
             ],
 
