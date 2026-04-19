@@ -418,8 +418,8 @@ def payment_method_details(request):
                 "name": "Paytm",
                 "icon": "https://eatoorprod.s3.eu-north-1.amazonaws.com/logo/paymt_image.webp",
                 "packageName": "net.one97.paytm",
-                "scheme": "paytm://upi/pay?",
-                "iosScheme": "paytm://upi/pay?",
+                "scheme": "paytmmp://upi/pay?",
+                "iosScheme": "paytmmp://upi/pay?",
                 "priority": 1,
                 "is_active": True
             },
