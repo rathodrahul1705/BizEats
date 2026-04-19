@@ -31,7 +31,6 @@ def get_eatmart_home_data(request):
             { "id": 13, "name": "Dryfruits", "icon": "🥜", "icon_type": "emoji", "item_count": 0, "is_active": True, "sort_order": 13 }
             ],
             
-
             "banner_images": [
             {
                 "id": "banner1",
