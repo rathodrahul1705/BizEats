@@ -35,9 +35,9 @@ def get_eatmart_home_data(request):
             {
                 "id": "banner1",
                 "name": "Happy Akshaya Tritiya",
-                "icon": "https://eatoorprod.s3.amazonaws.com/uploads/62400317c9fd4c58a77da3aab2bb099b.jpg",
+                "icon": "https://eatoorprod.s3.amazonaws.com/uploads/ac8351fbdbac439e96bdb63775c6c511.jpg",
                 "document_type": 1,
-                "thumbnail": "https://eatoorprod.s3.eu-north-1.amazonaws.com/uploads/happy_holi.png"
+                "thumbnail": "https://eatoorprod.s3.amazonaws.com/uploads/ac8351fbdbac439e96bdb63775c6c511.jpg"
             }
             ],
 
