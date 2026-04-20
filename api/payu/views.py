@@ -456,7 +456,7 @@ def payment_method_details(request):
                 "packageName": "com.cred.club",
                 "scheme": "credpay://upi/pay?",
                 "iosScheme": "credpay://upi/pay?",
-                "anroidScheme": "credpay://pay?",
+                "anroidScheme": "credpay://upi/pay?",
                 "priority": 4,
                 "is_active": True
             },
@@ -480,7 +480,7 @@ def payment_method_details(request):
                 "packageName": "",
                 "scheme": "upi://pay?",
                 "iosScheme": "upi://pay?",
-                "anroidScheme": "upi://pay?",
+                "anroidScheme": "upi://upi/pay?",
                 "priority": 6,
                 "is_active": True
             },
@@ -492,7 +492,7 @@ def payment_method_details(request):
                 "packageName": "in.amazon.mShop.android.shopping",
                 "scheme": "amazonpay://upi/pay?",
                 "iosScheme": "amazonpay://upi/pay?",
-                "anroidScheme": "amazonpay://pay?",
+                "anroidScheme": "amazonpay://upi/pay?",
                 "priority": 7,
                 "is_active": True
             }
