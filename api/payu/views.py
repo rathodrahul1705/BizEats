@@ -444,7 +444,7 @@ def payment_method_details(request):
                 "packageName": "com.google.android.apps.nbu.paisa.user",
                 "scheme": "gpay://upi/pay?",
                 "iosScheme": "gpay://upi/pay?",
-                "anroidScheme": "gpay://pay?",
+                "anroidScheme": "gpay://upi/pay?",
                 "priority": 3,
                 "is_active": True
             },
