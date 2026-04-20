@@ -420,6 +420,7 @@ def payment_method_details(request):
                 "packageName": "net.one97.paytm",
                 "scheme": "paytmmp://upi/pay?",
                 "iosScheme": "paytmmp://upi/pay?",
+                "anroidScheme": "paytmmp://pay?",
                 "priority": 1,
                 "is_active": True
             },
@@ -431,6 +432,7 @@ def payment_method_details(request):
                 "packageName": "com.phonepe.app",
                 "scheme": "phonepe://upi/pay?",
                 "iosScheme": "phonepe://upi/pay?",
+                "anroidScheme": "phonepe://pay?",
                 "priority": 2,
                 "is_active": True
             },
@@ -442,6 +444,7 @@ def payment_method_details(request):
                 "packageName": "com.google.android.apps.nbu.paisa.user",
                 "scheme": "gpay://upi/pay?",
                 "iosScheme": "gpay://upi/pay?",
+                "anroidScheme": "gpay://pay?",
                 "priority": 3,
                 "is_active": True
             },
@@ -453,6 +456,7 @@ def payment_method_details(request):
                 "packageName": "com.cred.club",
                 "scheme": "credpay://upi/pay?",
                 "iosScheme": "credpay://upi/pay?",
+                "anroidScheme": "credpay://pay?",
                 "priority": 4,
                 "is_active": True
             },
@@ -464,6 +468,7 @@ def payment_method_details(request):
                 "packageName": "in.org.npci.upiapp",
                 "scheme": "bhim://upi/pay?",
                 "iosScheme": "bhim://upi/pay?",
+                "anroidScheme": "bhim://pay?",
                 "priority": 5,
                 "is_active": True
             },
@@ -475,6 +480,7 @@ def payment_method_details(request):
                 "packageName": "",
                 "scheme": "upi://pay?",
                 "iosScheme": "upi://pay?",
+                "anroidScheme": "upi://pay?",
                 "priority": 6,
                 "is_active": True
             },
@@ -486,6 +492,7 @@ def payment_method_details(request):
                 "packageName": "in.amazon.mShop.android.shopping",
                 "scheme": "amazonpay://upi/pay?",
                 "iosScheme": "amazonpay://upi/pay?",
+                "anroidScheme": "amazonpay://pay?",
                 "priority": 7,
                 "is_active": True
             }
