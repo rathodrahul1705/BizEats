@@ -43,80 +43,80 @@ def get_dummy_banners():
     """Static banner data (can be moved to DB later)"""
 
     return [
+        # {
+        #     "id": 1,
+        #     "title": "Biryani",
+        #     "subtitle": "Hot & spicy biryanis up to 30% OFF",
+        #     "image_url": "https://eatoorprod.s3.amazonaws.com/menu_images/5df3397c503b4ad09da617107984f682.jpg",
+        #     "theme": {
+        #         "bg_color": "#FF6B4A",
+        #         "text_color": "#FFFFFF",
+        #         "icon_color": "#FFFFFF"
+        #     },
+        #     "offer": {
+        #         "type": "food_offer",
+        #         "banner_type": "cuisine",
+        #         "category": "Biryani",
+        #         "discount": "30% OFF",
+        #         "code": "BIRYANI30",
+        #         "api_params": {
+        #             "category": "Rice & Biryani",
+        #             "food_type": "Non-Veg",
+        #             "offer_type": "DISCOUNT",
+        #             "min_price": "200",
+        #             "sort_by": "-discount_percent"
+        #         }
+        #     },
+        #     "validity": {
+        #         "from": (datetime.now() - timedelta(days=2)).isoformat(),
+        #         "till": (datetime.now() + timedelta(days=15)).isoformat()
+        #     },
+        #     "terms": [
+        #         "Minimum order ₹299",
+        #         "Maximum discount ₹150"
+        #     ],
+        #     "order": 1,
+        #     "is_active": True
+        # },
+
+        # {
+        #     "id": 2,
+        #     "title": "Waffle",
+        #     "subtitle": "Sweet cravings? Get waffles up to 40% OFF",
+        #     "image_url": "https://eatoorprod.s3.amazonaws.com/menu_images/c84196f9a7cd4fd7bbc49d375dbdb227.jpg",
+        #     "theme": {
+        #         "bg_color": "#FFB800",
+        #         "text_color": "#1E293B",
+        #         "icon_color": "#1E293B"
+        #     },
+        #     "offer": {
+        #         "type": "food_offer",
+        #         "banner_type": "dessert",
+        #         "category": "Waffle",
+        #         "discount": "40% OFF",
+        #         "code": "WAFFLE40",
+        #         "api_params": {
+        #             "category": "Dessert",
+        #             "food_type": "Veg",
+        #             "offer_type": "DISCOUNT",
+        #             "max_price": "300",
+        #             "sort_by": "-discount_percent"
+        #         }
+        #     },
+        #     "validity": {
+        #         "from": (datetime.now() - timedelta(days=1)).isoformat(),
+        #         "till": (datetime.now() + timedelta(days=20)).isoformat()
+        #     },
+        #     "terms": [
+        #         "Minimum order ₹199",
+        #         "Maximum discount ₹120"
+        #     ],
+        #     "order": 2,
+        #     "is_active": True
+        # },
+
         {
             "id": 1,
-            "title": "Biryani",
-            "subtitle": "Hot & spicy biryanis up to 30% OFF",
-            "image_url": "https://eatoorprod.s3.amazonaws.com/menu_images/5df3397c503b4ad09da617107984f682.jpg",
-            "theme": {
-                "bg_color": "#FF6B4A",
-                "text_color": "#FFFFFF",
-                "icon_color": "#FFFFFF"
-            },
-            "offer": {
-                "type": "food_offer",
-                "banner_type": "cuisine",
-                "category": "Biryani",
-                "discount": "30% OFF",
-                "code": "BIRYANI30",
-                "api_params": {
-                    "category": "Rice & Biryani",
-                    "food_type": "Non-Veg",
-                    "offer_type": "DISCOUNT",
-                    "min_price": "200",
-                    "sort_by": "-discount_percent"
-                }
-            },
-            "validity": {
-                "from": (datetime.now() - timedelta(days=2)).isoformat(),
-                "till": (datetime.now() + timedelta(days=15)).isoformat()
-            },
-            "terms": [
-                "Minimum order ₹299",
-                "Maximum discount ₹150"
-            ],
-            "order": 1,
-            "is_active": True
-        },
-
-        {
-            "id": 2,
-            "title": "Waffle",
-            "subtitle": "Sweet cravings? Get waffles up to 40% OFF",
-            "image_url": "https://eatoorprod.s3.amazonaws.com/menu_images/c84196f9a7cd4fd7bbc49d375dbdb227.jpg",
-            "theme": {
-                "bg_color": "#FFB800",
-                "text_color": "#1E293B",
-                "icon_color": "#1E293B"
-            },
-            "offer": {
-                "type": "food_offer",
-                "banner_type": "dessert",
-                "category": "Waffle",
-                "discount": "40% OFF",
-                "code": "WAFFLE40",
-                "api_params": {
-                    "category": "Dessert",
-                    "food_type": "Veg",
-                    "offer_type": "DISCOUNT",
-                    "max_price": "300",
-                    "sort_by": "-discount_percent"
-                }
-            },
-            "validity": {
-                "from": (datetime.now() - timedelta(days=1)).isoformat(),
-                "till": (datetime.now() + timedelta(days=20)).isoformat()
-            },
-            "terms": [
-                "Minimum order ₹199",
-                "Maximum discount ₹120"
-            ],
-            "order": 2,
-            "is_active": True
-        },
-
-        {
-            "id": 3,
             "title": "Buy 1 Get 1 Free",
             "subtitle": "Double the food, same price 😍",
             "image_url": "https://eatoorprod.s3.eu-north-1.amazonaws.com/uploads/buy_one_get_one_free.avif",
