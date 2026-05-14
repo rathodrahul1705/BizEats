@@ -538,7 +538,7 @@ def payment_method_details(request):
 
         cod = {
             "method_id": PAYMENT_METHOD_MAP["cod"],
-            "is_active": True,
+            "is_active": False,
             "icon": f"{BASE_ICON_URL}cod.png",
             "message": "Cash on Delivery available"
         }
