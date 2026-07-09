@@ -26,7 +26,7 @@ from .serializers import (
 
 logger = logging.getLogger(__name__)
 
-COMMISSION_RATE = Decimal('0.10')  # 10% commission on subtotal
+COMMISSION_RATE = Decimal('0.10')
 
 # ---------- Helper: get restaurant data ----------
 def get_restaurant_data(restaurant_id):
@@ -95,36 +95,38 @@ def get_date_range(filter_type, start_date=None, end_date=None, timezone_str='As
     logger.info(f"Date range computed: {start_dt} to {end_dt}")
     return start_dt, end_dt
 
-# ---------- Helper: compute settlement summary (based on subtotal) ----------
+# ---------- Helper: compute settlement summary ----------
 def compute_summary(orders_queryset):
     logger.debug("Computing summary for orders queryset")
     total_orders = orders_queryset.count()
     
-    # Aggregate subtotal, delivery_fee, tax
     agg = orders_queryset.aggregate(
-        gross_sales=Coalesce(Sum('subtotal'), Value(0.00, output_field=DecimalField())),
+        item_gross_sale=Coalesce(Sum('subtotal'), Value(0.00, output_field=DecimalField())),
+        gross_sale=Coalesce(Sum('total_amount'), Value(0.00, output_field=DecimalField())),
         total_delivery_fee=Coalesce(Sum('delivery_fee'), Value(0.00, output_field=DecimalField())),
         total_tax=Coalesce(Sum('tax'), Value(0.00, output_field=DecimalField())),
     )
-    gross_sales = agg['gross_sales'] or Decimal('0.00')
+    item_gross_sale = agg['item_gross_sale'] or Decimal('0.00')
+    gross_sale = agg['gross_sale'] or Decimal('0.00')
     total_delivery_fee = agg['total_delivery_fee'] or Decimal('0.00')
     total_tax = agg['total_tax'] or Decimal('0.00')
     
-    commission = gross_sales * COMMISSION_RATE
-    net_pay = gross_sales - commission  # restaurant receives subtotal minus commission
+    eatoor_commission = item_gross_sale * COMMISSION_RATE
+    restaurant_net_pay = item_gross_sale - eatoor_commission
     
     summary = {
         'total_orders': total_orders,
-        'gross_sales': round(gross_sales, 2),
+        'item_gross_sale': round(item_gross_sale, 2),
+        'gross_sale': round(gross_sale, 2),
         'total_delivery_fee': round(total_delivery_fee, 2),
         'total_tax': round(total_tax, 2),
-        'commission': round(commission, 2),
-        'net_pay': round(net_pay, 2),
+        'eatoor_commission': round(eatoor_commission, 2),
+        'restaurant_net_pay': round(restaurant_net_pay, 2),
     }
     logger.debug(f"Summary computed: {summary}")
     return summary
 
-# ---------- Helper: build transaction dict (now based on subtotal) ----------
+# ---------- Helper: build transaction dict ----------
 def order_to_transaction(order, commission_rate=COMMISSION_RATE):
     logger.debug(f"Building transaction for order ID: {order.id}")
     payment = order.payments.first()
@@ -142,10 +144,10 @@ def order_to_transaction(order, commission_rate=COMMISSION_RATE):
     else:
         order_type = 'dine_in'
     
-    # Revenue for restaurant is subtotal (menu price)
-    subtotal = order.subtotal or Decimal('0.00')
-    commission = subtotal * commission_rate
-    net = subtotal - commission
+    item_gross_sale = order.subtotal or Decimal('0.00')
+    gross_sale = order.total_amount or Decimal('0.00')
+    eatoor_commission = item_gross_sale * commission_rate
+    restaurant_net_pay = item_gross_sale - eatoor_commission
     discount = order.coupon_discount or Decimal('0.00')
     tax = order.tax or Decimal('0.00')
     delivery_fee = order.delivery_fee or Decimal('0.00')
@@ -158,12 +160,13 @@ def order_to_transaction(order, commission_rate=COMMISSION_RATE):
         'order_type': order_type,
         'payment_method': payment_method_display,
         'items_count': order.quantity or 1,
-        'subtotal': round(subtotal, 2),
+        'item_gross_sale': round(item_gross_sale, 2),
+        'gross_sale': round(gross_sale, 2),
         'discount': round(discount, 2),
         'tax': round(tax, 2),
         'delivery_fee': round(delivery_fee, 2),
-        'commission': round(commission, 2),
-        'net': round(net, 2),
+        'eatoor_commission': round(eatoor_commission, 2),
+        'restaurant_net_pay': round(restaurant_net_pay, 2),
         'status': payment_status_str,
     }
     logger.debug(f"Transaction built: {transaction['order_id']}")
@@ -226,13 +229,16 @@ class SettlementDashboardView(APIView):
             'payout_date': cycle_end + timedelta(days=1),
             'status': 'processing',
             'orders': cycle_summary['total_orders'],
-            'revenue': cycle_summary['gross_sales'],        # subtotal
-            'commission': cycle_summary['commission'],
-            'net_pay': cycle_summary['net_pay'],
+            'item_gross_sale': cycle_summary['item_gross_sale'],
+            'gross_sale': cycle_summary['gross_sale'],
+            'eatoor_commission': cycle_summary['eatoor_commission'],
+            'restaurant_net_pay': cycle_summary['restaurant_net_pay'],
             'progress_percent': progress_percent,
         }
 
-        restaurant_data = RestaurantBriefSerializer(restaurant).data
+        # Pass request context to serializer to build absolute image URLs
+        restaurant_data = RestaurantBriefSerializer(restaurant, context={'request': request}).data
+
         response_data = {
             'success': True,
             'data': {
@@ -283,17 +289,18 @@ class SettlementTransactionsView(APIView):
                 logger.warning(f"Invalid status filter: {data['status']}, returning empty")
                 orders_qs = orders_qs.none()
 
-        # Compute overall totals (now includes delivery fee and tax)
+        # Compute overall totals
         totals = compute_summary(orders_qs)
 
-        # Aggregate by day: sum subtotal, delivery_fee, tax
+        # Aggregate by day
         day_summary_qs = (
             orders_qs
             .annotate(day=TruncDate('order_date'))
             .values('day')
             .annotate(
                 total_orders=Count('id'),
-                gross_sales=Coalesce(Sum('subtotal'), Value(0.00, output_field=DecimalField())),
+                item_gross_sale=Coalesce(Sum('subtotal'), Value(0.00, output_field=DecimalField())),
+                gross_sale=Coalesce(Sum('total_amount'), Value(0.00, output_field=DecimalField())),
                 total_delivery_fee=Coalesce(Sum('delivery_fee'), Value(0.00, output_field=DecimalField())),
                 total_tax=Coalesce(Sum('tax'), Value(0.00, output_field=DecimalField())),
             )
@@ -302,17 +309,19 @@ class SettlementTransactionsView(APIView):
 
         day_list = []
         for item in day_summary_qs:
-            gross = item['gross_sales'] or Decimal('0.00')
-            commission = gross * COMMISSION_RATE
-            net = gross - commission
+            item_gross = item['item_gross_sale'] or Decimal('0.00')
+            gross = item['gross_sale'] or Decimal('0.00')
+            commission = item_gross * COMMISSION_RATE
+            net = item_gross - commission
             day_list.append({
                 'date': item['day'],
                 'total_orders': item['total_orders'],
-                'gross_sales': round(gross, 2),
+                'item_gross_sale': round(item_gross, 2),
+                'gross_sale': round(gross, 2),
                 'total_delivery_fee': round(item['total_delivery_fee'] or 0, 2),
                 'tax': round(item['total_tax'] or 0, 2),
-                'commission': round(commission, 2),
-                'net_pay': round(net, 2),
+                'eatoor_commission': round(commission, 2),
+                'restaurant_net_pay': round(net, 2),
                 'average_order_value': round(gross / item['total_orders'], 2) if item['total_orders'] > 0 else 0,
             })
 
@@ -323,9 +332,8 @@ class SettlementTransactionsView(APIView):
         field_map = {
             'date': 'date',
             'total_orders': 'total_orders',
-            'gross_sales': 'gross_sales',
-            'net_pay': 'net_pay',
-            # optionally add 'total_delivery_fee' if needed
+            'gross_sale': 'gross_sale',
+            'restaurant_net_pay': 'restaurant_net_pay',
         }
         sort_key = field_map.get(sort_by, 'date')
         day_list.sort(key=lambda x: x[sort_key], reverse=reverse)
@@ -344,7 +352,9 @@ class SettlementTransactionsView(APIView):
         except EmptyPage:
             paginated_days = paginator.page(paginator.num_pages)
 
-        restaurant_data = RestaurantBriefSerializer(restaurant).data
+        # Pass request context to serializer
+        restaurant_data = RestaurantBriefSerializer(restaurant, context={'request': request}).data
+
         response_data = {
             'success': True,
             'data': {
@@ -362,7 +372,7 @@ class SettlementTransactionsView(APIView):
         logger.info(f"Transactions response sent for restaurant {restaurant.restaurant_id}")
         return Response(response_data, status=status.HTTP_200_OK)
 
-# ---------- Export View (unchanged) ----------
+# ---------- Export View ----------
 class SettlementExportView(APIView):
     def post(self, request):
         logger.info("SettlementExportView POST called")
@@ -376,6 +386,7 @@ class SettlementExportView(APIView):
             logger.warning(f"Restaurant not found: {data['restaurant_id']}")
             return Response({'success': False, 'error': 'Restaurant not found'}, status=status.HTTP_404_NOT_FOUND)
 
+        # In a real implementation, generate the file and return its URL
         file_url = "https://storage.example.com/settlements/report_12345.xlsx"
         expires_at = (datetime.now() + timedelta(hours=1)).isoformat() + 'Z'
         logger.info(f"Export file generated: {file_url}, expires at {expires_at}")
@@ -400,7 +411,8 @@ class SettlementTransactionDetailView(APIView):
             return Response({'success': False, 'error': 'Transaction not found'}, status=status.HTTP_404_NOT_FOUND)
 
         txn = order_to_transaction(order)
-        restaurant_data = RestaurantBriefSerializer(order.restaurant).data
+        # Pass request context to serializer
+        restaurant_data = RestaurantBriefSerializer(order.restaurant, context={'request': request}).data
         txn['restaurant'] = restaurant_data
         logger.info(f"Transaction detail sent for order {transaction_id}")
 

@@ -12,6 +12,7 @@ class RestaurantBriefSerializer(serializers.Serializer):
     address = serializers.SerializerMethodField()
     phone = serializers.SerializerMethodField()
     email = serializers.SerializerMethodField()
+    profile_image = serializers.SerializerMethodField()   # NEW
 
     def get_address(self, obj):
         location = getattr(obj, 'restaurant_location', None)
@@ -34,7 +35,16 @@ class RestaurantBriefSerializer(serializers.Serializer):
         owner = getattr(obj, 'owner_details', None)
         return owner.owner_email_address if owner else ''
 
-# ---------- Query serializers ----------
+    def get_profile_image(self, obj):
+        """Return absolute URL of the profile image, or None if not set."""
+        request = self.context.get('request')
+        if obj.profile_image and hasattr(obj.profile_image, 'url'):
+            if request is not None:
+                return request.build_absolute_uri(obj.profile_image.url)
+            return obj.profile_image.url
+        return None
+
+# ---------- Query serializers (unchanged) ----------
 class SettlementDashboardQuerySerializer(serializers.Serializer):
     restaurant_id = serializers.CharField(required=True)
     filter = serializers.ChoiceField(choices=['this_week','last_week','this_month','last_month','custom'])
@@ -80,14 +90,15 @@ class SettlementExportBodySerializer(serializers.Serializer):
             raise serializers.ValidationError("start_date must be before end_date")
         return data
 
-# ---------- Response serializers ----------
+# ---------- Response serializers (unchanged) ----------
 class SettlementSummarySerializer(serializers.Serializer):
     total_orders = serializers.IntegerField()
-    gross_sales = serializers.DecimalField(max_digits=12, decimal_places=2)
+    item_gross_sale = serializers.DecimalField(max_digits=12, decimal_places=2)
+    gross_sale = serializers.DecimalField(max_digits=12, decimal_places=2)
     total_delivery_fee = serializers.DecimalField(max_digits=12, decimal_places=2)
     total_tax = serializers.DecimalField(max_digits=12, decimal_places=2)
-    commission = serializers.DecimalField(max_digits=12, decimal_places=2)
-    net_pay = serializers.DecimalField(max_digits=12, decimal_places=2)
+    eatoor_commission = serializers.DecimalField(max_digits=12, decimal_places=2)
+    restaurant_net_pay = serializers.DecimalField(max_digits=12, decimal_places=2)
 
 class SettlementCurrentCycleSerializer(serializers.Serializer):
     cycle_start_date = serializers.DateField()
@@ -95,9 +106,10 @@ class SettlementCurrentCycleSerializer(serializers.Serializer):
     payout_date = serializers.DateField()
     status = serializers.CharField()
     orders = serializers.IntegerField()
-    revenue = serializers.DecimalField(max_digits=12, decimal_places=2)
-    commission = serializers.DecimalField(max_digits=12, decimal_places=2)
-    net_pay = serializers.DecimalField(max_digits=12, decimal_places=2)
+    item_gross_sale = serializers.DecimalField(max_digits=12, decimal_places=2)
+    gross_sale = serializers.DecimalField(max_digits=12, decimal_places=2)
+    eatoor_commission = serializers.DecimalField(max_digits=12, decimal_places=2)
+    restaurant_net_pay = serializers.DecimalField(max_digits=12, decimal_places=2)
     progress_percent = serializers.IntegerField()
 
 class SettlementTransactionSerializer(serializers.Serializer):
@@ -108,20 +120,22 @@ class SettlementTransactionSerializer(serializers.Serializer):
     order_type = serializers.CharField()
     payment_method = serializers.CharField()
     items_count = serializers.IntegerField()
-    subtotal = serializers.DecimalField(max_digits=12, decimal_places=2)
+    item_gross_sale = serializers.DecimalField(max_digits=12, decimal_places=2)
+    gross_sale = serializers.DecimalField(max_digits=12, decimal_places=2)
     discount = serializers.DecimalField(max_digits=12, decimal_places=2)
     tax = serializers.DecimalField(max_digits=12, decimal_places=2)
     delivery_fee = serializers.DecimalField(max_digits=12, decimal_places=2)
-    commission = serializers.DecimalField(max_digits=12, decimal_places=2)
-    net = serializers.DecimalField(max_digits=12, decimal_places=2)
+    eatoor_commission = serializers.DecimalField(max_digits=12, decimal_places=2)
+    restaurant_net_pay = serializers.DecimalField(max_digits=12, decimal_places=2)
     status = serializers.CharField()
 
 class DayWiseSummarySerializer(serializers.Serializer):
     date = serializers.DateField()
     total_orders = serializers.IntegerField()
-    gross_sales = serializers.DecimalField(max_digits=12, decimal_places=2)
+    item_gross_sale = serializers.DecimalField(max_digits=12, decimal_places=2)
+    gross_sale = serializers.DecimalField(max_digits=12, decimal_places=2)
     total_delivery_fee = serializers.DecimalField(max_digits=12, decimal_places=2)
     tax = serializers.DecimalField(max_digits=12, decimal_places=2)
-    commission = serializers.DecimalField(max_digits=12, decimal_places=2)
-    net_pay = serializers.DecimalField(max_digits=12, decimal_places=2)
+    eatoor_commission = serializers.DecimalField(max_digits=12, decimal_places=2)
+    restaurant_net_pay = serializers.DecimalField(max_digits=12, decimal_places=2)
     average_order_value = serializers.DecimalField(max_digits=12, decimal_places=2, required=False)
