@@ -1,13 +1,18 @@
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 import math
 import requests
 from BizEats import settings
 from api.delivery.porter_service import get_fare_estimate
-from api.models import Payment, RestaurantMaster, UserDeliveryAddress, WalletTransaction
+from api.models import Order, Payment, RestaurantMaster, UserDeliveryAddress, WalletTransaction
 import os
 import logging
 from typing import Dict, Union, Optional, Tuple
 from math import radians, sin, cos, sqrt, atan2
+
+
+from django.utils import timezone
+from django.db.models import Sum, Count
 
 logger = logging.getLogger(__name__)
 
@@ -206,3 +211,123 @@ def get_final_payment_checks(order_id, payment_method_display, order_payment_det
         "cod_payment_used": cod_payment_used,
         "cod_payment_pending": cod_payment_pending,
     }
+
+# ---------- Revenue summary helper (unchanged) ----------
+def get_revenue_summary(orders_queryset):
+    """
+    Given a queryset of Order objects, compute:
+        - total_orders: int (excluding 'In Progress')
+        - total_revenue: Decimal (as string, excluding 'In Progress')
+        - status_breakdown: list of {status: str, order_count: int, revenue: str}
+          (excluding 'In Progress')
+    """
+    # Exclude orders with status = 9 ('In Progress')
+    filtered_qs = orders_queryset.exclude(status=9)
+
+    total_orders = filtered_qs.count()
+    total_revenue = filtered_qs.aggregate(total=Sum('total_amount'))['total'] or Decimal('0.00')
+
+    status_choices = dict(Order.ORDER_STATUS_CHOICES)
+
+    status_breakdown = (
+        filtered_qs.values('status')
+        .annotate(
+            order_count=Count('id'),
+            revenue=Sum('total_amount')
+        )
+        .order_by('status')
+    )
+
+    breakdown_list = []
+    for item in status_breakdown:
+        status_code = item['status']
+        breakdown_list.append({
+            'status': status_choices.get(status_code, str(status_code)),
+            'order_count': item['order_count'],
+            'revenue': str(item['revenue'] or Decimal('0.00'))
+        })
+
+    return {
+        'total_orders': total_orders,
+        'total_revenue': str(total_revenue),
+        'status_breakdown': breakdown_list,
+    }
+
+
+# ---------- Settlement date range helpers ----------
+def parse_date(date_str):
+    """Convert 'YYYY-MM-DD' to timezone-aware datetime at start of day."""
+    if not date_str:
+        return None
+    try:
+        naive = datetime.strptime(date_str, '%Y-%m-%d')
+        return timezone.make_aware(naive)
+    except ValueError:
+        return None
+
+
+def get_settlement_range(settlement_date=None):
+    """
+    Return (start_date, end_date) for a weekly settlement period ending on a Wednesday.
+    If settlement_date is given, it must be a Wednesday.
+    Otherwise, use the most recent Wednesday (or today if today is Wednesday).
+    The period is: Thursday (start) to Wednesday (end) inclusive.
+    """
+    if settlement_date:
+        # Validate that it's a Wednesday (weekday=2)
+        if settlement_date.weekday() != 2:
+            raise ValueError("settlement_date must be a Wednesday.")
+        wednesday = settlement_date
+    else:
+        # Use today's date
+        today = timezone.now().date()
+        # Find the most recent Wednesday. Wednesday weekday = 2 (Monday=0)
+        days_since_wednesday = (today.weekday() - 2) % 7
+        wednesday = today - timedelta(days=days_since_wednesday)
+
+    # Start: Thursday = Wednesday - 6 days (since Thursday to Wednesday inclusive is 7 days)
+    start = wednesday - timedelta(days=6)
+    # End: end of the Wednesday (so orders on that day are included)
+    end = wednesday + timedelta(days=1) - timedelta(microseconds=1)
+
+    # Make them timezone-aware datetimes (start at midnight, end at 23:59:59)
+    start_dt = timezone.make_aware(datetime.combine(start, datetime.min.time()))
+    end_dt = timezone.make_aware(datetime.combine(end, datetime.max.time()))
+
+    return start_dt, end_dt
+
+
+def get_date_range_from_request(data):
+    """
+    Determine the date range based on request data.
+    Priority:
+        1. Explicit start_date & end_date (must both be present)
+        2. settlement_date (must be a Wednesday)
+        3. Default: current settlement week (last Thursday to this Wednesday)
+    Returns (start_date, end_date, range_type)
+    """
+    start_date_str = data.get('start_date')
+    end_date_str = data.get('end_date')
+    settlement_date_str = data.get('settlement_date')
+
+    # 1. Explicit dates
+    if start_date_str and end_date_str:
+        start = parse_date(start_date_str)
+        end = parse_date(end_date_str)
+        if start is None or end is None:
+            raise ValueError("Invalid date format. Use YYYY-MM-DD.")
+        # Make end inclusive
+        end = end + timedelta(days=1) - timedelta(microseconds=1)
+        return start, end, 'custom'
+
+    # 2. Settlement date
+    if settlement_date_str:
+        settlement = parse_date(settlement_date_str)
+        if settlement is None:
+            raise ValueError("Invalid settlement_date format. Use YYYY-MM-DD.")
+        start, end = get_settlement_range(settlement)
+        return start, end, 'settlement_week'
+
+    # 3. Default: current settlement week
+    start, end = get_settlement_range()  # no date -> uses today
+    return start, end, 'current_settlement_week'

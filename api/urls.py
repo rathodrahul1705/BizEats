@@ -144,7 +144,7 @@ urlpatterns = [
 
     path('api/offers/check/', check_credit_offer, name='check_credit_offer'),
 
-
+    path('api/', include('api.settlements.urls')),
 
     # urlpatterns = [
     #     # Global endpoints

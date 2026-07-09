@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
 import json
@@ -26,7 +27,10 @@ from io import BytesIO
 import os
 from django.conf import settings
 
-from api.utils.utils import get_final_payment_checks
+from api.utils.utils import get_date_range_from_request, get_final_payment_checks, get_revenue_summary
+
+# Set up logger
+logger = logging.getLogger(__name__)
 
 @method_decorator(csrf_exempt, name='dispatch')
 class TrackOrder(APIView):
@@ -35,11 +39,13 @@ class TrackOrder(APIView):
     """
 
     def post(self, request, *args, **kwargs):
+        logger.info("TrackOrder called with data: %s", request.data)
         try:
             user_id = request.data.get('user_id')
             order_number = request.data.get('order_number')
             user = User.objects.filter(id=user_id).first()
             if not user:
+                logger.warning("User not found: user_id=%s", user_id)
                 return Response({"status": "error", "message": "User not found"}, status=status.HTTP_404_NOT_FOUND)
 
             full_name = user.full_name
@@ -155,42 +161,60 @@ class TrackOrder(APIView):
 
                 data.append(order_data)
 
+            logger.info("TrackOrder success for user_id=%s, order_number=%s", user_id, order_number)
             return Response({
                 "status": "success",
                 "orders": data
             })
 
         except Exception as e:
+            logger.exception("TrackOrder failed: %s", str(e))
             return Response(
                 {"status": "error", "message": str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
+# ---------- Main view ----------
 @method_decorator(csrf_exempt, name='dispatch')
 class RestaurantOrders(APIView):
     def post(self, request, *args, **kwargs):
+        logger.info("RestaurantOrders called with data: %s", request.data)
         try:
-            
-            seven_days_ago = timezone.now() - timedelta(days=30)
             restaurant_id = request.data.get('restaurant_id')
-            # orders = Order.objects.filter(restaurant_id=restaurant_id)
-            orders = Order.objects.filter(
-                restaurant_id=restaurant_id,
-                created_at__gte=seven_days_ago
-            )
+            if not restaurant_id:
+                return Response(
+                    {"status": "error", "message": "restaurant_id is required"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
 
+            # ----- Determine date range using helper -----
+            try:
+                start_date, end_date, range_type = get_date_range_from_request(request.data)
+            except ValueError as ve:
+                return Response(
+                    {"status": "error", "message": str(ve)},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Filter orders
+            orders_qs = Order.objects.filter(
+                restaurant_id=restaurant_id,
+                created_at__gte=start_date,
+                created_at__lte=end_date
+            ).exclude(status=9)
+
+            # ----- Compute summary (excluding In Progress) -----
+            summary = get_revenue_summary(orders_qs)
+
+            # ----- Build detailed order list (all orders) -----
             data = []
-            for order in orders:
+            for order in orders_qs:
                 user = User.objects.filter(id=order.user_id).first()
 
                 payment_details = Payment.objects.filter(order_id=order.id).first()
-                if payment_details:
-                    transaction_id = payment_details.razorpay_payment_id
-                else:
-                    transaction_id = None
+                transaction_id = payment_details.razorpay_payment_id if payment_details else None
 
                 delivery_address = UserDeliveryAddress.objects.filter(id=order.delivery_address_id).first()
-                
                 if delivery_address:
                     address_parts = [
                         delivery_address.street_address,
@@ -202,7 +226,6 @@ class RestaurantOrders(APIView):
                     address_string = ", ".join([part for part in address_parts if part])
                 else:
                     address_string = ""
-
 
                 cart_items = Cart.objects.filter(order_number=order.order_number)
                 item_details = []
@@ -232,7 +255,7 @@ class RestaurantOrders(APIView):
                     "subtotal": str(subtotal),
                     "delivery_fee": str(order.delivery_fee),
                     "total": str(order.total_amount),
-                    "status": order.status,
+                    "status": order.get_status_display(),
                     "transaction_id": transaction_id,
                     "payment_status": order.get_payment_status_display(),
                     "payment_method": order.get_payment_method_display(),
@@ -240,12 +263,25 @@ class RestaurantOrders(APIView):
 
                 data.append(order_data)
 
+            logger.info(
+                "RestaurantOrders success for restaurant_id=%s, orders_count=%d, total_revenue=%s, range=%s",
+                restaurant_id, len(data), summary['total_revenue'], range_type
+            )
+
+            # ----- Final response -----
             return Response({
                 "status": "success",
-                "orders": data
+                "range": {
+                    "type": range_type,
+                    "start": start_date.strftime("%Y-%m-%d %H:%M:%S"),
+                    "end": end_date.strftime("%Y-%m-%d %H:%M:%S"),
+                },
+                "orders": data,
+                "summary": summary
             })
 
         except Exception as e:
+            logger.exception("RestaurantOrders failed: %s", str(e))
             return Response(
                 {"status": "error", "message": str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -292,17 +328,20 @@ def generate_invoice_pdf(order):
 
 class OrderStatusUpdate(APIView):
     def post(self, request, *args, **kwargs):
+        logger.info("OrderStatusUpdate called with data: %s", request.data)
         try:
             order_number = request.data.get('order_number')
             new_status = request.data.get('new_status')
 
             if not order_number or new_status is None:
+                logger.warning("OrderStatusUpdate missing required fields: order_number=%s, new_status=%s", order_number, new_status)
                 return Response({
                     "status": "error",
                     "message": "order_number and new_status are required."
                 }, status=status.HTTP_400_BAD_REQUEST)
 
             order = Order.objects.get(order_number=order_number)
+            logger.info("Updating order %s status from %s to %s", order_number, order.status, new_status)
             
             if new_status == 4:
                helper.create_delivery_request(order_number,order)
@@ -319,6 +358,7 @@ class OrderStatusUpdate(APIView):
                 "user_id":order.user_id,
                 "order_number":order_number
             }
+            
             customer_token = (
                 Device.objects
                 .filter(user_id=order.user_id)
@@ -337,6 +377,7 @@ class OrderStatusUpdate(APIView):
             
             send_order_status_email(order)
 
+            logger.info("OrderStatusUpdate success for order %s, new status %s", order_number, new_status)
             return Response({
                 "status": "success",
                 "message": f"Order #{order_number} status updated and customer notified.",
@@ -344,12 +385,14 @@ class OrderStatusUpdate(APIView):
             })
 
         except Order.DoesNotExist:
+            logger.warning("OrderStatusUpdate: Order not found: order_number=%s", order_number)
             return Response({
                 "status": "error",
                 "message": f"Order with number {order_number} not found."
             }, status=status.HTTP_404_NOT_FOUND)
 
         except Exception as e:
+            logger.exception("OrderStatusUpdate failed: %s", str(e))
             return Response(
                 {"status": "error", "message": str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -363,10 +406,12 @@ class OrderDetails(APIView):
     """
 
     def post(self, request, *args, **kwargs):
+        logger.info("OrderDetails called with data: %s", request.data)
         try:
             user_id = request.data.get('user_id')
             user = User.objects.filter(id=user_id).first()
             if not user:
+                logger.warning("OrderDetails: User not found: user_id=%s", user_id)
                 return Response({"status": "error", "message": "User not found"}, status=status.HTTP_404_NOT_FOUND)
 
             full_name = user.full_name
@@ -441,12 +486,14 @@ class OrderDetails(APIView):
 
                 data.append(order_data)
 
+            logger.info("OrderDetails success for user_id=%s, orders_count=%d", user_id, len(data))
             return Response({
                 "status": "success",
                 "orders": data
             })
 
         except Exception as e:
+            logger.exception("OrderDetails failed: %s", str(e))
             return Response(
                 {"status": "error", "message": str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -471,7 +518,9 @@ class LiveLocationDetails(APIView):
 
     def post(self, request, *args, **kwargs):
         order_id = request.data.get("order_id")
+        logger.info("LiveLocationDetails called for order_id=%s", order_id)
         if not order_id:
+            logger.warning("LiveLocationDetails: order_id missing")
             return Response(
                 {"status": "error", "message": "order_id is required."},
                 status=status.HTTP_400_BAD_REQUEST
@@ -480,18 +529,21 @@ class LiveLocationDetails(APIView):
         try:
             order = Order.objects.select_related("delivery_address", "restaurant").get(order_number=order_id)
         except Order.DoesNotExist:
+            logger.warning("LiveLocationDetails: Order not found: order_id=%s", order_id)
             return Response({"status": "error", "message": "Order not found."}, status=status.HTTP_404_NOT_FOUND)
 
         delivery_address = order.delivery_address
         restaurant = order.restaurant
 
         if not delivery_address or not delivery_address.latitude or not delivery_address.longitude:
+            logger.warning("LiveLocationDetails: Delivery address missing location for order_id=%s", order_id)
             return Response({"status": "error", "message": "Delivery address location not found."},
                             status=status.HTTP_404_NOT_FOUND)
 
         try:
             restaurant_location = restaurant.restaurant_location
         except RestaurantLocation.DoesNotExist:
+            logger.warning("LiveLocationDetails: Restaurant location missing for order_id=%s", order_id)
             return Response({"status": "error", "message": "Restaurant location not found."},
                             status=status.HTTP_404_NOT_FOUND)
 
@@ -532,6 +584,7 @@ class LiveLocationDetails(APIView):
                 float(delivery_address.longitude),
             )
 
+        logger.info("LiveLocationDetails success for order_id=%s", order_id)
         return Response({
             "status": "success",
             "user_destination": {
@@ -558,12 +611,14 @@ class UpdateOrderLiveLocationView(APIView):
     """
 
     def post(self, request, *args, **kwargs):
+        logger.info("UpdateOrderLiveLocationView called with data: %s", request.data)
         try:
             order_number = request.data.get("order_number")
             latitude = request.data.get("latitude")
             longitude = request.data.get("longitude")
 
             if not order_number or latitude is None or longitude is None:
+                logger.warning("UpdateOrderLiveLocationView missing required fields")
                 return Response({
                     "status": "error",
                     "message": "order_number, latitude, and longitude are required."
@@ -581,6 +636,7 @@ class UpdateOrderLiveLocationView(APIView):
             )
 
             message = "Live location created successfully." if created else "Live location updated successfully."
+            logger.info("UpdateOrderLiveLocationView %s for order_number=%s", message, order_number)
 
             return Response({
                 "status": "success",
@@ -588,6 +644,7 @@ class UpdateOrderLiveLocationView(APIView):
             }, status=status.HTTP_200_OK)
 
         except Exception as e:
+            logger.exception("UpdateOrderLiveLocationView failed: %s", str(e))
             return Response({
                 "status": "error",
                 "message": str(e)
@@ -600,10 +657,12 @@ class GetActiveOrders(APIView):
     """
 
     def post(self, request, *args, **kwargs):
+        logger.info("GetActiveOrders called with data: %s", request.data)
         try:
             user_id = request.data.get('user_id')
             user = User.objects.filter(id=user_id).first()
             if not user:
+                logger.warning("GetActiveOrders: User not found: user_id=%s", user_id)
                 return Response({"status": "error", "message": "User not found"}, status=status.HTTP_404_NOT_FOUND)
 
             orders = Order.objects.filter(user_id=user_id).exclude(status__in=[6, 7, 8, 9])
@@ -627,12 +686,14 @@ class GetActiveOrders(APIView):
                 }
                 data.append(order_data)
 
+            logger.info("GetActiveOrders success for user_id=%s, orders_count=%d", user_id, len(data))
             return Response({
                 "status": "success",
                 "orders": data
             })
 
         except Exception as e:
+            logger.exception("GetActiveOrders failed: %s", str(e))
             return Response(
                 {"status": "error", "message": str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -645,92 +706,28 @@ class MarkAsPaid(APIView):
     """
 
     def post(self, request, order_number, *args, **kwargs):
+        logger.info("MarkAsPaid called for order_number=%s", order_number)
         try:
 
             Order.objects.filter(order_number=order_number).update(payment_status=5)
             message = "Order Marked As Paid"
+            logger.info("MarkAsPaid success for order_number=%s", order_number)
             return Response({
                 "status": "success",
                 "message": message
             }, status=status.HTTP_200_OK)
 
         except Exception as e:
+            logger.exception("MarkAsPaid failed for order_number=%s: %s", order_number, str(e))
             return Response({
                 "status": "error",
                 "message": str(e)
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-# @method_decorator(csrf_exempt, name='dispatch')
-# class ApplyCouponOrder(APIView):
-
-#     def post(self, request, *args, **kwargs):
-#         try:
-#             coupon_code = request.data.get('code')
-#             order_amount = request.data.get('order_amount')
-#             restaurant_id = request.data.get('restaurant_id')
-#             user_id = request.data.get('user_id')
-
-#             if not all([coupon_code, order_amount, restaurant_id, user_id]):
-#                 return Response({
-#                     "status": "error",
-#                     "message": "All fields (coupon_code, order_amount, restaurant_id, user_id) are required."
-#                 }, status=status.HTTP_400_BAD_REQUEST)
-
-#             try:
-#                 coupon = Coupon.objects.get(code=coupon_code)
-#             except Coupon.DoesNotExist:
-#                 return Response({
-#                     "status": "error",
-#                     "message": "Invalid coupon code."
-#                 }, status=status.HTTP_400_BAD_REQUEST)
-
-#             now = timezone.now()
-#             if not (coupon.is_active and coupon.valid_from <= now <= coupon.valid_to):
-#                 return Response({
-#                     "status": "error",
-#                     "message": "Coupon is either inactive or expired."
-#                 }, status=status.HTTP_400_BAD_REQUEST)
-
-#             try:
-#                 order_amount = float(order_amount)
-#             except (ValueError, TypeError):
-#                 return Response({
-#                     "status": "error",
-#                     "message": "Invalid order amount."
-#                 }, status=status.HTTP_400_BAD_REQUEST)
-
-#             if order_amount < float(coupon.minimum_order_amount):
-#                 return Response({
-#                     "status": "error",
-#                     "message": f"Minimum order amount should be ₹{coupon.minimum_order_amount} to apply this coupon."
-#                 }, status=status.HTTP_400_BAD_REQUEST)
-
-#             coupon_discount_value = float(coupon.discount_value) if isinstance(coupon.discount_value, Decimal) else coupon.discount_value
-
-#             if coupon.discount_type == 'percentage':
-#                 discount_amount = (coupon_discount_value / 100) * order_amount
-#             else:
-#                 discount_amount = coupon_discount_value
-            
-#             discount_amount = min(discount_amount, order_amount)
-#             final_total_amount = max(order_amount - discount_amount, 0)
-
-#             return Response({
-#                 "status": "success",
-#                 "message": "Coupon applied successfully!",
-#                 "discount_amount": round(discount_amount, 2),
-#                 "final_total_amount": round(final_total_amount, 2)
-#             }, status=status.HTTP_200_OK)
-
-#         except Exception as e:
-#             return Response({
-#                 "status": "error",
-#                 "message": "Something went wrong while applying the coupon.",
-#                 "error_details": str(e)
-#             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 @method_decorator(csrf_exempt, name='dispatch')
 class ApplyCouponOrder(APIView):
     def post(self, request, *args, **kwargs):
+        logger.info("ApplyCouponOrder called with data: %s", request.data)
         try:
             coupon_code = request.data.get('code')
             order_amount = request.data.get('order_amount')
@@ -739,6 +736,7 @@ class ApplyCouponOrder(APIView):
 
             # Validate required fields
             if not all([coupon_code, order_amount, restaurant_id, user_id]):
+                logger.warning("ApplyCouponOrder missing required fields")
                 return Response({
                     "status": "error",
                     "message": "All fields (code, order_amount, restaurant_id, user_id) are required."
@@ -747,6 +745,7 @@ class ApplyCouponOrder(APIView):
             try:
                 order_amount = float(order_amount)
             except (ValueError, TypeError):
+                logger.warning("ApplyCouponOrder invalid order_amount: %s", order_amount)
                 return Response({
                     "status": "error",
                     "message": "Invalid order amount."
@@ -760,6 +759,7 @@ class ApplyCouponOrder(APIView):
                     is_active=True
                 )
             except OfferDetail.DoesNotExist:
+                logger.warning("ApplyCouponOrder: Coupon not found or inactive: code=%s", coupon_code)
                 return Response({
                     "status": "error",
                     "message": "Invalid coupon code or coupon not active."
@@ -767,6 +767,7 @@ class ApplyCouponOrder(APIView):
 
             # Check if coupon is valid
             if not offer.is_valid():
+                logger.warning("ApplyCouponOrder: Coupon expired/inactive: code=%s", coupon_code)
                 return Response({
                     "status": "error",
                     "message": "Coupon is either inactive or expired."
@@ -774,6 +775,7 @@ class ApplyCouponOrder(APIView):
 
             # Check if coupon is valid for this restaurant
             if offer.restaurant and str(offer.restaurant.restaurant_id) != str(restaurant_id):
+                logger.warning("ApplyCouponOrder: Coupon not valid for restaurant: code=%s, restaurant=%s", coupon_code, restaurant_id)
                 return Response({
                     "status": "error",
                     "message": "This coupon is not valid for the selected restaurant."
@@ -781,6 +783,7 @@ class ApplyCouponOrder(APIView):
 
             # Check minimum order amount
             if offer.minimum_order_amount and order_amount < float(offer.minimum_order_amount):
+                logger.warning("ApplyCouponOrder: Order amount below minimum: min=%s, actual=%s", offer.minimum_order_amount, order_amount)
                 return Response({
                     "status": "error",
                     "message": f"Minimum item amount should be ₹{offer.minimum_order_amount} to apply this coupon."
@@ -805,6 +808,7 @@ class ApplyCouponOrder(APIView):
             if offer.offer_type == 'free_delivery':
                 free_delivery = True
 
+            logger.info("ApplyCouponOrder success: code=%s, discount=%s, final_total=%s", coupon_code, discount_amount, final_total_amount)
             return Response({
                 "status": "success",
                 "message": "Coupon applied successfully!",
@@ -821,9 +825,9 @@ class ApplyCouponOrder(APIView):
             }, status=status.HTTP_200_OK)
 
         except Exception as e:
+            logger.exception("ApplyCouponOrder failed: %s", str(e))
             return Response({
                 "status": "error",
                 "message": "Something went wrong while applying the coupon.",
                 "error_details": str(e)
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
