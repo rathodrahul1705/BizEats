@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from api.models import (
     RestaurantMaster, RestaurantLocation, RestaurantOwnerDetail,
-    Order, Payment, User, UserDeliveryAddress, RestaurantMenu
+    Order, Payment, Settlement, SettlementOrder, User, UserDeliveryAddress, RestaurantMenu
 )
 from decimal import Decimal
 
@@ -139,3 +139,49 @@ class DayWiseSummarySerializer(serializers.Serializer):
     eatoor_commission = serializers.DecimalField(max_digits=12, decimal_places=2)
     restaurant_net_pay = serializers.DecimalField(max_digits=12, decimal_places=2)
     average_order_value = serializers.DecimalField(max_digits=12, decimal_places=2, required=False)
+
+class SettlementOrderSerializer(serializers.ModelSerializer):
+    order_number = serializers.CharField(source='order.order_number', read_only=True)
+
+    class Meta:
+        model = SettlementOrder
+        fields = ['order_number', 'order_amount', 'commission', 'payable']
+
+class SettlementListSerializer(serializers.ModelSerializer):
+    period = serializers.SerializerMethodField()
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+
+    class Meta:
+        model = Settlement
+        fields = [
+            'id', 'settlement_number', 'period', 'total_orders',
+            'payable_amount', 'status_display', 'created_at'
+        ]
+
+    def get_period(self, obj):
+        return f"{obj.start_date.strftime('%d %b')} - {obj.end_date.strftime('%d %b')}"
+
+class SettlementDetailSerializer(serializers.ModelSerializer):
+    restaurant_name = serializers.CharField(source='restaurant.name', read_only=True)
+    orders = SettlementOrderSerializer(many=True, read_only=True)
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+
+    class Meta:
+        model = Settlement
+        fields = [
+            'id', 'settlement_number', 'restaurant_name', 'start_date', 'end_date',
+            'total_orders', 'gross_sales', 'commission', 'delivery_charge',
+            'taxes', 'adjustments', 'payable_amount', 'status_display',
+            'payment_reference', 'paid_on', 'remarks', 'created_at', 'orders'
+        ]
+
+class SettlementGenerateSerializer(serializers.Serializer):
+    restaurant_id = serializers.IntegerField()
+    start_date = serializers.DateField()
+    end_date = serializers.DateField()
+    force = serializers.BooleanField(default=False)  # to override existing if needed
+
+class SettlementPaySerializer(serializers.Serializer):
+    settlement_id = serializers.IntegerField()
+    payment_reference = serializers.CharField(max_length=200)
+    remarks = serializers.CharField(required=False, allow_blank=True)

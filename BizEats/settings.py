@@ -8,6 +8,7 @@ import logging
 from logging.handlers import TimedRotatingFileHandler
 import firebase_admin
 from firebase_admin import credentials
+from celery.schedules import crontab
 
 cred = credentials.Certificate("serviceAccountKey.json")
 
@@ -42,7 +43,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'api',
     'background_task',
-    'storages'
+    'storages',
+    'django_celery_beat'
 ]
 
 MIDDLEWARE = [
@@ -145,6 +147,27 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "public")
 # PAYTM_TXN_URL = "https://securegw-stage.paytm.in/theia/api/v1/initiateTransaction"
 # PAYTM_STATUS_URL = "https://securegw-stage.paytm.in/v3/order/status"
 
+
+CELERY_BROKER_URL = "redis://127.0.0.1:6379/0"
+CELERY_RESULT_BACKEND = "redis://127.0.0.1:6379/0"
+
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+
+CELERY_TIMEZONE = "Asia/Kolkata"
+CELERY_ENABLE_UTC = False
+
+CELERY_TASK_TRACK_STARTED = True
+CELERY_TASK_TIME_LIMIT = 30 * 60
+CELERY_TASK_SOFT_TIME_LIMIT = 25 * 60
+
+CELERY_BEAT_SCHEDULE = {
+    "send-report-every-30-seconds": {
+        "task": "api.tasks.send_report",
+        "schedule": timedelta(seconds=30),
+    },
+}
 
 # Paytm Configuration
 PAYTM_MERCHANT_ID = 'SghfVi61537633348220'  # Get from Paytm dashboard

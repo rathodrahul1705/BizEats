@@ -1,8 +1,9 @@
 import logging
+from xml.dom import ValidationErr
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from datetime import datetime, timedelta, date
+from datetime import datetime, timedelta, date, timezone
 import pytz
 from django.db.models import Sum, Q, Count, F, Value, DecimalField
 from django.db.models.functions import Coalesce, TruncDate
@@ -11,7 +12,8 @@ from decimal import Decimal
 
 from api.models import (
     RestaurantMaster, Order, Payment, User,
-    RestaurantMenu, RestaurantLocation, RestaurantOwnerDetail
+    RestaurantMenu, RestaurantLocation, RestaurantOwnerDetail,
+    Settlement
 )
 from .serializers import (
     SettlementDashboardQuerySerializer,
@@ -22,7 +24,15 @@ from .serializers import (
     SettlementCurrentCycleSerializer,
     SettlementTransactionSerializer,
     DayWiseSummarySerializer,
+    SettlementListSerializer,
+    SettlementDetailSerializer,
+    SettlementGenerateSerializer,
+    SettlementPaySerializer
 )
+
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from django.shortcuts import get_object_or_404
+from api.settlements.settlement_service import SettlementService
 
 logger = logging.getLogger(__name__)
 
@@ -420,3 +430,67 @@ class SettlementTransactionDetailView(APIView):
             'success': True,
             'data': txn,
         }, status=status.HTTP_200_OK)
+    
+
+class AdminSettlementGenerateView(APIView):
+    permission_classes = [IsAdminUser]
+
+    def post(self, request):
+        serializer = SettlementGenerateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        try:
+            settlement = SettlementService.generate_settlement(
+                restaurant_id=serializer.validated_data['restaurant_id'],
+                start_date=serializer.validated_data['start_date'],
+                end_date=serializer.validated_data['end_date'],
+                force=serializer.validated_data.get('force', False)
+            )
+            return Response({
+                'success': True,
+                'settlement_id': settlement.id
+            }, status=status.HTTP_201_CREATED)
+        except ValidationErr as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+class AdminSettlementPayView(APIView):
+    permission_classes = [IsAdminUser]
+
+    def post(self, request):
+        serializer = SettlementPaySerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        settlement = get_object_or_404(
+            Settlement,
+            id=serializer.validated_data['settlement_id']
+        )
+        # Business logic: only PENDING or GENERATED can be paid? We'll allow if status in [GENERATED, APPROVED]
+        if settlement.status not in [Settlement.Status.GENERATED, Settlement.Status.APPROVED]:
+            return Response(
+                {'error': 'Settlement cannot be marked paid in current status.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        settlement.status = Settlement.Status.PAID
+        settlement.payment_reference = serializer.validated_data['payment_reference']
+        settlement.remarks = serializer.validated_data.get('remarks', '')
+        settlement.paid_on = timezone.now()
+        settlement.save()
+        return Response({'success': True})
+
+class RestaurantSettlementListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        # Assuming restaurant is linked to user; we need to filter by restaurant
+        # We'll assume request.user has a restaurant profile
+        restaurant = request.user.restaurant  # adjust based on your auth setup
+        settlements = Settlement.objects.filter(restaurant=restaurant).order_by('-created_at')
+        serializer = SettlementListSerializer(settlements, many=True)
+        return Response(serializer.data)
+
+class RestaurantSettlementDetailView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk):
+        restaurant = request.user.restaurant
+        settlement = get_object_or_404(Settlement, id=pk, restaurant=restaurant)
+        serializer = SettlementDetailSerializer(settlement)
+        return Response(serializer.data)

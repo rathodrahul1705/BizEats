@@ -5,6 +5,7 @@ from api.delivery.porter_views import porter_track_booking
 from api.emailer.email_notifications import send_order_status_email
 from api.models import Order, PorterOrder
 from api.order.track_order import generate_invoice_pdf
+from celery import shared_task
 
 logger = logging.getLogger('background_tasks')
 
@@ -79,3 +80,11 @@ def update_order_statuses():
     # # Re-schedule the task again
     # logger.info("Rescheduling update_order_statuses task to run after 60 seconds.")
     # update_order_statuses(schedule=180)
+
+
+@shared_task
+def send_report():
+    
+    print(f"Email sent to user {"===="}")
+
+    return True
