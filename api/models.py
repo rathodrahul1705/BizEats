@@ -1377,6 +1377,7 @@ class Settlement(models.Model):
     taxes = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     adjustments = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     payable_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    settlement_file = models.ImageField(upload_to="settlement_file/", blank=True, null=True)
 
     status = models.IntegerField(
         choices=((1, "Pending"), (2, "Approved"), (3, "Paid"), (4, "Cancelled")),

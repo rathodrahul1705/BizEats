@@ -89,6 +89,11 @@ def update_order_statuses():
 
 @shared_task
 def generate_weekly_settlements():
+    """
+    Celery task to generate weekly settlements for all restaurants.
+    For each successfully created settlement, an invoice PDF is generated
+    and attached to the settlement record.
+    """
     logger.info("Starting weekly settlement generation task.")
 
     timezone_str = 'Asia/Kolkata'
@@ -105,36 +110,53 @@ def generate_weekly_settlements():
     restaurants = RestaurantMaster.objects.all().iterator()
 
     for restaurant in restaurants:
-        logger.info(f"Processing restaurant {restaurant.restaurant_id}")
+        restaurant_id = restaurant.restaurant_id
+        logger.info(f"Processing restaurant {restaurant_id}")
 
         try:
+            # 1. Generate settlement
             settlement = SettlementService.generate_settlement(
-                restaurant_id=restaurant.restaurant_id,
+                restaurant_id=restaurant_id,
                 start_date=start_date,
                 end_date=end_date,
                 force=False
             )
             logger.info(
                 "Settlement generated for restaurant %s: %s",
-                restaurant.restaurant_id, settlement.settlement_number
+                restaurant_id, settlement.settlement_number
             )
+
+            # 2. Generate and attach invoice PDF
+            try:
+                SettlementService.generate_invoice(settlement)
+                logger.info(
+                    "Invoice generated for settlement %s",
+                    settlement.settlement_number
+                )
+            except Exception as invoice_error:
+                # Log error but do not fail the whole task
+                logger.error(
+                    "Failed to generate invoice for settlement %s (restaurant %s): %s",
+                    settlement.settlement_number, restaurant_id, str(invoice_error),
+                    exc_info=True
+                )
 
         except ValidationError as e:
             error_msg = str(e)
             if "already exists" in error_msg.lower():
                 logger.info(
                     "Settlement already exists for restaurant %s, skipping.",
-                    restaurant.restaurant_id
+                    restaurant_id
                 )
             elif "no completed orders" in error_msg.lower():
                 logger.info(
                     "No orders for restaurant %s: %s",
-                    restaurant.restaurant_id, error_msg
+                    restaurant_id, error_msg
                 )
             else:
                 logger.error(
                     "Unexpected ValidationError for restaurant %s: %s",
-                    restaurant.restaurant_id, error_msg
+                    restaurant_id, error_msg
                 )
 
         except IntegrityError as e:
@@ -142,12 +164,12 @@ def generate_weekly_settlements():
             # The unique constraint on (restaurant, start_date, end_date) prevents duplicates.
             logger.info(
                 "Settlement already exists for restaurant %s (concurrent creation), skipping.",
-                restaurant.restaurant_id
+                restaurant_id
             )
 
         except Exception as e:
             logger.error(
                 "Unexpected error for restaurant %s: %s",
-                restaurant.restaurant_id, e,
+                restaurant_id, e,
                 exc_info=True
             )

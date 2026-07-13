@@ -27,7 +27,7 @@ from io import BytesIO
 import os
 from django.conf import settings
 
-from api.utils.utils import get_date_range_from_request, get_final_payment_checks, get_revenue_summary
+from api.utils.utils import get_date_range_from_request, get_date_range_settle, get_final_payment_checks, get_revenue_summary
 
 # Set up logger
 logger = logging.getLogger(__name__)
@@ -188,8 +188,9 @@ class RestaurantOrders(APIView):
                 )
 
             # ----- Determine date range using helper -----
+            range_type = 'current_settlement_week'
             try:
-                start_date, end_date, range_type = get_date_range_from_request(request.data)
+                start_date, end_date = get_date_range_settle('this_week')
             except ValueError as ve:
                 return Response(
                     {"status": "error", "message": str(ve)},
