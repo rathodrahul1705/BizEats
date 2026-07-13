@@ -164,7 +164,7 @@ CELERY_TASK_SOFT_TIME_LIMIT = 25 * 60
 
 CELERY_BEAT_SCHEDULE = {
     "send-report-every-30-seconds": {
-        "task": "api.tasks.send_report",
+        "task": "api.tasks.generate_weekly_settlements",
         "schedule": timedelta(seconds=30),
     },
 }

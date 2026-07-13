@@ -1,11 +1,17 @@
 import logging
+from sqlite3 import IntegrityError
 from background_task import background
 from django.utils import timezone
 from api.delivery.porter_views import porter_track_booking
 from api.emailer.email_notifications import send_order_status_email
-from api.models import Order, PorterOrder
+from api.models import Order, PorterOrder,Settlement
 from api.order.track_order import generate_invoice_pdf
 from celery import shared_task
+from datetime import datetime, timedelta
+from .models import RestaurantMaster
+from api.settlements.settlement_service import SettlementService
+from django.core.exceptions import ValidationError
+import pytz
 
 logger = logging.getLogger('background_tasks')
 
@@ -81,10 +87,67 @@ def update_order_statuses():
     # logger.info("Rescheduling update_order_statuses task to run after 60 seconds.")
     # update_order_statuses(schedule=180)
 
-
 @shared_task
-def send_report():
-    
-    print(f"Email sent to user {"===="}")
+def generate_weekly_settlements():
+    logger.info("Starting weekly settlement generation task.")
 
-    return True
+    timezone_str = 'Asia/Kolkata'
+    tz = pytz.timezone(timezone_str)
+    today = datetime.now(tz).date()
+
+    # Week: Monday to Sunday
+    start_date = today - timedelta(days=today.weekday())
+    end_date = start_date + timedelta(days=6)
+
+    logger.info(f"Settlement period: {start_date} to {end_date}")
+
+    # Use iterator to avoid loading all restaurants at once
+    restaurants = RestaurantMaster.objects.all().iterator()
+
+    for restaurant in restaurants:
+        logger.info(f"Processing restaurant {restaurant.restaurant_id}")
+
+        try:
+            settlement = SettlementService.generate_settlement(
+                restaurant_id=restaurant.restaurant_id,
+                start_date=start_date,
+                end_date=end_date,
+                force=False
+            )
+            logger.info(
+                "Settlement generated for restaurant %s: %s",
+                restaurant.restaurant_id, settlement.settlement_number
+            )
+
+        except ValidationError as e:
+            error_msg = str(e)
+            if "already exists" in error_msg.lower():
+                logger.info(
+                    "Settlement already exists for restaurant %s, skipping.",
+                    restaurant.restaurant_id
+                )
+            elif "no completed orders" in error_msg.lower():
+                logger.info(
+                    "No orders for restaurant %s: %s",
+                    restaurant.restaurant_id, error_msg
+                )
+            else:
+                logger.error(
+                    "Unexpected ValidationError for restaurant %s: %s",
+                    restaurant.restaurant_id, error_msg
+                )
+
+        except IntegrityError as e:
+            # Occurs when two concurrent tasks try to create the same settlement.
+            # The unique constraint on (restaurant, start_date, end_date) prevents duplicates.
+            logger.info(
+                "Settlement already exists for restaurant %s (concurrent creation), skipping.",
+                restaurant.restaurant_id
+            )
+
+        except Exception as e:
+            logger.error(
+                "Unexpected error for restaurant %s: %s",
+                restaurant.restaurant_id, e,
+                exc_info=True
+            )

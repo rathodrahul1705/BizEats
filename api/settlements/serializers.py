@@ -147,41 +147,96 @@ class SettlementOrderSerializer(serializers.ModelSerializer):
         model = SettlementOrder
         fields = ['order_number', 'order_amount', 'commission', 'payable']
 
-class SettlementListSerializer(serializers.ModelSerializer):
-    period = serializers.SerializerMethodField()
-    status_display = serializers.CharField(source='get_status_display', read_only=True)
 
-    class Meta:
-        model = Settlement
-        fields = [
-            'id', 'settlement_number', 'period', 'total_orders',
-            'payable_amount', 'status_display', 'created_at'
-        ]
+class SettlementExportSerializer(serializers.Serializer):
+    filter = serializers.ChoiceField(choices=['today', 'this_week', 'last_week', 'this_month', 'last_month', 'custom'])
+    start_date = serializers.CharField(required=False, allow_blank=True)
+    end_date = serializers.CharField(required=False, allow_blank=True)
+    restaurant_id = serializers.CharField(required=False, allow_blank=True)
+    status = serializers.CharField(required=False, allow_blank=True)
+    format = serializers.ChoiceField(choices=['csv'], default='csv')
+    timezone = serializers.CharField(required=False, default='Asia/Kolkata')
 
-    def get_period(self, obj):
-        return f"{obj.start_date.strftime('%d %b')} - {obj.end_date.strftime('%d %b')}"
+    def validate(self, data):
+        if data['filter'] == 'custom' and not (data.get('start_date') and data.get('end_date')):
+            raise serializers.ValidationError("start_date and end_date required for custom filter")
+        return data
 
-class SettlementDetailSerializer(serializers.ModelSerializer):
-    restaurant_name = serializers.CharField(source='restaurant.name', read_only=True)
-    orders = SettlementOrderSerializer(many=True, read_only=True)
-    status_display = serializers.CharField(source='get_status_display', read_only=True)
-
-    class Meta:
-        model = Settlement
-        fields = [
-            'id', 'settlement_number', 'restaurant_name', 'start_date', 'end_date',
-            'total_orders', 'gross_sales', 'commission', 'delivery_charge',
-            'taxes', 'adjustments', 'payable_amount', 'status_display',
-            'payment_reference', 'paid_on', 'remarks', 'created_at', 'orders'
-        ]
-
-class SettlementGenerateSerializer(serializers.Serializer):
-    restaurant_id = serializers.IntegerField()
+class SettlementItemSerializer(serializers.ModelSerializer):
     start_date = serializers.DateField()
     end_date = serializers.DateField()
-    force = serializers.BooleanField(default=False)  # to override existing if needed
+    total_orders = serializers.IntegerField()
+    item_gross_sale = serializers.DecimalField(source='item_gross_sales', max_digits=12, decimal_places=2)
+    gross_sale = serializers.DecimalField(source='gross_sales', max_digits=12, decimal_places=2)
+    total_delivery_fee = serializers.DecimalField(source='delivery_charge', max_digits=12, decimal_places=2)
+    tax = serializers.DecimalField(source='taxes', max_digits=12, decimal_places=2)
+    eatoor_commission = serializers.DecimalField(source='commission', max_digits=12, decimal_places=2)
+    restaurant_net_pay = serializers.DecimalField(source='payable_amount', max_digits=12, decimal_places=2)
+    average_order_value = serializers.SerializerMethodField()
+    settlement_id = serializers.CharField(source='settlement_number')
+    status = serializers.SerializerMethodField()
+    restaurant_name = serializers.CharField(source='restaurant.restaurant_name')
 
-class SettlementPaySerializer(serializers.Serializer):
-    settlement_id = serializers.IntegerField()
-    payment_reference = serializers.CharField(max_length=200)
-    remarks = serializers.CharField(required=False, allow_blank=True)
+    class Meta:
+        model = Settlement
+        fields = [
+            'total_orders', 'item_gross_sale', 'gross_sale',
+            'total_delivery_fee', 'tax', 'eatoor_commission',
+            'restaurant_net_pay', 'average_order_value',
+            'settlement_id', 'status', 'restaurant_name',
+            'start_date','payout_date','end_date'
+        ]
+
+    def get_average_order_value(self, obj):
+        if obj.total_orders > 0:
+            return round(obj.gross_sales / obj.total_orders, 2)
+        return 0.00
+
+    def get_status(self, obj):
+        return obj.status
+
+class SettlementTotalsSerializer(serializers.Serializer):
+    total_orders = serializers.IntegerField()
+    item_gross_sale = serializers.DecimalField(max_digits=12, decimal_places=2)
+    gross_sale = serializers.DecimalField(max_digits=12, decimal_places=2)
+    total_delivery_fee = serializers.DecimalField(max_digits=12, decimal_places=2)
+    total_tax = serializers.DecimalField(max_digits=12, decimal_places=2)
+    eatoor_commission = serializers.DecimalField(max_digits=12, decimal_places=2)
+    restaurant_net_pay = serializers.DecimalField(max_digits=12, decimal_places=2)
+
+class RestaurantInfoSerializer(serializers.ModelSerializer):
+    id = serializers.CharField(source='restaurant_id')
+    name = serializers.CharField(source='restaurant_name')
+    address = serializers.SerializerMethodField()
+    phone = serializers.SerializerMethodField()
+    email = serializers.SerializerMethodField()
+    profile_image = serializers.SerializerMethodField()
+
+    class Meta:
+        model = RestaurantMaster
+        fields = ['id', 'name', 'address', 'phone', 'email', 'profile_image']
+
+    def get_address(self, obj):
+        if hasattr(obj, 'restaurant_location'):
+            loc = obj.restaurant_location
+            parts = [p for p in [loc.area_sector_locality, loc.city, loc.zip_code] if p]
+            return ', '.join(parts)
+        return ""
+
+    def get_phone(self, obj):
+        if hasattr(obj, 'owner_details'):
+            return obj.owner_details.owner_primary_contact or obj.owner_details.owner_contact
+        return ""
+
+    def get_email(self, obj):
+        if hasattr(obj, 'owner_details'):
+            return obj.owner_details.owner_email_address
+        return ""
+
+    def get_profile_image(self, obj):
+        request = self.context.get('request')
+        if obj.profile_image and hasattr(obj.profile_image, 'url'):
+            if request:
+                return request.build_absolute_uri(obj.profile_image.url)
+            return obj.profile_image.url
+        return None

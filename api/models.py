@@ -1361,94 +1361,50 @@ class UserPaymentMethod(models.Model):
 
     def __str__(self):
         return f"{self.user} - {self.payment_type}"
+
 class Settlement(models.Model):
-
     settlement_number = models.CharField(max_length=30, unique=True)
-
-    restaurant = models.ForeignKey(
-        RestaurantMaster,
-        on_delete=models.CASCADE
-    )
-
+    restaurant = models.ForeignKey(RestaurantMaster, on_delete=models.CASCADE)
     start_date = models.DateField()
-
     end_date = models.DateField()
-
+    payout_date = models.DateField()
     total_orders = models.IntegerField(default=0)
 
     gross_sales = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-
+    item_gross_sales = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     commission = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-
     delivery_charge = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-
     taxes = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-
     adjustments = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-
     payable_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
 
     status = models.IntegerField(
-        choices=(
-            (1, "Pending"),
-            (2, "Approved"),
-            (3, "Paid"),
-            (4, "Cancelled"),
-        ),
+        choices=((1, "Pending"), (2, "Approved"), (3, "Paid"), (4, "Cancelled")),
         default=1
     )
-
-    payment_reference = models.CharField(
-        max_length=200,
-        blank=True,
-        null=True
-    )
-
-    paid_on = models.DateTimeField(
-        blank=True,
-        null=True
-    )
-
-    remarks = models.TextField(
-        blank=True,
-        null=True
-    )
+    payment_reference = models.CharField(max_length=200, blank=True, null=True)
+    paid_on = models.DateTimeField(blank=True, null=True)
+    remarks = models.TextField(blank=True, null=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
-
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         db_table = "settlements"
+        unique_together = ("restaurant", "start_date", "end_date")
+        indexes = [models.Index(fields=["restaurant", "start_date", "end_date"])]
 
 
 class SettlementOrder(models.Model):
+    settlement = models.ForeignKey(Settlement, on_delete=models.CASCADE, related_name="orders")
+    order = models.ForeignKey(Order, on_delete=models.CASCADE)
 
-    settlement = models.ForeignKey(
-        Settlement,
-        on_delete=models.CASCADE,
-        related_name="orders"
-    )
-
-    order = models.ForeignKey(
-        Order,
-        on_delete=models.CASCADE
-    )
-
-    order_amount = models.DecimalField(
-        max_digits=12,
-        decimal_places=2
-    )
-
-    commission = models.DecimalField(
-        max_digits=12,
-        decimal_places=2
-    )
-
-    payable = models.DecimalField(
-        max_digits=12,
-        decimal_places=2
-    )
+    gross_sales = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    item_gross_sales = models.DecimalField(max_digits=12, decimal_places=2, default=0)  # ← added default
+    commission = models.DecimalField(max_digits=12, decimal_places=2, default=0)        # ← added default
+    delivery_charge = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    taxes = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    payable = models.DecimalField(max_digits=12, decimal_places=2, default=0)          # ← added default
 
     class Meta:
         db_table = "settlement_orders"

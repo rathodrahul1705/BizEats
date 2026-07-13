@@ -1,13 +1,13 @@
 from django.urls import path
 from .views import (
+    AdminSettlementStatusUpdate,
     SettlementDashboardView,
     SettlementTransactionsView,
     SettlementExportView,
     SettlementTransactionDetailView,
-    AdminSettlementGenerateView,
-    AdminSettlementPayView,
-    RestaurantSettlementListView,
-    RestaurantSettlementDetailView
+    AdminSettlementDashboardView,
+    AdminSettlementTransactionsView,
+    AdminSettlementExportView
 )
 
 urlpatterns = [
@@ -16,10 +16,11 @@ urlpatterns = [
     path('partner/settlements/export/', SettlementExportView.as_view(), name='settlement-export'),
     path('partner/settlements/transactions/<str:transaction_id>/', SettlementTransactionDetailView.as_view(), name='settlement-transaction-detail'),
 
-    path('api/admin/settlement/generate/', AdminSettlementGenerateView.as_view(), name='admin-settle-generate'),
-    path('api/admin/settlement/pay/', AdminSettlementPayView.as_view(), name='admin-settle-pay'),
-    path('api/restaurant/settlements/', RestaurantSettlementListView.as_view(), name='rest-settle-list'),
-    path('api/restaurant/settlement/<int:pk>/', RestaurantSettlementDetailView.as_view(), name='rest-settle-detail'),
+
+    path('admin/settlements/dashboard/', AdminSettlementDashboardView.as_view(), name='settlement-dashboard'),
+    path('admin/settlements/transactions/', AdminSettlementTransactionsView.as_view(), name='settlement-transactions'),
+    path('admin/settlements/export/', AdminSettlementExportView.as_view(), name='settlement-export'),
+    path('admin/settlements/transactions/status/update/', AdminSettlementStatusUpdate.as_view(), name='settlement-status-update'),
 ]
 
 

@@ -9,6 +9,8 @@ from django.db.models import Sum, Q, Count, F, Value, DecimalField
 from django.db.models.functions import Coalesce, TruncDate
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from decimal import Decimal
+from rest_framework import status as http_status
+
 
 from api.models import (
     RestaurantMaster, Order, Payment, User,
@@ -17,6 +19,7 @@ from api.models import (
 )
 from .serializers import (
     SettlementDashboardQuerySerializer,
+    SettlementExportSerializer,
     SettlementTransactionsQuerySerializer,
     SettlementExportBodySerializer,
     RestaurantBriefSerializer,
@@ -24,15 +27,31 @@ from .serializers import (
     SettlementCurrentCycleSerializer,
     SettlementTransactionSerializer,
     DayWiseSummarySerializer,
-    SettlementListSerializer,
-    SettlementDetailSerializer,
-    SettlementGenerateSerializer,
-    SettlementPaySerializer
 )
 
+from django.shortcuts import get_object_or_404
+from datetime import datetime, timedelta
+from django.utils import timezone
+from api.models import Settlement, RestaurantMaster
+from .serializers import (
+    SettlementItemSerializer,
+    SettlementTotalsSerializer,
+    RestaurantInfoSerializer
+)
+import csv
+from django.http import HttpResponse
+
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404
 from api.settlements.settlement_service import SettlementService
+
+from api.utils.utils import (
+    get_date_range_settle,
+    apply_filters_settle,
+    aggregate_totals_settle,
+    is_admin_user
+)
 
 logger = logging.getLogger(__name__)
 
@@ -430,67 +449,331 @@ class SettlementTransactionDetailView(APIView):
             'success': True,
             'data': txn,
         }, status=status.HTTP_200_OK)
+
+# ---------- Helper functions for Admin views ----------
+def apply_filters(queryset, restaurant_id, start_date, end_date):
+    """
+    Apply restaurant and date filters to Settlement queryset.
+    """
+    logger.debug(f"apply_filters called: restaurant_id={restaurant_id}, start_date={start_date}, end_date={end_date}")
+    # Filter by date range: we use end_date as settlement date
+    queryset = queryset.filter(end_date__gte=start_date, end_date__lte=end_date)
     
+    if restaurant_id and restaurant_id != 'all':
+        queryset = queryset.filter(restaurant_id=restaurant_id)
+    
+    logger.debug(f"apply_filters result count: {queryset.count()}")
+    return queryset
 
-class AdminSettlementGenerateView(APIView):
-    permission_classes = [IsAdminUser]
 
-    def post(self, request):
-        serializer = SettlementGenerateSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        try:
-            settlement = SettlementService.generate_settlement(
-                restaurant_id=serializer.validated_data['restaurant_id'],
-                start_date=serializer.validated_data['start_date'],
-                end_date=serializer.validated_data['end_date'],
-                force=serializer.validated_data.get('force', False)
-            )
-            return Response({
-                'success': True,
-                'settlement_id': settlement.id
-            }, status=status.HTTP_201_CREATED)
-        except ValidationErr as e:
-            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+def aggregate_totals(queryset):
+    """
+    Compute aggregated totals from a Settlement queryset.
+    """
+    logger.debug("aggregate_totals called")
+    totals = queryset.aggregate(
+        total_orders=Sum('total_orders'),
+        item_gross_sale=Sum('item_gross_sales'),
+        gross_sale=Sum('gross_sales'),
+        total_delivery_fee=Sum('delivery_charge'),
+        total_tax=Sum('taxes'),
+        eatoor_commission=Sum('commission'),
+        restaurant_net_pay=Sum('payable_amount'),
+    )
+    # Convert None to 0
+    for key in totals:
+        if totals[key] is None:
+            totals[key] = 0
+    logger.debug(f"aggregate_totals result: {totals}")
+    return totals
 
-class AdminSettlementPayView(APIView):
-    permission_classes = [IsAdminUser]
-
-    def post(self, request):
-        serializer = SettlementPaySerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        settlement = get_object_or_404(
-            Settlement,
-            id=serializer.validated_data['settlement_id']
-        )
-        # Business logic: only PENDING or GENERATED can be paid? We'll allow if status in [GENERATED, APPROVED]
-        if settlement.status not in [Settlement.Status.GENERATED, Settlement.Status.APPROVED]:
-            return Response(
-                {'error': 'Settlement cannot be marked paid in current status.'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        settlement.status = Settlement.Status.PAID
-        settlement.payment_reference = serializer.validated_data['payment_reference']
-        settlement.remarks = serializer.validated_data.get('remarks', '')
-        settlement.paid_on = timezone.now()
-        settlement.save()
-        return Response({'success': True})
-
-class RestaurantSettlementListView(APIView):
+# ---------- Admin Settlement Dashboard ----------
+class AdminSettlementDashboardView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        # Assuming restaurant is linked to user; we need to filter by restaurant
-        # We'll assume request.user has a restaurant profile
-        restaurant = request.user.restaurant  # adjust based on your auth setup
-        settlements = Settlement.objects.filter(restaurant=restaurant).order_by('-created_at')
-        serializer = SettlementListSerializer(settlements, many=True)
-        return Response(serializer.data)
+        if not is_admin_user(request.user):
+            raise PermissionDenied("Admin access required.")
 
-class RestaurantSettlementDetailView(APIView):
+        logger.info("AdminSettlementDashboardView GET called")
+
+        filter_type = request.query_params.get('filter', 'this_week')
+        restaurant_id = request.query_params.get('restaurant_id')
+        custom_start = request.query_params.get('start_date')
+        custom_end = request.query_params.get('end_date')
+        status_filter = request.query_params.get('status')
+
+        if restaurant_id is None:
+            restaurant_id = "all"
+
+        start_date = end_date = None
+        if filter_type == 'custom':
+            try:
+                start_date = datetime.strptime(custom_start, '%Y-%m-%d').date()
+                end_date = datetime.strptime(custom_end, '%Y-%m-%d').date()
+            except (ValueError, TypeError) as e:
+                logger.error(f"Invalid custom dates: {e}")
+                return Response(
+                    {'error': 'Invalid custom dates, use YYYY-MM-DD format'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+        start_date, end_date = get_date_range_settle(filter_type, start_date, end_date)
+
+        qs = Settlement.objects.all().select_related('restaurant')
+        qs = apply_filters_settle(qs, restaurant_id, start_date, end_date, status_filter)
+
+        totals = aggregate_totals_settle(qs)
+        totals_serializer = SettlementTotalsSerializer(totals)
+
+        restaurant_info = None
+        if restaurant_id and restaurant_id != 'all':
+            restaurant = get_object_or_404(RestaurantMaster, restaurant_id=restaurant_id)
+            restaurant_info = RestaurantInfoSerializer(restaurant, context={'request': request}).data
+
+        response_data = {
+            'data': {
+                'restaurant': restaurant_info,
+                'totals': totals_serializer.data,
+            }
+        }
+        logger.info("AdminSettlementDashboardView response sent")
+        return Response(response_data)
+
+class AdminSettlementTransactionsView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def get(self, request, pk):
-        restaurant = request.user.restaurant
-        settlement = get_object_or_404(Settlement, id=pk, restaurant=restaurant)
-        serializer = SettlementDetailSerializer(settlement)
-        return Response(serializer.data)
+    def get(self, request):
+        if not is_admin_user(request.user):  # assume this helper exists
+            raise PermissionDenied("Admin access required.")
+
+        logger.info("AdminSettlementTransactionsView GET called")
+
+        # Get query parameters
+        filter_type = request.query_params.get('filter', 'this_week')
+        restaurant_id = request.query_params.get('restaurant_id')
+        custom_start = request.query_params.get('start_date')
+        custom_end = request.query_params.get('end_date')
+        status_filter = request.query_params.get('status')
+        page = int(request.query_params.get('page', 1))
+        page_size = int(request.query_params.get('page_size', 20))
+
+        if page_size <= 0:
+            page_size = 20
+
+        # Handle custom date range
+        start_date = end_date = None
+        if filter_type == 'custom':
+            try:
+                start_date = datetime.strptime(custom_start, '%Y-%m-%d').date()
+                end_date = datetime.strptime(custom_end, '%Y-%m-%d').date()
+            except (ValueError, TypeError) as e:
+                logger.error(f"Invalid custom dates: {e}")
+                return Response(
+                    {'error': 'Invalid custom dates, use YYYY-MM-DD format'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+        # Get date range based on filter_type
+        start_date, end_date = get_date_range_settle(filter_type, start_date, end_date)
+
+        # Base queryset
+        qs = Settlement.objects.all().select_related('restaurant')
+
+        # Apply filters (including restaurant)
+        qs = apply_filters_settle(qs, restaurant_id, start_date, end_date, status_filter)
+
+        # Ordering
+        qs = qs.order_by('-end_date')
+
+        # Pagination
+        total_items = qs.count()
+        total_pages = (total_items + page_size - 1) // page_size if page_size > 0 else 1
+        start_idx = (page - 1) * page_size
+        end_idx = start_idx + page_size
+        paginated_qs = qs[start_idx:end_idx]
+
+        # Serialize items
+        items_serializer = SettlementItemSerializer(paginated_qs, many=True)
+
+        # Totals (aggregated over the filtered queryset)
+        totals = aggregate_totals_settle(qs)
+        totals_serializer = SettlementTotalsSerializer(totals)
+
+        # Restaurant info (only if a specific restaurant is selected)
+        restaurant_info = None
+        if restaurant_id is not None and restaurant_id != 'all':
+            restaurant = get_object_or_404(RestaurantMaster, restaurant_id=restaurant_id)
+            restaurant_info = RestaurantInfoSerializer(restaurant, context={'request': request}).data
+
+        response_data = {
+            'data': {
+                'items': items_serializer.data,
+                'totals': totals_serializer.data,
+                'restaurant': restaurant_info,
+                'pagination': {
+                    'page': page,
+                    'total_pages': total_pages,
+                    'total_items': total_items,
+                }
+            }
+        }
+        logger.info("AdminSettlementTransactionsView response sent")
+        return Response(response_data)
+
+# ---------- Admin Settlement Export ----------
+class AdminSettlementExportView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        if not is_admin_user(request.user):
+            raise PermissionDenied("Admin access required.")
+
+        logger.info("AdminSettlementExportView POST called")
+
+        serializer = SettlementExportSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        data = serializer.validated_data
+        filter_type = data['filter']
+        restaurant_id = data.get('restaurant_id')
+        status_filter = data.get('status')
+
+        start_date = end_date = None
+        if filter_type == 'custom':
+            try:
+                start_date = datetime.strptime(data['start_date'], '%Y-%m-%d').date()
+                end_date = datetime.strptime(data['end_date'], '%Y-%m-%d').date()
+            except (ValueError, TypeError) as e:
+                logger.error(f"Invalid custom dates: {e}")
+                return Response(
+                    {'error': 'Invalid custom dates, use YYYY-MM-DD format'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+        start_date, end_date = get_date_range_settle(filter_type, start_date, end_date)
+
+        qs = Settlement.objects.all().select_related('restaurant')
+        qs = apply_filters_settle(qs, restaurant_id, start_date, end_date, status_filter)
+        qs = qs.order_by('-end_date')
+
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="settlement_report.csv"'
+
+        writer = csv.writer(response)
+        writer.writerow([
+            'Settlement ID', 'Date', 'Restaurant', 'Total Orders',
+            'Item Gross Sale', 'Gross Sale', 'Delivery Fee', 'Tax',
+            'Commission', 'Net Pay', 'Avg Order Value', 'Status'
+        ])
+
+        for settlement in qs:
+            avg = round(settlement.gross_sales / settlement.total_orders, 2) if settlement.total_orders > 0 else 0
+            status_map = {1: 'Pending', 2: 'Approved', 3: 'Paid', 4: 'Cancelled'}
+            status_text = status_map.get(settlement.status, 'Pending')
+            writer.writerow([
+                settlement.settlement_number,
+                settlement.end_date.strftime('%Y-%m-%d'),
+                settlement.restaurant.restaurant_name,
+                settlement.total_orders,
+                settlement.item_gross_sales,
+                settlement.gross_sales,
+                settlement.delivery_charge,
+                settlement.taxes,
+                settlement.commission,
+                settlement.payable_amount,
+                avg,
+                status_text
+            ])
+
+        logger.info(f"AdminExport CSV generated with {qs.count()} rows")
+        return response
+    
+class AdminSettlementStatusUpdate(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        settlement_id = request.query_params.get("settlement_id")
+        settlement_status = request.query_params.get("status")
+
+        if settlement_status == "pending":
+            settlement_status = 1
+        if settlement_status == "approved":
+            settlement_status = 2
+        if settlement_status == "paid":
+            settlement_status = 3
+        if settlement_status == "cancelled":
+            settlement_status = 4
+
+        if not settlement_id:
+            return Response(
+                {
+                    "status": False,
+                    "message": "settlement_id is required."
+                },
+                status=http_status.HTTP_400_BAD_REQUEST
+            )
+
+        if not settlement_status:
+            return Response(
+                {
+                    "status": False,
+                    "message": "status is required."
+                },
+                status=http_status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            settlement_status = int(settlement_status)
+        except ValueError:
+            return Response(
+                {
+                    "status": False,
+                    "message": "Invalid status."
+                },
+                status=http_status.HTTP_400_BAD_REQUEST
+            )
+
+        if settlement_status not in [1, 2, 3, 4]:
+            return Response(
+                {
+                    "status": False,
+                    "message": "Status must be one of 1(Pending), 2(Approved), 3(Paid), 4(Cancelled)."
+                },
+                status=http_status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            settlement = Settlement.objects.get(settlement_number=settlement_id)
+        except Settlement.DoesNotExist:
+            return Response(
+                {
+                    "status": False,
+                    "message": "Settlement not found."
+                },
+                status=http_status.HTTP_404_NOT_FOUND
+            )
+
+        settlement.status = settlement_status
+
+        # Update paid_on only when status is Paid
+        if settlement_status == 3:
+            settlement.paid_on = timezone.now()
+        else:
+            settlement.paid_on = None
+
+        settlement.save()
+
+        return Response(
+            {
+                "status": True,
+                "message": "Settlement status updated successfully.",
+                "data": {
+                    "settlement_id": settlement.id,
+                    "status": settlement.status,
+                    "status_name": settlement.get_status_display(),
+                }
+            },
+            status=http_status.HTTP_200_OK
+        )
