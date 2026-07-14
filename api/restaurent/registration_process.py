@@ -320,9 +320,6 @@ class RestaurantMenueStore(APIView):
         discount_active = request.data.get('discount_active')
         cuisines = request.data.get('cuisines', '').split(',')
         
-
-        print("addon_groups===",addon_groups)
-
         # --------------------- 🔥 S3 IMAGE UPLOAD ----------------------------
         item_image = request.FILES.get('item_image')
         file_key = None

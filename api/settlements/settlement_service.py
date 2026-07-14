@@ -23,7 +23,9 @@ from reportlab.platypus import (
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 
+from api.emailer.email_notifications import send_settlement_status_notification
 from api.models import Settlement, SettlementOrder, Order
+from api.utils.utils import get_date_range_settle
 
 logger = logging.getLogger(__name__)
 
@@ -71,6 +73,59 @@ def get_s3_client():
         region_name=settings.AWS_S3_REGION_NAME,
     )
 
+
+def get_settlement(restaurant_id, filter_type="this_week"):
+    """
+    Retrieve a Settlement object for a given restaurant and date range.
+
+    Returns:
+        dict or None: Settlement data if found, otherwise None.
+    Raises:
+        ValueError: If restaurant_id, start_date, or end_date are missing.
+    """
+    try:
+        start_date, end_date = get_date_range_settle(filter_type)
+    except Exception as e:
+        logger.error(f"Failed to get date range for filter {filter_type}: {e}")
+        raise ValueError(f"Invalid filter_type: {filter_type}") from e
+
+    logger.info(f"get_settlement start_date {start_date} end_date {end_date} restaurant_id {restaurant_id}")
+
+    # Validate inputs
+    if not restaurant_id or not start_date or not end_date:
+        raise ValueError("restaurant_id, start_date, and end_date must all be provided.")
+
+    # Query
+    settlement = Settlement.objects.filter(
+        restaurant_id=restaurant_id,
+        start_date=start_date,
+        end_date=end_date
+    ).first()
+
+    # No settlement found – return None (caller can decide to raise or handle)
+    if settlement is None:
+        logger.warning(
+            f"No settlement found for restaurant {restaurant_id} "
+            f"between {start_date} and {end_date}"
+        )
+        return None
+
+    # Build response dictionary with safe attribute access
+    try:
+        settlement_file_url = settlement.settlement_file.url if settlement.settlement_file else None
+    except (ValueError, AttributeError):
+        settlement_file_url = None
+        logger.warning(f"Settlement file URL could not be retrieved for settlement {settlement.id}")
+
+    return {
+        'id': settlement.id,
+        'status': settlement.get_status_display(),
+        'start_date': settlement.start_date,
+        'end_date': settlement.end_date,
+        'settlement_number': settlement.settlement_number,
+        'settlement_file': settlement_file_url,
+    }
+    
 
 # ----------------------------------------------------------------------
 # Design tokens - keep in one place so the invoice is easy to re-theme
@@ -397,14 +452,19 @@ class SettlementService:
         elements.append(Spacer(1, 0.28 * inch))
 
         # =====================================================
-        # META STRIP: Restaurant / Period / Payout — 3 clean columns
+        # META STRIP: Restaurant / Period / Payout / Settlement Date — 4 columns
         # =====================================================
         restaurant_name = restaurant.restaurant_name if restaurant else 'N/A'
+        # Settlement date: use created_at if available, else today
+        settlement_date = settlement.created_at if hasattr(settlement, 'created_at') and settlement.created_at else timezone.now()
+        settlement_date_str = settlement_date.strftime('%d %b %Y')
+
         meta_data = [
             [
                 Paragraph("BILLED TO", label_style),
                 Paragraph("SETTLEMENT PERIOD", label_style),
                 Paragraph("PAYOUT DATE", label_style),
+                Paragraph("SETTLEMENT DATE", label_style),   # new column
             ],
             [
                 Paragraph(f"{restaurant_name} (ID: {settlement.restaurant_id})", value_style),
@@ -414,14 +474,15 @@ class SettlementService:
                     value_style
                 ),
                 Paragraph(settlement.payout_date.strftime('%d %b %Y'), value_style),
+                Paragraph(settlement_date_str, value_style),   # new value
             ],
         ]
-        meta_col_w = avail_width / 3.0
-        meta_table = Table(meta_data, colWidths=[meta_col_w] * 3)
+        meta_col_w = avail_width / 4.0  # now four columns
+        meta_table = Table(meta_data, colWidths=[meta_col_w] * 4)
         meta_table.setStyle(TableStyle([
             ('VALIGN', (0, 0), (-1, -1), 'TOP'),
             ('LEFTPADDING', (0, 0), (-1, -1), 0),
-            ('RIGHTPADDING', (0, 0), (-1, -1), 12),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 8),
             ('TOPPADDING', (0, 0), (-1, 0), 0),
             ('BOTTOMPADDING', (0, 0), (-1, 0), 4),
             ('TOPPADDING', (0, 1), (-1, 1), 0),
@@ -526,6 +587,9 @@ class SettlementService:
              Paragraph(f"-{inr_format(settlement.commission)}", summary_value_style)],
             [Paragraph("Adjustments", summary_label_style),
              Paragraph(inr_format(settlement.adjustments), summary_value_style)],
+            # Settlement Status row (added in previous change)
+            [Paragraph("Settlement Status", summary_label_style),
+             Paragraph(settlement.get_status_display(), summary_value_style)],
         ]
         # Keep the detail summary to the right half of the page, like a typical invoice total block
         summary_table = Table(summary_rows, colWidths=[avail_width * 0.32, avail_width * 0.24])
@@ -601,4 +665,7 @@ class SettlementService:
             "Invoice PDF uploaded to S3 at %s for settlement %s",
             file_key, settlement.settlement_number
         )
+
+        send_settlement_status_notification(settlement_number=settlement.settlement_number)
+        
         return settlement

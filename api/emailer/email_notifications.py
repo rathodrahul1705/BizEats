@@ -9,6 +9,14 @@ from decimal import Decimal, ROUND_UP, ROUND_HALF_UP
 from django.conf import settings
 from num2words import num2words
 import base64
+import logging
+from django.core.mail import EmailMultiAlternatives
+from django.conf import settings
+from django.shortcuts import get_object_or_404
+from api.models import Settlement
+
+logger = logging.getLogger(__name__)
+
 
 def get_order_email_content(order):
     status_messages = {
@@ -925,8 +933,6 @@ def get_order_full_details(order_details):
 #     </html>
 #     """
 
-
-
 def generate_coupon_html(coupon, is_vendor=False):
     """Generate modern HTML email for coupon approval workflow"""
     # Discount text
@@ -1330,3 +1336,317 @@ def generate_coupon_status_html(coupon):
     </html>
     """
     return html
+
+
+from django.template import Context, Template
+from django.utils import timezone
+
+def format_inr(amount):
+    """
+    Convert a Decimal or numeric amount to Indian Rupee format with comma separators.
+    Example: 1234567.89 -> "₹ 12,34,567.89"
+    """
+    if amount is None:
+        return "₹ 0.00"
+    try:
+        # Ensure it's a Decimal with 2 decimal places
+        amt = Decimal(str(amount)).quantize(Decimal('0.01'))
+    except Exception:
+        amt = Decimal('0.00')
+
+    # Separate integer and fractional parts
+    integer_part, frac_part = str(amt).split('.')
+    # Add commas using Indian numbering system (last 3 digits then groups of 2)
+    if len(integer_part) > 3:
+        # Separate the last 3 digits
+        last_three = integer_part[-3:]
+        rest = integer_part[:-3]
+        # Group the rest into pairs
+        grouped_rest = ''
+        for i, ch in enumerate(reversed(rest)):
+            if i > 0 and i % 2 == 0:
+                grouped_rest = ',' + grouped_rest
+            grouped_rest = ch + grouped_rest
+        integer_part = grouped_rest + ',' + last_three
+    # else: no grouping needed
+    return f"₹ {integer_part}.{frac_part}"
+
+def send_settlement_status_notification(settlement_number, status=None):
+    """
+    Send email notifications to both the restaurant partner and Eatoor
+    for every settlement status update. Includes a link to the settlement
+    file (if available).
+
+    Args:
+        settlement_number (str): Unique identifier of the settlement.
+        status (int, optional): The new status code (1-4). If not provided,
+            the current status from the settlement object is used.
+
+    Raises:
+        Settlement.DoesNotExist: If settlement_number is not found.
+        Exception: For any email sending errors.
+    """
+    # 1. Retrieve the settlement
+    settlement = get_object_or_404(Settlement, settlement_number=settlement_number)
+
+    # 2. Determine the status (use current if not explicitly given)
+    if status is None:
+        status = settlement.status
+
+    # Get the human-readable status label
+    status_label = settlement.get_status_display()  # e.g., "Pending", "Approved"
+
+    # Get payout date (if available)
+    payout_date = getattr(settlement, 'payout_date', None)
+    if payout_date:
+        payout_date_str = payout_date.strftime('%Y-%m-%d')
+    else:
+        payout_date_str = 'N/A'
+
+    # 3. Prepare recipient emails
+    restaurant_email = settlement.restaurant.user.email
+    eatoor_email = getattr(settings, 'EATOOR_NOTIFICATION_EMAIL', 'contact@eatoor.com')
+    recipients = [restaurant_email, eatoor_email]
+
+    # 4. Build email subject (include payout date)
+    subject = f"Settlement {settlement_number} – {status_label} – Payout {payout_date_str}"
+
+    # 5. Gather context data
+    restaurant_name = settlement.restaurant.restaurant_name
+    amount = settlement.payable_amount   # or getattr(settlement, 'amount', 'N/A')
+    date = settlement.updated_at or settlement.created_at or timezone.now()
+
+    # 6. Settlement file S3 URL (if any)
+    file_url = None
+    if settlement.settlement_file and hasattr(settlement.settlement_file, 'url'):
+        file_url = settlement.settlement_file.url
+
+    # 7. Format amount in INR
+    formatted_amount = format_inr(amount)
+
+    # 8. Build email content (plain text and HTML)
+    # Plain text version (keep simple)
+    plain_text_body = f"""
+Dear {restaurant_name},
+
+Your settlement {settlement_number} has been updated to:
+
+    {status_label}
+
+Amount: {formatted_amount}
+Date: {date.strftime('%Y-%m-%d %H:%M')}
+Payout Date: {payout_date_str}
+"""
+
+    if file_url:
+        plain_text_body += f"\nSettlement file: {file_url}\n"
+
+    plain_text_body += """
+
+For more details, please log in to your Eatoor dashboard.
+
+Thank you,
+Eatoor Team
+    """.strip()
+
+    html_template = Template("""
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settlement Status Update</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            padding: 30px 25px;
+        }
+        .header {
+            border-bottom: 3px solid #f26c4f;
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+        }
+        .header h1 {
+            color: #2c3e50;
+            font-size: 24px;
+            margin: 0;
+            font-weight: 600;
+        }
+        .status-badge {
+            display: inline-block;
+            background: #f26c4f;
+            color: #fff;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 18px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            margin: 10px 0 20px 0;
+        }
+        .info-grid {
+            background: #f8fafc;
+            border-radius: 6px;
+            padding: 18px 20px;
+            margin: 20px 0;
+        }
+        .info-grid .row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #e9edf2;
+        }
+        .info-grid .row:last-child {
+            border-bottom: none;
+        }
+        .info-grid .label {
+            font-weight: 600;
+            color: #555;
+        }
+        .info-grid .value {
+            color: #1a1a1a;
+            font-weight: 500;
+        }
+        .file-link {
+            display: inline-block;
+            background: #f26c4f;
+            color: #fff !important;
+            text-decoration: none;
+            padding: 10px 24px;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 15px;
+            margin: 15px 0 5px 0;
+            transition: background 0.2s;
+        }
+        .file-link:hover {
+            background: #d95a3e;
+        }
+        .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e9edf2;
+            font-size: 14px;
+            color: #7f8c8d;
+            text-align: center;
+        }
+        .footer .brand {
+            color: #f26c4f;
+            font-weight: 600;
+        }
+        @media only screen and (max-width: 480px) {
+            .container {
+                padding: 20px 15px;
+            }
+            .info-grid .row {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🏷️ Settlement Update</h1>
+        </div>
+
+        <!-- Greeting -->
+        <p>Dear <strong>{{ restaurant_name }}</strong>,</p>
+        <p>Your settlement <strong>{{ settlement_number }}</strong> has been updated to:</p>
+
+        <!-- Status badge -->
+        <div class="status-badge">{{ status_label }}</div>
+
+        <!-- Details -->
+        <div class="info-grid">
+            <div class="row">
+                <span class="label">Settlement ID:</span>
+                <span class="value"> {{ settlement_number }}</span>
+            </div>
+            <div class="row">
+                <span class="label">Amount:</span>
+                <span class="value"> {{ formatted_amount }}</span>
+            </div>
+            <div class="row">
+                <span class="label">Status:</span>
+                <span class="value"> {{ status_label }}</span>
+            </div>
+            <div class="row">
+                <span class="label">Payout Date:</span>
+                <span class="value"> {{ payout_date_str }}</span>
+            </div>
+        </div>
+
+        <!-- File link (if any) -->
+        {% if file_url %}
+        <p style="text-align: center; margin: 25px 0 10px 0;">
+            <a href="{{ file_url }}" class="file-link">📄 Download Settlement File</a>
+        </p>
+        <p style="font-size: 13px; color: #888; text-align: center;">(This link expires according to your storage policy)</p>
+        {% endif %}
+
+        <!-- Additional info -->
+        <p style="margin-top: 25px;">
+            For more details, please log in to your <strong>Eatoor dashboard</strong>.
+        </p>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>Thank you for being with us.</p>
+            <p class="brand">Eatoor Team</p>
+            <p style="font-size: 12px; margin-top: 10px;">
+                This is an automated notification. Please do not reply to this email.
+            </p>
+        </div>
+    </div>
+</body>
+</html>
+    """)
+
+    # Render HTML with context
+    context = Context({
+        'restaurant_name': restaurant_name,
+        'settlement_number': settlement_number,
+        'status_label': status_label,
+        'formatted_amount': formatted_amount,
+        'date_str': date.strftime('%d %b %Y, %I:%M %p'),
+        'payout_date_str': payout_date_str,
+        'file_url': file_url,
+    })
+    html_body = html_template.render(context)
+
+    # 9. Send a single email to both recipients
+    email = EmailMultiAlternatives(
+        subject=subject,
+        body=plain_text_body,
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        to=recipients,
+    )
+    email.attach_alternative(html_body, "text/html")
+
+    # 10. Send (Django will use TLS if EMAIL_USE_TLS=True in settings)
+    try:
+        email.send(fail_silently=False)
+        logger.info(
+            "Settlement status notification sent for %s (status: %s) to %s",
+            settlement_number, status_label, recipients
+        )
+    except Exception as e:
+        logger.error(
+            "Failed to send settlement notification for %s: %s",
+            settlement_number, str(e)
+        )
+        raise  # re-raise to let the caller handle it

@@ -17,6 +17,7 @@ from api.models import (
     RestaurantMenu, RestaurantLocation, RestaurantOwnerDetail,
     Settlement
 )
+from api.tasks import generate_weekly_settlements
 from .serializers import (
     SettlementDashboardQuerySerializer,
     SettlementExportSerializer,
@@ -44,7 +45,7 @@ from django.http import HttpResponse
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404
-from api.settlements.settlement_service import SettlementService
+from api.settlements.settlement_service import SettlementService, get_settlement
 
 from api.utils.utils import (
     get_date_range_settle,
@@ -251,12 +252,17 @@ class SettlementDashboardView(APIView):
         )
         cycle_summary = compute_summary(cycle_orders)
         progress_percent = int(((today - cycle_start).days + 1) / 7 * 100) if today <= cycle_end else 100
+        
+        settlement = get_settlement(restaurant_id=data['restaurant_id'],filter_type='this_week')        
+        settlement_status = 'Pending'
+        if settlement:
+            settlement_status = settlement['status']
 
         current_cycle = {
             'cycle_start_date': cycle_start,
             'cycle_end_date': cycle_end,
             'payout_date': cycle_end + timedelta(days=1),
-            'status': 'processing',
+            'status': settlement_status,
             'orders': cycle_summary['total_orders'],
             'item_gross_sale': cycle_summary['item_gross_sale'],
             'gross_sale': cycle_summary['gross_sale'],
@@ -271,6 +277,7 @@ class SettlementDashboardView(APIView):
         response_data = {
             'success': True,
             'data': {
+                'settlement_status': settlement,
                 'restaurant': restaurant_data,
                 'current_cycle': current_cycle,
             }
@@ -383,7 +390,7 @@ class SettlementTransactionsView(APIView):
 
         # Pass request context to serializer
         restaurant_data = RestaurantBriefSerializer(restaurant, context={'request': request}).data
-
+        
         response_data = {
             'success': True,
             'data': {
@@ -765,6 +772,21 @@ class AdminSettlementStatusUpdate(APIView):
 
         settlement.save()
 
+        # 1. Generate and attach invoice PDF
+        try:
+            SettlementService.generate_invoice(settlement)
+            logger.info(
+                "Invoice generated for settlement %s",
+                settlement.settlement_number
+            )
+        except Exception as invoice_error:
+            # Log error but do not fail the whole task
+            logger.error(
+                "Failed to generate invoice for settlement %s (restaurant %s): %s",
+                settlement.settlement_number, str(invoice_error),
+                exc_info=True
+            )
+        
         return Response(
             {
                 "status": True,

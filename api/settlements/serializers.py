@@ -166,6 +166,7 @@ class SettlementItemSerializer(serializers.ModelSerializer):
     start_date = serializers.DateField()
     end_date = serializers.DateField()
     total_orders = serializers.IntegerField()
+    settlement_file = serializers.ImageField()
     item_gross_sale = serializers.DecimalField(source='item_gross_sales', max_digits=12, decimal_places=2)
     gross_sale = serializers.DecimalField(source='gross_sales', max_digits=12, decimal_places=2)
     total_delivery_fee = serializers.DecimalField(source='delivery_charge', max_digits=12, decimal_places=2)
@@ -184,7 +185,7 @@ class SettlementItemSerializer(serializers.ModelSerializer):
             'total_delivery_fee', 'tax', 'eatoor_commission',
             'restaurant_net_pay', 'average_order_value',
             'settlement_id', 'status', 'restaurant_name',
-            'start_date','payout_date','end_date'
+            'start_date','payout_date','end_date','settlement_file'
         ]
 
     def get_average_order_value(self, obj):

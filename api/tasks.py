@@ -3,7 +3,7 @@ from sqlite3 import IntegrityError
 from background_task import background
 from django.utils import timezone
 from api.delivery.porter_views import porter_track_booking
-from api.emailer.email_notifications import send_order_status_email
+from api.emailer.email_notifications import send_order_status_email, send_settlement_status_notification
 from api.models import Order, PorterOrder,Settlement
 from api.order.track_order import generate_invoice_pdf
 from celery import shared_task
@@ -160,8 +160,6 @@ def generate_weekly_settlements():
                 )
 
         except IntegrityError as e:
-            # Occurs when two concurrent tasks try to create the same settlement.
-            # The unique constraint on (restaurant, start_date, end_date) prevents duplicates.
             logger.info(
                 "Settlement already exists for restaurant %s (concurrent creation), skipping.",
                 restaurant_id
