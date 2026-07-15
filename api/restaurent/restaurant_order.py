@@ -1,7 +1,6 @@
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal, ROUND_UP
 import logging
-import math
 from django.conf import settings
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -26,6 +25,8 @@ from api.serializers import OrderPlacementSerializer, RestaurantMasterSerializer
 from api.utils.utils import calculate_distance_and_cost
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import TokenAuthentication
+from math import radians, sin, cos, sqrt, atan2
+
 
 
 logger = logging.getLogger(__name__)
@@ -1048,98 +1049,268 @@ class PlaceOrderAPI(APIView):
         return prep_time
 
 
+# class GetAddressByFilter(APIView):
+#     def post(self, request):
+#         logger.info("GetAddressByFilter POST called")
+#         try:
+#             lat = request.data.get("lat")
+#             long = request.data.get("long")
+#             isGuest = request.data.get("isGuest")
+#             logger.debug(f"lat={lat}, long={long}, isGuest={isGuest}")
+
+#             if not lat or not long:
+#                 logger.warning("Missing latitude or longitude")
+#                 return Response(
+#                     {"detail": "Latitude and Longitude are required"},
+#                     status=status.HTTP_400_BAD_REQUEST
+#                 )
+
+#             latitude = Decimal(str(lat))
+#             longitude = Decimal(str(long))
+
+#             if isGuest:
+#                 full_address = self.get_address_from_google(latitude, longitude)
+#                 logger.info(f"Guest user location: lat={latitude}, lon={longitude}")
+#                 return Response(
+#                     {
+#                         "is_guest": True,
+#                         "isGuest": isGuest,
+#                         "latitude": latitude,
+#                         "longitude": longitude,
+#                         "full_address": full_address,
+#                         "home_type": "Delivering",
+#                         "detail": "Default location for guest user"
+#                     },
+#                     status=status.HTTP_200_OK
+#                 )
+
+#             if not request.user.is_authenticated:
+#                 logger.warning("Unauthenticated user but isGuest=False")
+#                 return Response(
+#                     {"detail": "Authentication required"},
+#                     status=status.HTTP_401_UNAUTHORIZED
+#                 )
+
+#             address = UserDeliveryAddress.objects.filter(
+#                 user=request.user,
+#                 latitude=latitude,
+#                 longitude=longitude
+#             ).first()
+
+#             if address:
+#                 serializer = UserDeliveryAddressSerializer(address)
+#                 data = serializer.data
+#                 if address.home_type == "Other" and address.name_of_location:
+#                     data["home_type"] = address.name_of_location
+#                 logger.info(f"Found address in DB for user {request.user.id}, id={address.id}")
+#                 return Response(data, status=status.HTTP_200_OK)
+
+#             # Fallback to Google
+#             full_address = self.get_address_from_google(latitude, longitude)
+#             logger.info(f"Address not in DB, fetched from Google: {full_address}")
+#             return Response(
+#                 {
+#                     "detail": "Address not found in DB",
+#                     "latitude": latitude,
+#                     "longitude": longitude,
+#                     "full_address": full_address
+#                 },
+#                 status=status.HTTP_200_OK
+#             )
+
+#         except Exception as e:
+#             logger.exception(f"Error in GetAddressByFilter: {e}")
+#             return Response(
+#                 {"error": str(e)},
+#                 status=status.HTTP_400_BAD_REQUEST
+#             )
+
+#     def get_address_from_google(self, latitude, longitude):
+#         try:
+#             GOOGLE_API_KEY = settings.GOOGLE_MAP_API_KEY
+#             url = (
+#                 "https://maps.googleapis.com/maps/api/geocode/json"
+#                 f"?latlng={latitude},{longitude}&key={GOOGLE_API_KEY}"
+#             )
+#             response = requests.get(url, timeout=5)
+#             if response.status_code == 200:
+#                 results = response.json().get("results")
+#                 if results:
+#                     return results[0].get("formatted_address")
+#         except Exception as e:
+#             logger.warning(f"Google geocode failed: {e}")
+#         return None
 class GetAddressByFilter(APIView):
+
+    SEARCH_RADIUS = 30  # meters
+    BOUNDING_BOX = Decimal("0.0005")  # ~55 meters
+
     def post(self, request):
         logger.info("GetAddressByFilter POST called")
+
         try:
             lat = request.data.get("lat")
             long = request.data.get("long")
             isGuest = request.data.get("isGuest")
+
             logger.debug(f"lat={lat}, long={long}, isGuest={isGuest}")
 
-            if not lat or not long:
-                logger.warning("Missing latitude or longitude")
+            if lat is None or long is None:
                 return Response(
                     {"detail": "Latitude and Longitude are required"},
-                    status=status.HTTP_400_BAD_REQUEST
+                    status=status.HTTP_400_BAD_REQUEST,
                 )
 
             latitude = Decimal(str(lat))
             longitude = Decimal(str(long))
 
+            # ---------------- Guest User ----------------
             if isGuest:
                 full_address = self.get_address_from_google(latitude, longitude)
-                logger.info(f"Guest user location: lat={latitude}, lon={longitude}")
+
                 return Response(
                     {
                         "is_guest": True,
-                        "isGuest": isGuest,
+                        "isGuest": True,
                         "latitude": latitude,
                         "longitude": longitude,
                         "full_address": full_address,
                         "home_type": "Delivering",
-                        "detail": "Default location for guest user"
+                        "detail": "Default location for guest user",
                     },
-                    status=status.HTTP_200_OK
+                    status=status.HTTP_200_OK,
                 )
 
+            # ---------------- Authentication ----------------
             if not request.user.is_authenticated:
-                logger.warning("Unauthenticated user but isGuest=False")
                 return Response(
                     {"detail": "Authentication required"},
-                    status=status.HTTP_401_UNAUTHORIZED
+                    status=status.HTTP_401_UNAUTHORIZED,
                 )
 
-            address = UserDeliveryAddress.objects.filter(
+            # ---------------- Find Nearby Saved Addresses ----------------
+            addresses = UserDeliveryAddress.objects.filter(
                 user=request.user,
-                latitude=latitude,
-                longitude=longitude
-            ).first()
+                latitude__range=(
+                    latitude - self.BOUNDING_BOX,
+                    latitude + self.BOUNDING_BOX,
+                ),
+                longitude__range=(
+                    longitude - self.BOUNDING_BOX,
+                    longitude + self.BOUNDING_BOX,
+                ),
+            )
 
-            if address:
-                serializer = UserDeliveryAddressSerializer(address)
+            closest_address = None
+            min_distance = float("inf")
+
+            for addr in addresses:
+                distance = self.haversine(
+                    latitude,
+                    longitude,
+                    addr.latitude,
+                    addr.longitude,
+                )
+
+                if distance < min_distance:
+                    min_distance = distance
+                    closest_address = addr
+
+            # ---------------- Address Found ----------------
+            if (
+                closest_address is not None
+                and min_distance <= self.SEARCH_RADIUS
+            ):
+                serializer = UserDeliveryAddressSerializer(closest_address)
                 data = serializer.data
-                if address.home_type == "Other" and address.name_of_location:
-                    data["home_type"] = address.name_of_location
-                logger.info(f"Found address in DB for user {request.user.id}, id={address.id}")
+
+                if (
+                    closest_address.home_type == "Other"
+                    and closest_address.name_of_location
+                ):
+                    data["home_type"] = closest_address.name_of_location
+
+                data["distance"] = round(min_distance, 2)
+
+                logger.info(
+                    f"Saved address found: "
+                    f"{closest_address.id} "
+                    f"Distance: {min_distance:.2f} meters"
+                )
+
                 return Response(data, status=status.HTTP_200_OK)
 
-            # Fallback to Google
-            full_address = self.get_address_from_google(latitude, longitude)
-            logger.info(f"Address not in DB, fetched from Google: {full_address}")
+            # ---------------- Fallback Google ----------------
+            full_address = self.get_address_from_google(
+                latitude,
+                longitude,
+            )
+
             return Response(
                 {
-                    "detail": "Address not found in DB",
+                    "detail": "Address not found in saved addresses",
                     "latitude": latitude,
                     "longitude": longitude,
-                    "full_address": full_address
+                    "full_address": full_address,
                 },
-                status=status.HTTP_200_OK
+                status=status.HTTP_200_OK,
             )
 
         except Exception as e:
-            logger.exception(f"Error in GetAddressByFilter: {e}")
+            logger.exception(e)
+
             return Response(
                 {"error": str(e)},
-                status=status.HTTP_400_BAD_REQUEST
+                status=status.HTTP_400_BAD_REQUEST,
             )
+
+    def haversine(self, lat1, lon1, lat2, lon2):
+        """
+        Returns distance in meters.
+        """
+
+        R = 6371000
+
+        lat1 = float(lat1)
+        lon1 = float(lon1)
+        lat2 = float(lat2)
+        lon2 = float(lon2)
+
+        dlat = radians(lat2 - lat1)
+        dlon = radians(lon2 - lon1)
+
+        a = (
+            sin(dlat / 2) ** 2
+            + cos(radians(lat1))
+            * cos(radians(lat2))
+            * sin(dlon / 2) ** 2
+        )
+
+        c = 2 * atan2(sqrt(a), sqrt(1 - a))
+
+        return R * c
 
     def get_address_from_google(self, latitude, longitude):
         try:
             GOOGLE_API_KEY = settings.GOOGLE_MAP_API_KEY
+
             url = (
                 "https://maps.googleapis.com/maps/api/geocode/json"
                 f"?latlng={latitude},{longitude}&key={GOOGLE_API_KEY}"
             )
+
             response = requests.get(url, timeout=5)
+
             if response.status_code == 200:
-                results = response.json().get("results")
+                results = response.json().get("results", [])
+
                 if results:
-                    return results[0].get("formatted_address")
+                    return results[0]["formatted_address"]
+
         except Exception as e:
             logger.warning(f"Google geocode failed: {e}")
-        return None
 
+        return None
 
 @method_decorator(csrf_exempt, name='dispatch')
 class RestaurantCartReOrder(APIView):

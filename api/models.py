@@ -360,8 +360,13 @@ class UserDeliveryAddress(models.Model):
         (OFFICE, "Office"),
         (OTHER, "Other"),
     ]
+    
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="delivery_addresses")
+
+    receiver_name = models.CharField(max_length=100)
+    receiver_phone = models.CharField(max_length=15)
+
     street_address = models.CharField(max_length=255)
     city = models.CharField(max_length=100)
     state = models.CharField(max_length=100)
