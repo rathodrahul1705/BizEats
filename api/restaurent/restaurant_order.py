@@ -463,22 +463,55 @@ class CartWithRestaurantDetails(APIView):
             if address_id:
                 try:
                     if user_id:
-                        address_obj = UserDeliveryAddress.objects.get(id=address_id, user_id=user_id)
+                        address_obj = UserDeliveryAddress.objects.get(
+                            id=address_id,
+                            user_id=user_id
+                        )
                     else:
                         address_obj = UserDeliveryAddress.objects.get(id=address_id)
+
                     logger.info(f"Delivery address found: address_id={address_id}")
 
-                    location_data = calculate_distance_and_cost(restaurant_id, address_id)
+                    # Address Details
+                    delivery_address_details = {
+                        "id": address_obj.id,
+                        "user_id": address_obj.user_id if address_obj.user_id else None,
+                        "receiver_name": getattr(address_obj, "receiver_name", None),
+                        "receiver_phone": getattr(address_obj, "receiver_phone", None),
+                        "house_no": getattr(address_obj, "house_no", None),
+                        "floor": getattr(address_obj, "floor", None),
+                        "landmark": getattr(address_obj, "landmark", None),
+                        "street_address": address_obj.street_address,
+                        "city": address_obj.city,
+                        "state": getattr(address_obj, "state", None),
+                        "country": getattr(address_obj, "country", None),
+                        "postal_code": getattr(address_obj, "zip_code", None),
+                        "latitude": getattr(address_obj, "latitude", None),
+                        "longitude": getattr(address_obj, "longitude", None),
+                        "address_type": getattr(address_obj, "address_type", None),
+                        "is_default": getattr(address_obj, "is_default", False),
+                    }
+
+                    location_data = calculate_distance_and_cost(
+                        restaurant_id,
+                        address_id
+                    )
+
                     if "error" in location_data:
-                        logger.error(f"Distance calculation error: {location_data['error']}")
+                        logger.error(
+                            f"Distance calculation error: {location_data['error']}"
+                        )
                         return self._error_response(
                             location_data["error"],
                             status.HTTP_400_BAD_REQUEST
                         )
-                    
+
                     delivery_amount = location_data["estimated_delivery_cost"]
                     distance_km = location_data["distance_km"]
-                    logger.info(f"Distance: {distance_km} km, delivery cost: {delivery_amount}")
+
+                    logger.info(
+                        f"Distance: {distance_km} km, delivery cost: {delivery_amount}"
+                    )
 
                 except UserDeliveryAddress.DoesNotExist:
                     logger.warning(f"Address not found: address_id={address_id}")
