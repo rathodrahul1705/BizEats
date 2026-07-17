@@ -1427,3 +1427,42 @@ class SettlementOrder(models.Model):
         db_table = "settlement_orders"
         unique_together = ("settlement", "order")
 
+class PaymentWebhookLog(models.Model):
+    """
+    Minimal table to store PayU webhook events
+    """
+    # Core identifiers
+    txnid = models.CharField(max_length=100, db_index=True)
+    mihpayid = models.CharField(max_length=100, db_index=True, blank=True, null=True)
+    
+    # Event type and status
+    event_type = models.CharField(max_length=20, db_index=True)  # success, failure, pending, refund, dispute
+    status = models.CharField(max_length=20, db_index=True)  # success, failure, pending
+    
+    # Amount and customer
+    amount = models.CharField(max_length=20)
+    email = models.EmailField(blank=True, null=True)
+    phone = models.CharField(max_length=20, blank=True, null=True)
+    
+    # Payment mode
+    mode = models.CharField(max_length=20, blank=True, null=True)
+    
+    # Full payload (JSON)
+    payload = models.JSONField(default=dict)
+    
+    # Processing status
+    processed = models.BooleanField(default=False, db_index=True)
+    
+    # Timestamp
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        db_table = "payment_webhook_log"
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['txnid', 'event_type']),
+            models.Index(fields=['status', 'processed']),
+        ]
+    
+    def __str__(self):
+        return f"{self.event_type} - {self.txnid} ({self.amount})"
