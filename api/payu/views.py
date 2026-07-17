@@ -14,8 +14,9 @@ from rest_framework import status
 from api.models import UserPaymentMethod
 from api.models import Order
 from api.wallet.services import add_money_success
-
 from .utils import create_payment_generate_hash, order_create, upsert_user_payment_method, verify_payment_generate_hash, verify_payment_update
+from django.http import JsonResponse
+from django.views.decorators.http import require_http_methods
 
 # ✅ Logger setup
 logger = logging.getLogger(__name__)
@@ -880,20 +881,20 @@ def payment_vpa_validate(request):
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
     
-@csrf_exempt
-def customer_payment_success(request):
-    logger.info("=" * 80)
-    logger.info("Method: %s", request.method)
-    logger.info("Content-Type: %s", request.content_type)
-    logger.info("REMOTE_ADDR: %s", request.META.get("REMOTE_ADDR"))
-    logger.info("X_FORWARDED_FOR: %s", request.META.get("HTTP_X_FORWARDED_FOR"))
-    logger.info("Headers: %s", dict(request.headers))
-    logger.info("GET: %s", request.GET.dict())
-    logger.info("POST: %s", request.POST.dict())
-    logger.info("Raw Body: %s", request.body.decode("utf-8", errors="ignore"))
-    logger.info("=" * 80)
+# @csrf_exempt
+# def customer_payment_success(request):
+#     logger.info("=" * 80)
+#     logger.info("Method: %s", request.method)
+#     logger.info("Content-Type: %s", request.content_type)
+#     logger.info("REMOTE_ADDR: %s", request.META.get("REMOTE_ADDR"))
+#     logger.info("X_FORWARDED_FOR: %s", request.META.get("HTTP_X_FORWARDED_FOR"))
+#     logger.info("Headers: %s", dict(request.headers))
+#     logger.info("GET: %s", request.GET.dict())
+#     logger.info("POST: %s", request.POST.dict())
+#     logger.info("Raw Body: %s", request.body.decode("utf-8", errors="ignore"))
+#     logger.info("=" * 80)
 
-    return HttpResponse("OK", status=200)
+#     return HttpResponse("OK", status=200)
 
 
 @csrf_exempt
@@ -905,3 +906,116 @@ def customer_payment_failed(request):
     logger.info(f"Body: {request.body.decode('utf-8', errors='ignore')}")
 
     return HttpResponse("FAILED WEBHOOK RECEIVED", status=200)
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def customer_payment_success(request):
+    """
+    Dummy PayU payment webhook handler for testing
+    """
+    try:
+        body = request.body.decode("utf-8")
+
+        logger.info("=" * 80)
+        logger.info("PayU SUCCESS Webhook Received")
+        logger.info("Method: %s", request.method)
+        logger.info("Content-Type: %s", request.content_type)
+        logger.info("REMOTE_ADDR: %s", request.META.get("REMOTE_ADDR"))
+        logger.info("X_FORWARDED_FOR: %s", request.META.get("HTTP_X_FORWARDED_FOR"))
+        logger.info("Headers: %s", dict(request.headers))
+        logger.info("Raw Body: %s", body)
+
+        # Try JSON first
+        try:
+            data = json.loads(body)
+            logger.info("Payload Type: JSON")
+        except json.JSONDecodeError:
+            data = request.POST.dict()
+            logger.info("Payload Type: FORM_URL_ENCODED")
+
+        logger.info("Parsed Data: %s", data)
+
+        txnid = data.get("txnid", "")
+        amount = data.get("amount", "")
+        productinfo = data.get("productinfo", "")
+        firstname = data.get("firstname", "")
+        email = data.get("email", "")
+        phone = data.get("phone", "")
+        status = data.get("status", "").lower()
+        hash_value = data.get("hash", "")
+        mihpayid = data.get("mihpayid", "")
+        mode = data.get("mode", "")
+        bank_ref_num = data.get("bank_ref_num", "")
+        bankcode = data.get("bankcode", "")
+
+        logger.info(
+            "Transaction Details | txnid=%s | mihpayid=%s | amount=%s | status=%s | mode=%s | bank_ref=%s | bankcode=%s",
+            txnid,
+            mihpayid,
+            amount,
+            status,
+            mode,
+            bank_ref_num,
+            bankcode,
+        )
+
+        # Dummy processing
+        if status == "success":
+
+            logger.info("✅ Payment Successful | txnid=%s", txnid)
+
+            response = {
+                "status": "success",
+                "message": "Webhook processed successfully",
+                "transaction_id": txnid,
+                "payment_id": mihpayid,
+                "amount": amount,
+                "payment_status": "completed",
+            }
+
+        elif status == "failure":
+
+            logger.warning(
+                "❌ Payment Failed | txnid=%s | error=%s | message=%s",
+                txnid,
+                data.get("error"),
+                data.get("error_Message"),
+            )
+
+            response = {
+                "status": "failed",
+                "message": "Payment failed",
+                "transaction_id": txnid,
+                "payment_status": "failed",
+            }
+
+        else:
+
+            logger.info(
+                "⏳ Payment Status Update | txnid=%s | status=%s",
+                txnid,
+                status,
+            )
+
+            response = {
+                "status": "pending",
+                "message": f"Payment status: {status}",
+                "transaction_id": txnid,
+            }
+
+        logger.info("Returning Response: %s", response)
+        logger.info("=" * 80)
+
+        return JsonResponse(response, status=200)
+
+    except Exception as e:
+        logger.exception("Error processing PayU webhook")
+
+        return JsonResponse(
+            {
+                "status": "error",
+                "message": str(e),
+            },
+            status=400,
+        )
