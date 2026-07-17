@@ -897,7 +897,6 @@ def payment_vpa_validate(request):
 #     return HttpResponse("OK", status=200)
 
 @csrf_exempt
-@require_http_methods(["POST"])
 def customer_payment_success(request):
     """
     PayU Webhook endpoint for payment events.
