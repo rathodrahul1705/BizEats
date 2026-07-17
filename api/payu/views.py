@@ -907,115 +907,229 @@ def customer_payment_failed(request):
 
     return HttpResponse("FAILED WEBHOOK RECEIVED", status=200)
 
-
 @csrf_exempt
-@require_http_methods(["POST"])
 def customer_payment_success(request):
     """
-    Dummy PayU payment webhook handler for testing
+    Handle PayU payment responses - supports both:
+    - GET: User redirect after payment (success/failure page)
+    - POST: Webhook from PayU for real-time status updates
     """
-    try:
-        body = request.body.decode("utf-8")
-
+    
+    # Handle GET requests (user redirected from PayU)
+    if request.method == "GET":
         logger.info("=" * 80)
-        logger.info("PayU SUCCESS Webhook Received")
-        logger.info("Method: %s", request.method)
-        logger.info("Content-Type: %s", request.content_type)
-        logger.info("REMOTE_ADDR: %s", request.META.get("REMOTE_ADDR"))
-        logger.info("X_FORWARDED_FOR: %s", request.META.get("HTTP_X_FORWARDED_FOR"))
-        logger.info("Headers: %s", dict(request.headers))
-        logger.info("Raw Body: %s", body)
-
-        # Try JSON first
-        try:
-            data = json.loads(body)
-            logger.info("Payload Type: JSON")
-        except json.JSONDecodeError:
-            data = request.POST.dict()
-            logger.info("Payload Type: FORM_URL_ENCODED")
-
-        logger.info("Parsed Data: %s", data)
-
-        txnid = data.get("txnid", "")
-        amount = data.get("amount", "")
-        productinfo = data.get("productinfo", "")
-        firstname = data.get("firstname", "")
-        email = data.get("email", "")
-        phone = data.get("phone", "")
-        status = data.get("status", "").lower()
-        hash_value = data.get("hash", "")
-        mihpayid = data.get("mihpayid", "")
-        mode = data.get("mode", "")
-        bank_ref_num = data.get("bank_ref_num", "")
-        bankcode = data.get("bankcode", "")
-
+        logger.info("PayU Payment Redirect Received (GET)")
+        logger.info("GET Parameters: %s", dict(request.GET))
+        
+        # Get parameters from query string
+        txnid = request.GET.get("txnid", "")
+        status = request.GET.get("status", "").lower()
+        mihpayid = request.GET.get("mihpayid", "")
+        amount = request.GET.get("amount", "")
+        
         logger.info(
-            "Transaction Details | txnid=%s | mihpayid=%s | amount=%s | status=%s | mode=%s | bank_ref=%s | bankcode=%s",
+            "Redirect Details | txnid=%s | mihpayid=%s | amount=%s | status=%s",
             txnid,
             mihpayid,
             amount,
-            status,
-            mode,
-            bank_ref_num,
-            bankcode,
+            status
         )
-
-        # Dummy processing
+        
+        # Determine response based on status
         if status == "success":
-
-            logger.info("✅ Payment Successful | txnid=%s", txnid)
-
-            response = {
+            logger.info("✅ Payment Successful - Redirect | txnid=%s", txnid)
+            
+            # You can redirect to success page or return JSON
+            return JsonResponse({
                 "status": "success",
-                "message": "Webhook processed successfully",
+                "message": "Payment completed successfully",
                 "transaction_id": txnid,
                 "payment_id": mihpayid,
                 "amount": amount,
-                "payment_status": "completed",
-            }
-
-        elif status == "failure":
-
-            logger.warning(
-                "❌ Payment Failed | txnid=%s | error=%s | message=%s",
-                txnid,
-                data.get("error"),
-                data.get("error_Message"),
-            )
-
-            response = {
+                "payment_status": "completed"
+            }, status=200)
+            
+        elif status == "failure" or status == "failed":
+            error_message = request.GET.get("error_Message", "Payment failed")
+            logger.warning("❌ Payment Failed - Redirect | txnid=%s | error=%s", txnid, error_message)
+            
+            return JsonResponse({
                 "status": "failed",
-                "message": "Payment failed",
+                "message": error_message,
                 "transaction_id": txnid,
-                "payment_status": "failed",
-            }
-
+                "payment_status": "failed"
+            }, status=400)
+            
         else:
-
-            logger.info(
-                "⏳ Payment Status Update | txnid=%s | status=%s",
-                txnid,
-                status,
-            )
-
-            response = {
+            logger.info("⏳ Payment Status Unknown | txnid=%s | status=%s", txnid, status)
+            
+            return JsonResponse({
                 "status": "pending",
                 "message": f"Payment status: {status}",
                 "transaction_id": txnid,
-            }
-
-        logger.info("Returning Response: %s", response)
+                "payment_status": status
+            }, status=200)
+    
+    # Handle POST requests (PayU webhook)
+    elif request.method == "POST":
         logger.info("=" * 80)
-
-        return JsonResponse(response, status=200)
-
-    except Exception as e:
-        logger.exception("Error processing PayU webhook")
-
-        return JsonResponse(
-            {
+        logger.info("PayU Webhook Received (POST)")
+        logger.info("Method: %s", request.method)
+        logger.info("Content-Type: %s", request.content_type)
+        logger.info("REMOTE_ADDR: %s", request.META.get("REMOTE_ADDR"))
+        logger.info("HTTP_X_FORWARDED_FOR: %s", request.META.get("HTTP_X_FORWARDED_FOR"))
+        
+        # Log headers (excluding sensitive ones)
+        safe_headers = {k: v for k, v in request.headers.items() 
+                       if k.lower() not in ['authorization', 'cookie']}
+        logger.info("Headers: %s", safe_headers)
+        
+        try:
+            # Get raw body
+            body = request.body.decode("utf-8")
+            logger.info("Raw Body: %s", body)
+            
+            # Try to parse as JSON first
+            try:
+                data = json.loads(body)
+                logger.info("Payload Type: JSON")
+            except json.JSONDecodeError:
+                # If not JSON, try form data
+                data = request.POST.dict()
+                logger.info("Payload Type: FORM_URL_ENCODED")
+            
+            logger.info("Parsed Data: %s", data)
+            
+            # Extract payment details
+            txnid = data.get("txnid", "")
+            amount = data.get("amount", "")
+            productinfo = data.get("productinfo", "")
+            firstname = data.get("firstname", "")
+            email = data.get("email", "")
+            phone = data.get("phone", "")
+            status = data.get("status", "").lower()
+            hash_value = data.get("hash", "")
+            mihpayid = data.get("mihpayid", "")
+            mode = data.get("mode", "")
+            bank_ref_num = data.get("bank_ref_num", "")
+            bankcode = data.get("bankcode", "")
+            error = data.get("error", "")
+            error_message = data.get("error_Message", "")
+            
+            # Validate required fields
+            if not txnid:
+                logger.warning("Missing txnid in webhook payload")
+                return JsonResponse({
+                    "status": "error",
+                    "message": "Missing transaction ID"
+                }, status=400)
+            
+            logger.info(
+                "Transaction Details | txnid=%s | mihpayid=%s | amount=%s | status=%s | mode=%s | bank_ref=%s | bankcode=%s",
+                txnid,
+                mihpayid,
+                amount,
+                status,
+                mode,
+                bank_ref_num,
+                bankcode,
+            )
+            
+            # Process based on payment status
+            if status == "success":
+                logger.info("✅ Payment Successful - Webhook | txnid=%s", txnid)
+                
+                # TODO: Update your database here
+                # Example:
+                # payment = Payment.objects.get(transaction_id=txnid)
+                # payment.status = 'completed'
+                # payment.payment_id = mihpayid
+                # payment.save()
+                
+                response = {
+                    "status": "success",
+                    "message": "Webhook processed successfully",
+                    "transaction_id": txnid,
+                    "payment_id": mihpayid,
+                    "amount": amount,
+                    "payment_status": "completed",
+                    "mode": mode
+                }
+                return JsonResponse(response, status=200)
+                
+            elif status == "failure":
+                logger.warning(
+                    "❌ Payment Failed - Webhook | txnid=%s | error=%s | message=%s",
+                    txnid,
+                    error,
+                    error_message
+                )
+                
+                # TODO: Update your database here
+                # Example:
+                # payment = Payment.objects.get(transaction_id=txnid)
+                # payment.status = 'failed'
+                # payment.error_message = error_message
+                # payment.save()
+                
+                response = {
+                    "status": "failed",
+                    "message": error_message or "Payment failed",
+                    "transaction_id": txnid,
+                    "payment_id": mihpayid,
+                    "payment_status": "failed",
+                    "error_code": error
+                }
+                return JsonResponse(response, status=200)  # Return 200 even for failures
+                
+            elif status == "pending":
+                logger.info(
+                    "⏳ Payment Pending - Webhook | txnid=%s | status=%s",
+                    txnid,
+                    status
+                )
+                
+                response = {
+                    "status": "pending",
+                    "message": "Payment is pending",
+                    "transaction_id": txnid,
+                    "payment_status": "pending"
+                }
+                return JsonResponse(response, status=200)
+                
+            else:
+                logger.info(
+                    "⏳ Payment Status Update - Webhook | txnid=%s | status=%s",
+                    txnid,
+                    status
+                )
+                
+                response = {
+                    "status": status,
+                    "message": f"Payment status: {status}",
+                    "transaction_id": txnid,
+                    "payment_status": status
+                }
+                return JsonResponse(response, status=200)
+                
+        except json.JSONDecodeError as e:
+            logger.error("JSON decode error: %s", str(e))
+            return JsonResponse({
                 "status": "error",
-                "message": str(e),
-            },
-            status=400,
-        )
+                "message": "Invalid JSON payload"
+            }, status=400)
+            
+        except Exception as e:
+            logger.exception("Error processing PayU webhook")
+            return JsonResponse({
+                "status": "error",
+                "message": str(e)
+            }, status=400)
+    
+    # Handle any other HTTP methods
+    else:
+        logger.warning("Method not allowed: %s", request.method)
+        return JsonResponse({
+            "status": "error",
+            "message": f"Method {request.method} not allowed"
+        }, status=405)
