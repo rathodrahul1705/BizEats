@@ -7,6 +7,8 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from django.conf import settings
 
+from api.payu.utils import verify_payment_generate_hash
+
 logger = logging.getLogger(__name__)
 
 # PayU IP addresses for production
@@ -48,31 +50,40 @@ def verify_payu_ip(request):
     logger.warning(f"Request from non-PayU IP: {ip}")
     return False
 
-
 def verify_payu_hash(data, received_hash):
     """Verify PayU webhook signature"""
     try:
-        # Get merchant key and salt from settings
-        merchant_key = getattr(settings, 'PAYU_MERCHANT_KEY', '')
+        # Get merchant salt from settings
         salt = getattr(settings, 'PAYU_MERCHANT_SALT', '')
         
-        if not merchant_key or not salt:
-            logger.warning("PayU credentials not configured for hash verification")
+        if not salt:
+            logger.warning("PayU salt not configured for hash verification")
             return True  # Skip verification if not configured
         
-        # Build hash string as per PayU's specification
-        # key|txnid|amount|productinfo|firstname|email|udf1|udf2|udf3|udf4|udf5||||||salt
-        hash_string = f"{merchant_key}|{data.get('txnid', '')}|{data.get('amount', '')}|{data.get('productinfo', '')}|{data.get('firstname', '')}|{data.get('email', '')}|{data.get('udf1', '')}|{data.get('udf2', '')}|{data.get('udf3', '')}|{data.get('udf4', '')}|{data.get('udf5', '')}||||||{salt}"
+        command = "verify_payment"
+
+        # Step 1: Generate hash
+        hash_payload = {
+            "key": settings.PAYU_MERCHANT_KEY,
+            "txnid": data['txnid'],
+            "command": command,
+        }
         
         # Generate hash
-        generated_hash = hashlib.sha512(hash_string.encode()).lower().hexdigest()
+        generated_hash = verify_payment_generate_hash(hash_payload, salt)
+        
+        if generated_hash is None:
+            return False
         
         # Compare
         is_valid = generated_hash == received_hash
         if not is_valid:
             logger.error(f"Hash verification failed for transaction: {data.get('txnid')}")
+            logger.debug(f"Generated: {generated_hash}")
+            logger.debug(f"Received: {received_hash}")
         
         return is_valid
+        
     except Exception as e:
         logger.error(f"Hash verification error: {e}")
         return False
@@ -89,8 +100,9 @@ def customer_payment_success(request):
     - Form POST URL Encoded (payment success/failure)
     - JSON (refund/dispute)
     - GET (verification pings)
+    - Nested JSON payload with event_payload
     """
-    logger.info("=" * 80)
+    logger.info("=" * 80) 
     logger.info("Received PayU Webhook Event")
     logger.info("=" * 80)
     logger.info("Method: %s", request.method)
@@ -103,7 +115,6 @@ def customer_payment_success(request):
     ip = request.META.get('HTTP_X_FORWARDED_FOR', '').split(',')[0].strip() or request.META.get('REMOTE_ADDR')
     logger.info("Client IP: %s", ip)
 
-    
     # Handle GET requests (verification pings from PayU)
     if request.method == 'GET':
         logger.info("GET request received - verification ping from PayU")
@@ -112,21 +123,54 @@ def customer_payment_success(request):
     # Handle POST requests
     payment_data = {}
     event_type = None
+    nested_payload = False
     
     # Check content type to determine how to parse
     content_type = request.content_type or ''
     
     if 'application/json' in content_type:
-        # JSON payload (refund/dispute)
+        # JSON payload (refund/dispute or new format)
         try:
-            payment_data = json.loads(request.body.decode('utf-8'))
-            logger.info("JSON Data: %s", payment_data)
+            raw_data = json.loads(request.body.decode('utf-8'))
+            logger.info("Raw JSON Data: %s", raw_data)
             
-            # Determine event type from JSON
-            if payment_data.get('action') == 'refund':
-                event_type = 'refund'
-            elif payment_data.get('event') == 'dispute':
-                event_type = 'dispute'
+            # Check if this is the new nested format with event_payload
+            if 'event_payload' in raw_data:
+                # New format: extract event_payload
+                payment_data = raw_data.get('event_payload', {})
+                nested_payload = True
+                
+                # Determine event type from wrapper
+                event_type_wrapper = raw_data.get('event_type', '')
+                status_wrapper = raw_data.get('status', '')
+                
+                if event_type_wrapper == 'payment':
+                    if status_wrapper.lower() == 'success':
+                        event_type = 'payment_success'
+                    elif status_wrapper.lower() == 'failure':
+                        event_type = 'payment_failure'
+                    else:
+                        event_type = 'payment_pending'
+                
+                logger.info(f"Extracted nested payload - Event: {event_type}, Status: {status_wrapper}")
+                
+                # Also check for refund/dispute in nested format
+                if 'action' in payment_data and payment_data.get('action') == 'refund':
+                    event_type = 'refund'
+                elif 'event' in payment_data and payment_data.get('event') == 'dispute':
+                    event_type = 'dispute'
+                    
+            else:
+                # Old JSON format (refund/dispute)
+                payment_data = raw_data
+                
+                # Determine event type from JSON
+                if payment_data.get('action') == 'refund':
+                    event_type = 'refund'
+                elif payment_data.get('event') == 'dispute':
+                    event_type = 'dispute'
+                    
+            logger.info("Payment Data: %s", payment_data)
                 
         except json.JSONDecodeError as e:
             logger.error(f"JSON parsing error: {e}")
@@ -164,7 +208,12 @@ def customer_payment_success(request):
     # If no data received
     if not payment_data:
         logger.warning("No payment data received")
-        return HttpResponse("OK", status=200)
+        return JsonResponse({
+            'status': 'pending',
+            'message': 'Payment status: ',
+            'transaction_id': '',
+            'payment_status': ''
+        }, status=200)
     
     # Verify hash for payment events (optional but recommended)
     if event_type in ['payment_success', 'payment_failure']:
@@ -178,43 +227,93 @@ def customer_payment_success(request):
     
     # Process based on event type
     try:
+        response_data = {
+            'status': 'pending',
+            'message': 'Payment status: ',
+            'transaction_id': payment_data.get('txnid', ''),
+            'payment_status': event_type or 'unknown'
+        }
+        
         if event_type == 'payment_success':
             handle_successful_payment(payment_data)
+            response_data['status'] = 'success'
+            response_data['message'] = 'Payment processed successfully'
+            response_data['payment_status'] = 'success'
+            
         elif event_type == 'payment_failure':
             handle_failed_payment(payment_data)
+            response_data['status'] = 'failed'
+            response_data['message'] = 'Payment failed'
+            response_data['payment_status'] = 'failed'
+            
         elif event_type == 'payment_pending':
             handle_pending_payment(payment_data)
+            response_data['status'] = 'pending'
+            response_data['message'] = 'Payment is pending'
+            response_data['payment_status'] = 'pending'
+            
         elif event_type == 'refund':
             handle_refund_payment(payment_data)
+            response_data['status'] = 'refunded'
+            response_data['message'] = 'Refund processed'
+            response_data['payment_status'] = 'refunded'
+            
         elif event_type == 'dispute':
             handle_dispute_payment(payment_data)
+            response_data['status'] = 'dispute'
+            response_data['message'] = 'Dispute registered'
+            response_data['payment_status'] = 'dispute'
+            
         else:
             # Try to determine from data if event_type not set
             if 'action' in payment_data and payment_data['action'] == 'refund':
                 handle_refund_payment(payment_data)
+                response_data['status'] = 'refunded'
+                response_data['message'] = 'Refund processed'
+                response_data['payment_status'] = 'refunded'
+                
             elif 'event' in payment_data and payment_data['event'] == 'dispute':
                 handle_dispute_payment(payment_data)
+                response_data['status'] = 'dispute'
+                response_data['message'] = 'Dispute registered'
+                response_data['payment_status'] = 'dispute'
+                
             elif 'status' in payment_data:
-                if payment_data['status'] == 'success':
+                if payment_data.get('status') == 'success':
                     handle_successful_payment(payment_data)
-                elif payment_data['status'] == 'failure':
+                    response_data['status'] = 'success'
+                    response_data['message'] = 'Payment processed successfully'
+                    response_data['payment_status'] = 'success'
+                    
+                elif payment_data.get('status') == 'failure':
                     handle_failed_payment(payment_data)
+                    response_data['status'] = 'failed'
+                    response_data['message'] = 'Payment failed'
+                    response_data['payment_status'] = 'failed'
+                    
                 else:
                     logger.info(f"Unknown event type: {payment_data}")
+                    response_data['message'] = f'Unknown event type: {payment_data.get("status", "unknown")}'
             else:
                 logger.info(f"Unknown event type: {payment_data}")
+                response_data['message'] = 'Unknown event type'
         
-        # Always return 200 OK to acknowledge receipt
-        return HttpResponse("OK", status=200)
+        # Return 200 OK with response data
+        return JsonResponse(response_data, status=200)
         
     except Exception as e:
         logger.error(f"Error processing webhook: {str(e)}", exc_info=True)
         # Still return 200 to prevent PayU from retrying
-        return HttpResponse("OK", status=200)
+        return JsonResponse({
+            'status': 'error',
+            'message': f'Error processing webhook: {str(e)}',
+            'transaction_id': payment_data.get('txnid', ''),
+            'payment_status': 'error'
+        }, status=200)
 
 
 def handle_successful_payment(data):
-    """Handle successful payment webhook event (Form POST URL Encoded)"""
+    """Handle successful payment webhook event"""
     logger.info("Processing successful payment")
     
     # Extract all relevant data
@@ -249,10 +348,11 @@ def handle_successful_payment(data):
     field8 = data.get('field8')
     field9 = data.get('field9')
     
-    logger.info(f"Payment Successful - Transaction: {txnid}, PayU ID: {mihpayid}, Amount: {amount}, Net: {net_amount_debit}")
+    logger.info(f"Payment Successful - Transaction: {txnid}, PayU ID: {mihpayid}, "
+                f"Amount: {amount}, Net: {net_amount_debit}, Mode: {mode}, "
+                f"PG Type: {pg_type}, UDF1: {udf1}, UDF2: {udf2}, UDF5: {udf5}")
     
     # TODO: Update your database
-    # Example:
     # try:
     #     transaction = Transaction.objects.get(transaction_id=txnid)
     #     transaction.status = 'completed'
@@ -284,7 +384,7 @@ def handle_successful_payment(data):
 
 
 def handle_failed_payment(data):
-    """Handle failed payment webhook event (Form POST URL Encoded)"""
+    """Handle failed payment webhook event"""
     logger.info("Processing failed payment")
     
     txnid = data.get('txnid')
