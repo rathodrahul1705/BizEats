@@ -364,8 +364,17 @@ class UserDeliveryAddress(models.Model):
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="delivery_addresses")
 
-    receiver_name = models.CharField(max_length=100)
-    receiver_phone = models.CharField(max_length=15)
+    receiver_name = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True
+    )
+
+    receiver_phone = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True
+    )
 
     street_address = models.CharField(max_length=255)
     city = models.CharField(max_length=100)
@@ -1417,3 +1426,4 @@ class SettlementOrder(models.Model):
     class Meta:
         db_table = "settlement_orders"
         unique_together = ("settlement", "order")
+
