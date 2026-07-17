@@ -20,7 +20,6 @@ from .utils import create_payment_generate_hash, order_create, upsert_user_payme
 # ✅ Logger setup
 logger = logging.getLogger(__name__)
 
-
 @api_view(['POST'])
 def initiate_payment(request):
     """
@@ -880,3 +879,24 @@ def payment_vpa_validate(request):
             {"status": "error", "message": "Something went wrong"},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+    
+@csrf_exempt
+def customer_payment_success(request):
+    logger.info("========== PayU SUCCESS Webhook ==========")
+    logger.info(f"Method: {request.method}")
+    logger.info(f"Headers: {dict(request.headers)}")
+    logger.info(f"POST Data: {request.POST.dict()}")
+    logger.info(f"Body: {request.body.decode('utf-8', errors='ignore')}")
+
+    return HttpResponse("SUCCESS WEBHOOK RECEIVED", status=200)
+
+
+@csrf_exempt
+def customer_payment_failed(request):
+    logger.info("========== PayU FAILED Webhook ==========")
+    logger.info(f"Method: {request.method}")
+    logger.info(f"Headers: {dict(request.headers)}")
+    logger.info(f"POST Data: {request.POST.dict()}")
+    logger.info(f"Body: {request.body.decode('utf-8', errors='ignore')}")
+
+    return HttpResponse("FAILED WEBHOOK RECEIVED", status=200)
