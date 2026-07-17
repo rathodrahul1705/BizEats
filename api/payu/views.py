@@ -1,6 +1,8 @@
 from datetime import timezone
+from gettext import translation
 import json
 import uuid
+from django.http import HttpResponse
 import requests
 import hashlib
 import logging
@@ -11,6 +13,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from api.models import UserPaymentMethod
 from api.models import Order
+from api.wallet.services import add_money_success
 
 from .utils import create_payment_generate_hash, order_create, upsert_user_payment_method, verify_payment_generate_hash, verify_payment_update
 
@@ -21,82 +24,143 @@ logger = logging.getLogger(__name__)
 def initiate_payment(request):
     """
     Initiate payment with PayU gateway
-    """    
+    Supports:
+    1. Order Payment
+    2. Wallet (Eatoor Money) Recharge
+    """
     try:
         logger.info("Initiating payment request")
 
         data = request.data
         logger.debug(f"Incoming request data: {data}")
 
-        # ✅ Extract required fields
-        amount = data.get('amount')
-        productinfo = data.get('productinfo')
-        firstname = data.get('firstname')
-        email = data.get('email')
-        phone = data.get('phone')
+        # Common payment fields
+        amount = data.get("amount")
+        productinfo = data.get("productinfo")
+        firstname = data.get("firstname")
+        email = data.get("email")
+        phone = data.get("phone")
+        payment_page = (data.get("payment_page") or "").lower()
 
-        # ✅ Validate payment fields
-        if not all([amount, productinfo, firstname, email, phone]):
-            missing = [f for f in ['amount', 'productinfo', 'firstname', 'email', 'phone'] if not data.get(f)]
+        # Validate payment fields
+        required_payment_fields = [
+            "amount",
+            "productinfo",
+            "firstname",
+            "email",
+            "phone"
+        ]
+
+        missing = [f for f in required_payment_fields if not data.get(f)]
+
+        if missing:
             logger.warning(f"Missing payment parameters: {missing}")
             return Response(
-                {"error": "Missing required parameters", "missing": missing},
+                {
+                    "error": "Missing required parameters",
+                    "missing": missing
+                },
                 status=400
             )
 
-        # ✅ Validate order fields
-        required_order_fields = ['user_id', 'restaurant_id', 'delivery_address_id', 'subtotal', 'total_amount']
-        missing_order = [f for f in required_order_fields if not data.get(f)]
-        if missing_order:
-            logger.warning(f"Missing order parameters: {missing_order}")
-            return Response(
-                {"error": "Missing order parameters", "missing": missing_order},
-                status=400
+        order_id = None
+        order_number = None
+        wallet_txn = None
+
+        ####################################################################
+        # Generate Transaction ID
+        ####################################################################
+        if payment_page == "eatoor_money":
+            txnid = f"WALLET_{uuid.uuid4().hex[:12]}"
+        else:
+            txnid = f"ORD{order_id}_{uuid.uuid4().hex[:8]}"
+
+        logger.info(f"Generated txnid={txnid}")
+
+        ####################################################################
+        # ORDER FLOW
+        ####################################################################
+        if payment_page != "eatoor_money":
+
+            required_order_fields = [
+                "user_id",
+                "restaurant_id",
+                "delivery_address_id",
+                "subtotal",
+                "total_amount"
+            ]
+
+            missing_order = [
+                field for field in required_order_fields
+                if not data.get(field)
+            ]
+
+            if missing_order:
+                logger.warning(f"Missing order parameters: {missing_order}")
+                return Response(
+                    {
+                        "error": "Missing order parameters",
+                        "missing": missing_order
+                    },
+                    status=400
+                )
+
+            logger.info("Creating order...")
+
+            order_result = order_create(data)
+
+            if not order_result.get("success"):
+                logger.error(f"Order creation failed: {order_result}")
+
+                return Response(
+                    {
+                        "error": "Failed to create order",
+                        "details": order_result.get("error")
+                    },
+                    status=400
+                )
+
+            order_id = order_result["order_id"]
+            order_number = order_result["order_number"]
+
+            logger.info(
+                f"Order created successfully. "
+                f"order_id={order_id}, "
+                f"order_number={order_number}"
             )
 
-        # ✅ Create order
-        logger.info("Creating order...")
-        order_result = order_create(data)
+        ####################################################################
+        # WALLET FLOW - Create transaction after PayU response
+        ####################################################################
+        # We'll create wallet transaction after getting PayU response
 
-        if not order_result.get('success'):
-            logger.error(f"Order creation failed: {order_result}")
-            return Response(
-                {"error": "Failed to create order", "details": order_result.get('error')},
-                status=400
-            )
-
-        order_id = order_result['order_id']
-        order_number = order_result['order_number']
-
-        logger.info(f"Order created successfully: order_id={order_id}, order_number={order_number}")
-
-        # ✅ Generate txnid
-        txnid = f"ORD{order_id}_{uuid.uuid4().hex[:8]}"
-        logger.debug(f"Generated txnid: {txnid}")
-
-        # ✅ Prepare hash params
         application_base_url = settings.REACT_APP_BASE_URL
 
+        ####################################################################
+        # Hash Parameters
+        ####################################################################
         hash_params = {
-            'key': settings.PAYU_MERCHANT_KEY,
-            'txnid': txnid,
-            'amount': str(amount),
-            'productinfo': productinfo,
-            'firstname': firstname,
-            'email': email,
-            'udf1': str(order_id),
-            'udf2': order_number,
-            'udf3': str(data.get('user_id')),
-            'udf4': data.get('payment_gateway', 'UPI'),
-            'udf5': ''
+            "key": settings.PAYU_MERCHANT_KEY,
+            "txnid": txnid,
+            "amount": str(amount),
+            "productinfo": productinfo,
+            "firstname": firstname,
+            "email": email,
+            "udf1": str(order_id) if order_id else str(data.get("user_id")),
+            "udf2": order_number if order_number else "WALLET_TOPUP",
+            "udf3": str(data.get("user_id")),
+            "udf4": data.get("payment_gateway", "UPI"),
+            "udf5": payment_page,
         }
 
-        logger.debug(f"Hash params: {hash_params}")
+        hashh = create_payment_generate_hash(
+            hash_params,
+            settings.PAYU_MERCHANT_SALT
+        )
 
-        hashh = create_payment_generate_hash(hash_params, settings.PAYU_MERCHANT_SALT)
-        logger.debug(f"Generated hash: {hashh}")
-
-        # ✅ Prepare PayU request
+        ####################################################################
+        # PayU Parameters
+        ####################################################################
         api_params = {
             "key": settings.PAYU_MERCHANT_KEY,
             "txnid": txnid,
@@ -111,67 +175,127 @@ def initiate_payment(request):
             "pg": "UPI",
             "txn_s2s_flow": "4",
             "hash": hashh,
-            "udf1": str(order_id),
-            "udf2": order_number,
-            "udf3": str(data.get('user_id')),
-            "udf4": data.get('payment_gateway', 'UPI'),
-            "udf5": ""
+            "udf1": str(order_id) if order_id else str(data.get("user_id")),
+            "udf2": order_number if order_number else "WALLET_TOPUP",
+            "udf3": str(data.get("user_id")),
+            "udf4": data.get("payment_gateway", "UPI"),
+            "udf5": payment_page,
         }
 
-        # ⚠️ Fix typo: payment_mehotd_type → payment_method_type
-        if data.get('payment_method_type') == "VPA":
-            api_params["vpa"] = data.get('vpa')
+        ####################################################################
+        # UPI Flow
+        ####################################################################
+        if data.get("payment_method_type") == "VPA":
+            api_params["vpa"] = data.get("vpa")
             api_params["bankcode"] = "UPI"
-            logger.info(f"Using VPA flow for txnid={txnid}, vpa={data.get('vpa')}")
+
+            logger.info(
+                f"Using VPA flow. txnid={txnid}, "
+                f"vpa={data.get('vpa')}"
+            )
+
         else:
             api_params["bankcode"] = "INTENT"
-            logger.info(f"Using Intent flow for txnid={txnid}")
+            logger.info(f"Using Intent flow. txnid={txnid}")
 
-        logger.debug(f"Final PayU params: {api_params}")
+        logger.debug(f"PayU Params: {api_params}")
 
-        # ✅ Send request to PayU
+        ####################################################################
+        # Call PayU
+        ####################################################################
         url = f"{settings.PAYU_BASE_URL}/_payment"
+
         logger.info(f"Sending request to PayU: {url}")
 
-        response = requests.post(url, data=api_params, timeout=30)
-        
-        logger.info(f"PayU response status: {response.status_code}")
-        logger.debug(f"PayU raw response: {response.text}")
+        response = requests.post(
+            url,
+            data=api_params,
+            timeout=30
+        )
 
-        response_json = response.json()
+        logger.info(f"PayU Response Status: {response.status_code}")
 
-        # ✅ Return response
-        return Response({
-            "status": "success",
-            "order_id": order_id,
-            "order_number": order_number,
-            "txnid": txnid,
-            "amount": amount,
-            "payu_response": response_json
-        }, status=200)
+        try:
+            response_json = response.json()
+        except Exception:
+            response_json = {
+                "raw_response": response.text
+            }
+
+        ####################################################################
+        # WALLET FLOW - Create transaction after receiving PayU response
+        ####################################################################
+        if payment_page == "eatoor_money":
+            logger.info("Wallet recharge flow detected. Creating wallet transaction with PayU response...")
+            
+            # Create wallet transaction record with PayU response
+            try:
+                wallet_txn = add_money_success(
+                    user=request.user,
+                    amount=amount,
+                    source="add_money",
+                    note="Wallet top-up initiated",
+                    status="pending",
+                    txnid=txnid,
+                    response_json=response_json  # Store the full PayU response
+                )
+
+                logger.info(f"Wallet transaction created: {wallet_txn.id if wallet_txn else 'None'}")
+            except Exception as e:
+                logger.error(f"Failed to create wallet transaction: {str(e)}")
+                # Note: Even if wallet transaction creation fails, we still return the PayU response
+                # so the frontend can proceed, but we log the error
+                # You may want to handle this differently based on your business logic
+
+        ####################################################################
+        # Success Response
+        ####################################################################
+        return Response(
+            {
+                "status": "success",
+                "payment_page": payment_page,
+                "order_id": order_id,
+                "order_number": order_number,
+                "txnid": txnid,
+                "amount": amount,
+                "wallet_transaction_id": wallet_txn.id if wallet_txn else None,
+                "payu_response": response_json
+            },
+            status=200
+        )
 
     except requests.exceptions.Timeout:
-        logger.error("PayU request timeout", exc_info=True)
+        logger.exception("PayU timeout")
+
         return Response(
-            {"error": "Payment gateway timeout"},
+            {
+                "error": "Payment gateway timeout"
+            },
             status=504
         )
 
     except requests.exceptions.RequestException as e:
-        logger.error(f"PayU request failed: {str(e)}", exc_info=True)
+        logger.exception("PayU request failed")
+
         return Response(
-            {"error": "Payment gateway error"},
+            {
+                "error": "Payment gateway error",
+                "details": str(e)
+            },
             status=502
         )
 
     except Exception as e:
         logger.exception("Unexpected error in initiate_payment")
-        return Response({
-            "error": "Something went wrong",
-            "details": str(e) if settings.DEBUG else "Internal server error"
-        }, status=500)
 
-
+        return Response(
+            {
+                "error": "Something went wrong",
+                "details": str(e) if settings.DEBUG else "Internal server error"
+            },
+            status=500
+        )
+    
 # ✅ 2. SUCCESS CALLBACK
 @csrf_exempt
 @api_view(['POST'])
@@ -394,6 +518,7 @@ def payment_method_details(request):
     """
     request_id = str(uuid.uuid4())[:8]
     user_id = request.query_params.get('user_id')
+    payment_page = request.query_params.get('payment_page')
 
     try:
         logger.info(f"[{request_id}] 💳 Payment method details API called")
@@ -550,7 +675,14 @@ def payment_method_details(request):
             key=lambda x: x.get("priority", 999)
         )
 
-        active_wallets = [w for w in wallets if w.get("is_active")]
+        active_wallets = [
+            w for w in wallets
+            if w.get("is_active")
+            and not (
+                payment_page == "eatoor_money"
+                and w.get("id") == "eatoor_money"
+            )
+        ]
 
         # ================= USER SAVED METHODS ================= #
 

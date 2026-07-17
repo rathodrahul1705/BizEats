@@ -1169,6 +1169,8 @@ class WalletTransaction(models.Model):
     order = models.ForeignKey("api.Order", null=True, blank=True, on_delete=models.SET_NULL)
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default="success")
     note = models.CharField(max_length=255, blank=True)
+    raw_response = models.JSONField(null=True, blank=True)
+    transaction_id = models.CharField(max_length=100, null=True, blank=True)
     razorpay_payment_id = models.CharField(max_length=100, null=True, blank=True)
     razorpay_order_id = models.CharField(max_length=100, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)

@@ -60,28 +60,6 @@ class CreateRazorpayOrderView(APIView):
             "key": settings.RAZORPAY_API_KEY,
             "message": "Razorpay order created successfully",
         })
-
-
-# -----------------------------
-# 3. ADD MONEY SUCCESS
-# -----------------------------
-# class AddMoneySuccessView(APIView):
-#     permission_classes = [IsAuthenticated]
-
-#     def post(self, request):
-#         amount = request.data.get("amount")
-#         razorpay_payment_id = request.data.get("razorpay_payment_id")
-#         razorpay_order_id = request.data.get("razorpay_order_id")
-
-#         if not amount:
-#             return Response({"error": "Amount is required"}, status=400)
-
-#         wallet, _ = Wallet.objects.get_or_create(user=request.user)
-
-#         credit_wallet(wallet, float(amount),razorpay_payment_id, razorpay_order_id, "add_money", note="Money Added")
-
-#         return Response({"message": "Money added successfully", "balance": wallet.balance})
-
 class AddMoneySuccessView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -121,9 +99,7 @@ class AddMoneySuccessView(APIView):
             "message": "Payment verified & wallet credited",
             "balance": wallet.balance
         }, status=200)
-
-
-
+    
 # -----------------------------
 # 4. DEBIT WALLET (Order Payment)
 # -----------------------------
