@@ -897,12 +897,20 @@ def payment_vpa_validate(request):
 #     return HttpResponse("OK", status=200)
 
 @csrf_exempt
+def customer_payment_failed(request):
+    logger.info("========== PayU FAILED Webhook ==========")
+    logger.info(f"Method: {request.method}")
+    logger.info(f"Headers: {dict(request.headers)}")
+    logger.info(f"POST Data: {request.POST.dict()}")
+    logger.info(f"Body: {request.body.decode('utf-8', errors='ignore')}")
+
+    return HttpResponse("FAILED WEBHOOK RECEIVED", status=200)
+
+@csrf_exempt
 def customer_payment_success(request):
     """
     PayU Webhook endpoint for payment events.
     Handles payment success, failure, refund, and dispute events.
-    
-    PayU sends data in application/x-www-form-urlencoded format
     """
     logger.info("=" * 80)
     logger.info("Received PayU Webhook Event")
@@ -919,16 +927,38 @@ def customer_payment_success(request):
     
     # Log GET parameters (if any)
     if request.GET:
-        logger.info("GET: %s", request.GET.dict())
+        logger.info("GET Data: %s", request.GET.dict())
     
-    # Process POST data (form-urlencoded)
-    # PayU sends data as form-urlencoded, so request.POST will contain the data
-    payment_data = request.POST.dict()
-    logger.info("POST Data: %s", payment_data)
+    # Process data based on request method
+    payment_data = {}
     
-    # Also log raw body for debugging
-    raw_body = request.body.decode("utf-8", errors="ignore")
-    logger.info("Raw Body: %s", raw_body)
+    if request.method == 'POST':
+        # PayU sends data as form-urlencoded
+        payment_data = request.POST.dict()
+        logger.info("POST Data: %s", payment_data)
+        
+        # Also check raw body for JSON data
+        if request.content_type and 'application/json' in request.content_type:
+            try:
+                import json
+                payment_data = json.loads(request.body.decode('utf-8'))
+                logger.info("JSON Data: %s", payment_data)
+            except:
+                pass
+        
+        # Log raw body
+        raw_body = request.body.decode('utf-8', errors='ignore')
+        logger.info("Raw Body: %s", raw_body)
+    
+    elif request.method == 'GET':
+        # PayU might send data as query parameters for verification
+        payment_data = request.GET.dict()
+        logger.info("GET Data (processed as payment data): %s", payment_data)
+        
+        # Check if this is a verification request
+        if not payment_data:
+            logger.info("Empty GET request - likely a verification ping from PayU")
+            return HttpResponse("OK", status=200)
     
     # Extract payment information
     mihpayid = payment_data.get('mihpayid')
@@ -948,137 +978,29 @@ def customer_payment_success(request):
     logger.info("Mode: %s", mode)
     logger.info("=" * 80)
     
+    # If no payment data, return OK (it's likely a verification)
+    if not payment_data:
+        logger.info("No payment data received - returning OK")
+        return HttpResponse("OK", status=200)
+    
     try:
         # Process the webhook event based on status or event type
-        event_type = request.headers.get('X-Event-Type')  # If PayU sends event type in header
+        event_type = request.headers.get('X-Event-Type')
         
         # Determine event type from data
-        if status == 'success' or status == 'completed':
-            # Handle successful payment
-            handle_successful_payment(payment_data)
-            
-        elif status == 'failed' or status == 'failure':
-            # Handle failed payment
-            handle_failed_payment(payment_data)
-            
-        elif status == 'refund' or 'refund' in raw_body.lower():
-            # Handle refund
-            handle_refund_payment(payment_data)
-            
-        elif 'dispute' in raw_body.lower():
-            # Handle dispute
-            handle_dispute_payment(payment_data)
-            
-        else:
-            # Handle other events or log unknown event
-            logger.warning("Unknown event type: %s", payment_data)
+        # if status == 'success' or status == 'completed':
+        #     handle_successful_payment(payment_data)
+        # elif status == 'failed' or status == 'failure':
+        #     handle_failed_payment(payment_data)
+        # elif status == 'refund' or 'refund' in str(payment_data).lower():
+        #     handle_refund_payment(payment_data)
+        # elif 'dispute' in str(payment_data).lower():
+        #     handle_dispute_payment(payment_data)
+        # else:
+        #     logger.warning("Unknown event type: %s", payment_data)
         
-        # Always return 200 OK to acknowledge receipt
-        # PayU expects a 200 OK response
         return HttpResponse("OK", status=200)
         
     except Exception as e:
         logger.error("Error processing webhook: %s", str(e), exc_info=True)
-        # Still return 200 to prevent PayU from retrying
-        # But log the error for investigation
         return HttpResponse("OK", status=200)
-
-
-def handle_successful_payment(data):
-    """Handle successful payment webhook event"""
-    logger.info("Processing successful payment")
-    
-    # Extract data
-    txnid = data.get('txnid')
-    mihpayid = data.get('mihpayid')
-    amount = data.get('amount')
-    email = data.get('email')
-    
-    # TODO: Update order status in your database
-    # Example:
-    # Order.objects.filter(order_id=txnid).update(
-    #     payment_status='success',
-    #     payu_payment_id=mihpayid,
-    #     payment_amount=amount
-    # )
-    
-    # TODO: Send confirmation email to customer
-    # TODO: Update inventory
-    # TODO: Generate invoice
-    
-    logger.info("Payment successful for transaction: %s, PayU ID: %s", txnid, mihpayid)
-
-
-def handle_failed_payment(data):
-    """Handle failed payment webhook event"""
-    logger.info("Processing failed payment")
-    
-    # Extract data
-    txnid = data.get('txnid')
-    error_message = data.get('error_Message', 'No error message provided')
-    error_code = data.get('error', 'No error code')
-    
-    # TODO: Update order status in your database
-    # Order.objects.filter(order_id=txnid).update(
-    #     payment_status='failed',
-    #     failure_reason=error_message,
-    #     failure_code=error_code
-    # )
-    
-    # TODO: Send notification to customer about failed payment
-    
-    logger.info("Payment failed for transaction: %s, Error: %s", txnid, error_message)
-
-
-def handle_refund_payment(data):
-    """Handle refund webhook event"""
-    logger.info("Processing refund event")
-    
-    # Extract data
-    txnid = data.get('txnid')
-    refund_amount = data.get('refund_amount', data.get('amount'))
-    refund_status = data.get('refund_status', 'processing')
-    
-    # TODO: Update refund status in your database
-    # Refund.objects.update_or_create(
-    #     transaction_id=txnid,
-    #     defaults={
-    #         'refund_amount': refund_amount,
-    #         'refund_status': refund_status
-    #     }
-    # )
-    
-    logger.info("Refund processed for transaction: %s, Amount: %s", txnid, refund_amount)
-
-
-def handle_dispute_payment(data):
-    """Handle dispute webhook event"""
-    logger.info("Processing dispute event")
-    
-    # Extract data
-    txnid = data.get('txnid')
-    dispute_reason = data.get('dispute_reason', 'Not specified')
-    dispute_status = data.get('dispute_status', 'raised')
-    
-    # TODO: Create dispute record in your database
-    # Dispute.objects.create(
-    #     transaction_id=txnid,
-    #     reason=dispute_reason,
-    #     status=dispute_status
-    # )
-    
-    # TODO: Notify admin team
-    # send_admin_alert(f"Dispute raised for transaction: {txnid}")
-    
-    logger.info("Dispute raised for transaction: %s, Reason: %s", txnid, dispute_reason)
-
-
-@csrf_exempt
-def customer_payment_failed(request):
-    logger.info("========== PayU FAILED Webhook ==========")
-    logger.info(f"Method: {request.method}")
-    logger.info(f"Headers: {dict(request.headers)}")
-    logger.info(f"POST Data: {request.POST.dict()}")
-    logger.info(f"Body: {request.body.decode('utf-8', errors='ignore')}")
-
-    return HttpResponse("FAILED WEBHOOK RECEIVED", status=200)
