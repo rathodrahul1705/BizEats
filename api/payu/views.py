@@ -882,13 +882,18 @@ def payment_vpa_validate(request):
     
 @csrf_exempt
 def customer_payment_success(request):
-    logger.info("========== PayU SUCCESS Webhook ==========")
-    logger.info(f"Method: {request.method}")
-    logger.info(f"Headers: {dict(request.headers)}")
-    logger.info(f"POST Data: {request.POST.dict()}")
-    logger.info(f"Body: {request.body.decode('utf-8', errors='ignore')}")
+    logger.info("=" * 80)
+    logger.info("Method: %s", request.method)
+    logger.info("Content-Type: %s", request.content_type)
+    logger.info("REMOTE_ADDR: %s", request.META.get("REMOTE_ADDR"))
+    logger.info("X_FORWARDED_FOR: %s", request.META.get("HTTP_X_FORWARDED_FOR"))
+    logger.info("Headers: %s", dict(request.headers))
+    logger.info("GET: %s", request.GET.dict())
+    logger.info("POST: %s", request.POST.dict())
+    logger.info("Raw Body: %s", request.body.decode("utf-8", errors="ignore"))
+    logger.info("=" * 80)
 
-    return HttpResponse("SUCCESS WEBHOOK RECEIVED", status=200)
+    return HttpResponse("OK", status=200)
 
 
 @csrf_exempt
