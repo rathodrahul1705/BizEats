@@ -6,7 +6,8 @@ from api.mobile.home import HomeKitchenList
 from api.notifications.notification_send import process_notification_queue, send_fcm_notification, send_order_received_notification
 from api.notifications.views import AssignTagCreateView, AssignTagListView, DeviceDeleteView, DeviceListView, DeviceRegisterView, NotificationMasterCreateView, NotificationMasterListView, NotificationQueueCreateView, NotificationQueueListView, RemoveDeviceToken, TagMasterCreateView, TagMasterListView
 from api.payment.payment import create_order, verify_payment, backup_payment_details
-from api.payu.views import customer_payment_failed, customer_payment_success, initiate_payment, payment_failure, payment_method_details, payment_success, payment_vpa_validate, verify_payment_payu
+from api.payu.views import initiate_payment, payment_failure, payment_method_details, payment_success, payment_vpa_validate, verify_payment_payu
+from api.payu.webhook import customer_payment_success
 from api.restaurent.menue_views import AddonGroupViewSet, AddonViewSet
 from api.search.searchcontent import search_results, search_suggestions
 from api.storage_backends import GetSingleImageFromS3, ListImagesFromS3, UploadImageToS3
@@ -67,9 +68,7 @@ urlpatterns = [
     path('api/payment/methods/', payment_method_details),
     path('api/payment/validatevpa/', payment_vpa_validate),
 
-
-    path('api/customer/payment/success/', customer_payment_success),
-    path('api/customer/payment/failed/', customer_payment_failed),
+    path('api/customer/payment/success/', customer_payment_success, name='payment_webhook'),
 
     path("api/restaurant/order/details/update/", PlaceOrderAPI.as_view(), name="restaurant-order-details-update"),
     path('api/restaurant/order/create-order/', create_order, name='create_order'),
