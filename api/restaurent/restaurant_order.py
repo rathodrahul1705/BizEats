@@ -427,9 +427,18 @@ class CartWithRestaurantDetails(APIView):
 
             # Suggestions
             cart_item_ids = [item.item_id for item in cart_items]
-            suggestion_items_qs = RestaurantMenu.objects.filter(
-                restaurant_id=restaurant_id
-            ).exclude(id__in=cart_item_ids)[:5]
+            current_time = datetime.now().time()
+            suggestion_items_qs = (
+                RestaurantMenu.objects.filter(
+                    restaurant_id=restaurant_id,
+                    availability=True,
+                )
+                .filter(
+                    Q(start_time__isnull=True) | Q(start_time__lte=current_time),
+                    Q(end_time__isnull=True) | Q(end_time__gte=current_time),
+                )
+                .exclude(id__in=cart_item_ids)[:5]
+            )
 
             suggestion_cart_items = []
             for item in suggestion_items_qs:
@@ -549,6 +558,7 @@ class CartWithRestaurantDetails(APIView):
             return Response({
                 "status": "success",
                 "restaurant_name": restaurant.restaurant_name,
+                "restaurant_status": restaurant.restaurant_status,
                 "cart_details": cart_details,
                 "suggestion_cart_items": suggestion_cart_items,
                 "delivery_address_details": delivery_address_details,
@@ -981,6 +991,7 @@ class PlaceOrderAPI(APIView):
                     cart_status=5,
                     order_number=order.order_number
                 )
+                
                 logger.info(f"Updated {updated_count} cart items to status=5")
 
                 try:

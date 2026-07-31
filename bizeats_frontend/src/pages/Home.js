@@ -361,7 +361,7 @@ const Home = () => {
               
               <div className="hero-stats">
                 <div className="hero-stat">
-                  <strong>200+</strong>
+                  <strong>5000+</strong>
                   <span>Happy Customers</span>
                 </div>
                 <div className="hero-stat">

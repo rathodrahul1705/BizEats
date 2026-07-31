@@ -220,38 +220,97 @@ class RestaurantMenuSerializer(serializers.ModelSerializer):
         model = RestaurantMenu
         fields = "__all__"  # Include all fields
 
+from rest_framework import serializers
+
 class UserDeliveryAddressSerializer(serializers.ModelSerializer):
     full_address = serializers.SerializerMethodField()
-    home_type_display = serializers.SerializerMethodField()  # new field just for display
-    
+    address_type = serializers.SerializerMethodField()
+
     class Meta:
         model = UserDeliveryAddress
         fields = "__all__"
-        read_only_fields = ["id", "created_at", "updated_at", "user"]
+        read_only_fields = [
+            "id",
+            "created_at",
+            "updated_at",
+            "user",
+            "address_type",
+            "full_address",
+        ]
+
+    def validate(self, attrs):
+        home_type = attrs.get(
+            "home_type",
+            getattr(self.instance, "home_type", None)
+        )
+        name_of_location = attrs.get(
+            "name_of_location",
+            getattr(self.instance, "name_of_location", None)
+        )
+
+        if home_type == "Other" and not name_of_location:
+            raise serializers.ValidationError({
+                "name_of_location": "This field is required when home_type is 'Other'."
+            })
+
+        if home_type != "Other":
+            attrs["name_of_location"] = home_type
+
+        return attrs
 
     def create(self, validated_data):
-        """Ensure only one default address is set per user."""
         user = validated_data["user"]
+
         if validated_data.get("is_default", False):
-            UserDeliveryAddress.objects.filter(user=user, is_default=True).update(is_default=False)
+            UserDeliveryAddress.objects.filter(
+                user=user,
+                is_default=True
+            ).update(is_default=False)
+
         return super().create(validated_data)
 
     def update(self, instance, validated_data):
-        """Ensure only one address is marked as default at a time."""
         if validated_data.get("is_default", False):
-            UserDeliveryAddress.objects.filter(user=instance.user, is_default=True).update(is_default=False)
+            UserDeliveryAddress.objects.filter(
+                user=instance.user,
+                is_default=True
+            ).update(is_default=False)
+
         return super().update(instance, validated_data)
-    
-    def get_full_address(self, obj):
-        landmark = f"Landmark: {obj.near_by_landmark}" if obj.near_by_landmark else "No Landmark"
-        return f"{obj.street_address}, {obj.city}, {obj.state}, {obj.zip_code}, {obj.country} ({landmark}, Type: {self.get_home_type_display(obj)})"
 
-    def get_home_type_display(self, obj):
-        """Return custom home_type value if it's 'Other'."""
+    def get_address_type(self, obj):
         if obj.home_type == "Other":
-            return obj.name_of_location or "Other"
-        return obj.home_type
+            return {
+                "key": "other",
+                "label": obj.name_of_location
+            }
 
+        return {
+            "key": obj.home_type.lower(),
+            "label": obj.home_type
+        }
+
+    def get_full_address(self, obj):
+        landmark = (
+            f"Landmark: {obj.near_by_landmark}"
+            if obj.near_by_landmark
+            else "No Landmark"
+        )
+
+        return (
+            f"{obj.street_address}, {obj.city}, {obj.state}, "
+            f"{obj.zip_code}, {obj.country} "
+            f"({landmark}, Type: {self.get_address_type(obj)['label']})"
+        )
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+
+        # Hide internal fields from response
+        data.pop("home_type", None)
+        data.pop("name_of_location", None)
+
+        return data
 
 class OrderPlacementSerializer(serializers.Serializer):
     user_id = serializers.IntegerField(required=True)

@@ -13,6 +13,7 @@ from api.notification_serializers import (
     DeviceSerializer, TagMasterSerializer, AssignTagsSerializer,
     NotificationMasterSerializer, NotificationQueueSerializer,Device
 )
+from django.conf import settings
 # --------------------------
 # CRUD APIs
 # --------------------------
@@ -132,5 +133,26 @@ class RemoveDeviceToken(APIView):
             {"message": "Device token removed successfully"},
             status=status.HTTP_200_OK
         )
+class AppVersionAPIView(APIView):
+    permission_classes = []
 
+    def get(self, request):
+        platform = request.query_params.get("platform", "").lower()
+        
+        if platform not in settings.APP_VERSION:
+            return Response(
+                {
+                    "success": False,
+                    "message": "Invalid platform. Use android or ios."
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
+        return Response(
+            {
+                "success": True,
+                "message": "Version fetched successfully.",
+                "data": settings.APP_VERSION[platform]
+            },
+            status=status.HTTP_200_OK
+        )

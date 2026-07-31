@@ -21,7 +21,7 @@ DEFAULT_DISTANCE_KM = 1.0
 def calculate_distance_and_cost(
     restaurant_id: int,
     delivery_address_id: int,
-    cost_per_km: float = 15.0
+    cost_per_km: float = 20.0
 ) -> Dict[str, Union[float, str, Dict]]:
     """
     Calculates distance in km and estimated delivery cost between restaurant and user address.
@@ -83,6 +83,8 @@ def calculate_distance_and_cost(
         # Calculate routing distance
         distance_km = _get_routing_distance(r_lat, r_lon, u_lat, u_lon)
 
+        print("distance_km====",distance_km)
+
         # ===============================
         # FALLBACK LOGIC
         # ===============================
@@ -100,6 +102,8 @@ def calculate_distance_and_cost(
 
         # Calculate delivery cost
         delivery_cost = calculate_delivery_cost(distance_km)
+
+        print("delivery_cost===",delivery_cost)
 
         result = {
             "restaurant_coordinates": {
@@ -163,7 +167,7 @@ def _get_routing_distance(
             return 0.0, 0, "0 km", 0
 
         legs = data["routes"][0]["legs"]
-
+        
         # Accurate backend distance & duration
         distance_meters = sum(leg["distance"]["value"] for leg in legs)
         duration_seconds = sum(leg["duration"]["value"] for leg in legs)
@@ -171,8 +175,8 @@ def _get_routing_distance(
         distance_km_original = round(distance_meters / 1000, 2)
 
         # Display distance = actual - 500m
-        distance_km = max(distance_km_original - 0.5, 0)
-
+        distance_km = distance_km_original
+        
         logger.info(
             "Routing distance: %.2f km (original: %.2f km), ETA: %d sec",
             distance_km, distance_km_original, duration_seconds
@@ -188,13 +192,17 @@ def _get_routing_distance(
 def calculate_delivery_cost(distance_km):
     """Calculate delivery cost based on distance."""
     logger.debug("calculate_delivery_cost: distance_km=%.2f", distance_km)
-    if distance_km <= 2:
-        cost = distance_km * 10
+
+    MIN_DISTANCE_KM = 0.5  # 500 meters
+    MIN_DELIVERY_FEE = 20  # ₹20
+
+    if distance_km <= MIN_DISTANCE_KM:
+        cost = MIN_DELIVERY_FEE
     else:
-        extra_cost = distance_km * 15  # Remaining km at ₹15/km
-        cost = extra_cost
+        cost = distance_km * 15
+
     logger.debug("Delivery cost calculated: %.2f", cost)
-    return cost
+    return round(cost, 2)
 
 
 def get_final_payment_checks(order_id, payment_method_display, order_payment_details):

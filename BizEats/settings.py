@@ -223,6 +223,24 @@ USE_TZ = True
 CORS_ALLOW_ALL_ORIGINS = True
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+APP_VERSION = {
+    "android": {
+        "latest_version": "1.0.6",
+        "minimum_version": "1.0.3",
+        "force_update": False,
+        "update_message": "Please update to the latest version to continue using Eatoor.",
+        "store_url": "https://play.google.com/store/apps/details?id=com.eatoor",
+    },
+    "ios": {
+        "latest_version": "1.6",
+        "minimum_version": "1.6",
+
+        "force_update": False,
+        "update_message": "Please update to the latest version to continue using Eatoor.",
+        "store_url": "https://apps.apple.com/in/app/eatoor/id6756539381",
+    },
+}
+
 # LOG_DIR = os.path.join(BASE_DIR, 'logs')
 # if not os.path.exists(LOG_DIR):
 #     os.makedirs(LOG_DIR)

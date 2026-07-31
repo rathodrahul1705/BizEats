@@ -13,7 +13,7 @@ from api.delivery.porter_views import porter_track_booking
 from api.models import Cart, Device, OfferDetail, Order, OrderReview, OrderStatusLog, PorterOrder, RestaurantLocation, RestaurantMenu, User, UserDeliveryAddress, OrderLiveLocation, Payment, Coupon, WalletTransaction
 from math import radians, sin, cos, sqrt, atan2
 from django.db import transaction
-from django.db.models import Q 
+from django.db.models import Q, Exists, OuterRef 
 from django.db.models import Sum, Count
 from django.db.models.functions import Coalesce
 from api.notifications.notification_payload import track_order_function
@@ -650,33 +650,66 @@ class UpdateOrderLiveLocationView(APIView):
                 "status": "error",
                 "message": str(e)
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
 @method_decorator(csrf_exempt, name='dispatch')
 class GetActiveOrders(APIView):
     """
-    Handles tracking orders for a user.
+    Returns active orders for a user only if the order exists in Cart.
     """
 
     def post(self, request, *args, **kwargs):
         logger.info("GetActiveOrders called with data: %s", request.data)
+
         try:
-            user_id = request.data.get('user_id')
+            user_id = request.data.get("user_id")
+
+            if not user_id:
+                return Response(
+                    {
+                        "status": "error",
+                        "message": "user_id is required"
+                    },
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
             user = User.objects.filter(id=user_id).first()
+
             if not user:
                 logger.warning("GetActiveOrders: User not found: user_id=%s", user_id)
-                return Response({"status": "error", "message": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+                return Response(
+                    {
+                        "status": "error",
+                        "message": "User not found"
+                    },
+                    status=status.HTTP_404_NOT_FOUND
+                )
 
-            orders = Order.objects.filter(user_id=user_id).exclude(status__in=[6, 7, 8, 9])
+            # Get only active orders that exist in Cart
+            orders = (
+                Order.objects.filter(user_id=user_id)
+                .exclude(status__in=[6, 7, 8, 9])
+                .annotate(
+                    in_cart=Exists(
+                        Cart.objects.filter(
+                            order_number=OuterRef("order_number")
+                        )
+                    )
+                )
+                .filter(in_cart=True)
+                .select_related("restaurant")
+                .order_by("-created_at")
+            )
+
             data = []
+
             for order in orders:
-                order_data = {
+                data.append({
                     "order_number": order.order_number,
                     "status": order.get_status_display(),
-                    "kitchan_name": order.restaurant.restaurant_name,
-                    "kitchan_image": (
+                    "restaurant_name": order.restaurant.restaurant_name,
+                    "restaurant_image": (
                         request.build_absolute_uri(order.restaurant.profile_image.url)
                         if order.restaurant.profile_image
-                        else None  # or a default image URL
+                        else None
                     ),
                     "placed_on": order.created_at.strftime("%Y-%m-%d %H:%M:%S"),
                     "estimated_delivery": (
@@ -684,19 +717,31 @@ class GetActiveOrders(APIView):
                         if order.delivery_date
                         else "Not available"
                     ),
-                }
-                data.append(order_data)
+                })
 
-            logger.info("GetActiveOrders success for user_id=%s, orders_count=%d", user_id, len(data))
-            return Response({
-                "status": "success",
-                "orders": data
-            })
+            logger.info(
+                "GetActiveOrders success for user_id=%s, orders_count=%d",
+                user_id,
+                len(data)
+            )
+
+            return Response(
+                {
+                    "status": "success",
+                    "message": "Active orders fetched successfully.",
+                    "orders": data,
+                },
+                status=status.HTTP_200_OK,
+            )
 
         except Exception as e:
             logger.exception("GetActiveOrders failed: %s", str(e))
             return Response(
-                {"status": "error", "message": str(e)},
+                {
+                    "status": "error",
+                    "message": "Something went wrong.",
+                    "error": str(e),
+                },
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 

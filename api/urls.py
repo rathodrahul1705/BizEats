@@ -4,9 +4,10 @@ from api.delivery.porter_admin import admin_porter_orders
 from api.favourites import FavouriteKitchenListView, FavouriteKitchenToggleView
 from api.mobile.home import HomeKitchenList
 from api.notifications.notification_send import process_notification_queue, send_fcm_notification, send_order_received_notification
-from api.notifications.views import AssignTagCreateView, AssignTagListView, DeviceDeleteView, DeviceListView, DeviceRegisterView, NotificationMasterCreateView, NotificationMasterListView, NotificationQueueCreateView, NotificationQueueListView, RemoveDeviceToken, TagMasterCreateView, TagMasterListView
+from api.notifications.views import AssignTagCreateView, AssignTagListView, DeviceDeleteView, DeviceListView, DeviceRegisterView, NotificationMasterCreateView, NotificationMasterListView, NotificationQueueCreateView, NotificationQueueListView, RemoveDeviceToken, TagMasterCreateView, TagMasterListView, AppVersionAPIView
 from api.payment.payment import create_order, verify_payment, backup_payment_details
-from api.payu.views import initiate_payment, payment_failure, payment_method_details, payment_success, payment_vpa_validate, verify_payment_payu
+from api.payu.views import initiate_payment, payment_failure, payment_method_details, payment_success, payment_vpa_validate, validate_payment, verify_payment_payu
+from api.payu.webhook import customer_payment_success
 from api.restaurent.menue_views import AddonGroupViewSet, AddonViewSet
 from api.search.searchcontent import search_results, search_suggestions
 from api.storage_backends import GetSingleImageFromS3, ListImagesFromS3, UploadImageToS3
@@ -60,12 +61,17 @@ urlpatterns = [
     # wallet Management end
 
     #payU Payment start
-    path('api/initiate/payment/', initiate_payment),
     path('api/payment/success/', payment_success),
     path('api/payment/failure/', payment_failure),
-    path('api/payment/verify/', verify_payment_payu),
     path('api/payment/methods/', payment_method_details),
     path('api/payment/validatevpa/', payment_vpa_validate),
+    path('api/payment/verify/', verify_payment_payu),
+
+    # Eatoor Payment API Updated
+    path('api/initiate/payment/', initiate_payment, name='payment_initiate'),
+    path('api/customer/payment/success/', customer_payment_success, name='payment_webhook'),
+    path('api/customer/payment/verify/', validate_payment, name='payment_validate'),
+
 
     path("api/restaurant/order/details/update/", PlaceOrderAPI.as_view(), name="restaurant-order-details-update"),
     path('api/restaurant/order/create-order/', create_order, name='create_order'),
@@ -129,6 +135,7 @@ urlpatterns = [
     path('api/device/list/', DeviceListView.as_view(), name='device-list'),
     path('api/device/delete/<int:pk>/', DeviceDeleteView.as_view(), name='device-delete'),
     path('api/device/remove/', RemoveDeviceToken.as_view(), name='device-remove'),
+    path('api/device/version/', AppVersionAPIView.as_view(), name='device-remove'),
     # Noftifications api end
 
 
