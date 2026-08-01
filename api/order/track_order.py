@@ -375,8 +375,9 @@ class OrderStatusUpdate(APIView):
                 order_number = response_body['order_number']
             
             customer_response = send_push_notification(tokens=[customer_token],title= title ,body= customer_body,order_number= order_number,data= None)
-            
-            send_order_status_email(order)
+
+            if new_status in [1, 6, 7, 8, 9]:
+                send_order_status_email(order)
 
             logger.info("OrderStatusUpdate success for order %s, new status %s", order_number, new_status)
             return Response({
