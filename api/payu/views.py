@@ -159,7 +159,7 @@ def initiate_payment(request):
             "udf1": str(order_id) if order_id else str(user_id),
             "udf2": order_number if order_number else "WALLET_TOPUP",
             "udf3": str(user_id),
-            "udf4": payment_gateway,
+            "udf4": payment_method,
             "udf5": payment_page,
         }
         
@@ -185,7 +185,7 @@ def initiate_payment(request):
             "udf1": str(order_id) if order_id else str(user_id),
             "udf2": order_number if order_number else "WALLET_TOPUP",
             "udf3": str(user_id),
-            "udf4": payment_gateway,
+            "udf4": payment_method,
             "udf5": payment_page,
         }
 

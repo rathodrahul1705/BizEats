@@ -9,6 +9,7 @@ from django.utils import timezone
 from django.contrib.auth import get_user_model
 
 from api.models import PaymentWebhookLog, Wallet, WalletTransaction
+from api.payu.utils import get_order_id_by_razorpay_payment_id, verify_payment_update
 from api.wallet.services import add_money_success
 
 logger = logging.getLogger(__name__)
@@ -74,7 +75,7 @@ def create_webhook_log(txnid, mihpayid, event_type, status, amount, email, phone
 def determine_transaction_type(payment_data):
     """
     Determine transaction type based on UDF fields
-    udf5: Main transaction type (eatoor_money, order_payment, etc.)
+    udf5: Main transaction type (eatoor_money, food_order, etc.)
     udf2: Sub-type (WALLET_TOPUP, ORDER, etc.)
     """
     udf5 = payment_data.get('udf5', '')
@@ -83,8 +84,8 @@ def determine_transaction_type(payment_data):
     # Check udf5 first for primary type
     if udf5 == 'eatoor_money':
         return 'wallet_topup'
-    elif udf5 == 'order_payment':
-        return 'order_payment'
+    elif udf5 == 'food_order':
+        return 'food_order'
     elif udf5 == 'order_refund':
         return 'order_refund'
     elif udf5 == 'promo_credit':
@@ -94,7 +95,7 @@ def determine_transaction_type(payment_data):
         if udf2 == 'WALLET_TOPUP':
             return 'wallet_topup'
         elif udf2 == 'ORDER':
-            return 'order_payment'
+            return 'food_order'
         else:
             return 'unknown'
 
@@ -362,8 +363,8 @@ def handle_successful_payment(data, txnid, txn_type, webhook_log=None):
         # Handle different transaction types
         if txn_type == 'wallet_topup':
             handle_wallet_topup(data, txnid, webhook_log)
-        elif txn_type == 'order_payment':
-            handle_order_payment(data, txnid, webhook_log)
+        elif txn_type == 'food_order':
+            handle_food_order(data, txnid, webhook_log)
         elif txn_type == 'order_refund':
             handle_order_refund(data, txnid, webhook_log)
         elif txn_type == 'promo_credit':
@@ -373,7 +374,7 @@ def handle_successful_payment(data, txnid, txn_type, webhook_log=None):
             if udf2 == 'WALLET_TOPUP':
                 handle_wallet_topup(data, txnid, webhook_log)
             elif udf2 == 'ORDER':
-                handle_order_payment(data, txnid, webhook_log)
+                handle_food_order(data, txnid, webhook_log)
             else:
                 logger.warning(f"Unknown transaction type for {txnid}: UDF5={udf5}, UDF2={udf2}")
                 # Default to wallet topup for backward compatibility
@@ -396,7 +397,7 @@ def handle_wallet_topup(data, txnid, webhook_log=None):
         mode = data.get('mode')
         udf1 = data.get('udf1')  # User ID or wallet ID
         udf3 = data.get('udf3')  # Additional data
-        udf4 = data.get('udf4')  # Payment mode
+        udf4 = data.get('udf4')  # Payment method
         
         # Get user from email or udf1
         user = None
@@ -443,19 +444,20 @@ def handle_wallet_topup(data, txnid, webhook_log=None):
         raise
 
 
-def handle_order_payment(data, txnid, webhook_log=None):
+def handle_food_order(data, txnid, webhook_log=None):
     """Handle order payment transaction"""
     logger.info(f"Processing order payment for transaction: {txnid}")
     
     try:
-        # TODO: Implement order payment logic
-        # Get order ID from udf fields
-        order_id = data.get('udf1') or data.get('udf3')
-        
-        logger.info(f"Order payment - Transaction: {txnid}, Order ID: {order_id}")
-        
-        # Update order status to paid
-        # Order.objects.filter(id=order_id).update(status='paid')
+
+        payment_status = 5
+        payment_step_type="validate"
+        payment_method = data.get('udf4') 
+        order_id = data.get('udf1') 
+
+        logger.info(f"Order payment - Transaction: {txnid}, Order ID: {order_id} call txnid: {txnid}, order_id: {order_id} payment_status: {payment_status}")
+
+        verify_payment_update(data, payment_method, order_id, payment_status, txnid, payment_step_type, payment_type=3, function_type="event")
         
         pass
         
@@ -623,7 +625,7 @@ def handle_refund_payment(data, txnid, txn_type, webhook_log=None):
     
     try:
         # TODO: Implement refund logic based on transaction type
-        if txn_type == 'order_payment':
+        if txn_type == 'food_order':
             # Handle order refund
             pass
         elif txn_type == 'wallet_topup':

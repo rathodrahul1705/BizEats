@@ -594,7 +594,7 @@ def send_payment_notifications(order):
 
 
 @transaction.atomic
-def verify_payment_update(response_data, payment_method, order_id, payment_status, txnid, payment_step_type, payment_type):
+def verify_payment_update(response_data, payment_method, order_id, payment_status, txnid, payment_step_type, payment_type, function_type=None):
     """
     PayU Payment Verification Service - Updates payment and order records
     
@@ -605,7 +605,7 @@ def verify_payment_update(response_data, payment_method, order_id, payment_statu
         payment_status: Expected payment status
         txnid: PayU transaction ID
     """
-    logger.info(f"[Order-{order_id}] 🔍 Starting payment verification update process")
+    logger.info(f"[Order-{order_id}] 🔍 Starting payment verification update process function_type: {function_type}")
     
     try:
         # Step 1: Get and lock order
@@ -614,7 +614,7 @@ def verify_payment_update(response_data, payment_method, order_id, payment_statu
             return {"success": False, "error": "Order not found"}
         
         # Step 2: Parse response based on format
-        payment_info = parse_payment_response(response_data, txnid, payment_method)
+        payment_info = parse_payment_response(response_data, txnid, payment_method, function_type)
         if not payment_info.get('success'):
             return payment_info
         
@@ -624,13 +624,14 @@ def verify_payment_update(response_data, payment_method, order_id, payment_statu
         )
         if not validation_result.get('success'):
             return validation_result
-        
+                
         # Step 4: Map statuses to model choices
         status_mapping = map_payment_statuses(
             payment_info['payu_status'], 
             payment_info['unmapped_status'], 
             payment_step_type
         )
+        
         
         # Step 5: Create/Update payment record
         payment = update_payment_record(
@@ -705,23 +706,119 @@ def get_order_or_fail(order_id):
         return None
 
 
-def parse_payment_response(response_data, txnid, payment_method):
-    """
-    Parse PayU response and extract payment information
+# def parse_payment_response(response_data, txnid, payment_method, function_type):
+#     """
+#     Parse PayU response and extract payment information
     
-    Handles both:
-    - Verification response format (transaction_details)
-    - Initiation response format (metaData)
-    """
+#     Handles both:
+#     - Verification response format (transaction_details)
+#     - Initiation response format (metaData)
+#     """
+
+#     print("response_data====",response_data)
+#     if function_type == "event":
+#         print("=====")
+#     else:
+#         # Check for verification response format (from PayU verification API)
+#         transaction_details = response_data.get("transaction_details", {})
+#         if transaction_details:
+#             txn = transaction_details.get(txnid)
+#             if not txn:
+#                 logger.error(f"Transaction not found for txnid: {txnid}")
+#                 return {"success": False, "error": f"Transaction not found: {txnid}"}
+            
+#             return {
+#                 "success": True,
+#                 "payu_status": txn.get("status", ""),
+#                 "unmapped_status": txn.get("unmappedstatus", ""),
+#                 "txn_id": txn.get("txnid", ""),
+#                 "mihpayid": txn.get("mihpayid", ""),
+#                 "bank_ref": txn.get("bank_ref_num", ""),
+#                 "amount": float(txn.get("transaction_amount", 0)),
+#                 "payment_mode": txn.get("mode", "UNKNOWN"),
+#                 "gateway_fee": float(txn.get("additional_charges", 0)),
+#                 "net_amount": float(txn.get("net_amount_debit", 0)),
+#                 "app_name": txn.get("App_Name", ""),
+#                 "bankcode": txn.get("bankcode", ""),
+#                 "is_initiation": False
+#             }
+        
+#         # Check for initiation response format (from PayU create payment API)
+#         meta_data = response_data.get("metaData", {})
+#         if meta_data:
+#             return {
+#                 "success": True,
+#                 "payu_status": meta_data.get("txnStatus", "pending"),
+#                 "unmapped_status": meta_data.get("unmappedStatus", "pending"),
+#                 "txn_id": meta_data.get("txnId", txnid),
+#                 "mihpayid": meta_data.get("referenceId", ""),
+#                 "amount": 0,
+#                 "payment_mode": payment_method,
+#                 "gateway_fee": 0,
+#                 "net_amount": 0,
+#                 "app_name": "",
+#                 "bankcode": "",
+#                 "is_initiation": True
+#             }
     
-    # Check for verification response format (from PayU verification API)
+#     return {"success": False, "error": "Unknown response format"}
+
+def parse_payment_response(response_data, txnid, payment_method, function_type):
+    """
+    Parse PayU response and extract payment information.
+
+    Handles:
+    - event              -> PayU callback/webhook
+    - verification API   -> transaction_details
+    - initiation API     -> metaData
+    """
+
+    logger.debug("function_type=%s", function_type)
+
+    # ------------------------------------------------------------------
+    # PayU Success/Failure Callback (event)
+    # ------------------------------------------------------------------
+    if function_type == "event":
+        return {
+            "success": True,
+            "payu_status": response_data.get("status", ""),
+            "unmapped_status": response_data.get("unmappedstatus", ""),
+            "txn_id": response_data.get("txnid", txnid),
+            "mihpayid": response_data.get("mihpayid", ""),
+            "bank_ref": response_data.get(
+                "bank_ref_num"
+            ) or response_data.get("bank_ref_no", ""),
+            "amount": float(response_data.get("amount", 0)),
+            "payment_mode": response_data.get(
+                "mode", payment_method
+            ),
+            "gateway_fee": float(response_data.get("additional_charges", 0)),
+            "net_amount": float(response_data.get("net_amount_debit", 0)),
+            "app_name": response_data.get("App_Name", ""),
+            "bankcode": response_data.get("bankcode", ""),
+            "pg_type": response_data.get("PG_TYPE", ""),
+            "payment_source": response_data.get("payment_source", ""),
+            "error": response_data.get("error", ""),
+            "error_message": response_data.get("error_Message", ""),
+            "bank_response": response_data.get("field7", ""),
+            "callback_status": response_data.get("field9", ""),
+            "upi_vpa": response_data.get("field3", ""),
+            "utr": response_data.get("field2", ""),
+            "addedon": response_data.get("addedon", ""),
+            "is_initiation": False,
+            "is_event": True,
+        }
+
+    # ------------------------------------------------------------------
+    # Verification Response
+    # ------------------------------------------------------------------
     transaction_details = response_data.get("transaction_details", {})
     if transaction_details:
         txn = transaction_details.get(txnid)
         if not txn:
-            logger.error(f"Transaction not found for txnid: {txnid}")
+            logger.error("Transaction not found for txnid: %s", txnid)
             return {"success": False, "error": f"Transaction not found: {txnid}"}
-        
+
         return {
             "success": True,
             "payu_status": txn.get("status", ""),
@@ -735,10 +832,13 @@ def parse_payment_response(response_data, txnid, payment_method):
             "net_amount": float(txn.get("net_amount_debit", 0)),
             "app_name": txn.get("App_Name", ""),
             "bankcode": txn.get("bankcode", ""),
-            "is_initiation": False
+            "is_initiation": False,
+            "is_event": False,
         }
-    
-    # Check for initiation response format (from PayU create payment API)
+
+    # ------------------------------------------------------------------
+    # Payment Initiation Response
+    # ------------------------------------------------------------------
     meta_data = response_data.get("metaData", {})
     if meta_data:
         return {
@@ -753,11 +853,11 @@ def parse_payment_response(response_data, txnid, payment_method):
             "net_amount": 0,
             "app_name": "",
             "bankcode": "",
-            "is_initiation": True
+            "is_initiation": True,
+            "is_event": False,
         }
-    
-    return {"success": False, "error": "Unknown response format"}
 
+    return {"success": False, "error": "Unknown response format"}
 
 def validate_payment_status(payment_info, payment_step_type, expected_status):
     """Validate payment status based on payment type"""
