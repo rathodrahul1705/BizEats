@@ -312,6 +312,18 @@ class UserDeliveryAddressSerializer(serializers.ModelSerializer):
 
         return data
 
+class UserDeliveryAddressReceiverSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserDeliveryAddress
+        fields = ["receiver_name", "receiver_phone"]
+
+    def validate_receiver_phone(self, value):
+        if value:
+            value = value.strip()
+            if not value.isdigit() or len(value) != 10:
+                raise serializers.ValidationError("Receiver phone must be a valid 10-digit number.")
+        return value
+    
 class OrderPlacementSerializer(serializers.Serializer):
     user_id = serializers.IntegerField(required=True)
     restaurant_id = serializers.CharField(required=True, max_length=20)

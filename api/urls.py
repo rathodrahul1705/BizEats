@@ -20,7 +20,7 @@ from .views import CustomTokenRefreshView, FetchReviewView, FetchUserList, Fetch
 from .restaurent.registration_process import RestaurantStatusUpdate, RestaurantStoreStepOne, RestaurantStoreStepTwo, RestaurantStoreStepThree, RestaurantStoreStepFour, RestaurantByUserAPIView, RestaurantByRestauranrtAPIView, RestaurantMenueStore, RestaurantMenueList,RestaurantMenueDetails,RestaurantMenueUpdate,RestaurantMenueDelete, RestaurantListAPI, RestaurantDetailMenuView
 from django.conf import settings
 from django.conf.urls.static import static
-from .restaurent.restaurant_order import GetAddressByFilter, PlaceOrderAPI, RestaurantCartAddOrRemove, RestaurantCartList, CartWithRestaurantDetails,CartWithRestaurantDetailsClear, RestaurantCartReOrder, SetDefaultAddressView, UserDeliveryAddressCreateView, UserDeliveryAddressDeleteView, UserDeliveryAddressUpdateView, UserDeliveryAddressListCreateView, CartWithRestaurantUserUpdate, RestaurantOrderDetailsAPI, UserDataDelete
+from .restaurent.restaurant_order import GetAddressByFilter, PlaceOrderAPI, RestaurantCartAddOrRemove, RestaurantCartList, CartWithRestaurantDetails,CartWithRestaurantDetailsClear, RestaurantCartReOrder, SetDefaultAddressView, UserDeliveryAddressCreateView, UserDeliveryAddressDeleteView, UserDeliveryAddressReceiverUpdateView, UserDeliveryAddressUpdateView, UserDeliveryAddressListCreateView, CartWithRestaurantUserUpdate, RestaurantOrderDetailsAPI, UserDataDelete
 from .order.track_order import ApplyCouponOrder, GetActiveOrders, LiveLocationDetails, MarkAsPaid, OrderDetails, TrackOrder, RestaurantOrders, OrderStatusUpdate, UpdateOrderLiveLocationView
 from django.http import JsonResponse
 from rest_framework.routers import DefaultRouter
@@ -218,6 +218,7 @@ urlpatterns = [
     path("api/user_address/store/", UserDeliveryAddressCreateView.as_view(), name="create_address"),
     path("api/user_address/status_update/<int:pk>/", SetDefaultAddressView.as_view(), name="status_update"),
     path("api/user_address/update/<int:pk>/", UserDeliveryAddressUpdateView.as_view(), name="update_address"),
+    path("api/user_address/update/receiver/<int:pk>/", UserDeliveryAddressReceiverUpdateView.as_view(), name="update_address_receiver"),
     path("api/user_address/delete/<int:pk>/", UserDeliveryAddressDeleteView.as_view(), name="delete_address"),
     path("api/addresses/list/", UserDeliveryAddressListCreateView.as_view(), name="address-list-create"),
     path("api/restaurant/order/details/", RestaurantOrderDetailsAPI.as_view(), name="restaurant-order-details"),

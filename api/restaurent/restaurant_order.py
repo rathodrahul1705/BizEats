@@ -9,6 +9,7 @@ import requests
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, generics, permissions
+from api import serializers
 from api.emailer.email_notifications import send_order_status_email
 from api.models import Cart, Coupon, Device, Order, OrderStatusLog, PaymentMethod, RestaurantMenu, User, DeleteAccountDetails
 import json
@@ -21,7 +22,7 @@ from api.models import RestaurantMaster, RestaurantCuisine, RestaurantDeliveryTi
 from api.notifications.notification_payload import track_order_function
 from api.notifications.notification_send import send_order_received_notification, send_push_notification
 from api.offer.view import check_credit_offer
-from api.serializers import OrderPlacementSerializer, RestaurantMasterSerializer, RestaurantSerializerByStatus, RestaurantDetailSerializer, RestaurantMasterNewSerializer, RestaurantMenuSerializer, RestaurantListSerializer, UserDeliveryAddressSerializer
+from api.serializers import OrderPlacementSerializer, RestaurantMasterSerializer, RestaurantSerializerByStatus, RestaurantDetailSerializer, RestaurantMasterNewSerializer, RestaurantMenuSerializer, RestaurantListSerializer, UserDeliveryAddressReceiverSerializer, UserDeliveryAddressSerializer
 from api.utils.utils import calculate_distance_and_cost
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import TokenAuthentication
@@ -658,8 +659,8 @@ class UserDeliveryAddressCreateView(generics.CreateAPIView):
             logger.exception(f"Failed to create address for user_id={self.request.user.id}: {e}")
             raise
 
-
 class UserDeliveryAddressUpdateView(generics.RetrieveUpdateAPIView):
+
     """API to update an existing address."""
     serializer_class = UserDeliveryAddressSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -675,7 +676,41 @@ class UserDeliveryAddressUpdateView(generics.RetrieveUpdateAPIView):
         except Exception as e:
             logger.exception(f"Failed to update address: {e}")
             raise
+class UserDeliveryAddressReceiverUpdateView(generics.UpdateAPIView):
+    """
+    Update receiver name and receiver phone for a delivery address.
+    """
 
+    serializer_class = UserDeliveryAddressReceiverSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return UserDeliveryAddress.objects.filter(user=self.request.user)
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+
+        serializer = self.get_serializer(
+            instance,
+            data=request.data,
+            partial=True
+        )
+
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        logger.info(
+            f"Receiver details updated for address_id={instance.id} by user_id={request.user.id}"
+        )
+
+        return Response(
+            {
+                "status": True,
+                "message": "Receiver details updated successfully.",
+                "data": serializer.data,
+            },
+            status=status.HTTP_200_OK,
+        )
 
 class UserDeliveryAddressDeleteView(generics.DestroyAPIView):
     """API to delete an existing user address."""
