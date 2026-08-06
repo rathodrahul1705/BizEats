@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { PlusCircle, MinusCircle, Trash2, CheckCircle, ArrowLeft, User, MapPin, ClipboardCheck, Gift, X } from "lucide-react";
+import { PlusCircle, MinusCircle, Trash2, CheckCircle, ArrowLeft, User, MapPin, ClipboardCheck, Gift, X, Smartphone } from "lucide-react";
 import "../assets/css/Cart.css";
 import SignIn from "../components/SignIn";
 import AddressSelection from "./AddressSelection";
@@ -18,6 +18,7 @@ const CartOrder = ({ user, setUser }) => {
   const [error, setError] = useState(null);
   const [confetti, setConfetti] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [showAppPrompt, setShowAppPrompt] = useState(false);
 
   const sessionId = getOrCreateSessionId();
   const restaurantId = localStorage.getItem("current_order_restaurant_id");
@@ -45,10 +46,6 @@ const CartOrder = ({ user, setUser }) => {
   const [userSelectedAddress, setUserSelectedAddress] = useState(
     localStorage.getItem("user_full_address") || null
   );
-
-  // const [restaurantid, setRestaurantid] = useState(
-  //   localStorage.getItem("restaurant_id") || null
-  // );
 
   useEffect(() => {
     localStorage.setItem("cart_order_current_step", step.toString());
@@ -177,18 +174,19 @@ const CartOrder = ({ user, setUser }) => {
     }, 0);
   };
 
-  const calculateDeliveryFee = () => {
-    return subtotal > 200 ? 0 : 40;
-  };
-
   const subtotal = calculateSubtotal();
   const totalSavings = calculateTotalSavings();
-  const deliveryFee = calculateDeliveryFee();
   const total = subtotal;
 
   const handleProceed = () => {
     if (cartItems.length === 0) {
       alert("Your cart is empty. Please add items before proceeding.");
+      return;
+    }
+
+    // Check if user has items in cart and show app prompt
+    if (cartItems.length > 0) {
+      setShowAppPrompt(true);
       return;
     }
 
@@ -205,6 +203,35 @@ const CartOrder = ({ user, setUser }) => {
         setStep(3);
       }
     }
+  };
+
+  const handleOpenApp = () => {
+    // Try to open the app using deep link
+    // const appDeepLink = `yourapp://cart/checkout?restaurantId=${restaurantId}&sessionId=${sessionId}`;
+    const appDeepLink = `eatoor://cart/checkout?restaurantId=${restaurantId}&sessionId=${sessionId}`;
+    const appStoreLink = isMobile ? 
+      (navigator.userAgent.includes('iOS') ? 'https://apps.apple.com/in/app/eatoor/id6756539381' : 'https://play.google.com/store/apps/details?id=com.eatoor') 
+      : 'https://yourapp.com/download';
+
+    // Try to open the app
+    const startTime = Date.now();
+    
+    // Create a hidden iframe to try to open the app
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    iframe.src = appDeepLink;
+    document.body.appendChild(iframe);
+
+    // Fallback to app store if app doesn't open
+    setTimeout(() => {
+      document.body.removeChild(iframe);
+      // If the app didn't open (page is still visible), redirect to app store
+      if (Date.now() - startTime < 2500) {
+        window.location.href = appStoreLink;
+      }
+    }, 2000);
+
+    setShowAppPrompt(false);
   };
 
   const handleBack = () => {
@@ -230,6 +257,38 @@ const CartOrder = ({ user, setUser }) => {
   };
 
   const handlePayment = () => navigate(`/payments/${restaurantId}`);
+
+  // App Prompt Modal Component
+  const AppPromptModal = () => (
+    <div className="cart-order-app-prompt-overlay" onClick={() => setShowAppPrompt(false)}>
+      <div className="cart-order-app-prompt-modal" onClick={(e) => e.stopPropagation()}>
+        <button 
+          className="cart-order-app-prompt-close"
+          onClick={() => setShowAppPrompt(false)}
+          aria-label="Close"
+        >
+          <X size={24} />
+        </button>
+        
+        <div className="cart-order-app-prompt-icon">
+          <Smartphone size={48} />
+        </div>
+        
+        <h3 className="cart-order-app-prompt-title">Open in App</h3>
+        <p className="cart-order-app-prompt-message">
+          Continue your order on our mobile app for a better experience
+        </p>
+        
+        <button 
+          className="cart-order-app-prompt-app-btn"
+          onClick={handleOpenApp}
+        >
+          <Smartphone size={20} />
+          Open in App
+        </button>
+      </div>
+    </div>
+  );
 
   if (loading && cartItems.length === 0) {
     return <StripeLoader />;
@@ -263,7 +322,7 @@ const CartOrder = ({ user, setUser }) => {
                     />
                     {item.buy_one_get_one_free && (
                       <div className="cart-order-bogo-tag">
-                        <Gift size={14} />
+                        <Gift size={12} />
                         <span>BOGO</span>
                       </div>
                     )}
@@ -324,19 +383,10 @@ const CartOrder = ({ user, setUser }) => {
                     <span>-₹{totalSavings.toFixed(2)}</span>
                   </div>
                 )}
-                {/* <div className="cart-order-price-row">
-                  <span>Delivery Fee</span>
-                  <span>{deliveryFee === 0 ? "FREE" : `₹${deliveryFee.toFixed(2)}`}</span>
-                </div> */}
                 <div className="cart-order-price-row total">
                   <span>Total</span>
                   <span>₹{total.toFixed(2)}</span>
                 </div>
-                {/* {deliveryFee > 0 && subtotal < 200 && (
-                  <div className="cart-order-delivery-message">
-                    Add ₹{(200 - subtotal).toFixed(2)} more to get FREE delivery
-                  </div>
-                )} */}
               </div>
               <button 
                 className="cart-order-proceed-btn" 
@@ -353,13 +403,6 @@ const CartOrder = ({ user, setUser }) => {
       case 3:
         return (
           <div className="cart-order-review-container">
-            {/* <div className="cart-order-delivery-info">
-              <MapPin size={18} />
-              <div>
-                <p className="cart-order-delivery-address">{userSelectedAddress}</p>
-                <p className="cart-order-delivery-time">Estimated delivery: {cartItems[0]?.deliveryTime || "30-40 min"}</p>
-              </div>
-            </div> */}
             <ul className="cart-order-items-list">
               {cartItems.map((item) => (
                 <li key={item.id} className="cart-order-item-card">
@@ -372,7 +415,7 @@ const CartOrder = ({ user, setUser }) => {
                     />
                     {item.buy_one_get_one_free && (
                       <div className="cart-order-bogo-tag">
-                        <Gift size={14} />
+                        <Gift size={12} />
                         <span>BOGO</span>
                       </div>
                     )}
@@ -407,10 +450,6 @@ const CartOrder = ({ user, setUser }) => {
                     <span>-₹{totalSavings.toFixed(2)}</span>
                   </div>
                 )}
-                {/* <div className="cart-order-price-row">
-                  <span>Delivery Fee</span>
-                  <span>{deliveryFee === 0 ? "FREE" : `₹${deliveryFee.toFixed(2)}`}</span>
-                </div> */}
                 <div className="cart-order-price-row total">
                   <span>Total</span>
                   <span>₹{total.toFixed(2)}</span>
@@ -433,6 +472,8 @@ const CartOrder = ({ user, setUser }) => {
   return (
     <div className="cart-order">
       <Confetti active={confetti} config={{ elementCount: 50, spread: 70 }} />
+      
+      {showAppPrompt && <AppPromptModal />}
       
       <div className="cart-order-header">
         <div className="cart-order-header-content">

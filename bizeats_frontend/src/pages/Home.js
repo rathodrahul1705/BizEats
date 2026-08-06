@@ -1,7 +1,15 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import "../assets/css/Home.css";
-import { ArrowRightCircle, ChevronLeft, ChevronRight, Star, Clock, MapPin, Heart, Zap, Download, Smartphone, Play, Sparkles } from "lucide-react";
+import { 
+  ArrowRightCircle, ChevronLeft, ChevronRight, Star, Clock, 
+  MapPin, Heart, Zap, Download, Smartphone, Play, Sparkles, 
+  ShoppingBag, Phone, Mail, Instagram, Facebook, Twitter, 
+  Youtube, Truck, Coffee, UtensilsCrossed, Award, ShieldCheck,
+  ThumbsUp, Users, ChefHat, Clock as ClockIcon, 
+  Search, Menu, X, Plus, Minus, CheckCircle, 
+  TrendingUp, Flame, Crown, Gift, Rocket 
+} from "lucide-react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 import "swiper/css/navigation";
@@ -27,6 +35,7 @@ import HomePageChickeThali from "../assets/img/banjara_chicken_thali.png";
 import HomePageMasalaChaas from "../assets/img/masala_chaas.png";
 
 const Home = () => {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [restaurants, setRestaurants] = useState([]);
   const foodSwiperRef = useRef(null);
@@ -40,6 +49,8 @@ const Home = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [activeCategory, setActiveCategory] = useState("All");
   const [showVideoModal, setShowVideoModal] = useState(false);
+  const [selectedFood, setSelectedFood] = useState(null);
+  const [showFoodModal, setShowFoodModal] = useState(false);
 
   useEffect(() => {
     const handleResize = () => {
@@ -117,6 +128,10 @@ const Home = () => {
     setIsRestaurantEnd(swiper.isEnd);
   };
 
+  const handleOrderNow = () => {
+    navigate('/home-kitchens');
+  };
+
   const foodCategories = [
     { name: "All", icon: "🍽️" },
     { name: "Biryani", icon: "🍚" },
@@ -137,6 +152,8 @@ const Home = () => {
       price: "₹100",
       rating: 4.8,
       time: "30-45 min",
+      description: "Authentic Hyderabadi chicken biryani with aromatic spices",
+      reviews: 234
     },
     {
       name: "Gulab Jamun",
@@ -146,6 +163,8 @@ const Home = () => {
       price: "₹10",
       rating: 4.5,
       time: "15-20 min",
+      description: "Soft, spongy milk dumplings in sugar syrup",
+      reviews: 189
     },
     {
       name: "Upma",
@@ -154,7 +173,9 @@ const Home = () => {
       category: "Snacks",
       price: "₹50",
       rating: 4.2,
-      time: "20-30 min"
+      time: "20-30 min",
+      description: "Traditional South Indian breakfast with vegetables",
+      reviews: 156
     },
     {
       name: "Poha",
@@ -164,6 +185,8 @@ const Home = () => {
       price: "₹45",
       rating: 4.3,
       time: "15-25 min",
+      description: "Flattened rice with peanuts, curry leaves and spices",
+      reviews: 201
     },
     {
       name: "Maggie",
@@ -172,7 +195,9 @@ const Home = () => {
       category: "Fast Food",
       price: "₹60",
       rating: 4.1,
-      time: "10-15 min"
+      time: "10-15 min",
+      description: "Classic instant noodles with vegetables and cheese",
+      reviews: 312
     },
     {
       name: "Egg Roll",
@@ -182,6 +207,8 @@ const Home = () => {
       price: "₹80",
       rating: 4.4,
       time: "20-30 min",
+      description: "Crispy egg roll with fresh veggies and sauce",
+      reviews: 178,
       offer: "Combo Deal"
     },
     {
@@ -191,7 +218,9 @@ const Home = () => {
       category: "Biryani",
       price: "₹100",
       rating: 4.6,
-      time: "30-45 min"
+      time: "30-45 min",
+      description: "Flavorful egg biryani with basmati rice and spices",
+      reviews: 267
     },
     {
       name: "Kokam Sarbat",
@@ -201,6 +230,8 @@ const Home = () => {
       price: "₹40",
       rating: 4.6,
       time: "10-15 min",
+      description: "Refreshing kokam drink with mint and spices",
+      reviews: 143
     },
     {
       name: "Masala Chaas",
@@ -210,15 +241,19 @@ const Home = () => {
       price: "₹15",
       rating: 4.6,
       time: "10-15 min",
+      description: "Spiced buttermilk with roasted cumin and black salt",
+      reviews: 198
     },
     {
-      name: "Thalis",
+      name: "Chicken Thali",
       image: HomePageChickeThali,
       restaurant_id: restaurants[0]?.restaurant_id,
       category: "Thalis",
       price: "₹100",
       rating: 4.6,
       time: "30-45 min",
+      description: "Complete meal with chicken curry, rice, roti and salad",
+      reviews: 223
     }
   ];
 
@@ -248,7 +283,7 @@ const Home = () => {
       badge: "Weekend Only"
     }
   ];
-  
+
   if (loading && restaurants.length === 0) {
     return <StripeLoader />;
   }
@@ -321,14 +356,22 @@ const Home = () => {
 
   return (
     <div className="home-container">
+      {/* Order Now Floating Button - Only on Mobile */}
+      <div className="order-now-fixed-container">
+        <button onClick={handleOrderNow} className="order-now-floating-btn">
+          <ShoppingBag size={20} />
+          <span className="order-now-text">Order Now</span>
+        </button>
+      </div>
+
       {/* Hero Section */}
       <section className="hero-section">
         <div className="hero-container">
-          <div className="hero-content">
-            <div className="hero-text">
+          <div className="hero-grid">
+            <div className="hero-content">
               <div className="hero-badge">
                 <Sparkles size={16} />
-                <span>Fast Food Delivery</span>
+                <span>🔥 Trending Now</span>
               </div>
               <h1 className="hero-title">
                 <span className="hero-highlight">Delicious</span> food delivered 
@@ -338,25 +381,33 @@ const Home = () => {
                 Order from the best restaurants in your city. Quick delivery, great prices, 
                 and amazing food right at your doorstep.
               </p>
-              <div className="hero-cta">
-                <div className="hero-download-buttons">
-                  <a 
-                    href="https://play.google.com/store/apps/details?id=com.eatoor" 
-                    className="download-button"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <img src={PlayStoreBadge} alt="Get on Google Play" />
-                  </a>
-                  <a 
-                    href="https://apps.apple.com/in/app/eatoor/id6756539381" 
-                    className="download-button"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <img src={AppStoreBadge} alt="Download on App Store" />
-                  </a>
-                </div>
+              
+              <div className="hero-actions">
+                <button onClick={handleOrderNow} className="hero-primary-btn">
+                  Order Now <ArrowRightCircle size={20} />
+                </button>
+                <button onClick={() => setShowVideoModal(true)} className="hero-secondary-btn">
+                  <Play size={20} /> Watch Demo
+                </button>
+              </div>
+
+              <div className="hero-download-buttons">
+                <a 
+                  href="https://play.google.com/store/apps/details?id=com.eatoor" 
+                  className="download-button"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <img src={PlayStoreBadge} alt="Get on Google Play" />
+                </a>
+                <a 
+                  href="https://apps.apple.com/in/app/eatoor/id6756539381" 
+                  className="download-button"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <img src={AppStoreBadge} alt="Download on App Store" />
+                </a>
               </div>
               
               <div className="hero-stats">
@@ -374,50 +425,22 @@ const Home = () => {
                 </div>
               </div>
             </div>
-            
+
             <div className="hero-visual">
-              <div className="qr-download-card">
-                <div className="qr-download-card__header">
-                  <div className="qr-download-card__header-icon">
+              <div className="hero-qr-card">
+                <div className="hero-qr-card__header">
+                  <div className="hero-qr-card__icon">
                     <Smartphone size={24} />
                   </div>
-                  <div className="qr-download-card__header-text">
-                    <h4 className="qr-download-card__title">Download Our App</h4>
-                    <p className="qr-download-card__subtitle">Better experience & exclusive deals</p>
+                  <div>
+                    <h4>Download App</h4>
+                    <p>Scan to get started</p>
                   </div>
                 </div>
-                
-                <div className="qr-download-card__qr-container">
-                  <img 
-                    src={QRCodeImage} 
-                    alt="Download Eatoor App QR Code" 
-                    className="qr-download-card__qr"
-                  />
-                  <p className="qr-download-card__scan-text">
-                    Scan to download the app
-                  </p>
-                </div>
-                
-                <div className="qr-download-card__stores">
-                  <h5 className="qr-download-card__stores-title">Available On</h5>
-                  <div className="qr-download-card__store-badges">
-                    <a 
-                      href="https://play.google.com/store/apps/details?id=com.eatoor" 
-                      className="store-badge"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <img src={PlayStoreBadge} alt="Get on Google Play" />
-                    </a>
-                    <a 
-                      href="https://apps.apple.com/in/app/eatoor/id6756539381" 
-                      className="store-badge"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <img src={AppStoreBadge} alt="Download on App Store" />
-                    </a>
-                  </div>
+                <img src={QRCodeImage} alt="QR Code" className="hero-qr-card__qr" />
+                <div className="hero-qr-card__badges">
+                  <img src={PlayStoreBadge} alt="Google Play" />
+                  <img src={AppStoreBadge} alt="App Store" />
                 </div>
               </div>
             </div>
@@ -425,8 +448,8 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Food Categories */}
-      {/* <section className="categories-section">
+      {/* Category Filter */}
+      <section className="categories-section">
         <div className="section-container">
           <div className="categories-scroller">
             {foodCategories.map((category) => (
@@ -436,106 +459,381 @@ const Home = () => {
                 onClick={() => setActiveCategory(category.name)}
               >
                 <span className="category-pill__emoji">{category.icon}</span>
-                <h4 className="category-pill__name">{category.name}</h4>
+                <span className="category-pill__name">{category.name}</span>
               </button>
             ))}
           </div>
         </div>
-      </section> */}
+      </section>
 
-      {/* Popular Food Items */}
-      {/* <section className="food-items-section">
+      {/* Featured Foods */}
+      <section className="featured-foods">
         <div className="section-container">
           <div className="section-header">
             <div className="section-header__content">
-              <h2 className="section-heading">Popular Near You</h2>
-              <p className="section-subtitle">Discover delicious dishes from top restaurants</p>
+              <h2 className="section-heading">Popular Dishes</h2>
+              <p className="section-subtitle">Most loved items from our kitchens</p>
             </div>
-            <Link to="/menu" className="view-all-button">
-              View All <ArrowRightCircle size={16} />
-            </Link>
+            <div className="slider-controls">
+              <button 
+                className={`slider-arrow ${isFoodBeginning ? 'disabled' : ''}`}
+                onClick={handleFoodPrev}
+                aria-label="Previous"
+              >
+                <ChevronLeft size={20} />
+              </button>
+              <button 
+                className={`slider-arrow ${isFoodEnd ? 'disabled' : ''}`}
+                onClick={handleFoodNext}
+                aria-label="Next"
+              >
+                <ChevronRight size={20} />
+              </button>
+            </div>
           </div>
 
-          <div className="food-items-grid">
-            {filteredFoodItems.slice(0, 10).map((item, index) => (
-              <div className="food-item-card" key={index}>
-                <div className="food-item-card__image-wrapper">
-                  <img
-                    src={item.image}
-                    alt={item.name}
-                    className="food-item-card__image"
-                    loading="lazy"
-                  />
-                  {item.offer && (
-                    <div className="food-item-card__offer-badge">
-                      <Zap size={12} fill="#fff" />
-                      <span>{item.offer}</span>
-                    </div>
-                  )}
-                  <button className="food-item-card__wishlist">
-                    <Heart size={18} />
-                  </button>
-                </div>
-                <div className="food-item-card__content">
-                  <h3 className="food-item-card__name">{item.name}</h3>
-                  <div className="food-item-card__meta">
-                    <span className="food-item-card__price">{item.price}</span>
-                    <span className="food-item-card__rating">
-                      <Star size={14} fill="#FFD700" /> {item.rating}
-                    </span>
-                  </div>
-                  <div className="food-item-card__footer">
-                    <span className="food-item-card__time">
-                      <Clock size={14} /> {item.time}
-                    </span>
-                    <Link 
-                      to="/download-app" 
-                      className="food-item-card__button"
+          <Swiper
+            ref={foodSwiperRef}
+            modules={[Navigation, FreeMode]}
+            spaceBetween={20}
+            slidesPerView={1}
+            freeMode={true}
+            onSlideChange={updateFoodNavigationState}
+            onSwiper={(swiper) => updateFoodNavigationState(swiper)}
+            breakpoints={{
+              480: { slidesPerView: 2, spaceBetween: 16 },
+              768: { slidesPerView: 3, spaceBetween: 20 },
+              1024: { slidesPerView: 4, spaceBetween: 24 },
+            }}
+            className="food-swiper"
+          >
+            {filteredFoodItems.map((item, index) => (
+              <SwiperSlide key={index}>
+                <div className="food-card">
+                  <div className="food-card__image-wrapper">
+                    <img src={item.image} alt={item.name} className="food-card__image" />
+                    {item.offer && (
+                      <div className="food-card__offer-badge">
+                        <Zap size={14} /> {item.offer}
+                      </div>
+                    )}
+                    <button 
+                      className="food-card__quick-view"
+                      onClick={() => { setSelectedFood(item); setShowFoodModal(true); }}
                     >
-                      Order Now
-                    </Link>
+                      Quick View
+                    </button>
                   </div>
+                  <div className="food-card__content">
+                    <div className="food-card__header">
+                      <h3 className="food-card__name">{item.name}</h3>
+                      <span className="food-card__price">{item.price}</span>
+                    </div>
+                    <div className="food-card__meta">
+                      <div className="food-card__rating">
+                        <Star size={16} fill="#FFD700" stroke="#FFD700" />
+                        <span>{item.rating}</span>
+                        <span className="food-card__reviews">({item.reviews})</span>
+                      </div>
+                      <div className="food-card__time">
+                        <Clock size={14} /> {item.time}
+                      </div>
+                    </div>
+                    <button onClick={handleOrderNow} className="food-card__order-btn">
+                      Add to Cart
+                    </button>
+                  </div>
+                </div>
+              </SwiperSlide>
+            ))}
+          </Swiper>
+        </div>
+      </section>
+
+      {/* Food Quick View Modal */}
+      {showFoodModal && selectedFood && (
+        <div className="food-modal" onClick={() => setShowFoodModal(false)}>
+          <div className="food-modal__content" onClick={(e) => e.stopPropagation()}>
+            <button className="food-modal__close" onClick={() => setShowFoodModal(false)}>×</button>
+            <div className="food-modal__image">
+              <img src={selectedFood.image} alt={selectedFood.name} />
+            </div>
+            <div className="food-modal__body">
+              <h3 className="food-modal__name">{selectedFood.name}</h3>
+              <div className="food-modal__rating">
+                <Star size={18} fill="#FFD700" stroke="#FFD700" />
+                <span>{selectedFood.rating}</span>
+                <span className="food-modal__reviews">({selectedFood.reviews} reviews)</span>
+              </div>
+              <p className="food-modal__description">{selectedFood.description}</p>
+              <div className="food-modal__details">
+                <div className="food-modal__detail">
+                  <Clock size={16} />
+                  <span>{selectedFood.time}</span>
+                </div>
+                <div className="food-modal__detail">
+                  <span className="food-modal__price">{selectedFood.price}</span>
                 </div>
               </div>
-            ))}
+              <button onClick={() => { handleOrderNow(); setShowFoodModal(false); }} className="food-modal__order-btn">
+                Order Now
+              </button>
+            </div>
           </div>
         </div>
-      </section> */}
+      )}
 
-      {/* YouTube Shorts Section */}
-      <section className="youtube-shorts-section">
+      {/* Promo Banner */}
+      <section className="promo-section">
+        <div className="section-container">
+          <Swiper
+            modules={[Autoplay, Pagination, EffectFade]}
+            spaceBetween={0}
+            slidesPerView={1}
+            effect="fade"
+            autoplay={{ delay: 5000, disableOnInteraction: false }}
+            pagination={{ clickable: true }}
+            loop={true}
+            className="promo-swiper"
+          >
+            {banners.map((banner) => (
+              <SwiperSlide key={banner.id}>
+                <div className="promo-card" style={{ background: banner.bgColor }}>
+                  <div className="promo-card__content">
+                    {banner.badge && <span className="promo-card__badge">{banner.badge}</span>}
+                    <h3 className="promo-card__title">{banner.title}</h3>
+                    <p className="promo-card__subtitle">{banner.subtitle}</p>
+                    <button onClick={handleOrderNow} className="promo-card__btn">
+                      {banner.cta} <ArrowRightCircle size={18} />
+                    </button>
+                  </div>
+                  <div className="promo-card__image">
+                    <img src={banner.image} alt={banner.title} />
+                  </div>
+                </div>
+              </SwiperSlide>
+            ))}
+          </Swiper>
+        </div>
+      </section>
+
+      {/* Restaurants */}
+      <section className="restaurants-section">
         <div className="section-container">
           <div className="section-header">
             <div className="section-header__content">
-              <h2 className="section-heading">Foodie Shorts</h2>
-              <p className="section-subtitle">Watch our latest food preparation videos</p>
+              <h2 className="section-heading">Top Restaurants</h2>
+              <p className="section-subtitle">Best dining spots in your city</p>
+            </div>
+            <div className="slider-controls">
+              <button 
+                className={`slider-arrow ${isRestaurantBeginning ? 'disabled' : ''}`}
+                onClick={handleRestaurantsPrev}
+                aria-label="Previous"
+              >
+                <ChevronLeft size={20} />
+              </button>
+              <button 
+                className={`slider-arrow ${isRestaurantEnd ? 'disabled' : ''}`}
+                onClick={handleRestaurantsNext}
+                aria-label="Next"
+              >
+                <ChevronRight size={20} />
+              </button>
+            </div>
+          </div>
+
+          <Swiper
+            ref={restaurantsSwiperRef}
+            modules={[Navigation, FreeMode]}
+            spaceBetween={20}
+            slidesPerView={1}
+            freeMode={true}
+            onSlideChange={updateRestaurantsNavigationState}
+            onSwiper={(swiper) => updateRestaurantsNavigationState(swiper)}
+            breakpoints={{
+              480: { slidesPerView: 2, spaceBetween: 16 },
+              768: { slidesPerView: 3, spaceBetween: 20 },
+              1024: { slidesPerView: 4, spaceBetween: 24 },
+            }}
+            className="restaurants-swiper"
+          >
+            {restaurants.slice(0, 8).map((restaurant) => (
+              <SwiperSlide key={restaurant.restaurant_id}>
+                {renderRestaurantCard(restaurant)}
+              </SwiperSlide>
+            ))}
+          </Swiper>
+          
+          <div className="view-all-container">
+            <button onClick={handleOrderNow} className="view-all-btn">
+              View All Restaurants
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* How It Works */}
+      <section className="how-it-works">
+        <div className="section-container">
+          <div className="section-header text-center">
+            <div className="section-header__content">
+              <h2 className="section-heading">How It Works</h2>
+              <p className="section-subtitle">3 simple steps to get your food</p>
             </div>
           </div>
           
-          <div className="youtube-shorts-container">
-            <div className="youtube-short-card">
-              <div className="youtube-short-card__video" onClick={() => setShowVideoModal(true)}>
-                <div className="youtube-short-card__thumbnail">
-                  <img 
-                    src="https://img.youtube.com/vi/fq4iT7bWaHQ/maxresdefault.jpg" 
-                    alt="Food Preparation Short" 
-                  />
-                  <div className="youtube-short-card__play-button">
-                    <Play size={48} fill="#fff" />
+          <div className="steps-grid">
+            <div className="step-card">
+              <div className="step-card__icon-wrapper">
+                <div className="step-card__number">1</div>
+                <div className="step-card__icon">
+                  <Search size={32} />
+                </div>
+              </div>
+              <h3 className="step-card__title">Find Food</h3>
+              <p className="step-card__description">Explore restaurants and browse delicious dishes</p>
+            </div>
+            
+            <div className="step-card">
+              <div className="step-card__icon-wrapper">
+                <div className="step-card__number">2</div>
+                <div className="step-card__icon">
+                  <ShoppingBag size={32} />
+                </div>
+              </div>
+              <h3 className="step-card__title">Order & Pay</h3>
+              <p className="step-card__description">Select your items and checkout securely</p>
+            </div>
+            
+            <div className="step-card">
+              <div className="step-card__icon-wrapper">
+                <div className="step-card__number">3</div>
+                <div className="step-card__icon">
+                  <Truck size={32} />
+                </div>
+              </div>
+              <h3 className="step-card__title">Enjoy Meal</h3>
+              <p className="step-card__description">Get your food delivered hot and fresh</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials */}
+      <section className="testimonials-section">
+        <div className="section-container">
+          <div className="section-header text-center">
+            <div className="section-header__content">
+              <h2 className="section-heading">What Our Customers Say</h2>
+              <p className="section-subtitle">Real reviews from real food lovers</p>
+            </div>
+          </div>
+          
+          <Swiper
+            modules={[Pagination, Autoplay]}
+            spaceBetween={24}
+            slidesPerView={1}
+            pagination={{ clickable: true }}
+            autoplay={{ delay: 5000, disableOnInteraction: false }}
+            breakpoints={{
+              768: { slidesPerView: 2, spaceBetween: 24 },
+              1024: { slidesPerView: 3, spaceBetween: 24 }
+            }}
+            className="testimonials-swiper"
+          >
+            {restaurantsReview.slice(0, 6).map((testimonial, index) => (
+              <SwiperSlide key={testimonial.id || index}>
+                <div className="testimonial-card">
+                  <div className="testimonial-card__rating">
+                    {[...Array(5)].map((_, i) => (
+                      <Star 
+                        key={i} 
+                        size={16}
+                        fill={i < testimonial.rating ? "#FFD700" : "#E5E7EB"}
+                        stroke={i < testimonial.rating ? "#FFD700" : "#E5E7EB"}
+                      />
+                    ))}
+                  </div>
+                  <p className="testimonial-card__text">
+                    "{testimonial.comment.split(' ').slice(0, 25).join(' ')}{testimonial.comment.split(' ').length > 25 ? '...' : ''}"
+                  </p>
+                  <div className="testimonial-card__author">
+                    <div className="testimonial-card__avatar">
+                      {testimonial.name?.charAt(0).toUpperCase() || 'U'}
+                    </div>
+                    <div>
+                      <p className="testimonial-card__name">{testimonial.name || 'Anonymous'}</p>
+                      <p className="testimonial-card__location">{testimonial.location || 'Food Lover'}</p>
+                    </div>
                   </div>
                 </div>
-                <div className="youtube-short-card__content">
-                  <h3 className="youtube-short-card__title">Eatoor App Launch | Order Food, Track Delivery & Review</h3>
-                  <p className="youtube-short-card__description">
-                    Welcome to Eatoor – your all-in-one food delivery app! 🍴✨ In this video, we walk you through the complete Eatoor app flow:
-                  </p>
-                  <div className="youtube-short-card__meta">
-                    <span className="youtube-short-card__duration">Short</span>
-                    <span className="youtube-short-card__views">10K views</span>
-                  </div>
+              </SwiperSlide>
+            ))}
+          </Swiper>
+        </div>
+      </section>
+
+      {/* App Download CTA */}
+      <section className="app-download-cta">
+        <div className="section-container">
+          <div className="app-download-cta__content">
+            <div className="app-download-cta__text">
+              <h2>Get the Eatoor App</h2>
+              <p>Order faster, get exclusive deals, and track your delivery in real-time</p>
+              <div className="app-download-cta__features">
+                <div className="app-download-cta__feature">
+                  <CheckCircle size={20} />
+                  <span>Exclusive app-only discounts</span>
+                </div>
+                <div className="app-download-cta__feature">
+                  <CheckCircle size={20} />
+                  <span>Real-time order tracking</span>
+                </div>
+                <div className="app-download-cta__feature">
+                  <CheckCircle size={20} />
+                  <span>One-tap reordering</span>
+                </div>
+              </div>
+              <div className="app-download-cta__buttons">
+                <a 
+                  href="https://play.google.com/store/apps/details?id=com.eatoor" 
+                  className="download-button"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <img src={PlayStoreBadge} alt="Google Play" />
+                </a>
+                <a 
+                  href="https://apps.apple.com/in/app/eatoor/id6756539381" 
+                  className="download-button"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <img src={AppStoreBadge} alt="App Store" />
+                </a>
+              </div>
+            </div>
+            <div className="app-download-cta__visual">
+              <div className="phone-mockup">
+                <div className="phone-mockup__screen">
+                  <img src={MobileScreen} alt="App Preview" />
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Final CTA */}
+      <section className="final-cta">
+        <div className="section-container">
+          <div className="final-cta__content">
+            <h2 className="final-cta__title">Ready to satisfy your cravings?</h2>
+            <p className="final-cta__subtitle">Order now and get 20% off on your first order</p>
+            <button onClick={handleOrderNow} className="final-cta__btn">
+              Order Now <Rocket size={20} />
+            </button>
           </div>
         </div>
       </section>
@@ -544,12 +842,7 @@ const Home = () => {
       {showVideoModal && (
         <div className="video-modal" onClick={() => setShowVideoModal(false)}>
           <div className="video-modal__content" onClick={(e) => e.stopPropagation()}>
-            <button 
-              className="video-modal__close"
-              onClick={() => setShowVideoModal(false)}
-            >
-              ×
-            </button>
+            <button className="video-modal__close" onClick={() => setShowVideoModal(false)}>×</button>
             <div className="video-modal__video">
               <iframe
                 width="100%"
@@ -564,354 +857,6 @@ const Home = () => {
           </div>
         </div>
       )}
-
-      {/* Promotional Banner Carousel */}
-      <section className="promo-banner-section">
-        <div className="section-container">
-          <div className="section-header">
-            <div className="section-header__content">
-              <h2 className="section-heading">Special Offers</h2>
-              <p className="section-subtitle">Don't miss out on these amazing deals</p>
-            </div>
-          </div>
-          
-          <Swiper
-            modules={[Autoplay, Pagination, EffectFade]}
-            spaceBetween={0}
-            slidesPerView={1}
-            effect="fade"
-            autoplay={{ delay: 5000, disableOnInteraction: false }}
-            pagination={{ clickable: true }}
-            loop={true}
-            className="promo-swiper"
-          >
-            {banners.map((banner) => (
-              <SwiperSlide key={banner.id}>
-                <div className="promo-banner">
-                  <div className="promo-banner__content">
-                    {banner.badge && (
-                      <div className="promo-banner__badge">
-                        {banner.badge}
-                      </div>
-                    )}
-                    <h3 className="promo-banner__title">{banner.title}</h3>
-                    <p className="promo-banner__subtitle">{banner.subtitle}</p>
-                    <Link to={banner.link} className="promo-banner__button">
-                      {banner.cta} <ArrowRightCircle size={16} />
-                    </Link>
-                  </div>
-                  <div className="promo-banner__image">
-                    <img src={banner.image} alt={banner.title} loading="lazy" />
-                  </div>
-                </div>
-              </SwiperSlide>
-            ))}
-          </Swiper>
-        </div>
-      </section>
-
-      {/* App Download Section */}
-      <section className="app-download-section">
-        <div className="section-container">
-          <div className="app-download-content">
-            <div className="app-download-text">
-              <h2 className="section-heading">Get the App</h2>
-              <p className="section-subtitle">
-                Experience faster ordering, exclusive deals, and personalized recommendations
-              </p>
-              <div className="app-features">
-                <div className="app-feature">
-                  <div className="app-feature__icon">⚡</div>
-                  <div className="app-feature__text">
-                    <h4>Faster Ordering</h4>
-                    <p>One-tap reordering and saved favorites</p>
-                  </div>
-                </div>
-                <div className="app-feature">
-                  <div className="app-feature__icon">🎁</div>
-                  <div className="app-feature__text">
-                    <h4>Exclusive Deals</h4>
-                    <p>App-only discounts and promotions</p>
-                  </div>
-                </div>
-                <div className="app-feature">
-                  <div className="app-feature__icon">🔔</div>
-                  <div className="app-feature__text">
-                    <h4>Real-time Tracking</h4>
-                    <p>Track your order from kitchen to doorstep</p>
-                  </div>
-                </div>
-              </div>
-              <div className="app-download-buttons">
-                <a 
-                  href="https://play.google.com/store/apps/details?id=com.eatoor" 
-                  className="download-button"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <img src={PlayStoreBadge} alt="Get on Google Play" />
-                </a>
-                <a 
-                  href="https://apps.apple.com/in/app/eatoor/id6756539381" 
-                  className="download-button"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <img src={AppStoreBadge} alt="Download on App Store" />
-                </a>
-              </div>
-            </div>
-            <div className="app-download-visual">
-              <div className="phone-mockup">
-                <div className="phone-mockup__screen">
-                  <img src={MobileScreen} alt="App Preview" />
-                </div>
-                <div className="phone-mockup__notch"></div>
-                <div className="phone-mockup__speaker"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* How It Works Section */}
-      <section className="how-it-works-section">
-        <div className="section-container">
-          <div className="section-header">
-            <div className="section-header__content">
-              <h2 className="section-heading">How It Works</h2>
-              <p className="section-subtitle">Get your favorite food in 3 simple steps</p>
-            </div>
-          </div>
-          
-          <div className="steps-container">
-            <div className="step-card">
-              <div className="step-card__number">1</div>
-              <div className="step-card__icon">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M10.5 1.875a1.125 1.125 0 0 1 2.25 0v8.219c.517.162 1.02.382 1.5.659V3.375a1.125 1.125 0 0 1 2.25 0v10.937a4.505 4.505 0 0 0-3.25 2.373 8.963 8.963 0 0 1 4-.935A.75.75 0 0 0 18 15v-2.266a3.368 3.368 0 0 1 .988-2.37 1.125 1.125 0 0 1 1.591 1.59 1.118 1.118 0 0 0-.329.79v3.006h-.005a6 6 0 0 1-1.752 4.007l-1.736 1.736a6 6 0 0 1-4.242 1.757H10.5a7.5 7.5 0 0 1-7.5-7.5V6.375a1.125 1.125 0 0 1 2.25 0v5.519c.46-.452.965-.832 1.5-1.141V3.375a1.125 1.125 0 0 1 2.25 0v6.526c.495-.1.997-.151 1.5-.151V1.875Z" />
-                </svg>
-              </div>
-              <div className="step-card__content">
-                <h3 className="step-card__title">Choose Your Food</h3>
-                <p className="step-card__description">
-                  Browse through hundreds of restaurants and dishes in your area
-                </p>
-              </div>
-            </div>
-            
-            <div className="step-card">
-              <div className="step-card__number">2</div>
-              <div className="step-card__icon">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M2.25 2.25a.75.75 0 0 0 0 1.5h1.386c.17 0 .318.114.362.278l2.558 9.592a3.752 3.752 0 0 0-2.806 3.63c0 .414.336.75.75.75h15.75a.75.75 0 0 0 0-1.5H5.378A2.25 2.25 0 0 1 7.5 15h11.218a.75.75 0 0 0 .674-.421 60.358 60.358 0 0 0 2.96-7.228.75.75 0 0 0-.525-.965A60.864 60.864 0 0 0 5.68 4.509l-.232-.867A1.875 1.875 0 0 0 3.636 2.25H2.25ZM3.75 20.25a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0ZM16.5 20.25a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0Z" />
-                </svg>
-              </div>
-              <div className="step-card__content">
-                <h3 className="step-card__title">Place Your Order</h3>
-                <p className="step-card__description">
-                  Select your favorite dishes and checkout with secure payment options
-                </p>
-              </div>
-            </div>
-            
-            <div className="step-card">
-              <div className="step-card__number">3</div>
-              <div className="step-card__icon">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                  <path fillRule="evenodd" d="M7.5 6v.75H5.513c-.96 0-1.764.724-1.865 1.679l-1.263 12A1.875 1.875 0 0 0 4.25 22.5h15.5a1.875 1.875 0 0 0 1.865-2.071l-1.263-12a1.875 1.875 0 0 0-1.865-1.679H16.5V6a4.5 4.5 0 1 0-9 0ZM12 3a3 3 0 0 0-3 3v.75h6V6a3 3 0 0 0-3-3Zm-3 8.25a3 3 0 1 0 6 0v-.75a.75.75 0 0 1 1.5 0v.75a4.5 4.5 0 1 1-9 0v-.75a.75.75 0 0 1 1.5 0v.75Z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <div className="step-card__content">
-                <h3 className="step-card__title">Enjoy Your Meal</h3>
-                <p className="step-card__description">
-                  Receive your fresh, hot food delivered fast to your doorstep
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Restaurant Slider Section */}
-      {/* <section className="restaurants-section">
-        <div className="section-container">
-          <div className="section-header">
-            <div className="section-header__content">
-              <h2 className="section-heading">Top Restaurants Near You</h2>
-              <p className="section-subtitle">Explore the best dining experiences in your area</p>
-            </div>
-            {!isMobile && (
-              <div className="slider-controls">
-                <button 
-                  onClick={handleRestaurantsPrev}
-                  className={`slider-arrow ${isRestaurantBeginning ? 'disabled' : ''}`}
-                  disabled={isRestaurantBeginning}
-                >
-                  <ChevronLeft size={24} />
-                </button>
-                <button 
-                  onClick={handleRestaurantsNext}
-                  className={`slider-arrow ${isRestaurantEnd ? 'disabled' : ''}`}
-                  disabled={isRestaurantEnd}
-                >
-                  <ChevronRight size={24} />
-                </button>
-              </div>
-            )}
-          </div>
-          
-          <div className="restaurants-slider">
-            <Swiper
-              ref={restaurantsSwiperRef}
-              slidesPerView={isMobile ? 1.2 : 3.5}
-              spaceBetween={isMobile ? 16 : 24}
-              freeMode={true}
-              pagination={isMobile ? { clickable: true } : false}
-              modules={isMobile ? [FreeMode, Pagination] : [FreeMode, Navigation]}
-              onSlideChange={updateRestaurantsNavigationState}
-              onSwiper={updateRestaurantsNavigationState}
-              breakpoints={{
-                320: { slidesPerView: 1.2, spaceBetween: 10 },
-                375: { slidesPerView: 1.5 },
-                480: { slidesPerView: 2 },
-                640: { slidesPerView: 2.5 },
-                768: { slidesPerView: 3, spaceBetween: 20 },
-                1024: { slidesPerView: 4, spaceBetween: 24 },
-                1280: { slidesPerView: 5, spaceBetween: 24 }
-              }}
-              className="restaurants-swiper"
-            >
-              {restaurants.map((restaurant) => (
-                <SwiperSlide key={restaurant.restaurant_id}>
-                  {renderRestaurantCard(restaurant)}
-                </SwiperSlide>
-              ))}
-            </Swiper>
-          </div>
-          
-          {restaurants.length > 0 && (
-            <div className="view-all-container">
-              <Link to="/restaurants" className="view-all-button">
-                View All Restaurants <ArrowRightCircle size={16} />
-              </Link>
-            </div>
-          )}
-        </div>
-      </section> */}
-
-      {/* Testimonials Section */}
-      <section className="testimonials-section">
-        <div className="section-container">
-          <div className="section-header">
-            <div className="section-header__content">
-              <h2 className="section-heading">Loved by Foodies</h2>
-              <p className="section-subtitle">What our customers say about us</p>
-            </div>
-          </div>
-          
-          <div className="testimonials-slider">
-            <Swiper
-              modules={[Pagination, Autoplay]}
-              spaceBetween={30}
-              slidesPerView={1}
-              pagination={{ clickable: true }}
-              autoplay={{ delay: 6000, disableOnInteraction: false }}
-              breakpoints={{
-                768: { slidesPerView: 2, spaceBetween: 30 },
-                1024: { slidesPerView: 3, spaceBetween: 30 }
-              }}
-              className="testimonials-swiper"
-            >
-              {restaurantsReview.map((testimonial, index) => (
-                <SwiperSlide key={testimonial.id || index}>
-                  <div className="testimonial-card">
-                    <div className="testimonial-card__rating">
-                      {[...Array(5)].map((_, i) => (
-                        <Star 
-                          key={i} 
-                          size={18}
-                          fill={i < testimonial.rating ? "#FFD700" : "#DDD"}
-                        />
-                      ))}
-                    </div>
-                    <blockquote className="testimonial-card__quote">
-                      "{testimonial.comment.split(' ').slice(0, 20).join(' ')}{testimonial.comment.split(' ').length > 20 ? '...' : ''}"
-                    </blockquote>
-                    <div className="testimonial-card__author">
-                      <div className="testimonial-card__author-avatar">
-                        {testimonial.name?.charAt(0).toUpperCase() || 'U'}
-                      </div>
-                      <div className="testimonial-card__author-info">
-                        <p className="testimonial-card__author-name">{testimonial.name || 'Anonymous'}</p>
-                        <p className="testimonial-card__author-location">{testimonial.location || 'Regular Customer'}</p>
-                      </div>
-                    </div>
-                  </div>
-                </SwiperSlide>
-              ))}
-            </Swiper>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="cta-section">
-        <div className="section-container">
-          <div className="cta-content">
-            <div className="cta-text">
-              <h2 className="cta-title">Ready to Order?</h2>
-              <p className="cta-subtitle">
-                Download the Eatoor app now and get 20% off on your first order!
-              </p>
-              <div className="cta-stats">
-                <div className="cta-stat">
-                  <strong>Fast</strong>
-                  <span>Delivery</span>
-                </div>
-                <div className="cta-stat">
-                  <strong>Fresh</strong>
-                  <span>Food</span>
-                </div>
-                <div className="cta-stat">
-                  <strong>24/7</strong>
-                  <span>Support</span>
-                </div>
-              </div>
-            </div>
-            <div className="cta-buttons">
-              <div className="cta-download-buttons">
-                <a 
-                  href="https://play.google.com/store/apps/details?id=com.eatoor" 
-                  className="download-button"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <img src={PlayStoreBadge} alt="Get on Google Play" />
-                </a>
-                <a 
-                  href="https://apps.apple.com/in/app/eatoor/id6756539381" 
-                  className="download-button"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <img src={AppStoreBadge} alt="Download on App Store" />
-                </a>
-              </div>
-              <div className="cta-qr">
-                <div className="cta-qr__container">
-                  <img 
-                    src={QRCodeImage} 
-                    alt="Download Eatoor App QR Code" 
-                    className="cta-qr__image"
-                  />
-                  <p className="cta-qr__text">Scan to download</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
     </div>
   );
 };

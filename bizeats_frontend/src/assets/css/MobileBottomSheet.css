@@ -1,0 +1,300 @@
+/* ============================================
+   BOTTOM SCREEN PAGE - Compact Modal
+   ============================================ */
+
+/* ---------- Overlay ---------- */
+.bottom-screen-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 99999;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  animation: bottomScreenOverlayIn 0.4s ease;
+}
+
+.bottom-screen-overlay--closing {
+  animation: bottomScreenOverlayOut 0.3s ease forwards;
+}
+
+/* ---------- Bottom Sheet Container ---------- */
+.bottom-screen-page {
+  background: #ffffff;
+  border-radius: 24px 24px 0 0;
+  max-width: 420px;
+  width: 100%;
+  padding: 12px 24px 28px;
+  position: relative;
+  animation: bottomScreenSlideIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.15);
+}
+
+.bottom-screen-page--closing {
+  animation: bottomScreenSlideOut 0.3s ease forwards;
+}
+
+/* ---------- Drag Handle ---------- */
+.bottom-screen-page__handle {
+  display: flex;
+  justify-content: center;
+  padding: 4px 0 8px;
+  cursor: grab;
+  user-select: none;
+}
+
+.bottom-screen-page__handle-bar {
+  width: 36px;
+  height: 4px;
+  background: #d1d5db;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+.bottom-screen-page__handle:hover .bottom-screen-page__handle-bar {
+  width: 44px;
+  background: #ff6b35;
+}
+
+/* ---------- Close Button ---------- */
+.bottom-screen-page__close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.bottom-screen-page__close:hover {
+  background: rgba(0, 0, 0, 0.1);
+  transform: rotate(90deg);
+}
+
+.bottom-screen-page__close:active {
+  transform: scale(0.9);
+}
+
+/* ---------- Content ---------- */
+.bottom-screen-page__content {
+  text-align: center;
+  padding: 4px 0;
+}
+
+.bottom-screen-page__icon {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.bottom-screen-page__icon svg {
+  animation: bottomScreenIconBounce 2s ease-in-out infinite;
+}
+
+.bottom-screen-page__title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 6px 0;
+  letter-spacing: -0.3px;
+}
+
+.bottom-screen-page__description {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0 0 20px 0;
+  line-height: 1.5;
+}
+
+/* ---------- Continue Button ---------- */
+.bottom-screen-page__button {
+  width: 100%;
+  padding: 14px 20px;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  color: white;
+  background: linear-gradient(135deg, #ff6b35 0%, #ff8f5e 100%);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.bottom-screen-page__button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s ease;
+}
+
+.bottom-screen-page__button:hover::before {
+  left: 100%;
+}
+
+.bottom-screen-page__button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 25px rgba(255, 107, 53, 0.4);
+}
+
+.bottom-screen-page__button:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.bottom-screen-page__button-icon {
+  transition: transform 0.3s ease;
+}
+
+.bottom-screen-page__button:hover .bottom-screen-page__button-icon {
+  transform: translateX(4px);
+}
+
+/* ============================================
+   ANIMATIONS
+   ============================================ */
+
+@keyframes bottomScreenOverlayIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes bottomScreenOverlayOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes bottomScreenSlideIn {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes bottomScreenSlideOut {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+}
+
+@keyframes bottomScreenIconBounce {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+/* Small phones */
+@media (max-width: 380px) {
+  .bottom-screen-page {
+    padding: 10px 16px 20px;
+    border-radius: 20px 20px 0 0;
+  }
+  
+  .bottom-screen-page__title {
+    font-size: 18px;
+  }
+  
+  .bottom-screen-page__description {
+    font-size: 13px;
+  }
+  
+  .bottom-screen-page__button {
+    padding: 12px 16px;
+    font-size: 15px;
+  }
+}
+
+/* Landscape phones */
+@media (max-height: 600px) and (orientation: landscape) {
+  .bottom-screen-page {
+    max-height: 85vh;
+    padding: 8px 20px 16px;
+  }
+  
+  .bottom-screen-page__icon svg {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .bottom-screen-page__title {
+    font-size: 17px;
+  }
+  
+  .bottom-screen-page__description {
+    font-size: 13px;
+    margin-bottom: 14px;
+  }
+  
+  .bottom-screen-page__button {
+    padding: 10px 16px;
+    font-size: 14px;
+  }
+}
+
+/* Dark mode */
+@media (prefers-color-scheme: dark) {
+  .bottom-screen-page {
+    background: #1f2937;
+  }
+  
+  .bottom-screen-page__title {
+    color: #f3f4f6;
+  }
+  
+  .bottom-screen-page__description {
+    color: #9ca3af;
+  }
+  
+  .bottom-screen-page__close {
+    background: rgba(255, 255, 255, 0.05);
+  }
+  
+  .bottom-screen-page__close:hover {
+    background: rgba(255, 255, 255, 0.1);
+  }
+  
+  .bottom-screen-page__handle-bar {
+    background: #4b5563;
+  }
+  
+  .bottom-screen-page__handle:hover .bottom-screen-page__handle-bar {
+    background: #ff6b35;
+  }
+}

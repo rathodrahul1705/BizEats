@@ -1,6 +1,6 @@
+// FoodGrid.jsx
 import React, { useState, useEffect, useRef } from "react";
-import { ArrowRightCircle, ChevronLeft, ChevronRight, User } from "lucide-react";
-import "../assets/css/FoodList.css";
+import { ArrowRightCircle, ChevronLeft, ChevronRight, Clock, MapPin, Star } from "lucide-react";
 import { Link } from "react-router-dom";
 import API_ENDPOINTS from "../components/config/apiConfig";
 import fetchData from "../components/services/apiService";
@@ -11,6 +11,8 @@ import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 import 'swiper/css/free-mode';
+
+// Image imports
 import HomePageUpma from "../assets/img/snaks.png";
 import HomePagePoha from "../assets/img/home_page_poha.png";
 import HomePageMaggie from "../assets/img/home_page_maggie.webp";
@@ -20,12 +22,16 @@ import HomePageEggBiryani from "../assets/img/home_page_chicken_biryani.png";
 import HomePageGulabJamun from "../assets/img/home_page_gulab_jamun.png";
 import HomePageKokamSarbat from "../assets/img/homa_page_kokam_sarbat.png";
 
-const FoodGrid = ({user}) => {
+import "../assets/css/FoodList.css";
+
+const FoodGrid = ({ user }) => {
   const [loading, setLoading] = useState(true);
   const [restaurants, setRestaurants] = useState([]);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  
   const foodSwiperRef = useRef(null);
   const restaurantsSwiperRef = useRef(null);
+  
   const [isFoodBeginning, setIsFoodBeginning] = useState(true);
   const [isFoodEnd, setIsFoodEnd] = useState(false);
   const [isRestaurantsBeginning, setIsRestaurantsBeginning] = useState(true);
@@ -35,10 +41,6 @@ const FoodGrid = ({user}) => {
     const handleResize = () => {
       setIsMobile(window.innerWidth < 768);
     };
-
-    const firstName = user?.full_name?.split(' ')[0] || '';
-    const capitalizedFirstName = firstName.charAt(0).toUpperCase() + firstName.slice(1).toUpperCase();
-
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
@@ -48,83 +50,31 @@ const FoodGrid = ({user}) => {
       setLoading(true);
       try {
         const response = await fetchData(API_ENDPOINTS.HOME.LIVE_RES_LIST, "GET", null);
-        setRestaurants(response.data.KitchenList);
+        setRestaurants(response.data.KitchenList || []);
       } catch (error) {
         console.error("Error fetching restaurants:", error);
       } finally {
         setLoading(false);
       }
     };
-
     fetchRestaurants();
   }, []);
 
   const foodItems = [
-    {
-      name: "Chicken Biryani",
-      image: HomePageChickenBiryani,
-      restaurant_id: restaurants[0]?.restaurant_id
-    },
-    {
-      name: "Gulab Jamun",
-      image: HomePageGulabJamun,
-      restaurant_id: restaurants[0]?.restaurant_id
-    },
-    {
-      name: "Samosa",
-      image: HomePageUpma,
-      restaurant_id: restaurants[0]?.restaurant_id
-    },
-    {
-      name: "Poha",
-      image: HomePagePoha,
-      restaurant_id: restaurants[0]?.restaurant_id
-    },
-    {
-      name: "Maggie",
-      image: HomePageMaggie,
-      restaurant_id: restaurants[0]?.restaurant_id
-    },
-    {
-      name: "Egg Roll",
-      image: HomePageEggRoll,
-      restaurant_id: restaurants[0]?.restaurant_id
-    },
-    {
-      name: "Egg Biryani",
-      image: HomePageEggBiryani,
-      restaurant_id: restaurants[0]?.restaurant_id
-    },
-    {
-      name: "Beverage",
-      image: HomePageKokamSarbat,
-      restaurant_id: restaurants[0]?.restaurant_id
-    }
+    { name: "Chicken Biryani", image: HomePageChickenBiryani },
+    { name: "Gulab Jamun", image: HomePageGulabJamun },
+    { name: "Samosa", image: HomePageUpma },
+    { name: "Poha", image: HomePagePoha },
+    { name: "Maggie", image: HomePageMaggie },
+    { name: "Egg Roll", image: HomePageEggRoll },
+    { name: "Egg Biryani", image: HomePageEggBiryani },
+    { name: "Beverage", image: HomePageKokamSarbat }
   ];
 
-  const handleFoodPrev = () => {
-    if (foodSwiperRef.current) {
-      foodSwiperRef.current.swiper.slidePrev();
-    }
-  };
-
-  const handleFoodNext = () => {
-    if (foodSwiperRef.current) {
-      foodSwiperRef.current.swiper.slideNext();
-    }
-  };
-
-  const handleRestaurantsPrev = () => {
-    if (restaurantsSwiperRef.current) {
-      restaurantsSwiperRef.current.swiper.slidePrev();
-    }
-  };
-
-  const handleRestaurantsNext = () => {
-    if (restaurantsSwiperRef.current) {
-      restaurantsSwiperRef.current.swiper.slideNext();
-    }
-  };
+  const handleFoodPrev = () => foodSwiperRef.current?.swiper.slidePrev();
+  const handleFoodNext = () => foodSwiperRef.current?.swiper.slideNext();
+  const handleRestaurantsPrev = () => restaurantsSwiperRef.current?.swiper.slidePrev();
+  const handleRestaurantsNext = () => restaurantsSwiperRef.current?.swiper.slideNext();
 
   const updateFoodNavigationState = (swiper) => {
     setIsFoodBeginning(swiper.isBeginning);
@@ -136,67 +86,58 @@ const FoodGrid = ({user}) => {
     setIsRestaurantsEnd(swiper.isEnd);
   };
 
+  const getUserGreeting = () => {
+    if (!user?.full_name) return "What's on your mind";
+    const firstName = user.full_name.split(' ')[0];
+    return `${firstName.charAt(0).toUpperCase()}${firstName.slice(1).toLowerCase()}, What's on your mind`;
+  };
+
   const renderCard = (restaurant) => (
-    <div className="split_card__container" key={restaurant.restaurant_id}>
+    <div className="food-list-restaurant-card" key={restaurant.restaurant_id}>
       <Link 
         to={`/city/${restaurant?.restaurant_city}/${restaurant?.restaurant_slug}/${restaurant.restaurant_id}`} 
-        className="split_card__image_card"
+        className="food-list-restaurant-card__link"
       >
-        <div className="split_card__image_wrapper">
+        <div className="food-list-restaurant-card__image-wrapper">
           <img 
             src={restaurant.restaurant_image} 
             alt={restaurant.restaurant_name} 
-            className="split_card__image"
+            className="food-list-restaurant-card__image"
             loading="lazy"
           />
-          <div className="split_card__badges">
-            <span className="split_card__price_badge">
+          <div className="food-list-restaurant-card__badges">
+            <span className="food-list-restaurant-card__price-badge">
               ₹{restaurant.avg_price_range} for two
             </span>
             {restaurant.rating && (
-              <span className="split_card__rating_badge">
-                ⭐ {restaurant.rating}
+              <span className="food-list-restaurant-card__rating-badge">
+                <Star size={12} fill="#FF8250" color="#FF8250" />
+                {restaurant.rating}
               </span>
             )}
           </div>
-          <button className="split_card__action_btn">
+          <button className="food-list-restaurant-card__action-btn" aria-label="View restaurant">
             <ArrowRightCircle size={20} />
           </button>
         </div>
-      </Link>
 
-      <div className="split_card__content_card">
-        <Link 
-          to={`/city/${restaurant?.restaurant_city}/${restaurant?.restaurant_slug}/${restaurant.restaurant_id}`} 
-          className="split_card__content_link"
-        >
-          <h3 className="split_card__title">{restaurant.restaurant_name}</h3>
-          <span className="split_card__delivery_time">
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true" strokeColor="rgba(2, 6, 12, 0.92)" fillColor="rgba(2, 6, 12, 0.92)">
-              <circle cx="10" cy="10" r="9" fill="url(#StoreRating20_svg__paint0_linear_32982_71567)"></circle>
-              <path d="M10.0816 12.865C10.0312 12.8353 9.96876 12.8353 9.91839 12.865L7.31647 14.3968C6.93482 14.6214 6.47106 14.2757 6.57745 13.8458L7.27568 11.0245C7.29055 10.9644 7.26965 10.9012 7.22195 10.8618L4.95521 8.99028C4.60833 8.70388 4.78653 8.14085 5.23502 8.10619L8.23448 7.87442C8.29403 7.86982 8.34612 7.83261 8.36979 7.77777L9.54092 5.06385C9.71462 4.66132 10.2854 4.66132 10.4591 5.06385L11.6302 7.77777C11.6539 7.83261 11.706 7.86982 11.7655 7.87442L14.765 8.10619C15.2135 8.14085 15.3917 8.70388 15.0448 8.99028L12.7781 10.8618C12.7303 10.9012 12.7095 10.9644 12.7243 11.0245L13.4225 13.8458C13.5289 14.2757 13.0652 14.6214 12.6835 14.3968L10.0816 12.865Z" fill="white"></path>
-              <defs>
-                <linearGradient id="StoreRating20_svg__paint0_linear_32982_71567" x1="10" y1="1" x2="10" y2="19" gradientUnits="userSpaceOnUse">
-                  <stop stop-color="#21973B"></stop>
-                  <stop offset="1" stop-color="#128540"></stop>
-                </linearGradient>
-              </defs>
-            </svg>
-            4.5
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <circle cx="12" cy="12" r="10"></circle>
-              <polyline points="12 6 12 12 16 14"></polyline>
-            </svg>
-            {restaurant.delivery_time || '45 mins'}
-          </span>
-          <p className="split_card__cuisine">{restaurant.item_cuisines}</p>
-          <div className="split_card__footer">
-            <span className="split_card__location">
+        <div className="food-list-restaurant-card__content">
+          <h3 className="food-list-restaurant-card__title">{restaurant.restaurant_name}</h3>
+          <div className="food-list-restaurant-card__meta">
+            <span className="food-list-restaurant-card__delivery">
+              <Clock size={14} />
+              {restaurant.delivery_time || '30-45 mins'}
+            </span>
+          </div>
+          <p className="food-list-restaurant-card__cuisine">{restaurant.item_cuisines}</p>
+          <div className="food-list-restaurant-card__footer">
+            <span className="food-list-restaurant-card__location">
+              <MapPin size={14} />
               {restaurant.restaurant_location}
             </span>
           </div>
-        </Link>
-      </div>
+        </div>
+      </Link>
     </div>
   );
 
@@ -205,173 +146,139 @@ const FoodGrid = ({user}) => {
   }
 
   return (
-    <div className="food-grid-container">
-      {/* Food Categories Section - Desktop */}
-      {!isMobile && (
-        <section className="food-categories-section">
-          <div className="food-categories-container">
-            <div className="food-categories-header">
-             <h2 className="food-categories-heading">
-                {user?.full_name
-                  ? `${user.full_name.split(' ')[0].charAt(0).toUpperCase()}${user.full_name
-                      .split(' ')[0]
-                      .slice(1)
-                      .toLowerCase()}, What's on your mind`
-                  : `What's on your mind`}
-              </h2>
-              <div className="food-categories-controls">
+    <div className="food-list-restaurant">
+      <div className="food-list-restaurant__container">
+        {/* Food Categories - Desktop */}
+        {!isMobile && (
+          <section className="food-list-restaurant-categories">
+            <div className="food-list-restaurant-categories__header">
+              <h2 className="food-list-restaurant-categories__title">{getUserGreeting()}</h2>
+              <div className="food-list-restaurant-categories__controls">
                 <button 
                   onClick={handleFoodPrev} 
-                  className={`food-categories-arrow ${isFoodBeginning ? 'disabled' : ''}`}
+                  className={`food-list-restaurant-categories__arrow ${isFoodBeginning ? 'disabled' : ''}`}
                   disabled={isFoodBeginning}
+                  aria-label="Previous categories"
                 >
-                  <ChevronLeft size={24} />
+                  <ChevronLeft size={22} />
                 </button>
                 <button 
                   onClick={handleFoodNext} 
-                  className={`food-categories-arrow ${isFoodEnd ? 'disabled' : ''}`}
+                  className={`food-list-restaurant-categories__arrow ${isFoodEnd ? 'disabled' : ''}`}
                   disabled={isFoodEnd}
+                  aria-label="Next categories"
                 >
-                  <ChevronRight size={24} />
+                  <ChevronRight size={22} />
                 </button>
               </div>
             </div>
 
-            <div className="food-categories-wrapper">
+            <div className="food-list-restaurant-categories__swiper">
               <Swiper
                 ref={foodSwiperRef}
                 modules={[Navigation]}
-                spaceBetween={20}
+                spaceBetween={16}
                 slidesPerView={6}
                 onSlideChange={updateFoodNavigationState}
                 onSwiper={updateFoodNavigationState}
                 breakpoints={{
-                  1024: { slidesPerView: 5 },
-                  768: { slidesPerView: 4 },
-                  640: { slidesPerView: 3 },
-                  480: { slidesPerView: 2.5 },
-                  320: { slidesPerView: 1.5 }
+                  320: { slidesPerView: 3, spaceBetween: 12 },
+                  480: { slidesPerView: 4, spaceBetween: 12 },
+                  640: { slidesPerView: 5, spaceBetween: 16 },
+                  1024: { slidesPerView: 6, spaceBetween: 16 }
                 }}
               >
                 {foodItems.map((item, index) => (
                   <SwiperSlide key={index}>
-                    <Link to={`/city/thane/eatoor-delights-kalwa-thane/EAT33233428`} className="food-categories-item">
-                      <div className="food-categories-image-wrapper">
+                    <Link 
+                      to={`/city/thane/eatoor-delights-kalwa-thane/EAT33233428`} 
+                      className="food-list-restaurant-categories__item"
+                    >
+                      <div className="food-list-restaurant-categories__image-wrapper">
                         <img
                           src={item.image}
                           alt={item.name}
-                          className="food-categories-image"
+                          className="food-list-restaurant-categories__image"
                           loading="lazy"
                         />
                       </div>
-                      <p className="food-categories-name">{item.name}</p>
+                      <p className="food-list-restaurant-categories__name">{item.name}</p>
                     </Link>
                   </SwiperSlide>
                 ))}
               </Swiper>
             </div>
-          </div>
-        </section>
-      )}
+          </section>
+        )}
 
-      {/* Food Categories Section - Mobile */}
-      {isMobile && (
-        <section className="food-categories-mobile-section">
-          <div className="food-categories-mobile-container">
-            <div className="food-categories-mobile-header">
-              <h2 className="food-categories-mobile-heading">
-                {user?.full_name
-                  ? `${user.full_name.split(' ')[0].charAt(0).toUpperCase()}${user.full_name
-                      .split(' ')[0]
-                      .slice(1)
-                      .toLowerCase()}, What's on your mind`
-                  : `What's on your mind`}
-              </h2>
-            </div>
-            <div className="food-categories-mobile-grid">
-              {foodItems.slice(0, 4).map((item, index) => (
+        {/* Food Categories - Mobile */}
+        {isMobile && (
+          <section className="food-list-restaurant-categories-mobile">
+            <h2 className="food-list-restaurant-categories-mobile__title">{getUserGreeting()}</h2>
+            <div className="food-list-restaurant-categories-mobile__grid">
+              {foodItems.map((item, index) => (
                 <Link 
                   key={index} 
                   to={`/city/thane/eatoor-delights-kalwa-thane/EAT33233428`} 
-                  className="food-categories-mobile-item"
+                  className="food-list-restaurant-categories-mobile__item"
                 >
-                  <div className="food-categories-mobile-image-wrapper">
+                  <div className="food-list-restaurant-categories-mobile__image-wrapper">
                     <img
                       src={item.image}
                       alt={item.name}
-                      className="food-categories-mobile-image"
+                      className="food-list-restaurant-categories-mobile__image"
                       loading="lazy"
                     />
                   </div>
-                  <p className="food-categories-mobile-name">{item.name}</p>
+                  <p className="food-list-restaurant-categories-mobile__name">{item.name}</p>
                 </Link>
               ))}
             </div>
-            <div className="food-categories-mobile-grid">
-              {foodItems.slice(4, 8).map((item, index) => (
-                <Link 
-                  key={index} 
-                  to={`/city/thane/eatoor-delights-kalwa-thane/EAT33233428`} 
-                  className="food-categories-mobile-item"
-                >
-                  <div className="food-categories-mobile-image-wrapper">
-                    <img
-                      src={item.image}
-                      alt={item.name}
-                      className="food-categories-mobile-image"
-                      loading="lazy"
-                    />
-                  </div>
-                  <p className="food-categories-mobile-name">{item.name}</p>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
+          </section>
+        )}
 
-      {/* Restaurants Grid Section */}
-      <section className="restaurants-section">
-        <div className="restaurants-container">
-          <div className="restaurants-header">
-            <h2 className="restaurants-heading">Order from nearby kitchens</h2>
+        {/* Restaurants Section */}
+        <section className="food-list-restaurant-grid">
+          <div className="food-list-restaurant-grid__header">
+            <h2 className="food-list-restaurant-grid__title">Order from nearby kitchens</h2>
             {!isMobile && (
-              <div className="restaurants-controls">
+              <div className="food-list-restaurant-grid__controls">
                 <button 
                   onClick={handleRestaurantsPrev} 
-                  className={`restaurants-arrow ${isRestaurantsBeginning ? 'disabled' : ''}`}
+                  className={`food-list-restaurant-grid__arrow ${isRestaurantsBeginning ? 'disabled' : ''}`}
                   disabled={isRestaurantsBeginning}
+                  aria-label="Previous restaurants"
                 >
-                  <ChevronLeft size={24} />
+                  <ChevronLeft size={22} />
                 </button>
                 <button 
                   onClick={handleRestaurantsNext} 
-                  className={`restaurants-arrow ${isRestaurantsEnd ? 'disabled' : ''}`}
+                  className={`food-list-restaurant-grid__arrow ${isRestaurantsEnd ? 'disabled' : ''}`}
                   disabled={isRestaurantsEnd}
+                  aria-label="Next restaurants"
                 >
-                  <ChevronRight size={24} />
+                  <ChevronRight size={22} />
                 </button>
               </div>
             )}
           </div>
 
-          <div className="restaurants-wrapper">
+          <div className="food-list-restaurant-grid__swiper">
             <Swiper
               ref={restaurantsSwiperRef}
               modules={[Navigation, FreeMode]}
-              spaceBetween={24}
+              spaceBetween={20}
               slidesPerView={4}
               freeMode={true}
               onSlideChange={updateRestaurantsNavigationState}
               onSwiper={updateRestaurantsNavigationState}
               breakpoints={{
-                320: { slidesPerView: 1.2, spaceBetween: 16 },
-                375: { slidesPerView: 1.5, spaceBetween: 16 },
-                480: { slidesPerView: 1.8, spaceBetween: 16 },
-                640: { slidesPerView: 2.2, spaceBetween: 16 },
-                768: { slidesPerView: 2.5, spaceBetween: 20 },
-                1024: { slidesPerView: 3.5, spaceBetween: 24 },
-                1200: { slidesPerView: 4, spaceBetween: 24 }
+                320: { slidesPerView: 1.2, spaceBetween: 12 },
+                480: { slidesPerView: 1.5, spaceBetween: 12 },
+                640: { slidesPerView: 2, spaceBetween: 16 },
+                768: { slidesPerView: 2.5, spaceBetween: 16 },
+                1024: { slidesPerView: 3.5, spaceBetween: 20 },
+                1200: { slidesPerView: 4, spaceBetween: 20 }
               }}
             >
               {restaurants.map((restaurant) => (
@@ -381,24 +288,20 @@ const FoodGrid = ({user}) => {
               ))}
             </Swiper>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <section className="home_cooked_detail">
-        <div className="home_cooked_detail__container">
-          <div className="home_cooked_detail__header">
-            <h2 className="home_cooked_detail__heading">Home-cooked food in Mumbai</h2>
-          </div>
-          
-          <div className="home_cooked_detail__grid">
-            {restaurants.map((restaurant) => (
-              <div key={restaurant.restaurant_id} className="home_cooked_detail__card">
+        {/* Home Cooked Detail */}
+        <section className="food-list-restaurant-home-cooked">
+          <h2 className="food-list-restaurant-home-cooked__title">Home-cooked food in Mumbai</h2>
+          <div className="food-list-restaurant-home-cooked__grid">
+            {restaurants.slice(0, 8).map((restaurant) => (
+              <div key={restaurant.restaurant_id} className="food-list-restaurant-home-cooked__item">
                 {renderCard(restaurant)}
               </div>
             ))}
           </div>
-        </div>
-      </section>
+        </section>
+      </div>
     </div>
   );
 };

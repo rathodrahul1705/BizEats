@@ -33,6 +33,7 @@ import Pricing from "./components/links/Pricing";
 import ScrollToTop from "./components/ScrollToTop";
 import StickyTrackOrder from '../src/order/StickyTrackOrder';
 import LocationChecker from '../src/location/LocationRestriction';
+import MobileBottomSheet from '../src/MobileBottomSheet';
 
 // Private Route Components with improved validation
 const PrivateRoute = ({ children, user }) => {
@@ -230,6 +231,8 @@ const App = () => {
       {(location.pathname === '/' || location.pathname === '/home-kitchens') && <StickyTrackOrder user={user} setUser={setUser} />}
       {/* <Footer /> */}
       {(location.pathname === '/' || location.pathname === '/about-us' || location.pathname === '/contact-us' || location.pathname === '/privacy-policy' || location.pathname === '/terms-and-conditions' || location.pathname === '/cancellation-refund-policy') && <Footer />}
+          
+      <MobileBottomSheet />
     </div>
   );
 };
