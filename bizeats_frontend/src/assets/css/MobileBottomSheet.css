@@ -298,3 +298,98 @@
     background: #ff6b35;
   }
 }
+
+/* Add these styles to your existing CSS file */
+
+.bottom-screen-page__button--loading {
+  opacity: 0.7;
+  cursor: not-allowed;
+  justify-content: center;
+  gap: 10px;
+}
+
+.bottom-screen-page__spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: #fff;
+  animation: spin 0.8s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Optional: Disable interactions when loading */
+.bottom-screen-page__button:disabled {
+  pointer-events: none;
+}
+
+/* Add to MobileBottomSheet.css */
+
+.bottom-screen-page__helper-text {
+  font-size: 12px;
+  color: #999;
+  text-align: center;
+  margin-top: 12px;
+  padding: 8px 12px;
+  background: #f5f5f5;
+  border-radius: 8px;
+  line-height: 1.4;
+  max-width: 90%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Add animation for loading state */
+.bottom-screen-page__button--loading {
+  opacity: 0.8;
+  cursor: not-allowed;
+  justify-content: center;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.bottom-screen-page__spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: #fff;
+  animation: spin 0.8s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Responsive styles */
+@media (max-width: 480px) {
+  .bottom-screen-page__spinner {
+    width: 18px;
+    height: 18px;
+  }
+  
+  .bottom-screen-page__button {
+    font-size: 15px;
+    padding: 12px 20px;
+  }
+  
+  .bottom-screen-page__title {
+    font-size: 20px;
+  }
+  
+  .bottom-screen-page__helper-text {
+    font-size: 11px;
+    padding: 6px 10px;
+  }
+}
+
+@media (max-width: 360px) {
+  .bottom-screen-page__helper-text {
+    font-size: 10px;
+  }
+}

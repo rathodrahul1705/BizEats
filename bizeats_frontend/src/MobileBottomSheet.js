@@ -6,6 +6,7 @@ const MobileBottomSheet = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isInstagram, setIsInstagram] = useState(false);
 
   // Detect if device is mobile
   useEffect(() => {
@@ -16,6 +17,19 @@ const MobileBottomSheet = () => {
     };
 
     setIsMobile(checkMobile());
+  }, []);
+
+  // Check for Instagram
+  useEffect(() => {
+    const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+    const isInstagramBrowser = /instagram/i.test(userAgent.toLowerCase());
+    setIsInstagram(isInstagramBrowser);
+    
+    // Debug logging
+    if (isInstagramBrowser) {
+      console.log('Running in Instagram browser');
+      console.log('User Agent:', userAgent);
+    }
   }, []);
 
   // Show bottom sheet after a short delay
@@ -72,7 +86,6 @@ const MobileBottomSheet = () => {
     
     if (activeSocials.length === 0) return null;
     
-    // Return the first active social media
     const socialNames = {
       instagram: 'Instagram',
       facebook: 'Facebook',
@@ -92,158 +105,175 @@ const MobileBottomSheet = () => {
     return socialNames[activeSocials[0][0]] || null;
   };
 
-  // Get app store link based on device and social media platform
-  const getAppStoreLink = () => {
+  // Instagram-specific URL opening
+  const openInstagramLink = (url) => {
+    return new Promise((resolve, reject) => {
+      try {
+        // Method 1: Create a hidden anchor and click it
+        const link = document.createElement('a');
+        link.href = url;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.style.display = 'none';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        resolve(true);
+      } catch (error) {
+        reject(error);
+      }
+    });
+  };
+
+  // Get app store link based on device
+  const getAppStoreLinks = () => {
     const deviceType = getDeviceType();
-    const socials = detectSocialMedia();
-    const isInAppBrowser = Object.values(socials).some(val => val === true);
-    
-    // App store links
     const androidLink = 'https://play.google.com/store/apps/details?id=com.eatoor';
     const iosLink = 'https://apps.apple.com/in/app/eatoor/id6756539381';
     
-    // Special handling for different social media platforms
-    if (isInAppBrowser) {
-      // Instagram specific handling
-      if (socials.instagram && deviceType === 'android') {
-        return `intent://details?id=com.eatoor#Intent;scheme=market;action=android.intent.action.VIEW;end`;
-      }
-      
-      // Facebook specific handling
-      if (socials.facebook && deviceType === 'android') {
-        // Use Facebook's in-app browser handling
-        return `https://play.google.com/store/apps/details?id=com.eatoor`;
-      }
-      
-      // TikTok specific handling
-      if (socials.tiktok && deviceType === 'android') {
-        return `intent://details?id=com.eatoor#Intent;scheme=market;action=android.intent.action.VIEW;end`;
-      }
-      
-      // Twitter/X specific handling
-      if (socials.twitter && deviceType === 'android') {
-        return `intent://details?id=com.eatoor#Intent;scheme=market;action=android.intent.action.VIEW;end`;
-      }
-      
-      // LinkedIn specific handling
-      if (socials.linkedin && deviceType === 'android') {
-        return `https://play.google.com/store/apps/details?id=com.eatoor`;
-      }
-      
-      // For iOS, use universal link or App Store link
-      if (deviceType === 'ios') {
-        return iosLink;
+    // Instagram specific links
+    if (isInstagram) {
+      if (deviceType === 'android') {
+        return {
+          primary: `intent://details?id=com.eatoor#Intent;scheme=market;action=android.intent.action.VIEW;end`,
+          fallback: androidLink,
+          direct: androidLink,
+          deepLink: 'market://details?id=com.eatoor'
+        };
+      } else if (deviceType === 'ios') {
+        return {
+          primary: iosLink,
+          fallback: iosLink,
+          direct: iosLink,
+          deepLink: 'itms-apps://apps.apple.com/in/app/eatoor/id6756539381'
+        };
       }
     }
     
-    // Default links
+    // Regular links
     if (deviceType === 'android') {
-      return androidLink;
+      return {
+        primary: androidLink,
+        fallback: androidLink,
+        direct: androidLink,
+        deepLink: 'market://details?id=com.eatoor'
+      };
     } else if (deviceType === 'ios') {
-      return iosLink;
+      return {
+        primary: iosLink,
+        fallback: iosLink,
+        direct: iosLink,
+        deepLink: 'itms-apps://apps.apple.com/in/app/eatoor/id6756539381'
+      };
     }
-    return '#';
+    
+    return { primary: '#', fallback: '#', direct: '#', deepLink: '#' };
   };
 
-  // Get fallback link for social media platforms
-  const getFallbackLink = () => {
+  // Main function to handle opening URL
+  const openAppStore = async () => {
+    const links = getAppStoreLinks();
     const deviceType = getDeviceType();
     
-    if (deviceType === 'android') {
-      return 'https://play.google.com/store/apps/details?id=com.eatoor';
-    } else if (deviceType === 'ios') {
-      return 'https://apps.apple.com/in/app/eatoor/id6756539381';
+    console.log('Attempting to open:', links);
+    console.log('Device type:', deviceType);
+    console.log('Is Instagram:', isInstagram);
+
+    if (isInstagram) {
+      // Instagram specific handling
+      if (deviceType === 'android') {
+        // Try multiple methods for Android Instagram
+        try {
+          // Method 1: Try deep link first
+          const deepLinkAnchor = document.createElement('a');
+          deepLinkAnchor.href = links.deepLink;
+          deepLinkAnchor.target = '_blank';
+          deepLinkAnchor.style.display = 'none';
+          document.body.appendChild(deepLinkAnchor);
+          deepLinkAnchor.click();
+          document.body.removeChild(deepLinkAnchor);
+          
+          // Method 2: Try intent after a short delay
+          setTimeout(() => {
+            const intentAnchor = document.createElement('a');
+            intentAnchor.href = links.primary;
+            intentAnchor.target = '_blank';
+            intentAnchor.style.display = 'none';
+            document.body.appendChild(intentAnchor);
+            intentAnchor.click();
+            document.body.removeChild(intentAnchor);
+          }, 300);
+          
+          // Method 3: Fallback to direct URL if nothing works
+          setTimeout(() => {
+            window.open(links.fallback, '_blank');
+          }, 800);
+          
+        } catch (error) {
+          console.error('Android Instagram navigation failed:', error);
+          // Ultimate fallback
+          window.open(links.fallback, '_blank');
+        }
+      } else if (deviceType === 'ios') {
+        // iOS Instagram handling
+        try {
+          // Try App Store link
+          const link = document.createElement('a');
+          link.href = links.primary;
+          link.target = '_blank';
+          link.style.display = 'none';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          
+          // Fallback for iOS
+          setTimeout(() => {
+            window.location.href = links.primary;
+          }, 500);
+          
+        } catch (error) {
+          console.error('iOS Instagram navigation failed:', error);
+          window.location.href = links.fallback;
+        }
+      }
+    } else {
+      // Non-Instagram handling
+      try {
+        // Try primary link
+        const link = document.createElement('a');
+        link.href = links.primary;
+        link.target = '_blank';
+        link.style.display = 'none';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // Fallback if primary doesn't work
+        setTimeout(() => {
+          if (!document.hidden) {
+            window.location.href = links.fallback;
+          }
+        }, 2000);
+      } catch (error) {
+        console.error('Navigation failed:', error);
+        window.location.href = links.fallback;
+      }
     }
-    return '#';
   };
 
   const handleContinue = async () => {
     setIsLoading(true);
     
-    // Show loader for at least 500ms
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    const link = getAppStoreLink();
-    const fallbackLink = getFallbackLink();
-    const deviceType = getDeviceType();
-    const socials = detectSocialMedia();
-    const isInAppBrowser = Object.values(socials).some(val => val === true);
-    
-    if (link !== '#') {
-      try {
-        // Special handling for Instagram
-        if (socials.instagram && deviceType === 'android') {
-          // Try intent first
-          const anchor = document.createElement('a');
-          anchor.href = link;
-          anchor.target = '_blank';
-          document.body.appendChild(anchor);
-          anchor.click();
-          document.body.removeChild(anchor);
-          
-          // Fallback to Play Store
-          setTimeout(() => {
-            window.location.href = fallbackLink;
-          }, 1500);
-          return;
-        }
-        
-        // Special handling for Facebook
-        if (socials.facebook && deviceType === 'android') {
-          // For Facebook, sometimes direct link works better
-          window.location.href = link;
-          
-          // Fallback if it doesn't work
-          setTimeout(() => {
-            if (!document.hidden) {
-              window.location.href = fallbackLink;
-            }
-          }, 2000);
-          return;
-        }
-        
-        // Special handling for TikTok, Twitter/X, Snapchat
-        if ((socials.tiktok || socials.twitter || socials.snapchat) && deviceType === 'android') {
-          // Try to open with intent
-          const anchor = document.createElement('a');
-          anchor.href = link;
-          anchor.target = '_blank';
-          document.body.appendChild(anchor);
-          anchor.click();
-          document.body.removeChild(anchor);
-          
-          // Fallback
-          setTimeout(() => {
-            window.location.href = fallbackLink;
-          }, 1500);
-          return;
-        }
-        
-        // For iOS and other platforms
-        if (isInAppBrowser && deviceType === 'ios') {
-          // Use a timeout to handle iOS in-app browsers
-          window.location.href = link;
-          
-          // If still in same tab after 3 seconds, try fallback
-          setTimeout(() => {
-            if (!document.hidden) {
-              window.location.href = fallbackLink;
-            }
-          }, 3000);
-          return;
-        }
-        
-        // Default navigation
-        window.location.href = link;
-        
-      } catch (error) {
-        console.error('Navigation error:', error);
-        // Final fallback
-        window.location.href = fallbackLink;
-      }
+    try {
+      await openAppStore();
+    } catch (error) {
+      console.error('Error in handleContinue:', error);
+      // Final fallback
+      const links = getAppStoreLinks();
+      window.open(links.fallback, '_blank');
     }
     
-    // Reset loading state after navigation attempt
+    // Reset loading state
     setTimeout(() => {
       setIsLoading(false);
     }, 3000);
@@ -262,7 +292,6 @@ const MobileBottomSheet = () => {
   // Don't render on desktop
   if (!isMobile) return null;
 
-  // Get social media name for personalized messaging
   const socialMediaName = getSocialMediaName();
   const isInAppBrowser = Object.values(detectSocialMedia()).some(val => val === true);
 
@@ -304,15 +333,16 @@ const MobileBottomSheet = () => {
               </div>
               
               <h3 className="bottom-screen-page__title">
-                {isInAppBrowser && socialMediaName 
-                  ? `Continue on ${socialMediaName} App` 
-                  : 'Continue on App'}
+                {isInstagram ? 'Open in App Store' : 
+                 (isInAppBrowser && socialMediaName ? `Continue on ${socialMediaName} App` : 'Continue on App')}
               </h3>
               
               <p className="bottom-screen-page__description">
-                {isInAppBrowser && socialMediaName 
-                  ? `Get the best experience on our mobile app` 
-                  : 'Get the best experience on our mobile app'}
+                {isInstagram 
+                  ? 'Download our app for the best experience' 
+                  : (isInAppBrowser && socialMediaName 
+                    ? `Get the best experience on our mobile app` 
+                    : 'Get the best experience on our mobile app')}
               </p>
 
               {/* Continue button with loader */}
@@ -324,19 +354,25 @@ const MobileBottomSheet = () => {
                 {isLoading ? (
                   <>
                     <span className="bottom-screen-page__spinner"></span>
-                    Opening App...
+                    Opening App Store...
                   </>
                 ) : (
                   <>
-                    {isInAppBrowser && socialMediaName 
-                      ? `Continue on ${socialMediaName}` 
-                      : 'Continue on App'}
+                    {isInstagram ? 'Open in App Store' :
+                     (isInAppBrowser && socialMediaName ? `Continue on ${socialMediaName}` : 'Continue on App')}
                     <svg className="bottom-screen-page__button-icon" width="18" height="18" viewBox="0 0 20 20" fill="none">
                       <path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
                   </>
                 )}
               </button>
+              
+              {/* Additional help text for Instagram */}
+              {isInstagram && (
+                <p className="bottom-screen-page__helper-text">
+                  ⚡ If the app store doesn't open, tap the three dots (•••) in the top right and select "Open in Safari/Chrome"
+                </p>
+              )}
             </div>
           </div>
         </div>
