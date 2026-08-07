@@ -801,6 +801,10 @@ class RestaurantDetailMenuView(APIView):
             processed_items = []
 
             for item in items:
+                # Process only available items
+                if not item.get("availability", False):
+                    continue
+
                 category = RestaurantCategory.objects.filter(id=item['category']).first()
                 item['category'] = category.category_name
                 if item.get("item_image"):
