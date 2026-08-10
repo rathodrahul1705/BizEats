@@ -813,7 +813,7 @@ class ApplyCouponOrder(APIView):
                 }, status=status.HTTP_400_BAD_REQUEST)
 
             # Check if coupon is valid
-            if not offer.is_valid():
+            if not offer.is_valid:
                 logger.warning("ApplyCouponOrder: Coupon expired/inactive: code=%s", coupon_code)
                 return Response({
                     "status": "error",
