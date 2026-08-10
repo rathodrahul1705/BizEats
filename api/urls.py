@@ -32,7 +32,7 @@ from api.offer.banner_views import get_active_banners
 
 router = DefaultRouter()
 router.register(r'categories', RestaurantCategoryViewSet)
-router.register(r'offers', OfferViewSet, basename='offer')
+router.register(r'offer', OfferViewSet, basename='offer')
 router.register(r'restaurants', views.RestaurantListView, basename='restaurant')
 
 addon_group_router = DefaultRouter()
