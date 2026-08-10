@@ -120,10 +120,10 @@ const API_ENDPOINTS = {
   },
 
   OFFER: {
-    CREATE: `${BASE_URL}/offers/`,
-    FETCH: (restaurant_id) => `${BASE_URL}/offers/?restaurant_id=${restaurant_id}`,
-    DELETE: (coupon_id) => `${BASE_URL}/offers/${coupon_id}/`,
-    UPDATE: (coupon_id) => `${BASE_URL}/offers/${coupon_id}/`
+    CREATE: `${BASE_URL}/offer/`,
+    FETCH: (restaurant_id) => `${BASE_URL}/offer/?restaurant_id=${restaurant_id}`,
+    DELETE: (coupon_id) => `${BASE_URL}/offer/${coupon_id}/`,
+    UPDATE: (coupon_id) => `${BASE_URL}/offer/${coupon_id}/`
   },
 
   PROFILE: {
