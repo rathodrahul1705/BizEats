@@ -46,7 +46,7 @@ def get_dummy_banners():
             "id": 7,
             "title": "🇮🇳 Buy 1 Get 1 Free",
             "subtitle": "Celebrate Independence Day with Double the Food! 🎉",
-            "image_url": "https://eatoorprod.s3.eu-north-1.amazonaws.com/uploads/buyonegetonefree_1.png",
+            "image_url": "https://eatoorprod.s3.eu-north-1.amazonaws.com/uploads/buy_one_get_one_free_v3.png",
             "theme": {
                 "bg_color": "#FF9933",
                 "text_color": "#FFFFFF",
