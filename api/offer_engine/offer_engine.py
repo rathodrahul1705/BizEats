@@ -42,38 +42,50 @@ def is_banner_valid(banner):
 def get_dummy_banners():
     """Static banner data (can be moved to DB later)"""
     return [
-    {
-        "id": 7,
-        "title": "Buy 1 Get 1 Free",
-        "subtitle": "Double the food, same price 😍",
-        "image_url": "https://eatoorprod.s3.eu-north-1.amazonaws.com/uploads/buyonegetonefree_1.png",
-        "theme": {
-            "bg_color": "#008080",
-            "text_color": "#FFFFFF",
-            "icon_color": "#9C27B0"
-        },
-        "offer": {
-            "type": "bogo_offer",
-            "banner_type": "special",
-            "category": "BOGO",
-            "discount": "Buy 1 Get 1",
-            "code": "BOGOFREE",
-            "api_params": {
-                "offer_type": "BOGO",
-                "sort_by": "item_price"
-            }
-        },
-        "validity": {
-            "from": "2026-08-04T00:00:00",
-            "till": "2026-08-15T00:00:00"
-        },
-        "terms": [
-            "Applicable on selected items only"
-        ],
-        "order": 3,
-        "is_active": True
-    }
-]
+        {
+            "id": 7,
+            "title": "🇮🇳 Buy 1 Get 1 Free",
+            "subtitle": "Celebrate Independence Day with Double the Food! 🇮🇳",
+            "image_url": "https://eatoorprod.s3.eu-north-1.amazonaws.com/uploads/buyonegetonefree_1.png",
+            "theme": {
+                "bg_color": "#FF9933",
+                "text_color": "#FFFFFF",
+                "icon_color": "#138808",
+                "accent_color": "#000080",
+                "border_color": "#FFFFFF",
+                "gradient": {
+                    "type": "linear",
+                    "colors": [
+                        "#FF9933",
+                        "#FFFFFF",
+                        "#138808"
+                    ],
+                    "direction": "horizontal"
+                }
+            },
+            "offer": {
+                "type": "bogo_offer",
+                "banner_type": "independence_day_special",
+                "category": "BOGO",
+                "discount": "Buy 1 Get 1",
+                "code": "BOGOFREE",
+                "api_params": {
+                    "offer_type": "BOGO",
+                    "sort_by": "item_price"
+                }
+            },
+            "validity": {
+                "from": "2026-08-04T00:00:00",
+                "till": "2026-08-15T23:59:59"
+            },
+            "terms": [
+                "Applicable on selected items only",
+                "Independence Day Special 🇮🇳"
+            ],
+            "order": 3,
+            "is_active": true
+        }
+    ]
 
 def get_active_banners():
     """Return only active + valid banners"""
