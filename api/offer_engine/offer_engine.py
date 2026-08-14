@@ -44,28 +44,17 @@ def get_dummy_banners():
     return [
         {
             "id": 7,
-            "title": "🇮🇳 Buy 1 Get 1 Free",
-            "subtitle": "Celebrate Independence Day with Double the Food! 🇮🇳",
+            "title": "Buy 1 Get 1 Free",
+            "subtitle": "Double the food, same price 😍🇮🇳",
             "image_url": "https://eatoorprod.s3.eu-north-1.amazonaws.com/uploads/buyonegetonefree_1.png",
             "theme": {
                 "bg_color": "#FF9933",
                 "text_color": "#FFFFFF",
-                "icon_color": "#138808",
-                "accent_color": "#000080",
-                "border_color": "#FFFFFF",
-                "gradient": {
-                    "type": "linear",
-                    "colors": [
-                        "#FF9933",
-                        "#FFFFFF",
-                        "#138808"
-                    ],
-                    "direction": "horizontal"
-                }
+                "icon_color": "#138808"
             },
             "offer": {
                 "type": "bogo_offer",
-                "banner_type": "independence_day_special",
+                "banner_type": "special",
                 "category": "BOGO",
                 "discount": "Buy 1 Get 1",
                 "code": "BOGOFREE",
@@ -76,14 +65,13 @@ def get_dummy_banners():
             },
             "validity": {
                 "from": "2026-08-04T00:00:00",
-                "till": "2026-08-15T23:59:59"
+                "till": "2026-08-15T00:00:00"
             },
             "terms": [
-                "Applicable on selected items only",
-                "Independence Day Special 🇮🇳"
+                "Applicable on selected items only"
             ],
             "order": 3,
-            "is_active": true
+            "is_active": True
         }
     ]
 
