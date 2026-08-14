@@ -50,7 +50,7 @@ def get_dummy_banners():
             "theme": {
                 "bg_color": "#FF9933",
                 "text_color": "#FFFFFF",
-                "icon_color": "#138808"
+                "icon_color": "#000080"
             },
             "offer": {
                 "type": "bogo_offer",
