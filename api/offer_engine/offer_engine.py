@@ -46,7 +46,7 @@ def get_dummy_banners():
             "id": 7,
             "title": "Buy 1 Get 1 FREE",
             "subtitle": "Double the cravings. Double the happiness! 😍",
-            "image_url": "https://eatoorprod.s3.eu-north-1.amazonaws.com/uploads/b1g1_cake_v1.jpgcom",
+            "image_url": "https://eatoorprod.s3.eu-north-1.amazonaws.com/uploads/b1g1_cake_v1.jpg",
             "theme": {
                 "bg_color": "#E65C00",
                 "text_color": "#FFFFFF",
