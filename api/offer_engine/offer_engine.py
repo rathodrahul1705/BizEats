@@ -44,30 +44,29 @@ def get_dummy_banners():
     return [
         {
             "id": 7,
-            "title": "🇮🇳 Buy 1 Get 1 Free",
-            "subtitle": "Celebrate Independence Day with Double the Food! 🎉",
+            "title": "Buy 1 Get 1 FREE",
+            "subtitle": "Double the cravings. Double the happiness! 😍",
             "image_url": "https://eatoorprod.s3.eu-north-1.amazonaws.com/uploads/buy_one_get_one_free_v3.png",
             "theme": {
-                "bg_color": "#FF9933",
+                "bg_color": "#E65C00",
                 "text_color": "#FFFFFF",
-                "icon_color": "#000080",
-                "accent_color": "#138808",
-                "secondary_color": "#FFFFFF",
+                "icon_color": "#FFFFFF",
+                "accent_color": "#FFD166",
+                "secondary_color": "#3D1A00",
                 "gradient_colors": [
-                    "#FF9933",
-                    "#FFFFFF",
-                    "#138808"
+                    "#E65C00",
+                    "#FF814E"
                 ],
                 "gradient_direction": "horizontal"
             },
             "event": {
-                "enabled": True,
-                "type": "independence_day",
-                "name": "Independence Day",
-                "short_name": "15 August",
-                "icon": "🇮🇳",
+                "enabled": False,
+                "type": "regular",
+                "name": "Regular Offer",
+                "short_name": "Special Offer",
+                "icon": "🔥",
                 "year": 2026,
-                "theme": "tricolor"
+                "theme": "default"
             },
             "offer": {
                 "type": "bogo_offer",
@@ -81,12 +80,13 @@ def get_dummy_banners():
                 }
             },
             "validity": {
-                "from": "2026-08-04T00:00:00",
-                "till": "2026-08-15T00:00:00"
+                "from": "2026-08-16T00:00:00",
+                "till": "2026-09-16T00:00:00"
             },
             "terms": [
                 "Applicable on selected items only",
-                "Independence Day Special 🇮🇳"
+                "Buy 1 and Get 1 FREE",
+                "Terms and conditions apply"
             ],
             "order": 3,
             "is_active": True
@@ -97,7 +97,6 @@ def get_active_banners():
     """Return only active + valid banners"""
 
     banners = get_dummy_banners()
-
     active_banners = [b for b in banners if is_banner_valid(b)]
 
     # sort by order
