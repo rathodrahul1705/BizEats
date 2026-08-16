@@ -94,7 +94,7 @@ class TrackOrder(APIView):
 
                 if order.coupon_id:
                     try:
-                        coupon = Coupon.objects.get(id=order.coupon_id)
+                        coupon = OfferDetail.objects.get(id=order.coupon_id)
                         coupon_code = coupon.code
                         coupon_code_text = f"Discount coupon ({coupon_code})"
                     except Coupon.DoesNotExist:
@@ -196,12 +196,15 @@ class RestaurantOrders(APIView):
                     {"status": "error", "message": str(ve)},
                     status=status.HTTP_400_BAD_REQUEST
                 )
+            
+            print("start_date==",start_date)
+            print("end_date==",end_date)
 
             # Filter orders
             orders_qs = Order.objects.filter(
                 restaurant_id=restaurant_id,
-                created_at__gte=start_date,
-                created_at__lte=end_date
+                order_date__gte=start_date,
+                order_date__lt=end_date + timedelta(days=1)
             ).exclude(status=9)
 
             # ----- Compute summary (excluding In Progress) -----
@@ -771,6 +774,115 @@ class MarkAsPaid(APIView):
                 "message": str(e)
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+# @method_decorator(csrf_exempt, name='dispatch')
+# class ApplyCouponOrder(APIView):
+#     def post(self, request, *args, **kwargs):
+#         logger.info("ApplyCouponOrder called with data: %s", request.data)
+#         try:
+#             coupon_code = request.data.get('code')
+#             order_amount = request.data.get('order_amount')
+#             restaurant_id = request.data.get('restaurant_id')
+#             user_id = request.data.get('user_id')
+
+#             # Validate required fields
+#             if not all([coupon_code, order_amount, restaurant_id, user_id]):
+#                 logger.warning("ApplyCouponOrder missing required fields")
+#                 return Response({
+#                     "status": "error",
+#                     "message": "All fields (code, order_amount, restaurant_id, user_id) are required."
+#                 }, status=status.HTTP_400_BAD_REQUEST)
+
+#             try:
+#                 order_amount = float(order_amount)
+#             except (ValueError, TypeError):
+#                 logger.warning("ApplyCouponOrder invalid order_amount: %s", order_amount)
+#                 return Response({
+#                     "status": "error",
+#                     "message": "Invalid order amount."
+#                 }, status=status.HTTP_400_BAD_REQUEST)
+
+#             # Get the coupon/offer
+#             try:
+#                 offer = OfferDetail.objects.get(
+#                     code=coupon_code,
+#                     offer_type='coupon_code',
+#                     is_active=True
+#                 )
+#             except OfferDetail.DoesNotExist:
+#                 logger.warning("ApplyCouponOrder: Coupon not found or inactive: code=%s", coupon_code)
+#                 return Response({
+#                     "status": "error",
+#                     "message": "Invalid coupon code or coupon not active."
+#                 }, status=status.HTTP_400_BAD_REQUEST)
+
+#             # Check if coupon is valid
+#             if not offer.is_valid:
+#                 logger.warning("ApplyCouponOrder: Coupon expired/inactive: code=%s", coupon_code)
+#                 return Response({
+#                     "status": "error",
+#                     "message": "Coupon is either inactive or expired."
+#                 }, status=status.HTTP_400_BAD_REQUEST)
+
+#             # Check if coupon is valid for this restaurant
+#             if offer.restaurant and str(offer.restaurant.restaurant_id) != str(restaurant_id):
+#                 logger.warning("ApplyCouponOrder: Coupon not valid for restaurant: code=%s, restaurant=%s", coupon_code, restaurant_id)
+#                 return Response({
+#                     "status": "error",
+#                     "message": "This coupon is not valid for the selected restaurant."
+#                 }, status=status.HTTP_400_BAD_REQUEST)
+
+#             # Check minimum order amount
+#             if offer.minimum_order_amount and order_amount < float(offer.minimum_order_amount):
+#                 logger.warning("ApplyCouponOrder: Order amount below minimum: min=%s, actual=%s", offer.minimum_order_amount, order_amount)
+#                 return Response({
+#                     "status": "error",
+#                     "message": f"Minimum item amount should be ₹{offer.minimum_order_amount} to apply this coupon."
+#                 }, status=status.HTTP_400_BAD_REQUEST)
+
+#             # Calculate discount
+#             discount_amount = 0
+#             if offer.discount_type and offer.discount_value:
+#                 discount_value = float(offer.discount_value) if isinstance(offer.discount_value, Decimal) else offer.discount_value
+                
+#                 if offer.discount_type == 'percentage':
+#                     discount_amount = (discount_value / 100) * order_amount
+#                 else:  # fixed amount
+#                     discount_amount = discount_value
+
+#             # Ensure discount doesn't exceed order amount
+#             discount_amount = min(discount_amount, order_amount)
+#             final_total_amount = max(order_amount - discount_amount, 0)
+
+#             # Check for free delivery offers
+#             free_delivery = False
+#             if offer.offer_type == 'free_delivery':
+#                 free_delivery = True
+
+#             logger.info("ApplyCouponOrder success: code=%s, discount=%s, final_total=%s", coupon_code, discount_amount, final_total_amount)
+#             return Response({
+#                 "status": "success",
+#                 "message": "Coupon applied successfully!",
+#                 "discount_amount": round(discount_amount, 2),
+#                 "final_total_amount": round(final_total_amount, 2),
+#                 "free_delivery": free_delivery,
+#                 "offer_type": offer.offer_type,
+#                 "coupon_details": {
+#                     "code": offer.code,
+#                     "discount_type": offer.discount_type,
+#                     "discount_value": str(offer.discount_value) if offer.discount_value else None,
+#                     "minimum_order_amount": str(offer.minimum_order_amount) if offer.minimum_order_amount else None,
+#                 }
+#             }, status=status.HTTP_200_OK)
+
+#         except Exception as e:
+#             logger.exception("ApplyCouponOrder failed: %s", str(e))
+#             return Response({
+#                 "status": "error",
+#                 "message": "Something went wrong while applying the coupon.",
+#                 "error_details": str(e)
+#             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
 @method_decorator(csrf_exempt, name='dispatch')
 class ApplyCouponOrder(APIView):
     def post(self, request, *args, **kwargs):
@@ -781,12 +893,12 @@ class ApplyCouponOrder(APIView):
             restaurant_id = request.data.get('restaurant_id')
             user_id = request.data.get('user_id')
 
-            # Validate required fields
-            if not all([coupon_code, order_amount, restaurant_id, user_id]):
+            # Validate required fields (restaurant_id is now optional)
+            if not all([coupon_code, order_amount, user_id]):
                 logger.warning("ApplyCouponOrder missing required fields")
                 return Response({
                     "status": "error",
-                    "message": "All fields (code, order_amount, restaurant_id, user_id) are required."
+                    "message": "All fields (code, order_amount, user_id) are required. restaurant_id is optional."
                 }, status=status.HTTP_400_BAD_REQUEST)
 
             try:
@@ -820,13 +932,45 @@ class ApplyCouponOrder(APIView):
                     "message": "Coupon is either inactive or expired."
                 }, status=status.HTTP_400_BAD_REQUEST)
 
-            # Check if coupon is valid for this restaurant
-            if offer.restaurant and str(offer.restaurant.restaurant_id) != str(restaurant_id):
-                logger.warning("ApplyCouponOrder: Coupon not valid for restaurant: code=%s, restaurant=%s", coupon_code, restaurant_id)
-                return Response({
-                    "status": "error",
-                    "message": "This coupon is not valid for the selected restaurant."
-                }, status=status.HTTP_400_BAD_REQUEST)
+            # If restaurant_id is provided, validate the coupon for that restaurant
+            if restaurant_id:
+                if offer.restaurant:
+
+                    # Check if coupon is valid for this specific restaurant
+                    if str(offer.restaurant.restaurant_id) != str(restaurant_id):
+                        logger.warning("ApplyCouponOrder: Coupon not valid for restaurant: code=%s, restaurant=%s", coupon_code, restaurant_id)
+                        return Response({
+                            "status": "error",
+                            "message": "This coupon is not valid for the selected restaurant."
+                        }, status=status.HTTP_400_BAD_REQUEST)
+                else:
+                    # Coupon has no restaurant assigned (global coupon)
+                    # Check if filter_type is 'specific_restaurant' but no restaurant assigned
+                    if getattr(offer, 'filter_type', None) == 'specific_restaurant':
+                        logger.warning("ApplyCouponOrder: Coupon marked as specific_restaurant but no restaurant assigned: code=%s", coupon_code)
+                        return Response({
+                            "status": "error",
+                            "message": "This coupon is configured for specific restaurants but no restaurant is assigned."
+                        }, status=status.HTTP_400_BAD_REQUEST)
+                    # If filter_type is not 'specific_restaurant', it's a global coupon, so it's valid
+                    logger.info("ApplyCouponOrder: Global coupon applied for restaurant: %s", restaurant_id)
+            else:
+                # No restaurant_id provided
+                # If coupon has a restaurant assigned, it cannot be used without restaurant_id
+                if offer.restaurant:
+                    logger.warning("ApplyCouponOrder: Restaurant-specific coupon used without restaurant_id: code=%s", coupon_code)
+                    return Response({
+                        "status": "error",
+                        "message": "This coupon is restaurant-specific. Please provide restaurant_id."
+                    }, status=status.HTTP_400_BAD_REQUEST)
+                
+                # If filter_type is 'specific_restaurant' but no restaurant assigned (edge case)
+                if getattr(offer, 'filter_type', None) == 'specific_restaurant' and not offer.restaurant:
+                    logger.warning("ApplyCouponOrder: Coupon has specific_restaurant filter but no restaurant: code=%s", coupon_code)
+                    return Response({
+                        "status": "error",
+                        "message": "This coupon is configured incorrectly. Please contact support."
+                    }, status=status.HTTP_400_BAD_REQUEST)
 
             # Check minimum order amount
             if offer.minimum_order_amount and order_amount < float(offer.minimum_order_amount):
@@ -864,10 +1008,13 @@ class ApplyCouponOrder(APIView):
                 "free_delivery": free_delivery,
                 "offer_type": offer.offer_type,
                 "coupon_details": {
+                    "id": offer.id,
                     "code": offer.code,
                     "discount_type": offer.discount_type,
                     "discount_value": str(offer.discount_value) if offer.discount_value else None,
                     "minimum_order_amount": str(offer.minimum_order_amount) if offer.minimum_order_amount else None,
+                    "restaurant": str(offer.restaurant.restaurant_id) if offer.restaurant else None,
+                    "filter_type": getattr(offer, 'filter_type', None),
                 }
             }, status=status.HTTP_200_OK)
 

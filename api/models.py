@@ -459,7 +459,15 @@ class Order(models.Model):
     created_at = models.DateTimeField(default=now)
     updated_at = models.DateTimeField(auto_now=True)
     invoice_path = models.ImageField(upload_to='order_invoices/', blank=True, null=True)
-    coupon = models.ForeignKey('Coupon', on_delete=models.SET_NULL, null=True, blank=True, related_name='orders')
+    # coupon = models.ForeignKey('Coupon', on_delete=models.SET_NULL, null=True, blank=True, related_name='orders')
+    coupon = models.ForeignKey(
+        'OfferDetail',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='orders'
+    )
+    
     coupon_discount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, help_text="Discount amount from coupon")
 
     payment_notifications_sent = models.BooleanField(
@@ -991,6 +999,7 @@ class OfferDetail(models.Model):
             self.minimum_order_amount = 0
             
         super().save(*args, **kwargs)
+        
 class FavouriteKitchen(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     restaurant = models.ForeignKey(RestaurantMaster, on_delete=models.CASCADE)
