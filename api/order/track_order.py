@@ -778,22 +778,32 @@ class MarkAsPaid(APIView):
 class ApplyCouponOrder(APIView):
 
     def post(self, request, *args, **kwargs):
-        logger.info("ApplyCouponOrder called with data: %s", request.data)
-
+        logger.info("=" * 80)
+        logger.info("ApplyCouponOrder START - Request ID: %s", request.headers.get('X-Request-ID', 'N/A'))
+        logger.info("Request data: %s", request.data)
+        logger.info("Request user: %s", request.user.id if request.user.is_authenticated else 'Anonymous')
+        
         try:
+            # Extract parameters
             coupon_code = request.data.get("code")
             order_amount = request.data.get("order_amount")
             restaurant_id = request.data.get("restaurant_id")
             user_id = request.data.get("user_id")
-
             offer_type = request.data.get("offer_type")
             sub_filter = request.data.get("sub_filter")
             discount_type = request.data.get("discount_type")
+            
+            logger.info("Extracted parameters - coupon_code: %s, order_amount: %s, restaurant_id: %s, user_id: %s", 
+                       coupon_code, order_amount, restaurant_id, user_id)
+            logger.info("Optional parameters - offer_type: %s, sub_filter: %s, discount_type: %s", 
+                       offer_type, sub_filter, discount_type)
 
             # ---------------------------------------------------------
             # 1. Validate required parameters
             # ---------------------------------------------------------
             if not coupon_code or not order_amount or not user_id:
+                logger.warning("Missing required parameters - coupon_code: %s, order_amount: %s, user_id: %s", 
+                              coupon_code, order_amount, user_id)
                 return Response(
                     {
                         "status": "error",
@@ -809,7 +819,9 @@ class ApplyCouponOrder(APIView):
             # ---------------------------------------------------------
             try:
                 order_amount = Decimal(str(order_amount))
-            except (InvalidOperation, TypeError, ValueError):
+                logger.debug("Order amount converted to Decimal: %s", order_amount)
+            except (InvalidOperation, TypeError, ValueError) as e:
+                logger.error("Invalid order amount conversion error: %s, value: %s", str(e), order_amount)
                 return Response(
                     {
                         "status": "error",
@@ -819,6 +831,7 @@ class ApplyCouponOrder(APIView):
                 )
 
             if order_amount <= 0:
+                logger.warning("Order amount is <= 0: %s", order_amount)
                 return Response(
                     {
                         "status": "error",
@@ -834,24 +847,28 @@ class ApplyCouponOrder(APIView):
                 "code": coupon_code,
                 "is_active": True,
             }
+            logger.debug("Initial offer filters: %s", offer_filters)
 
             # offer_type is supplied by frontend
             if offer_type:
                 offer_filters["offer_type"] = offer_type
+                logger.debug("Added offer_type filter: %s", offer_type)
 
             # sub_filter is optional
             if sub_filter:
                 offer_filters["sub_filter"] = sub_filter
+                logger.debug("Added sub_filter filter: %s", sub_filter)
 
             # discount_type is optional
             if discount_type:
                 offer_filters["discount_type"] = discount_type
+                logger.debug("Added discount_type filter: %s", discount_type)
 
-            offer = OfferDetail.objects.filter(
-                **offer_filters
-            ).first()
+            logger.info("Querying OfferDetail with filters: %s", offer_filters)
+            offer = OfferDetail.objects.filter(**offer_filters).first()
 
             if not offer:
+                logger.warning("No active coupon found with code: %s", coupon_code)
                 return Response(
                     {
                         "status": "error",
@@ -859,11 +876,16 @@ class ApplyCouponOrder(APIView):
                     },
                     status=status.HTTP_400_BAD_REQUEST,
                 )
+            
+            logger.info("Coupon found - ID: %s, Code: %s, Type: %s", 
+                       offer.id, offer.code, offer.offer_type)
 
             # ---------------------------------------------------------
             # 4. Check offer validity
             # ---------------------------------------------------------
             if not offer.is_valid:
+                logger.warning("Coupon is invalid/expired - ID: %s, Code: %s, is_valid: %s", 
+                              offer.id, offer.code, offer.is_valid)
                 return Response(
                     {
                         "status": "error",
@@ -871,18 +893,23 @@ class ApplyCouponOrder(APIView):
                     },
                     status=status.HTTP_400_BAD_REQUEST,
                 )
+            
+            logger.info("Coupon validity check passed for ID: %s", offer.id)
 
             # ---------------------------------------------------------
             # 5. Validate restaurant
             # ---------------------------------------------------------
             if restaurant_id:
-
+                logger.info("Validating restaurant_id: %s for coupon ID: %s", restaurant_id, offer.id)
+                
                 # Coupon belongs to a specific restaurant
                 if offer.restaurant:
-
-                    if str(offer.restaurant.restaurant_id) != str(
-                        restaurant_id
-                    ):
+                    logger.debug("Coupon is restaurant-specific. Offer restaurant: %s, Request restaurant: %s", 
+                                offer.restaurant.restaurant_id, restaurant_id)
+                    
+                    if str(offer.restaurant.restaurant_id) != str(restaurant_id):
+                        logger.warning("Restaurant mismatch - Offer: %s, Request: %s", 
+                                      offer.restaurant.restaurant_id, restaurant_id)
                         return Response(
                             {
                                 "status": "error",
@@ -893,11 +920,13 @@ class ApplyCouponOrder(APIView):
                             },
                             status=status.HTTP_400_BAD_REQUEST,
                         )
+                    logger.info("Restaurant validation successful")
 
                 # Coupon is global
                 else:
-
                     if getattr(offer, "filter_type", None) == "specific_restaurant":
+                        logger.error("Coupon configured for specific_restaurant but no restaurant assigned - ID: %s", 
+                                   offer.id)
                         return Response(
                             {
                                 "status": "error",
@@ -909,11 +938,14 @@ class ApplyCouponOrder(APIView):
                             },
                             status=status.HTTP_400_BAD_REQUEST,
                         )
+                    logger.info("Global coupon validation successful")
 
             else:
-
+                logger.info("No restaurant_id provided. Checking if coupon is restaurant-specific...")
+                
                 # Restaurant-specific coupon requires restaurant_id
                 if offer.restaurant:
+                    logger.warning("Restaurant-specific coupon %s requires restaurant_id but none provided", offer.id)
                     return Response(
                         {
                             "status": "error",
@@ -925,10 +957,9 @@ class ApplyCouponOrder(APIView):
                         status=status.HTTP_400_BAD_REQUEST,
                     )
 
-                if (
-                    getattr(offer, "filter_type", None)
-                    == "specific_restaurant"
-                ):
+                if getattr(offer, "filter_type", None) == "specific_restaurant":
+                    logger.error("Coupon configured for specific_restaurant but no restaurant assigned - ID: %s", 
+                               offer.id)
                     return Response(
                         {
                             "status": "error",
@@ -939,6 +970,8 @@ class ApplyCouponOrder(APIView):
                         },
                         status=status.HTTP_400_BAD_REQUEST,
                     )
+                
+                logger.info("No restaurant validation needed for coupon ID: %s", offer.id)
 
             # ---------------------------------------------------------
             # 6. Check minimum order amount
@@ -948,11 +981,12 @@ class ApplyCouponOrder(APIView):
                 if offer.minimum_order_amount
                 else Decimal("0")
             )
+            
+            logger.debug("Minimum order amount: %s, Order amount: %s", minimum_order_amount, order_amount)
 
-            if (
-                minimum_order_amount > 0
-                and order_amount < minimum_order_amount
-            ):
+            if minimum_order_amount > 0 and order_amount < minimum_order_amount:
+                logger.warning("Order amount %s below minimum %s for coupon %s", 
+                              order_amount, minimum_order_amount, offer.id)
                 return Response(
                     {
                         "status": "error",
@@ -963,51 +997,63 @@ class ApplyCouponOrder(APIView):
                     },
                     status=status.HTTP_400_BAD_REQUEST,
                 )
+            
+            logger.info("Minimum order amount check passed")
 
             # ---------------------------------------------------------
             # 7. Calculate discount
             # ---------------------------------------------------------
             discount_amount = Decimal("0")
-
             offer_discount_type = offer.discount_type
             offer_discount_value = offer.discount_value
+            
+            logger.info("Calculating discount - Type: %s, Value: %s", 
+                       offer_discount_type, offer_discount_value)
 
             if offer_discount_value:
                 discount_value = Decimal(str(offer_discount_value))
 
                 # Percentage discount
                 if offer_discount_type == "percentage":
-
-                    discount_amount = (
-                        order_amount * discount_value / Decimal("100")
-                    )
+                    discount_amount = order_amount * discount_value / Decimal("100")
+                    logger.debug("Percentage discount calculation - order: %s, percentage: %s, discount: %s", 
+                                order_amount, discount_value, discount_amount)
 
                 # Fixed discount
                 elif offer_discount_type in ["fixed", "fixed_amount"]:
-
                     discount_amount = discount_value
+                    logger.debug("Fixed discount calculation - discount: %s", discount_amount)
+            else:
+                logger.debug("No discount value provided for coupon %s", offer.id)
 
             # ---------------------------------------------------------
             # 8. Discount cannot exceed order amount
             # ---------------------------------------------------------
-            discount_amount = min(
-                discount_amount,
-                order_amount
-            )
+            original_discount = discount_amount
+            discount_amount = min(discount_amount, order_amount)
+            
+            if original_discount != discount_amount:
+                logger.info("Discount capped - original: %s, capped: %s, order_amount: %s", 
+                           original_discount, discount_amount, order_amount)
 
-            final_total_amount = max(
-                order_amount - discount_amount,
-                Decimal("0")
-            )
+            final_total_amount = max(order_amount - discount_amount, Decimal("0"))
+            logger.info("Final calculation - order: %s, discount: %s, final: %s", 
+                       order_amount, discount_amount, final_total_amount)
 
             # ---------------------------------------------------------
             # 9. Free delivery
             # ---------------------------------------------------------
             free_delivery = offer.offer_type == "free_delivery"
+            if free_delivery:
+                logger.info("Free delivery applied for coupon %s", offer.id)
 
             # ---------------------------------------------------------
             # 10. Response
             # ---------------------------------------------------------
+            logger.info("Coupon applied successfully - User: %s, Coupon: %s, Final amount: %s", 
+                       user_id, coupon_code, final_total_amount)
+            logger.info("=" * 80)
+
             return Response(
                 {
                     "status": "success",
@@ -1020,11 +1066,7 @@ class ApplyCouponOrder(APIView):
                     "free_delivery": free_delivery,
 
                     "offer_type": offer.offer_type,
-                    "sub_filter": getattr(
-                        offer,
-                        "sub_filter",
-                        None
-                    ),
+                    "sub_filter": getattr(offer, "sub_filter", None),
                     "discount_type": offer.discount_type,
 
                     "coupon_details": {
@@ -1032,11 +1074,7 @@ class ApplyCouponOrder(APIView):
                         "code": offer.code,
 
                         "offer_type": offer.offer_type,
-                        "sub_filter": getattr(
-                            offer,
-                            "sub_filter",
-                            None
-                        ),
+                        "sub_filter": getattr(offer, "sub_filter", None),
 
                         "discount_type": offer.discount_type,
                         "discount_value": (
@@ -1057,21 +1095,19 @@ class ApplyCouponOrder(APIView):
                             else None
                         ),
 
-                        "filter_type": getattr(
-                            offer,
-                            "filter_type",
-                            None
-                        ),
+                        "filter_type": getattr(offer, "filter_type", None),
                     },
                 },
                 status=status.HTTP_200_OK,
             )
 
         except Exception as e:
-            logger.exception(
-                "ApplyCouponOrder failed: %s",
-                str(e)
-            )
+            logger.exception("=" * 80)
+            logger.exception("ApplyCouponOrder FAILED for user: %s, coupon: %s", 
+                           request.data.get('user_id'), request.data.get('code'))
+            logger.exception("Exception details: %s", str(e))
+            logger.exception("Stack trace:")
+            logger.exception("=" * 80)
 
             return Response(
                 {
