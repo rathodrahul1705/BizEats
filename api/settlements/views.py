@@ -339,6 +339,7 @@ class SettlementTransactionsView(APIView):
                 gross_sale=Coalesce(Sum('total_amount'), Value(0.00, output_field=DecimalField())),
                 total_delivery_fee=Coalesce(Sum('delivery_fee'), Value(0.00, output_field=DecimalField())),
                 total_tax=Coalesce(Sum('tax'), Value(0.00, output_field=DecimalField())),
+                total_discount=Coalesce(Sum('coupon_discount'), Value(0.00, output_field=DecimalField())),  # NEW FIELD
             )
             .order_by('day')
         )
@@ -359,6 +360,7 @@ class SettlementTransactionsView(APIView):
                 'eatoor_commission': round(commission, 2),
                 'restaurant_net_pay': round(net, 2),
                 'average_order_value': round(gross / item['total_orders'], 2) if item['total_orders'] > 0 else 0,
+                'total_discount': round(item['total_discount'] or 0, 2),  # NEW FIELD
             })
 
         # Sorting
@@ -370,6 +372,7 @@ class SettlementTransactionsView(APIView):
             'total_orders': 'total_orders',
             'gross_sale': 'gross_sale',
             'restaurant_net_pay': 'restaurant_net_pay',
+            'total_discount': 'total_discount',  # NEW FIELD - Optional sorting by discount
         }
         sort_key = field_map.get(sort_by, 'date')
         day_list.sort(key=lambda x: x[sort_key], reverse=reverse)
@@ -407,6 +410,49 @@ class SettlementTransactionsView(APIView):
         }
         logger.info(f"Transactions response sent for restaurant {restaurant.restaurant_id}")
         return Response(response_data, status=status.HTTP_200_OK)
+
+    def compute_summary(orders_qs):
+        """
+        Compute overall totals for the orders queryset
+        """
+        from django.db.models import Sum, Count, Coalesce, Value, DecimalField
+        
+        # Get the aggregated values
+        summary = orders_qs.aggregate(
+            total_orders=Count('id'),
+            item_gross_sale=Coalesce(Sum('subtotal'), Value(0.00, output_field=DecimalField())),
+            gross_sale=Coalesce(Sum('total_amount'), Value(0.00, output_field=DecimalField())),
+            total_delivery_fee=Coalesce(Sum('delivery_fee'), Value(0.00, output_field=DecimalField())),
+            tax=Coalesce(Sum('tax'), Value(0.00, output_field=DecimalField())),
+            total_discount=Coalesce(Sum('coupon_discount'), Value(0.00, output_field=DecimalField())),  # NEW FIELD
+        )
+        
+        # Extract values with defaults
+        total_orders = summary['total_orders'] or 0
+        item_gross_sale = summary['item_gross_sale'] or Decimal('0.00')
+        gross_sale = summary['gross_sale'] or Decimal('0.00')
+        total_delivery_fee = summary['total_delivery_fee'] or Decimal('0.00')
+        tax = summary['tax'] or Decimal('0.00')
+        total_discount = summary['total_discount'] or Decimal('0.00')  # NEW FIELD
+        
+        # Calculate commission and net pay
+        eatoor_commission = item_gross_sale * COMMISSION_RATE
+        restaurant_net_pay = item_gross_sale - eatoor_commission
+        
+        # Calculate average order value
+        average_order_value = round(gross_sale / total_orders, 2) if total_orders > 0 else Decimal('0.00')
+        
+        return {
+            'total_orders': total_orders,
+            'item_gross_sale': round(item_gross_sale, 2),
+            'gross_sale': round(gross_sale, 2),
+            'total_delivery_fee': round(total_delivery_fee, 2),
+            'tax': round(tax, 2),
+            'total_discount': round(total_discount, 2),  # NEW FIELD
+            'eatoor_commission': round(eatoor_commission, 2),
+            'restaurant_net_pay': round(restaurant_net_pay, 2),
+            'average_order_value': average_order_value,
+        }
 
 # ---------- Export View ----------
 class SettlementExportView(APIView):

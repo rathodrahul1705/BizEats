@@ -139,6 +139,7 @@ class DayWiseSummarySerializer(serializers.Serializer):
     eatoor_commission = serializers.DecimalField(max_digits=12, decimal_places=2)
     restaurant_net_pay = serializers.DecimalField(max_digits=12, decimal_places=2)
     average_order_value = serializers.DecimalField(max_digits=12, decimal_places=2, required=False)
+    total_discount = serializers.DecimalField(max_digits=12, decimal_places=2, required=False)
 
 class SettlementOrderSerializer(serializers.ModelSerializer):
     order_number = serializers.CharField(source='order.order_number', read_only=True)
