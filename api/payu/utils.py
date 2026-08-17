@@ -323,7 +323,7 @@ def order_create(data):
 
             # ✅ Create Order
             order = Order.objects.create(
-                coupon_id=data.get('coupon_id'),
+                coupon_id=data.get('coupon_code_id'),
                 coupon_discount=data.get('discount_amount', 0),
                 user_id=data.get('user_id'),
                 restaurant_id=data.get('restaurant_id'),
