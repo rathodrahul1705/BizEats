@@ -53,6 +53,7 @@ def initiate_payment(request):
 
         # Extract and normalize data
         amount = data.get("total_amount")
+        wallet_amount = data.get("wallet_amount")
         productinfo = data.get("productinfo")
         firstname = data.get("firstname")
         email = data.get("email")
@@ -91,7 +92,7 @@ def initiate_payment(request):
 
                 update_order_status(order, status_mapping, payment_step_type, payment_method, payment_type)
                 update_cart_items(order)
-                debit_wallet(wallet, amount, "order_payment", order)
+                debit_wallet(wallet, wallet_amount, "order_payment", order)
                 send_payment_notifications(order)
                 
                 return Response({
