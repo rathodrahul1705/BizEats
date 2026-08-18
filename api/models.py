@@ -782,6 +782,14 @@ class OfferDetail(models.Model):
     )
 
     # ------------------------------
+    # MARKETING COUPON IDENTIFIER
+    # ------------------------------
+    is_marketing_coupon = models.BooleanField(
+        default=False,
+        help_text="Identify if this coupon is a marketing coupon that users can manually enter"
+    )
+
+    # ------------------------------
     # DISCOUNT DETAILS
     # ------------------------------
     discount_type = models.CharField(
@@ -885,6 +893,8 @@ class OfferDetail(models.Model):
         verbose_name_plural = "Offer Details"
 
     def __str__(self):
+        if self.is_marketing_coupon:
+            return f"Marketing Coupon - {self.code or 'No Code'}"
         return f"{self.get_offer_type_display()} - {self.code or 'No Code'}"
 
     @property
