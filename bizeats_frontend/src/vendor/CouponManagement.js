@@ -5,17 +5,17 @@ import API_ENDPOINTS from "../components/config/apiConfig";
 import fetchData from "../components/services/apiService";
 import { useParams, useNavigate } from "react-router-dom";
 
-// Icons
+// Icons - using react-icons/fi
 import { 
   FiPlus, FiRefreshCw, FiEdit2, FiTrash2, FiX, 
   FiCheck, FiCalendar, FiTag, FiTruck, FiCreditCard,
   FiPercent, FiDollarSign, FiClock, FiUsers, FiFilter,
-  FiSearch, FiChevronDown, FiAlertCircle, FiStar,
-  FiPackage, FiGift, FiZap, FiTrendingUp,
-  FiUser, FiUserPlus, FiMapPin, FiGlobe
+  FiSearch, FiAlertCircle, FiPackage,
+  FiGift, FiZap, FiTrendingUp,
+  FiUser, FiUserPlus, FiMapPin, FiGlobe, FiCopy
 } from 'react-icons/fi';
 
-// Updated Constants
+// ======================== CONSTANTS ========================
 const OFFER_TYPES = {
   COUPON_CODE: 'coupon_code',
   FREE_DELIVERY: 'free_delivery',
@@ -35,7 +35,7 @@ const SUB_FILTERS = {
 
 const SUB_FILTER_DISPLAY = {
   [SUB_FILTERS.NEW_USER]: { label: 'New User', icon: <FiUserPlus /> },
-  [SUB_FILTERS.MINIMUM_AMOUNT]: { label: 'Minimum Amount', icon: <FiDollarSign /> },
+  [SUB_FILTERS.MINIMUM_AMOUNT]: { label: 'Min Amount', icon: <FiDollarSign /> },
   [SUB_FILTERS.SPECIFIC_RESTAURANT]: { label: 'Specific Restaurant', icon: <FiPackage /> },
   [SUB_FILTERS.LOCATION_BASED]: { label: 'Location Based', icon: <FiMapPin /> },
   [SUB_FILTERS.REFERRAL_BONUS]: { label: 'Referral Bonus', icon: <FiUsers /> },
@@ -46,38 +46,44 @@ const OFFER_TYPE_DISPLAY = {
   [OFFER_TYPES.COUPON_CODE]: { 
     label: 'Coupon Code', 
     icon: <FiTag />, 
-    color: '#FF6B6B',
+    color: '#f97316',
+    bgColor: '#fff7ed',
     subFilters: [SUB_FILTERS.NEW_USER, SUB_FILTERS.MINIMUM_AMOUNT, SUB_FILTERS.SPECIFIC_RESTAURANT]
   },
   [OFFER_TYPES.FREE_DELIVERY]: { 
     label: 'Free Delivery', 
     icon: <FiTruck />, 
-    color: '#4ECDC4',
+    color: '#14b8a6',
+    bgColor: '#f0fdfa',
     subFilters: [SUB_FILTERS.NEW_USER, SUB_FILTERS.MINIMUM_AMOUNT, SUB_FILTERS.LOCATION_BASED]
   },
   [OFFER_TYPES.CREDIT]: { 
     label: 'Credit', 
     icon: <FiCreditCard />, 
-    color: '#4776E6',
+    color: '#6366f1',
+    bgColor: '#eef2ff',
     subFilters: [SUB_FILTERS.NEW_USER, SUB_FILTERS.REFERRAL_BONUS, SUB_FILTERS.CASHBACK]
   },
   [OFFER_TYPES.RESTAURANT_DEAL]: { 
     label: 'Restaurant Deal', 
     icon: <FiPackage />, 
-    color: '#FF8E53',
+    color: '#f59e0b',
+    bgColor: '#fffbeb',
     subFilters: [SUB_FILTERS.SPECIFIC_RESTAURANT]
   },
   [OFFER_TYPES.AUTO_DISCOUNT]: { 
     label: 'Auto Discount', 
     icon: <FiZap />, 
-    color: '#9D50BB',
+    color: '#8b5cf6',
+    bgColor: '#f5f3ff',
     subFilters: [SUB_FILTERS.NEW_USER, SUB_FILTERS.MINIMUM_AMOUNT]
   }
 };
 
 const DISCOUNT_TYPES = {
   PERCENTAGE: 'percentage',
-  FIXED_AMOUNT: 'fixed'
+  FIXED_AMOUNT: 'fixed',
+  FREE_DELIVERY: 'fixed'
 };
 
 const CREDIT_TYPES = {
@@ -91,9 +97,9 @@ const STATUS = {
 };
 
 const STATUS_DISPLAY = {
-  [STATUS.REJECT]: { label: 'Rejected', color: '#FF4757', bgColor: '#FF475720' },
-  [STATUS.APPROVED]: { label: 'Active', color: '#2ED573', bgColor: '#2ED57320' },
-  [STATUS.PENDING_APPROVAL]: { label: 'Pending', color: '#FFA502', bgColor: '#FFA50220' }
+  [STATUS.REJECT]: { label: 'Rejected', color: '#dc2626', bgColor: '#fef2f2' },
+  [STATUS.APPROVED]: { label: 'Active', color: '#16a34a', bgColor: '#dcfce7' },
+  [STATUS.PENDING_APPROVAL]: { label: 'Pending', color: '#f59e0b', bgColor: '#fef3c7' }
 };
 
 const INITIAL_COUPON_STATE = {
@@ -118,14 +124,14 @@ const INITIAL_COUPON_STATE = {
   credit_expiry_days: 30,
 };
 
-// Helper functions
+// ======================== HELPER FUNCTIONS ========================
 const formatDateForInput = (dateString) => {
   if (!dateString) return '';
   try {
     const date = new Date(dateString);
     const offset = date.getTimezoneOffset() * 60000;
     return new Date(date.getTime() - offset).toISOString().slice(0, 16);
-  } catch (e) {
+  } catch {
     return '';
   }
 };
@@ -136,16 +142,24 @@ const formatDisplayDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-IN', {
       day: '2-digit',
       month: 'short',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+      year: 'numeric'
     });
-  } catch (e) {
+  } catch {
     return 'Invalid date';
   }
 };
 
-// Confirmation Popup Component
+// Generate a unique coupon code for free delivery
+const generateFreeDeliveryCode = () => {
+  const prefix = 'FREEDEL';
+  const timestamp = Date.now().toString(36).toUpperCase();
+  const random = Math.random().toString(36).substring(2, 6).toUpperCase();
+  return `${prefix}${timestamp.slice(-4)}${random}`;
+};
+
+// ======================== SUB-COMPONENTS ========================
+
+// Confirmation Popup
 const ConfirmationPopup = ({ message, onConfirm, onCancel }) => {
   return (
     <div className="cm-confirmation-overlay">
@@ -174,7 +188,7 @@ ConfirmationPopup.propTypes = {
   onCancel: PropTypes.func.isRequired
 };
 
-// Success Popup Component
+// Success Popup
 const SuccessPopup = ({ message, onClose }) => {
   useEffect(() => {
     const timer = setTimeout(onClose, 3000);
@@ -199,10 +213,10 @@ SuccessPopup.propTypes = {
   onClose: PropTypes.func.isRequired
 };
 
-// Stats Card Component
+// Stats Card
 const StatsCard = ({ icon, label, value, color }) => (
   <div className="cm-stats-card">
-    <div className="cm-stats-icon" style={{ backgroundColor: `${color}20`, color }}>
+    <div className="cm-stats-icon" style={{ backgroundColor: `${color}15`, color }}>
       {icon}
     </div>
     <div className="cm-stats-content">
@@ -219,8 +233,10 @@ StatsCard.propTypes = {
   color: PropTypes.string
 };
 
-// Offer Card Component
+// Offer Card
 const OfferCard = ({ offer, onEdit, onDelete, isAdmin }) => {
+  const [copied, setCopied] = useState(false);
+
   const getDiscountDisplay = () => {
     switch(offer.offer_type) {
       case OFFER_TYPES.FREE_DELIVERY:
@@ -253,57 +269,35 @@ const OfferCard = ({ offer, onEdit, onDelete, isAdmin }) => {
     }
   };
 
-  const getSubFilterDisplay = () => {
-    if (!offer.sub_filter) return null;
-    const subFilterInfo = SUB_FILTER_DISPLAY[offer.sub_filter];
-    if (!subFilterInfo) return null;
-    
-    return (
-      <span className="cm-sub-filter-badge">
-        {subFilterInfo.icon}
-        <span className="cm-sub-filter-label">{subFilterInfo.label}</span>
-      </span>
-    );
-  };
-
-  const getRestaurantDisplay = () => {
-    if (!offer.restaurant_details) return null;
-    return (
-      <span className="cm-restaurant-badge">
-        <FiPackage size={12} />
-        <span className="cm-restaurant-name">{offer.restaurant_details.restaurant_name}</span>
-      </span>
-    );
-  };
-
-  const getMinOrderDisplay = () => {
-    return offer.minimum_order_amount && parseFloat(offer.minimum_order_amount) > 0
-      ? `Min. order: ₹${parseFloat(offer.minimum_order_amount).toFixed(2)}`
-      : 'No minimum order';
-  };
-
-  const getValidUntilDisplay = () => {
-    if (!offer.valid_to) return 'No expiry';
-    const date = new Date(offer.valid_to);
-    const now = new Date();
-    const diffTime = date - now;
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
-    if (diffDays < 0) return 'Expired';
-    if (diffDays === 0) return 'Expires today';
-    if (diffDays === 1) return 'Expires tomorrow';
-    return `Expires in ${diffDays} days`;
+  const handleCopyCode = async () => {
+    if (offer.code) {
+      try {
+        await navigator.clipboard.writeText(offer.code);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      } catch (err) {
+        console.error('Failed to copy:', err);
+      }
+    }
   };
 
   return (
     <div className="cm-offer-card">
       <div className="cm-offer-header">
         <div className="cm-offer-type">
-          <span className="cm-offer-type-icon" style={{ color: OFFER_TYPE_DISPLAY[offer.offer_type]?.color }}>
+          <span 
+            className="cm-offer-type-icon" 
+            style={{ color: OFFER_TYPE_DISPLAY[offer.offer_type]?.color }}
+          >
             {OFFER_TYPE_DISPLAY[offer.offer_type]?.icon}
           </span>
           <span className="cm-offer-type-label">{OFFER_TYPE_DISPLAY[offer.offer_type]?.label}</span>
-          {getSubFilterDisplay()}
+          {offer.sub_filter && SUB_FILTER_DISPLAY[offer.sub_filter] && (
+            <span className="cm-sub-filter-badge">
+              {SUB_FILTER_DISPLAY[offer.sub_filter].icon}
+              <span className="cm-sub-filter-label">{SUB_FILTER_DISPLAY[offer.sub_filter].label}</span>
+            </span>
+          )}
         </div>
         <div className="cm-offer-status">
           <span 
@@ -326,15 +320,16 @@ const OfferCard = ({ offer, onEdit, onDelete, isAdmin }) => {
           </div>
         )}
         
-        {offer.offer_type === OFFER_TYPES.COUPON_CODE && offer.code && (
+        {offer.code && (
           <div className="cm-coupon-code-display">
             <FiTag size={16} />
             <span className="cm-coupon-code">{offer.code}</span>
             <button 
-              className="cm-copy-btn"
-              onClick={() => navigator.clipboard.writeText(offer.code)}
+              className={`cm-copy-btn ${copied ? 'copied' : ''}`}
+              onClick={handleCopyCode}
             >
-              Copy
+              {copied ? <FiCheck size={14} /> : <FiCopy size={14} />}
+              {copied ? 'Copied!' : 'Copy'}
             </button>
           </div>
         )}
@@ -344,25 +339,18 @@ const OfferCard = ({ offer, onEdit, onDelete, isAdmin }) => {
           <div className="cm-offer-meta">
             <span className="cm-meta-item">
               <FiCalendar size={14} />
-              {getValidUntilDisplay()}
+              {formatDisplayDate(offer.valid_from)} - {formatDisplayDate(offer.valid_to)}
             </span>
             <span className="cm-meta-item">
               <FiUsers size={14} />
               Used: {offer.times_used || 0}/{offer.max_uses || '∞'}
             </span>
-            {offer.max_uses_per_user && (
-              <span className="cm-meta-item">
-                <FiUser size={14} />
-                {offer.max_uses_per_user} per user
-              </span>
-            )}
           </div>
-          <p className="cm-min-order">{getMinOrderDisplay()}</p>
-          {offer.is_valid !== undefined && (
-            <p className={`cm-validity ${offer.is_valid ? 'cm-valid' : 'cm-invalid'}`}>
-              {offer.is_valid ? '✓ Valid' : '✗ Invalid'}
-            </p>
-          )}
+          <p className="cm-min-order">
+            {offer.minimum_order_amount && parseFloat(offer.minimum_order_amount) > 0
+              ? `Min. order: ₹${parseFloat(offer.minimum_order_amount).toFixed(2)}`
+              : 'No minimum order'}
+          </p>
         </div>
       </div>
       
@@ -395,7 +383,7 @@ OfferCard.propTypes = {
   isAdmin: PropTypes.bool
 };
 
-// Updated CouponForm Component
+// Coupon Form
 const CouponForm = ({ coupon, setCoupon, onSubmit, onClose, isOpen, apiErrors, isSubmitting, isAdmin, restaurants }) => {  
   const [errors, setErrors] = useState({});
 
@@ -411,6 +399,15 @@ const CouponForm = ({ coupon, setCoupon, onSubmit, onClose, isOpen, apiErrors, i
         break;
       
       case OFFER_TYPES.FREE_DELIVERY:
+        // Free delivery always needs a code
+        if (!coupon.code) {
+          // Auto-generate code if not provided
+          const generatedCode = generateFreeDeliveryCode();
+          setCoupon(prev => ({ ...prev, code: generatedCode }));
+        } else if (coupon.code.length > 20) {
+          newErrors.code = 'Coupon code cannot exceed 20 characters';
+        }
+        
         if (coupon.sub_filter === SUB_FILTERS.LOCATION_BASED) {
           if (!coupon.max_delivery_distance || coupon.max_delivery_distance <= 0) {
             newErrors.max_delivery_distance = 'Please enter a valid delivery distance';
@@ -473,6 +470,11 @@ const CouponForm = ({ coupon, setCoupon, onSubmit, onClose, isOpen, apiErrors, i
         is_active: coupon.is_active,
         id: coupon.id
       };
+      // Auto-generate code for free delivery
+      if (value === OFFER_TYPES.FREE_DELIVERY) {
+        resetCoupon.code = generateFreeDeliveryCode();
+        resetCoupon.discount_type = DISCOUNT_TYPES.FREE_DELIVERY;
+      }
       setCoupon(resetCoupon);
     } else if (name === 'sub_filter') {
       const updatedCoupon = {
@@ -556,49 +558,69 @@ const CouponForm = ({ coupon, setCoupon, onSubmit, onClose, isOpen, apiErrors, i
         );
       
       case OFFER_TYPES.FREE_DELIVERY:
-        if (coupon.sub_filter === SUB_FILTERS.LOCATION_BASED) {
-          return (
-            <>
-              <div className="cm-form-group">
-                <label>
-                  <FiMapPin className="cm-input-icon" />
-                  Max Delivery Distance (km)*
-                </label>
-                <input
-                  type="number"
-                  name="max_delivery_distance"
-                  value={coupon.max_delivery_distance}
-                  onChange={handleChange}
-                  placeholder="e.g., 5"
-                  step="0.5"
-                  min="0.1"
-                  className={allErrors.max_delivery_distance ? 'cm-input-error' : ''}
-                />
-                {allErrors.max_delivery_distance && <span className="cm-error-message">{allErrors.max_delivery_distance}</span>}
-              </div>
-              
-              <div className="cm-form-group">
-                <label>
-                  <FiDollarSign className="cm-input-icon" />
-                  Max Delivery Fee Covered (₹)*
-                </label>
-                <input
-                  type="number"
-                  name="max_delivery_fee"
-                  value={coupon.max_delivery_fee}
-                  onChange={handleChange}
-                  placeholder="e.g., 50"
-                  step="1"
-                  min="0"
-                  className={allErrors.max_delivery_fee ? 'cm-input-error' : ''}
-                />
-                {allErrors.max_delivery_fee && <span className="cm-error-message">{allErrors.max_delivery_fee}</span>}
-                <small className="cm-hint">Maximum delivery fee that will be waived</small>
-              </div>
-            </>
-          );
-        }
-        return null;
+        return (
+          <>
+            <div className="cm-form-group">
+              <label>
+                <FiTag className="cm-input-icon" />
+                Coupon Code*
+              </label>
+              <input
+                type="text"
+                name="code"
+                value={coupon.code}
+                onChange={handleChange}
+                placeholder="Auto-generated for free delivery"
+                className={allErrors.code ? 'cm-input-error' : ''}
+                maxLength="20"
+              />
+              {allErrors.code && <span className="cm-error-message">{allErrors.code}</span>}
+              <small className="cm-field-hint">
+                Leave empty to auto-generate or customize your own code
+              </small>
+            </div>
+            
+            {coupon.sub_filter === SUB_FILTERS.LOCATION_BASED && (
+              <>
+                <div className="cm-form-group">
+                  <label>
+                    <FiMapPin className="cm-input-icon" />
+                    Max Delivery Distance (km)*
+                  </label>
+                  <input
+                    type="number"
+                    name="max_delivery_distance"
+                    value={coupon.max_delivery_distance}
+                    onChange={handleChange}
+                    placeholder="e.g., 5"
+                    step="0.5"
+                    min="0.1"
+                    className={allErrors.max_delivery_distance ? 'cm-input-error' : ''}
+                  />
+                  {allErrors.max_delivery_distance && <span className="cm-error-message">{allErrors.max_delivery_distance}</span>}
+                </div>
+                
+                <div className="cm-form-group">
+                  <label>
+                    <FiDollarSign className="cm-input-icon" />
+                    Max Delivery Fee Covered (₹)*
+                  </label>
+                  <input
+                    type="number"
+                    name="max_delivery_fee"
+                    value={coupon.max_delivery_fee}
+                    onChange={handleChange}
+                    placeholder="e.g., 50"
+                    step="1"
+                    min="0"
+                    className={allErrors.max_delivery_fee ? 'cm-input-error' : ''}
+                  />
+                  {allErrors.max_delivery_fee && <span className="cm-error-message">{allErrors.max_delivery_fee}</span>}
+                </div>
+              </>
+            )}
+          </>
+        );
       
       case OFFER_TYPES.CREDIT:
         return (
@@ -638,7 +660,6 @@ const CouponForm = ({ coupon, setCoupon, onSubmit, onClose, isOpen, apiErrors, i
                 className={allErrors.credit_expiry_days ? 'cm-input-error' : ''}
               />
               {allErrors.credit_expiry_days && <span className="cm-error-message">{allErrors.credit_expiry_days}</span>}
-              <small className="cm-hint">Credit will expire after this many days from first use</small>
             </div>
           </>
         );
@@ -649,15 +670,36 @@ const CouponForm = ({ coupon, setCoupon, onSubmit, onClose, isOpen, apiErrors, i
   };
 
   const renderDiscountFields = () => {
+    // For free delivery, we show a static discount type
+    if (coupon.offer_type === OFFER_TYPES.FREE_DELIVERY) {
+      return (
+        <div className="cm-form-group">
+          <label>
+            Discount Type
+          </label>
+          <div className="cm-radio-group">
+            <label className="cm-radio-label cm-radio-disabled">
+              <input
+                type="radio"
+                name="discount_type"
+                value={DISCOUNT_TYPES.FREE_DELIVERY}
+                checked={true}
+                disabled
+              />
+              <span className="cm-radio-custom"></span>
+              <FiTruck size={14} /> Free Delivery
+            </label>
+          </div>
+          <small className="cm-field-hint">Free delivery offers always use free_delivery discount type</small>
+        </div>
+      );
+    }
+
     if ([OFFER_TYPES.COUPON_CODE, OFFER_TYPES.AUTO_DISCOUNT, OFFER_TYPES.CREDIT].includes(coupon.offer_type)) {
       return (
         <>
           <div className="cm-form-group">
             <label>
-              {coupon.discount_type === DISCOUNT_TYPES.PERCENTAGE ? 
-                <FiPercent className="cm-input-icon" /> : 
-                <FiDollarSign className="cm-input-icon" />
-              }
               Discount Type*
             </label>
             <div className="cm-radio-group">
@@ -670,7 +712,7 @@ const CouponForm = ({ coupon, setCoupon, onSubmit, onClose, isOpen, apiErrors, i
                   onChange={handleChange}
                 />
                 <span className="cm-radio-custom"></span>
-                Percentage
+                <FiPercent size={14} /> Percentage
               </label>
               <label className="cm-radio-label">
                 <input
@@ -681,7 +723,7 @@ const CouponForm = ({ coupon, setCoupon, onSubmit, onClose, isOpen, apiErrors, i
                   onChange={handleChange}
                 />
                 <span className="cm-radio-custom"></span>
-                Fixed Amount
+                <FiDollarSign size={14} /> Fixed Amount
               </label>
             </div>
             {allErrors.discount_type && <span className="cm-error-message">{allErrors.discount_type}</span>}
@@ -689,10 +731,6 @@ const CouponForm = ({ coupon, setCoupon, onSubmit, onClose, isOpen, apiErrors, i
 
           <div className="cm-form-group">
             <label>
-              {coupon.discount_type === DISCOUNT_TYPES.PERCENTAGE ? 
-                <FiPercent className="cm-input-icon" /> : 
-                <FiDollarSign className="cm-input-icon" />
-              }
               Discount Value*
             </label>
             <input
@@ -715,8 +753,6 @@ const CouponForm = ({ coupon, setCoupon, onSubmit, onClose, isOpen, apiErrors, i
   };
 
   const renderRestaurantField = () => {
-    // Show restaurant field for admin always (optional), 
-    // and for restaurant deals or specific_restaurant filter (required)
     const showRestaurantField = isAdmin || 
       coupon.offer_type === OFFER_TYPES.RESTAURANT_DEAL ||
       coupon.sub_filter === SUB_FILTERS.SPECIFIC_RESTAURANT;
@@ -746,9 +782,6 @@ const CouponForm = ({ coupon, setCoupon, onSubmit, onClose, isOpen, apiErrors, i
           ))}
         </select>
         {allErrors.restaurant && <span className="cm-error-message">{allErrors.restaurant}</span>}
-        {isAdmin && !isRequired && (
-          <small className="cm-hint">Leave empty to create a global offer for all restaurants</small>
-        )}
       </div>
     );
   };
@@ -780,7 +813,7 @@ const CouponForm = ({ coupon, setCoupon, onSubmit, onClose, isOpen, apiErrors, i
                     disabled={!!coupon.id && coupon.offer_type !== key}
                     style={coupon.offer_type === key ? { 
                       borderColor: value.color,
-                      backgroundColor: `${value.color}10`
+                      backgroundColor: value.bgColor
                     } : {}}
                   >
                     <span className="cm-offer-type-icon" style={{ color: value.color }}>
@@ -814,7 +847,6 @@ const CouponForm = ({ coupon, setCoupon, onSubmit, onClose, isOpen, apiErrors, i
                 className={allErrors.minimum_order_amount ? 'cm-input-error' : ''}
               />
               {allErrors.minimum_order_amount && <span className="cm-error-message">{allErrors.minimum_order_amount}</span>}
-              <small className="cm-hint">Set to 0 for no minimum order</small>
             </div>
 
             <div className="cm-form-group">
@@ -850,7 +882,7 @@ const CouponForm = ({ coupon, setCoupon, onSubmit, onClose, isOpen, apiErrors, i
             <div className="cm-form-group">
               <label>
                 <FiUsers className="cm-input-icon" />
-                Max Uses (Leave empty for unlimited)
+                Max Uses
               </label>
               <input
                 type="number"
@@ -866,7 +898,7 @@ const CouponForm = ({ coupon, setCoupon, onSubmit, onClose, isOpen, apiErrors, i
             <div className="cm-form-group">
               <label>
                 <FiUser className="cm-input-icon" />
-                Max Uses Per User (Leave empty for unlimited)
+                Max Uses Per User
               </label>
               <input
                 type="number"
@@ -940,7 +972,7 @@ CouponForm.propTypes = {
   restaurants: PropTypes.array
 };
 
-// Main CouponManagement Component
+// ======================== MAIN COMPONENT ========================
 const CouponManagement = ({ user }) => {
   const { restaurant_id } = useParams();  
   const [coupons, setCoupons] = useState([]);
@@ -959,20 +991,49 @@ const CouponManagement = ({ user }) => {
   const navigate = useNavigate();
 
   const isAdmin = user?.role === "Admin";
+  const userId = user?.user_id;
+
+  // Fetch user's restaurants
+  useEffect(() => {
+    if (!userId) return;
+
+    const fetchUserRestaurants = async () => {
+      try {
+        const response = await fetchData(
+          API_ENDPOINTS.RESTAURANT.BY_USER(userId),
+          "GET",
+          null,
+          localStorage.getItem("access")
+        );
+        
+        if (response?.live_restaurants?.length) {
+          setRestaurants(response.live_restaurants);
+        } else {
+          setRestaurants([]);
+        }
+      } catch (error) {
+        console.error("Error fetching restaurants:", error);
+        setError('Failed to load restaurants. Please try again.');
+        setRestaurants([]);
+      }
+    };
+
+    fetchUserRestaurants();
+  }, [userId]);
 
   // Calculate stats
   const stats = {
-    total: coupons.length,
-    active: coupons.filter(c => c.is_active === STATUS.APPROVED).length,
-    pending: coupons.filter(c => c.is_active === STATUS.PENDING_APPROVAL).length,
-    expired: coupons.filter(c => {
+    total: Array.isArray(coupons) ? coupons.length : 0,
+    active: Array.isArray(coupons) ? coupons.filter(c => c.is_active === STATUS.APPROVED).length : 0,
+    pending: Array.isArray(coupons) ? coupons.filter(c => c.is_active === STATUS.PENDING_APPROVAL).length : 0,
+    expired: Array.isArray(coupons) ? coupons.filter(c => {
       if (!c.valid_to) return false;
       return new Date(c.valid_to) < new Date();
-    }).length
+    }).length : 0
   };
 
   // Filter coupons
-  const filteredCoupons = coupons.filter(coupon => {
+  const filteredCoupons = Array.isArray(coupons) ? coupons.filter(coupon => {
     const matchesSearch = searchTerm === '' || 
       coupon.code?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       OFFER_TYPE_DISPLAY[coupon.offer_type]?.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -984,52 +1045,41 @@ const CouponManagement = ({ user }) => {
       (statusFilter === 'rejected' && coupon.is_active === STATUS.REJECT);
     
     return matchesSearch && matchesStatus;
-  });
+  }) : [];
 
-  // Fetch restaurants
-  const fetchRestaurants = async () => {
-    try {
-      if (isAdmin) {
-        // Admin can see all restaurants
-        const data = await fetchData(
-          API_ENDPOINTS.RESTAURANTS.FETCH_ALL,
-          "GET",
-          null,
-          localStorage.getItem("access")
-        );
-        setRestaurants(data);
-      } else if (restaurant_id) {
-        // Restaurant user can only see their restaurant
-        const data = await fetchData(
-          API_ENDPOINTS.RESTAURANTS.FETCH(restaurant_id),
-          "GET",
-          null,
-          localStorage.getItem("access")
-        );
-        setRestaurants([data]);
-      }
-    } catch (err) {
-      console.error('Error fetching restaurants:', err);
-      setRestaurants([]);
-    }
-  };
-
-  // Fetch coupons
+  // Fetch coupons based on user role
   const fetchCoupons = async () => {
     setIsLoading(true);
     setError(null);
     try {
-      const endpoint = API_ENDPOINTS.OFFER.FETCH(restaurant_id)
+      let endpoint;
+      if (isAdmin) {
+        // Admin fetches all coupons
+        endpoint = API_ENDPOINTS.OFFER.FETCH_ALL || API_ENDPOINTS.OFFER.FETCH();
+      } else if (restaurant_id) {
+        // Fetch coupons for specific restaurant from URL
+        endpoint = API_ENDPOINTS.OFFER.FETCH(restaurant_id);
+      } else if (restaurants.length > 0) {
+        // Fetch coupons for first restaurant
+        endpoint = API_ENDPOINTS.OFFER.FETCH(restaurants[0].restaurant_id);
+      } else {
+        setCoupons([]);
+        setIsLoading(false);
+        return;
+      }
+      
       const data = await fetchData(
         endpoint, 
         "GET", 
         null, 
         localStorage.getItem("access")
       );
-      setCoupons(data);
+      
+      setCoupons(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Error fetching coupons:', err);
       setError(err.response?.data?.message || 'Failed to fetch offers. Please try again.');
+      setCoupons([]);
       if (err.response?.status === 401) {
         navigate('/login');
       }
@@ -1038,10 +1088,12 @@ const CouponManagement = ({ user }) => {
     }
   };
 
+  // Fetch coupons on component mount or when restaurants change
   useEffect(() => {
-    fetchCoupons();
-    fetchRestaurants();
-  }, [restaurant_id, isAdmin]);
+    if (restaurants.length > 0 || isAdmin) {
+      fetchCoupons();
+    }
+  }, [restaurants, isAdmin]);
 
   const handleSubmit = async () => {
     setApiErrors(null);
@@ -1050,10 +1102,12 @@ const CouponManagement = ({ user }) => {
       const payload = {
         offer_type: coupon.offer_type,
         sub_filter: coupon.sub_filter || null,
-        code: coupon.offer_type === OFFER_TYPES.COUPON_CODE ? coupon.code : null,
-        discount_type: [OFFER_TYPES.COUPON_CODE, OFFER_TYPES.AUTO_DISCOUNT, OFFER_TYPES.CREDIT].includes(coupon.offer_type) 
-          ? coupon.discount_type 
-          : null,
+        code: coupon.code || null,
+        discount_type: coupon.offer_type === OFFER_TYPES.FREE_DELIVERY 
+          ? DISCOUNT_TYPES.FREE_DELIVERY 
+          : [OFFER_TYPES.COUPON_CODE, OFFER_TYPES.AUTO_DISCOUNT, OFFER_TYPES.CREDIT].includes(coupon.offer_type) 
+            ? coupon.discount_type 
+            : null,
         discount_value: [OFFER_TYPES.COUPON_CODE, OFFER_TYPES.AUTO_DISCOUNT, OFFER_TYPES.CREDIT].includes(coupon.offer_type) 
           ? parseFloat(coupon.discount_value)
           : null,
@@ -1080,16 +1134,18 @@ const CouponManagement = ({ user }) => {
           : null,
       };
 
-      // Add restaurant field for admin (optional) or restaurant user (auto-set)
-      if (isAdmin && coupon.restaurant) {
+      // Set restaurant for the offer
+      if (coupon.restaurant) {
         payload.restaurant = coupon.restaurant;
-      } else if (!isAdmin && restaurant_id) {
+      } else if (restaurants.length > 0 && !isAdmin) {
+        // If no restaurant selected and user is not admin, use the first restaurant
+        payload.restaurant = restaurants[0].restaurant_id;
+      } else if (restaurant_id) {
         payload.restaurant = restaurant_id;
       }
 
-      // Remove undefined values
       Object.keys(payload).forEach(key => {
-        if (payload[key] === undefined || payload[key] === '') {
+        if (payload[key] === undefined || payload[key] === '' || payload[key] === null) {
           delete payload[key];
         }
       });
@@ -1102,7 +1158,10 @@ const CouponManagement = ({ user }) => {
           payload,
           localStorage.getItem("access")
         );
-        setCoupons(coupons.map(c => c.id === coupon.id ? response : c));
+        setCoupons(prevCoupons => {
+          const currentCoupons = Array.isArray(prevCoupons) ? prevCoupons : [];
+          return currentCoupons.map(c => c.id === coupon.id ? response : c);
+        });
         setSuccessMessage('Offer updated successfully!');
       } else {
         response = await fetchData(
@@ -1111,7 +1170,10 @@ const CouponManagement = ({ user }) => {
           payload,
           localStorage.getItem("access")
         );
-        setCoupons([response, ...coupons]);
+        setCoupons(prevCoupons => {
+          const currentCoupons = Array.isArray(prevCoupons) ? prevCoupons : [];
+          return [response, ...currentCoupons];
+        });
         setSuccessMessage('Offer created successfully!');
       }
       
@@ -1175,7 +1237,10 @@ const CouponManagement = ({ user }) => {
       );
       
       setSuccessMessage('Offer deleted successfully!');
-      setCoupons(coupons.filter(c => c.id !== couponToDelete));
+      setCoupons(prevCoupons => {
+        const currentCoupons = Array.isArray(prevCoupons) ? prevCoupons : [];
+        return currentCoupons.filter(c => c.id !== couponToDelete);
+      });
     } catch (err) {
       console.error('Error deleting offer:', err);
       setError(err.response?.data?.message || 'Failed to delete offer. Please try again.');
@@ -1185,16 +1250,27 @@ const CouponManagement = ({ user }) => {
   };
 
   const resetForm = () => {
-    setCoupon({
+    const newCoupon = {
       ...INITIAL_COUPON_STATE,
-      restaurant: isAdmin ? '' : restaurant_id
-    });
+      restaurant: restaurants.length > 0 ? restaurants[0].restaurant_id : ''
+    };
+    // Auto-generate code for free delivery if that's the current offer type
+    if (coupon.offer_type === OFFER_TYPES.FREE_DELIVERY) {
+      newCoupon.code = generateFreeDeliveryCode();
+      newCoupon.discount_type = DISCOUNT_TYPES.FREE_DELIVERY;
+    }
+    setCoupon(newCoupon);
     setApiErrors(null);
     setError(null);
   };
 
   const openNewCouponForm = () => {
-    resetForm();
+    const newCoupon = {
+      ...INITIAL_COUPON_STATE,
+      restaurant: restaurants.length > 0 ? restaurants[0].restaurant_id : ''
+    };
+    // Pre-generate code for free delivery if user selects it
+    setCoupon(newCoupon);
     setIsModalOpen(true);
   };
 
@@ -1204,11 +1280,13 @@ const CouponManagement = ({ user }) => {
       <div className="cm-header">
         <div className="cm-header-content">
           <h1 className="cm-title">
-            <FiGift className="cm-title-icon" />
+            <span className="cm-title-icon"><FiGift /></span>
             Offer Management
           </h1>
           <p className="cm-subtitle">
-            {isAdmin ? 'Manage offers for all restaurants' : `Manage offers for your restaurant`}
+            {isAdmin ? 'Manage offers for all restaurants' : 
+             restaurants.length > 0 ? `Managing offers for your restaurants` : 
+             'Loading restaurants...'}
           </p>
         </div>
         
@@ -1236,24 +1314,21 @@ const CouponManagement = ({ user }) => {
           </select>
           
           <button 
-            className="cm-btn cm-btn-secondary"
-            onClick={() => {
-              fetchCoupons();
-              fetchRestaurants();
-            }}
+            className="cm-btn cm-btn-secondary cm-btn-icon"
+            onClick={fetchCoupons}
             disabled={isLoading}
           >
             <FiRefreshCw className={isLoading ? 'cm-spin' : ''} />
-            Refresh
+            <span className="cm-btn-text">Refresh</span>
           </button>
           
           <button 
-            className="cm-btn cm-btn-primary"
+            className="cm-btn cm-btn-primary cm-btn-icon"
             onClick={openNewCouponForm}
-            disabled={isLoading}
+            disabled={isLoading || (!isAdmin && restaurants.length === 0)}
           >
             <FiPlus />
-            Create
+            <span className="cm-btn-text">Create</span>
           </button>
         </div>
       </div>
@@ -1264,54 +1339,27 @@ const CouponManagement = ({ user }) => {
           icon={<FiGift />} 
           label="Total Offers" 
           value={stats.total}
-          color="#4776E6"
+          color="#6366f1"
         />
         <StatsCard 
           icon={<FiTrendingUp />} 
           label="Active Offers" 
           value={stats.active}
-          color="#2ED573"
+          color="#22c55e"
         />
         <StatsCard 
           icon={<FiClock />} 
           label="Pending Approval" 
           value={stats.pending}
-          color="#FFA502"
+          color="#f59e0b"
         />
         <StatsCard 
           icon={<FiAlertCircle />} 
           label="Expired Offers" 
           value={stats.expired}
-          color="#FF4757"
+          color="#ef4444"
         />
       </div>
-
-      {/* Restaurant Filter for Admin */}
-      {isAdmin && restaurants.length > 0 && (
-        <div className="cm-restaurant-filter">
-          <div className="cm-restaurant-filter-header">
-            <FiGlobe className="cm-restaurant-filter-icon" />
-            <h3>Restaurant Filter</h3>
-          </div>
-          <div className="cm-restaurant-filter-grid">
-            <button 
-              className={`cm-restaurant-filter-btn ${!coupon.restaurant ? 'active' : ''}`}
-              onClick={() => setCoupon({...coupon, restaurant: ''})}
-            >
-              All Restaurants
-            </button>
-            {restaurants.map(rest => (
-              <button
-                key={rest.restaurant_id}
-                className={`cm-restaurant-filter-btn ${coupon.restaurant === rest.restaurant_id ? 'active' : ''}`}
-                onClick={() => setCoupon({...coupon, restaurant: rest.restaurant_id})}
-              >
-                {rest.restaurant_name}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* Error Alert */}
       {error && (
@@ -1349,6 +1397,7 @@ const CouponManagement = ({ user }) => {
           <button 
             className="cm-btn cm-btn-primary"
             onClick={openNewCouponForm}
+            disabled={!isAdmin && restaurants.length === 0}
           >
             <FiPlus />
             Create First Offer
