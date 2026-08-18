@@ -104,7 +104,7 @@ class TrackOrder(APIView):
             try:
                 menu_item = RestaurantMenu.objects.get(id=item.item_id)
                 price = item.item_price or Decimal('0.00')
-                item_total = price * item.quantity if hasattr(item, 'quantity') else price
+                item_total = price
                 subtotal += item_total
                 
                 item_details.append({
@@ -190,7 +190,7 @@ class TrackOrder(APIView):
             
             if coupon.offer_type == "free_delivery":
                 # For free delivery, total amount remains unchanged
-                discount = Decimal('0.00')
+                discount = order.coupon_discount or Decimal('0.00')
             
             return {
                 "coupon_code": coupon.code if hasattr(coupon, 'code') else None,
