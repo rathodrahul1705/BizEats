@@ -155,7 +155,7 @@ class TrackOrder(APIView):
             ).strip().replace("  ", " ")
             
             return {
-                "restaurant_id": restaurant.id,
+                "restaurant_id": restaurant.restaurant_id or None,
                 "restaurant_name": restaurant.restaurant_name or "",
                 "restaurant_address_line": restaurant_address,
                 "restaurant_image": restaurant.profile_image.url if restaurant.profile_image else "",
@@ -168,7 +168,7 @@ class TrackOrder(APIView):
         except Exception as e:
             logger.error("Error getting restaurant details: %s", str(e))
             return {
-                "restaurant_id": restaurant.id if restaurant else None,
+                "restaurant_id": restaurant.restaurant_id or None,
                 "restaurant_name": getattr(restaurant, 'restaurant_name', ""),
                 "restaurant_address_line": "",
                 "restaurant_image": "",
@@ -386,9 +386,6 @@ class RestaurantOrders(APIView):
                     {"status": "error", "message": str(ve)},
                     status=status.HTTP_400_BAD_REQUEST
                 )
-            
-            print("start_date==",start_date)
-            print("end_date==",end_date)
 
             # Filter orders
             orders_qs = Order.objects.filter(
