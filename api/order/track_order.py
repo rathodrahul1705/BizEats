@@ -124,15 +124,21 @@ class TrackOrder(APIView):
 
                 order_payment_details = {
                     "subtotal": str(subtotal),
-                    "delivery_fee": order.delivery_fee,
-                    "total": str(order.total_amount),
+                    "delivery_fee": str(order.delivery_fee),
+                    "total": str(
+                        order.total_amount - (order.coupon_discount or 0)
+                    ),
                     "payment_status": order.get_payment_status_display(),
                     "order_status": order.get_status_display(),
                 }
 
                 coupon_details_details = {
                     "coupon_code": coupon_code,
-                    "coupon_discount": order.coupon_discount if order.coupon_discount else round(discount),
+                    "coupon_discount": (
+                        order.coupon_discount
+                        if order.coupon_discount
+                        else round(discount)
+                    ),
                     "coupon_code_text": coupon_code_text,
                 }
 
