@@ -3,7 +3,7 @@ import os
 from django.core.mail import send_mail, EmailMessage
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
-from api.models import Cart, Coupon, Order, RestaurantDocuments, RestaurantLocation, RestaurantMenu, User, UserDeliveryAddress
+from api.models import Cart, Coupon, Order, RestaurantDocuments, RestaurantLocation, RestaurantMenu, User, UserDeliveryAddress, OfferDetail
 from decouple import config
 from decimal import Decimal, ROUND_UP, ROUND_HALF_UP
 from django.conf import settings
@@ -98,7 +98,7 @@ def send_order_status_email(order):
 
     if order.coupon_id:
         try:
-            coupon = Coupon.objects.get(id=order.coupon_id)
+            coupon = OfferDetail.objects.get(id=order.coupon_id)
             coupon_code = coupon.code
             coupon_code_text = f"Discount coupon ({coupon_code})"
         except Coupon.DoesNotExist:
