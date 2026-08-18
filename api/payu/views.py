@@ -41,7 +41,7 @@ def initiate_payment(request):
         # ====================================================================
         # 1. VALIDATE REQUIRED FIELDS
         # ====================================================================
-        required_fields = ["amount", "productinfo", "firstname", "email", "phone"]
+        required_fields = ["total_amount", "productinfo", "firstname", "email", "phone"]
         missing = [f for f in required_fields if not data.get(f)]
         
         if missing:
@@ -52,7 +52,7 @@ def initiate_payment(request):
             )
 
         # Extract and normalize data
-        amount = data.get("amount")
+        amount = data.get("total_amount")
         productinfo = data.get("productinfo")
         firstname = data.get("firstname")
         email = data.get("email")
