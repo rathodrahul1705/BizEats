@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
+from api import serializers
 from api.emailer.email_notifications import generate_coupon_html, generate_coupon_status_html, send_otp_email, send_contact_email
 from api.mobile.auth import send_otp_via_twilio
 from api.serializers import ContactUsSerializer, OrderReviewSerializer, RestaurantCategorySerializer
@@ -321,6 +322,7 @@ class RestaurantCategoryViewSet(viewsets.ModelViewSet):
         if restaurant_id:
             return self.queryset.filter(restaurant_id=restaurant_id)
         return self.queryset    
+
 class OfferViewSet(viewsets.ModelViewSet):
     serializer_class = OfferSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -329,7 +331,9 @@ class OfferViewSet(viewsets.ModelViewSet):
         user = self.request.user
         code = self.request.query_params.get('code')
 
-        queryset = OfferDetail.objects.all().order_by('-created_at')
+        queryset = OfferDetail.objects.filter(
+            is_marketing_coupon=False
+        ).order_by('-created_at')
 
         # Filter by code if provided
         if code:
