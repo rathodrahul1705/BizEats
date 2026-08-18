@@ -37,146 +37,330 @@ class TrackOrder(APIView):
     """
     Handles tracking orders for a user.
     """
-
-    def post(self, request, *args, **kwargs):
-        logger.info("TrackOrder called with data: %s", request.data)
+    
+    # Define required fields for validation
+    REQUIRED_FIELDS = ['user_id', 'order_number']
+    
+    def _validate_request_data(self, data):
+        """Validate required fields in request data."""
+        missing_fields = [field for field in self.REQUIRED_FIELDS if not data.get(field)]
+        if missing_fields:
+            logger.warning("Missing required fields: %s", missing_fields)
+            return False, f"Missing required fields: {', '.join(missing_fields)}"
+        return True, None
+    
+    def _get_user(self, user_id):
+        """Fetch user by ID with error handling."""
         try:
+            user = User.objects.get(id=user_id)
+            logger.debug("User found: user_id=%s", user_id)
+            return user, None
+        except User.DoesNotExist:
+            logger.warning("User not found: user_id=%s", user_id)
+            return None, "User not found"
+        except Exception as e:
+            logger.error("Error fetching user user_id=%s: %s", user_id, str(e))
+            return None, "Error fetching user"
+    
+    def _format_address(self, delivery_address):
+        """Format delivery address into string."""
+        if not delivery_address:
+            return ""
+        
+        address_parts = [
+            delivery_address.street_address,
+            delivery_address.city,
+            delivery_address.state,
+            delivery_address.zip_code,
+            delivery_address.country
+        ]
+        return ", ".join([part for part in address_parts if part])
+    
+    def _get_address_details(self, delivery_address, user):
+        """Get formatted address details."""
+        if delivery_address:
+            return {
+                "full_name": user.full_name if hasattr(user, 'full_name') else "",
+                "address": self._format_address(delivery_address),
+                "landmark": delivery_address.near_by_landmark or "",
+                "home_type": delivery_address.home_type or "",
+                "phone_number": getattr(user, 'contact_number', ""),
+            }
+        return {
+            "full_name": getattr(user, 'full_name', ""),
+            "address": "",
+            "landmark": "",
+            "home_type": "",
+            "phone_number": getattr(user, 'contact_number', ""),
+        }
+    
+    def _get_cart_item_details(self, order_number):
+        """Get cart item details for an order."""
+        cart_items = Cart.objects.filter(order_number=order_number)
+        item_details = []
+        subtotal = Decimal('0.00')
+        
+        for item in cart_items:
+            try:
+                menu_item = RestaurantMenu.objects.get(id=item.item_id)
+                price = item.item_price or Decimal('0.00')
+                item_total = price * item.quantity if hasattr(item, 'quantity') else price
+                subtotal += item_total
+                
+                item_details.append({
+                    "item_name": menu_item.item_name or "Unknown",
+                    "quantity": item.quantity if hasattr(item, 'quantity') else 0,
+                    "unit_price": str(price),
+                    "total_price": str(item_total),
+                    "buy_one_get_one_free": getattr(item, 'buy_one_get_one_free', False)
+                })
+            except RestaurantMenu.DoesNotExist:
+                logger.warning("Menu item not found: item_id=%s", item.item_id)
+                # Still include item with "Unknown" name
+                item_details.append({
+                    "item_name": "Unknown",
+                    "quantity": getattr(item, 'quantity', 0),
+                    "unit_price": str(Decimal('0.00')),
+                    "total_price": str(Decimal('0.00')),
+                    "buy_one_get_one_free": getattr(item, 'buy_one_get_one_free', False)
+                })
+            except Exception as e:
+                logger.error("Error processing cart item: %s", str(e))
+        
+        return item_details, subtotal
+    
+    def _get_review_status(self, order_number, user_id, order_status):
+        """Determine review status for an order."""
+        if order_status != "Delivered":
+            return True
+        
+        review_exists = OrderReview.objects.filter(
+            order_id=order_number, 
+            user_id=user_id
+        ).exists()
+        
+        return review_exists
+    
+    def _get_restaurant_details(self, restaurant):
+        """Get formatted restaurant details."""
+        if not restaurant:
+            return {}
+        
+        try:
+            location = restaurant.restaurant_location
+            restaurant_address = (
+                f"{location.shop_no_building or ''} {location.floor_tower or ''} "
+                f"{location.area_sector_locality or ''}, {location.city or ''} "
+                f"{location.nearby_locality or ''}"
+            ).strip().replace("  ", " ")
+            
+            return {
+                "restaurant_id": restaurant.id,
+                "restaurant_name": restaurant.restaurant_name or "",
+                "restaurant_address_line": restaurant_address,
+                "restaurant_image": restaurant.profile_image.url if restaurant.profile_image else "",
+                "restaurant_contact": getattr(
+                    getattr(restaurant, 'owner_details', None), 
+                    'owner_contact', 
+                    ""
+                ),
+            }
+        except Exception as e:
+            logger.error("Error getting restaurant details: %s", str(e))
+            return {
+                "restaurant_id": restaurant.id if restaurant else None,
+                "restaurant_name": getattr(restaurant, 'restaurant_name', ""),
+                "restaurant_address_line": "",
+                "restaurant_image": "",
+                "restaurant_contact": "",
+            }
+    
+    def _get_coupon_details(self, order):
+        """Get coupon details for an order."""
+        if not order.coupon_id:
+            return {
+                "coupon_code": None,
+                "coupon_discount": Decimal('0.00'),
+                "coupon_code_text": "Discount",
+            }
+        
+        try:
+            coupon = OfferDetail.objects.get(id=order.coupon_id)
+            discount = order.coupon_discount or Decimal('0.00')
+            
+            if coupon.offer_type == "free_delivery":
+                # For free delivery, total amount remains unchanged
+                discount = Decimal('0.00')
+            
+            return {
+                "coupon_code": coupon.code if hasattr(coupon, 'code') else None,
+                "coupon_discount": str(discount),
+                "coupon_code_text": f"Discount coupon ({coupon.code})" if hasattr(coupon, 'code') else "Discount",
+            }
+        except OfferDetail.DoesNotExist:
+            logger.warning("Coupon not found: coupon_id=%s", order.coupon_id)
+            return {
+                "coupon_code": None,
+                "coupon_discount": Decimal('0.00'),
+                "coupon_code_text": "Discount",
+            }
+        except Exception as e:
+            logger.error("Error fetching coupon: %s", str(e))
+            return {
+                "coupon_code": None,
+                "coupon_discount": Decimal('0.00'),
+                "coupon_code_text": "Discount",
+            }
+    
+    def _get_payment_details(self, order, subtotal):
+        """Get payment details for an order."""
+        total_amount = str(order.total_amount)
+        
+        # Apply coupon discount if applicable
+        if order.coupon_id:
+            try:
+                coupon = OfferDetail.objects.get(id=order.coupon_id)
+                if coupon.offer_type != "free_delivery":
+                    discount = order.coupon_discount or Decimal('0.00')
+                    total_amount = str(order.total_amount - discount)
+            except OfferDetail.DoesNotExist:
+                pass
+        
+        return {
+            "subtotal": str(subtotal),
+            "delivery_fee": str(order.delivery_fee or Decimal('0.00')),
+            "total": total_amount,
+            "payment_status": order.get_payment_status_display() if hasattr(order, 'get_payment_status_display') else "Pending",
+            "order_status": order.get_status_display() if hasattr(order, 'get_status_display') else "Unknown",
+        }
+    
+    def _build_order_response(self, order, user):
+        """Build complete order response data."""
+        try:
+            # Get delivery address
+            delivery_address = UserDeliveryAddress.objects.filter(
+                id=order.delivery_address_id
+            ).first()
+            if not delivery_address:
+                logger.warning("Delivery address not found for order: %s", order.order_number)
+            
+            # Get address details
+            address_details = self._get_address_details(delivery_address, user)
+            
+            # Get cart items
+            item_details, subtotal = self._get_cart_item_details(order.order_number)
+            
+            # Get review status
+            order_status = order.get_status_display() if hasattr(order, 'get_status_display') else ""
+            review_exists = self._get_review_status(
+                order.order_number, 
+                user.id, 
+                order_status
+            )
+            
+            # Get restaurant details
+            restaurant_details = self._get_restaurant_details(order.restaurant)
+            
+            # Get coupon details
+            coupon_details = self._get_coupon_details(order)
+            
+            # Get payment details
+            payment_details = self._get_payment_details(order, subtotal)
+            
+            # Get payment method checks
+            payment_method = order.get_payment_method_display() if hasattr(order, 'get_payment_method_display') else ""
+            payment_method_checks = get_final_payment_checks(
+                order.id, 
+                payment_method,
+                payment_details
+            )
+            
+            return {
+                "order_number": order.order_number,
+                "placed_on": order.created_at.strftime("%Y-%m-%d %H:%M:%S") if order.created_at else "",
+                "estimated_delivery": (
+                    order.delivery_date.strftime("%Y-%m-%d %H:%M:%S") 
+                    if order.delivery_date 
+                    else "Not available"
+                ),
+                "review_present": review_exists,
+                "items": item_details,
+                "delivery_address": address_details,
+                "restaurant_details": restaurant_details,
+                "payment_details": payment_details,
+                "coupon_details_details": coupon_details,
+                "payment_method_checks": payment_method_checks,
+            }
+        except Exception as e:
+            logger.error("Error building order response for %s: %s", order.order_number, str(e))
+            raise
+    
+    def post(self, request, *args, **kwargs):
+        """
+        Handle POST request for tracking orders.
+        """
+        logger.info("TrackOrder called with data: %s", request.data)
+        
+        try:
+            # Validate request data
+            is_valid, error_message = self._validate_request_data(request.data)
+            if not is_valid:
+                return Response(
+                    {"status": "error", "message": error_message},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
             user_id = request.data.get('user_id')
             order_number = request.data.get('order_number')
-            user = User.objects.filter(id=user_id).first()
+            
+            # Get user
+            user, error = self._get_user(user_id)
             if not user:
-                logger.warning("User not found: user_id=%s", user_id)
-                return Response({"status": "error", "message": "User not found"}, status=status.HTTP_404_NOT_FOUND)
-
-            full_name = user.full_name
-            orders = Order.objects.filter(user_id=user_id, order_number=order_number)
+                return Response(
+                    {"status": "error", "message": error},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            
+            # Get orders
+            orders = Order.objects.filter(
+                user_id=user_id, 
+                order_number=order_number
+            ).select_related('restaurant', 'restaurant__restaurant_location', 
+                           'restaurant__owner_details')
+            
+            if not orders.exists():
+                logger.info("No orders found for user_id=%s, order_number=%s", user_id, order_number)
+                return Response({
+                    "status": "success",
+                    "orders": [],
+                    "message": "No orders found"
+                })
+            
+            # Process each order
             data = []
             for order in orders:
-                # Get delivery address
-                delivery_address = UserDeliveryAddress.objects.filter(id=order.delivery_address_id).first()
-
-                if delivery_address:
-                    address_parts = [
-                        delivery_address.street_address,
-                        delivery_address.city,
-                        delivery_address.state,
-                        delivery_address.zip_code,
-                        delivery_address.country
-                    ]
-                    address_string = ", ".join([part for part in address_parts if part])
-                else:
-                    address_string = ""
-
-                address_details = {
-                    "full_name": full_name,
-                    "address": address_string,
-                    "landmark": delivery_address.near_by_landmark if delivery_address else "",
-                    "home_type": delivery_address.home_type if delivery_address else "",
-                    "phone_number": user.contact_number if hasattr(user, 'contact_number') else "",  # optional handling
-                }
-
-                # Get item details
-                cart_items = Cart.objects.filter(order_number=order.order_number)
-                item_details = []
-                subtotal = Decimal(0)
-                for item in cart_items:
-                    menu_item = RestaurantMenu.objects.filter(id=item.item_id).first()
-                    price = item.item_price if item.item_price is not None else Decimal(0)
-                    item_total = price
-                    subtotal += item_total
-                    item_details.append({
-                        "item_name": menu_item.item_name if menu_item else "Unknown",
-                        "quantity": item.quantity,
-                        "unit_price": str(price),
-                        "total_price": str(item_total),
-                        "buy_one_get_one_free": item.buy_one_get_one_free
-                    })
-
-                if order.coupon_id:
-                    try:
-                        coupon = OfferDetail.objects.get(id=order.coupon_id)
-                        coupon_code = coupon.code
-                        coupon_code_text = f"Discount coupon ({coupon_code})"
-                    except Coupon.DoesNotExist:
-                        coupon_code = None
-                        coupon_code_text = f"Discount"
-                        discount = Decimal('0.00')
-                else:
-                    coupon_code = None
-                    coupon_code_text = f"Discount"
-                    discount = Decimal('0.00')
-
-
-                review_exists = OrderReview.objects.filter(order_id=order.order_number, user_id=user_id).exists()
-                order_status = order.get_status_display()
-
-                if review_exists == False and order_status == "Delivered":
-                    review_exists = False
-                elif review_exists == True and order_status == "Delivered":
-                    review_exists = True
-                else:
-                    review_exists = True
-
-                restaurant = order.restaurant
-                location = restaurant.restaurant_location
-                restaurant_address_line = f"{location.shop_no_building or ''} {location.floor_tower or ''} {location.area_sector_locality}, {location.city}, {location.nearby_locality or ''}".strip().replace("  ", " ")
+                try:
+                    order_data = self._build_order_response(order, user)
+                    data.append(order_data)
+                except Exception as e:
+                    logger.error("Error processing order %s: %s", order.order_number, str(e))
+                    # Continue with next order instead of failing completely
             
-
-                order_payment_details = {
-                    "subtotal": str(subtotal),
-                    "delivery_fee": str(order.delivery_fee),
-                    "total": str(
-                        order.total_amount - (order.coupon_discount or 0)
-                    ),
-                    "payment_status": order.get_payment_status_display(),
-                    "order_status": order.get_status_display(),
-                }
-
-                coupon_details_details = {
-                    "coupon_code": coupon_code,
-                    "coupon_discount": (
-                        order.coupon_discount
-                        if order.coupon_discount
-                        else round(discount)
-                    ),
-                    "coupon_code_text": coupon_code_text,
-                }
-
-                restaurant_details = {
-                    "restaurant_id": order.restaurant_id,
-                    "restaurant_name": order.restaurant.restaurant_name,
-                    "restaurant_address_line": restaurant_address_line,
-                    "restaurant_image": order.restaurant.profile_image.url,
-                    "restaurant_contact": order.restaurant.owner_details.owner_contact,
-                }
-
-                payment_method_checks = get_final_payment_checks(order.id, order.get_payment_method_display(),order_payment_details)
-
-                order_data = {
-                    "order_number": order.order_number,
-                    "placed_on": order.created_at.strftime("%Y-%m-%d %H:%M:%S"),
-                    "estimated_delivery": order.delivery_date.strftime("%Y-%m-%d %H:%M:%S") if order.delivery_date else "Not available",
-                    "review_present": review_exists,
-                    "items": item_details,
-                    "delivery_address": address_details,
-                    "restaurant_details":restaurant_details,
-                    "payment_details":order_payment_details,
-                    "coupon_details_details":coupon_details_details,
-                    "payment_method_checks": payment_method_checks,
-                }
-
-                data.append(order_data)
-
-            logger.info("TrackOrder success for user_id=%s, order_number=%s", user_id, order_number)
+            logger.info(
+                "TrackOrder success: user_id=%s, order_number=%s, orders_count=%d",
+                user_id, order_number, len(data)
+            )
+            
             return Response({
                 "status": "success",
-                "orders": data
+                "orders": data,
+                "total_orders": len(data)
             })
-
+            
         except Exception as e:
             logger.exception("TrackOrder failed: %s", str(e))
             return Response(
-                {"status": "error", "message": str(e)},
+                {"status": "error", "message": "An internal error occurred. Please try again."},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
