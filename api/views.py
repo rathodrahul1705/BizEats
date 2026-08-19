@@ -414,7 +414,7 @@ class OfferViewSet(viewsets.ModelViewSet):
         code = self.request.query_params.get('code')
         source = self.request.query_params.get("source", None)
 
-        logger.info(f"Offer queryset request from user: {user.email} (Role: {getattr(user, 'role', 'N/A')})")
+        logger.info(f"Offer queryset request from user: {user.email} source: {source} | code: {code} (Role: {getattr(user, 'role', 'N/A')})")
 
         # Base queryset
         queryset = OfferDetail.objects.all().order_by('-created_at')
@@ -429,8 +429,6 @@ class OfferViewSet(viewsets.ModelViewSet):
             logger.info(f"Admin user {user.email} viewing all offers")
             return queryset
 
-        # ✅ NON-ADMIN: APPLY FILTERS
-        # App users should NOT see marketing coupons in list view
         if source is None:
             queryset = queryset.filter(is_marketing_coupon=False)
             logger.info(f"Non-web user {user.email}: Filtering out marketing coupons")
