@@ -332,7 +332,7 @@ class OfferViewSet(viewsets.ModelViewSet):
         code = self.request.query_params.get('code')
         source = self.request.query_params.get("source", None)
 
-        # Base queryset - start with all offers
+        # Base queryset
         queryset = OfferDetail.objects.all().order_by('-created_at')
 
         # Filter by code if provided
@@ -343,18 +343,13 @@ class OfferViewSet(viewsets.ModelViewSet):
         if hasattr(user, 'role') and user.role == 2:
             return queryset
 
-        # ✅ FILTER BASED ON SOURCE FOR NON-ADMIN
-        if source == "web":
-            # Web users see all non-marketing offers
+        # ✅ NON-ADMIN: APPLY FILTERS
+        # App users should NOT see marketing coupons in list view
+        if source != "web":
             queryset = queryset.filter(is_marketing_coupon=False)
-        else:
-            # Mobile/app users see all offers (both marketing and non-marketing)
-            # No filter on is_marketing_coupon
-            pass
 
-        # ✅ NON-ADMIN: SHOW ONLY THEIR RESTAURANT OFFERS
+        # Filter by restaurant for non-admin
         user_restaurants = []
-
         if hasattr(user, 'restaurants'):
             user_restaurants = user.restaurants.all()
 
@@ -363,6 +358,25 @@ class OfferViewSet(viewsets.ModelViewSet):
             return queryset.filter(restaurant_id__in=restaurant_ids)
 
         return queryset.none()
+
+    def get_object(self):
+        """
+        Override get_object to bypass queryset filtering for detail/update/delete operations.
+        This allows app users to update/delete marketing coupons even though they're filtered out in list view.
+        """
+        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
+        pk = self.kwargs.get(lookup_url_kwarg)
+        
+        # Get the object directly from database
+        try:
+            obj = OfferDetail.objects.get(pk=pk)
+        except OfferDetail.DoesNotExist:
+            from rest_framework.exceptions import NotFound
+            raise NotFound('Offer not found')
+        
+        # Check if user has permission to access this object
+        self.check_object_permissions(self.request, obj)
+        return obj
 
     def perform_create(self, serializer):
         user = self.request.user
@@ -411,7 +425,7 @@ class OfferViewSet(viewsets.ModelViewSet):
 
     def update(self, request, *args, **kwargs):
         user = request.user
-        instance = self.get_object()
+        instance = self.get_object()  # This now uses the overridden get_object
         prev_status = instance.is_active
 
         # Permission check for non-admin
@@ -442,7 +456,7 @@ class OfferViewSet(viewsets.ModelViewSet):
 
     def destroy(self, request, *args, **kwargs):
         user = request.user
-        instance = self.get_object()
+        instance = self.get_object()  # This now uses the overridden get_object
 
         if not (hasattr(user, 'role') and user.role == 2):
             if instance.restaurant:
@@ -454,7 +468,13 @@ class OfferViewSet(viewsets.ModelViewSet):
                     )
 
         return super().destroy(request, *args, **kwargs)
-        
+
+    def retrieve(self, request, *args, **kwargs):
+        """Override retrieve to use the overridden get_object"""
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
+
     @action(detail=False, methods=['get'])
     def global_offers(self, request):
         queryset = OfferDetail.objects.filter(restaurant__isnull=True)
