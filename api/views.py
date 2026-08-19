@@ -330,10 +330,10 @@ class OfferViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         code = self.request.query_params.get('code')
+        source = self.request.query_params.get("source", None)
 
-        queryset = OfferDetail.objects.filter(
-            is_marketing_coupon=False
-        ).order_by('-created_at')
+        # Base queryset - start with all offers
+        queryset = OfferDetail.objects.all().order_by('-created_at')
 
         # Filter by code if provided
         if code:
@@ -342,6 +342,15 @@ class OfferViewSet(viewsets.ModelViewSet):
         # ✅ ADMIN: SHOW ALL OFFERS (NO FILTER)
         if hasattr(user, 'role') and user.role == 2:
             return queryset
+
+        # ✅ FILTER BASED ON SOURCE FOR NON-ADMIN
+        if source == "web":
+            # Web users see all non-marketing offers
+            queryset = queryset.filter(is_marketing_coupon=False)
+        else:
+            # Mobile/app users see all offers (both marketing and non-marketing)
+            # No filter on is_marketing_coupon
+            pass
 
         # ✅ NON-ADMIN: SHOW ONLY THEIR RESTAURANT OFFERS
         user_restaurants = []
@@ -445,7 +454,7 @@ class OfferViewSet(viewsets.ModelViewSet):
                     )
 
         return super().destroy(request, *args, **kwargs)
-
+        
     @action(detail=False, methods=['get'])
     def global_offers(self, request):
         queryset = OfferDetail.objects.filter(restaurant__isnull=True)
