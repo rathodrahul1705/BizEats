@@ -431,7 +431,7 @@ class OfferViewSet(viewsets.ModelViewSet):
 
         # ✅ NON-ADMIN: APPLY FILTERS
         # App users should NOT see marketing coupons in list view
-        if source != "web":
+        if source is None:
             queryset = queryset.filter(is_marketing_coupon=False)
             logger.info(f"Non-web user {user.email}: Filtering out marketing coupons")
 
