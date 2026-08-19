@@ -411,40 +411,71 @@ class OfferViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        code = self.request.query_params.get('code')
-        source = self.request.query_params.get("source", None)
+        code = self.request.query_params.get("code")
+        source = self.request.query_params.get("source")
 
-        logger.info(f"Offer queryset request from user: {user.email} source: {source} | code: {code} (Role: {getattr(user, 'role', 'N/A')})")
+        logger.info(
+            f"Offer queryset request from user: {user.email} "
+            f"source: {source} | code: {code} "
+            f"(Role: {getattr(user, 'role', 'N/A')})"
+        )
 
         # Base queryset
-        queryset = OfferDetail.objects.all().order_by('-created_at')
+        queryset = OfferDetail.objects.all().order_by("-created_at")
 
-        # Filter by code if provided
+        # Filter by code
         if code:
             logger.info(f"Filtering offers by code: {code}")
             queryset = queryset.filter(code=code)
 
-        # ✅ ADMIN: SHOW ALL OFFERS (NO FILTER)
-        if hasattr(user, 'role') and user.role == 2:
+        # ADMIN: return all offers
+        if getattr(user, "role", None) == 2:
             logger.info(f"Admin user {user.email} viewing all offers")
             return queryset
 
-        if source is None:
+        # NON-ADMIN
+        # Only exclude marketing coupons when source is NOT web
+        if source != "web":
             queryset = queryset.filter(is_marketing_coupon=False)
-            logger.info(f"Non-web user {user.email}: Filtering out marketing coupons")
+            logger.info(
+                f"Non-web request for {user.email}: "
+                f"excluding marketing coupons"
+            )
+        else:
+            logger.info(
+                f"Web request for {user.email}: "
+                f"including marketing coupons"
+            )
 
-        # Filter by restaurant for non-admin
-        user_restaurants = []
-        if hasattr(user, 'restaurants'):
-            user_restaurants = user.restaurants.all()
+        # Get restaurants associated with user
+        if hasattr(user, "restaurants"):
+            restaurant_ids = list(
+                user.restaurants.values_list("restaurant_id", flat=True)
+            )
+        else:
+            restaurant_ids = []
 
-        if user_restaurants:
-            restaurant_ids = [r.restaurant_id for r in user_restaurants]
-            logger.info(f"Filtering offers for restaurants: {restaurant_ids}")
-            return queryset.filter(restaurant_id__in=restaurant_ids)
+        logger.info(
+            f"User {user.email} restaurant IDs: {restaurant_ids}"
+        )
 
-        logger.info(f"No restaurants associated with user {user.email}")
-        return queryset.none()
+        # No restaurants -> no offers
+        if not restaurant_ids:
+            logger.info(
+                f"No restaurants associated with user {user.email}"
+            )
+            return queryset.none()
+
+        # Filter offers by user's restaurants
+        queryset = queryset.filter(
+            restaurant_id__in=restaurant_ids
+        )
+
+        logger.info(
+            f"Final offer count for {user.email}: {queryset.count()}"
+        )
+
+        return queryset
 
     def get_object(self):
         """
