@@ -36,6 +36,7 @@ class OfferSerializer(serializers.ModelSerializer):
             'credit_amount',
             'credit_type',
             'credit_expiry_days',
+            'is_marketing_coupon'
         ]
         read_only_fields = ['times_used', 'created_at', 'updated_at', 'is_valid']
         extra_kwargs = {
@@ -50,12 +51,31 @@ class OfferSerializer(serializers.ModelSerializer):
             'credit_expiry_days': {'required': False, 'allow_null': True},
             'sub_filter': {'required': False, 'allow_null': True},
             'minimum_order_amount': {'required': False, 'default': 0},
+            'is_marketing_coupon': {'required': False, 'default': False}
         }
+    
+    def to_internal_value(self, data):
+        """Handle boolean conversion for is_marketing_coupon"""
+        # Make a mutable copy of data
+        mutable_data = data.copy() if hasattr(data, 'copy') else dict(data)
+        
+        # Convert is_marketing_coupon to boolean properly
+        if 'is_marketing_coupon' in mutable_data:
+            if isinstance(mutable_data['is_marketing_coupon'], str):
+                mutable_data['is_marketing_coupon'] = mutable_data['is_marketing_coupon'].lower() == 'true'
+            elif mutable_data['is_marketing_coupon'] is not None:
+                mutable_data['is_marketing_coupon'] = bool(mutable_data['is_marketing_coupon'])
+        
+        return super().to_internal_value(mutable_data)
     
     def validate(self, data):
         """Custom validation matching model validation"""
         offer_type = data.get('offer_type', self.instance.offer_type if self.instance else None)
         sub_filter = data.get('sub_filter', self.instance.sub_filter if self.instance else None)
+        
+        # Handle is_marketing_coupon properly
+        if 'is_marketing_coupon' in data:
+            data['is_marketing_coupon'] = bool(data['is_marketing_coupon'])
         
         # Offer type validation
         if not offer_type:
@@ -165,6 +185,12 @@ class OfferSerializer(serializers.ModelSerializer):
         
         if 'minimum_order_amount' not in validated_data:
             validated_data['minimum_order_amount'] = 0
+        
+        # Ensure is_marketing_coupon is properly set
+        if 'is_marketing_coupon' in validated_data:
+            validated_data['is_marketing_coupon'] = bool(validated_data['is_marketing_coupon'])
+        else:
+            validated_data['is_marketing_coupon'] = False
             
         return super().create(validated_data)
     
@@ -172,8 +198,18 @@ class OfferSerializer(serializers.ModelSerializer):
         # Handle minimum order amount default
         if 'minimum_order_amount' not in validated_data:
             validated_data['minimum_order_amount'] = instance.minimum_order_amount or 0
-            
+        
+        # Explicitly handle is_marketing_coupon
+        # If it's in validated_data, use it; otherwise keep the instance value
+        if 'is_marketing_coupon' in validated_data:
+            # Convert to boolean explicitly
+            validated_data['is_marketing_coupon'] = bool(validated_data['is_marketing_coupon'])
+        else:
+            # Keep the existing value
+            validated_data['is_marketing_coupon'] = instance.is_marketing_coupon
+        
         return super().update(instance, validated_data)
+
 
 def validate_offer_payload(data, is_update=False, instance=None, user=None):
     """

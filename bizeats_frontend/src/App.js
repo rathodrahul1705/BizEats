@@ -211,7 +211,7 @@ const App = () => {
               <OrderManagement user={user} setUser={setUser} />
             </VendorPrivateRoute>
           } />
-          <Route path="/vendor-dashboard/coupon/management/:restaurant_id" element={
+          <Route path="/vendor-dashboard/coupon/management" element={
             <VendorPrivateRoute user={user}>
               <CouponManagement user={user} setUser={setUser} />
             </VendorPrivateRoute>

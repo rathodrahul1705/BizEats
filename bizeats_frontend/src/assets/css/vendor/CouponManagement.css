@@ -718,10 +718,132 @@
   margin-top: 2px;
 }
 
-.cm-hint {
+.cm-field-hint {
+  display: block;
   color: #94a3b8;
   font-size: 12px;
-  margin-top: 2px;
+  margin-top: 4px;
+  line-height: 1.5;
+}
+
+/* Code input + "Generate" button row */
+.cm-code-input-group {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.cm-code-input-group input {
+  flex: 1;
+  min-width: 0;
+}
+
+.cm-generate-btn {
+  flex-shrink: 0;
+  padding: 0 16px;
+  font-size: 13px;
+}
+
+/* ===== MARKETING COUPON TOGGLE ===== */
+.cm-marketing-group {
+  grid-column: 1 / -1;
+  padding: 16px 20px;
+  background: #f8fafc;
+  border-radius: 14px;
+  border: 1px solid #f1f5f9;
+}
+
+.cm-marketing-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  color: #1e293b;
+  margin-bottom: 8px;
+}
+
+.cm-marketing-control {
+  display: flex;
+  align-items: center;
+}
+
+/* Toggle Switch - Improved */
+.cm-toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #1e293b;
+  padding: 4px 0;
+  width: 100%;
+}
+
+.cm-toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 48px;
+  height: 26px;
+  flex-shrink: 0;
+}
+
+.cm-toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.cm-toggle-slider {
+  position: absolute;
+  inset: 0;
+  background: #cbd5e1;
+  border-radius: 999px;
+  transition: all 0.25s ease;
+  cursor: pointer;
+}
+
+.cm-toggle-slider::before {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  left: 3px;
+  bottom: 3px;
+  background: white;
+  border-radius: 50%;
+  transition: all 0.25s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.cm-toggle-switch input:checked + .cm-toggle-slider {
+  background: #f97316;
+}
+
+.cm-toggle-switch input:checked + .cm-toggle-slider::before {
+  transform: translateX(22px);
+}
+
+.cm-toggle-switch input:focus-visible + .cm-toggle-slider {
+  outline: 2px solid #f97316;
+  outline-offset: 2px;
+}
+
+.cm-toggle-switch input:active + .cm-toggle-slider::before {
+  width: 24px;
+}
+
+.cm-toggle-text {
+  font-weight: 500;
+  color: #475569;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.cm-toggle-text.active {
+  color: #f97316;
+  font-weight: 600;
 }
 
 /* Offer Type Selector */
@@ -983,62 +1105,6 @@
   background: #b91c1c;
 }
 
-/* ===== RESTAURANT FILTER ===== */
-.cm-restaurant-filter {
-  background: white;
-  border-radius: 16px;
-  padding: 16px 20px;
-  margin-bottom: 24px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-  border: 1px solid #f1f5f9;
-}
-
-.cm-restaurant-filter-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 12px;
-}
-
-.cm-restaurant-filter-header h3 {
-  font-size: 16px;
-  color: #0f172a;
-  margin: 0;
-}
-
-.cm-restaurant-filter-icon {
-  color: #f97316;
-  font-size: 18px;
-}
-
-.cm-restaurant-filter-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.cm-restaurant-filter-btn {
-  padding: 6px 16px;
-  border-radius: 20px;
-  border: 1.5px solid #e2e8f0;
-  background: white;
-  font-size: 13px;
-  font-weight: 500;
-  color: #475569;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.cm-restaurant-filter-btn:hover {
-  border-color: #cbd5e1;
-}
-
-.cm-restaurant-filter-btn.active {
-  border-color: #f97316;
-  background: #fff7ed;
-  color: #f97316;
-}
-
 /* ===== RESPONSIVE DESIGN ===== */
 @media (max-width: 1024px) {
   .cm-offers-grid {
@@ -1125,9 +1191,47 @@
   .cm-offer-type-selector {
     grid-template-columns: repeat(3, 1fr);
   }
-  
-  .cm-restaurant-filter {
+
+  .cm-code-input-group {
+    flex-direction: column;
+  }
+
+  .cm-generate-btn {
+    width: 100%;
+  }
+
+  /* Marketing toggle responsive */
+  .cm-marketing-group {
     padding: 14px 16px;
+  }
+  
+  .cm-marketing-label {
+    font-size: 13px;
+  }
+  
+  .cm-toggle-label {
+    gap: 12px;
+    font-size: 13px;
+  }
+  
+  .cm-toggle-switch {
+    width: 44px;
+    height: 24px;
+  }
+  
+  .cm-toggle-slider::before {
+    width: 18px;
+    height: 18px;
+    left: 3px;
+    bottom: 3px;
+  }
+  
+  .cm-toggle-switch input:checked + .cm-toggle-slider::before {
+    transform: translateX(20px);
+  }
+  
+  .cm-toggle-text {
+    font-size: 13px;
   }
 }
 
@@ -1264,15 +1368,6 @@
     margin: 8px;
   }
   
-  .cm-restaurant-filter-grid {
-    gap: 6px;
-  }
-  
-  .cm-restaurant-filter-btn {
-    padding: 5px 12px;
-    font-size: 12px;
-  }
-  
   .cm-sub-filter-selector {
     gap: 4px;
   }
@@ -1301,6 +1396,50 @@
   
   .cm-header-actions {
     gap: 6px;
+  }
+
+  /* Marketing toggle mobile */
+  .cm-marketing-group {
+    padding: 12px 14px;
+    border-radius: 12px;
+  }
+  
+  .cm-marketing-label {
+    font-size: 12px;
+    margin-bottom: 6px;
+  }
+  
+  .cm-toggle-label {
+    gap: 10px;
+    font-size: 12px;
+    flex-wrap: wrap;
+  }
+  
+  .cm-toggle-switch {
+    width: 40px;
+    height: 22px;
+  }
+  
+  .cm-toggle-slider::before {
+    width: 16px;
+    height: 16px;
+    left: 3px;
+    bottom: 3px;
+  }
+  
+  .cm-toggle-switch input:checked + .cm-toggle-slider::before {
+    transform: translateX(18px);
+  }
+  
+  .cm-toggle-text {
+    font-size: 12px;
+    flex: 1;
+    min-width: 120px;
+  }
+  
+  .cm-field-hint {
+    font-size: 11px;
+    margin-top: 4px;
   }
 }
 
@@ -1333,19 +1472,46 @@
   .cm-offer-type-selector {
     grid-template-columns: 1fr 1fr;
   }
+
+  /* Marketing toggle small phones */
+  .cm-marketing-group {
+    padding: 10px 12px;
+  }
+  
+  .cm-toggle-switch {
+    width: 36px;
+    height: 20px;
+  }
+  
+  .cm-toggle-slider::before {
+    width: 14px;
+    height: 14px;
+    left: 3px;
+    bottom: 3px;
+  }
+  
+  .cm-toggle-switch input:checked + .cm-toggle-slider::before {
+    transform: translateX(16px);
+  }
+  
+  .cm-toggle-text {
+    font-size: 11px;
+    min-width: 80px;
+  }
 }
 
 /* Touch-friendly */
 .cm-btn,
 .cm-offer-type-option,
 .cm-sub-filter-option,
-.cm-restaurant-filter-btn,
 .cm-edit-btn,
 .cm-delete-btn,
 .cm-copy-btn,
 .cm-close-btn,
 .cm-confirmation-cancel,
-.cm-confirmation-confirm {
+.cm-confirmation-confirm,
+.cm-toggle-label,
+.cm-toggle-switch {
   -webkit-tap-highlight-color: rgba(249, 115, 22, 0.1);
 }
 
