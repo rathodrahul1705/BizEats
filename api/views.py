@@ -425,55 +425,44 @@ class OfferViewSet(viewsets.ModelViewSet):
 
         # Filter by code
         if code:
-            logger.info(f"Filtering offers by code: {code}")
             queryset = queryset.filter(code=code)
 
-        # ADMIN: return all offers
+        # ADMIN: show all offers
         if getattr(user, "role", None) == 2:
-            logger.info(f"Admin user {user.email} viewing all offers")
             return queryset
 
-        # NON-ADMIN
-        # Only exclude marketing coupons when source is NOT web
+        # Non-admin:
+        # source=web -> include marketing coupons
+        # source != web -> exclude marketing coupons
         if source != "web":
             queryset = queryset.filter(is_marketing_coupon=False)
-            logger.info(
-                f"Non-web request for {user.email}: "
-                f"excluding marketing coupons"
-            )
-        else:
-            logger.info(
-                f"Web request for {user.email}: "
-                f"including marketing coupons"
-            )
 
-        # Get restaurants associated with user
+        # Get restaurant IDs
+        restaurant_ids = []
+
         if hasattr(user, "restaurants"):
             restaurant_ids = list(
                 user.restaurants.values_list("restaurant_id", flat=True)
             )
-        else:
-            restaurant_ids = []
 
         logger.info(
             f"User {user.email} restaurant IDs: {restaurant_ids}"
         )
 
-        # No restaurants -> no offers
-        if not restaurant_ids:
-            logger.info(
-                f"No restaurants associated with user {user.email}"
+        # Apply restaurant filter ONLY if restaurant IDs exist
+        if restaurant_ids:
+            queryset = queryset.filter(
+                restaurant_id__in=restaurant_ids
             )
-            return queryset.none()
 
-        # Filter offers by user's restaurants
-        queryset = queryset.filter(
-            restaurant_id__in=restaurant_ids
-        )
-
-        logger.info(
-            f"Final offer count for {user.email}: {queryset.count()}"
-        )
+            logger.info(
+                f"Filtering offers by restaurants: {restaurant_ids}"
+            )
+        else:
+            logger.info(
+                f"No restaurant IDs for {user.email}, "
+                f"skipping restaurant filter"
+            )
 
         return queryset
 
