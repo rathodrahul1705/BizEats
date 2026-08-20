@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import ReactDOM from "react-dom";
 import { 
   Edit, 
   Trash, 
@@ -79,9 +80,9 @@ const MenuManagement = () => {
 
   // Category form state
   const [categoryForm, setCategoryForm] = useState({
-    name: "",
-    description: "",
-    is_active: true
+    category_name: "",
+    category_description: "",
+    category_status: true
   });
 
   // Addon Group form state
@@ -147,6 +148,26 @@ const MenuManagement = () => {
     });
     setGroupedMenuItems(grouped);
   }, [filteredItems]);
+
+  // Lock background scroll while any modal/drawer is open, and allow Escape to close it.
+  // Rendering the modal through a portal (see below) keeps this independent from the
+  // expanded/collapsed state of the menu table.
+  useEffect(() => {
+    if (!showModal) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") setShowModal(false);
+    };
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [showModal]);
 
   const fetchAllData = async () => {
     try {
@@ -587,7 +608,7 @@ const MenuManagement = () => {
     try {
       const formDataToSend = new FormData();
       Object.keys(categoryForm).forEach(key => {
-        if (key === "is_active") {
+        if (key === "category_status") {
           formDataToSend.append(key, categoryForm[key] ? "1" : "0");
         } else {
           formDataToSend.append(key, categoryForm[key]);
@@ -606,9 +627,9 @@ const MenuManagement = () => {
       if (!response.ok) throw new Error("Failed to add category");
       
       setCategoryForm({
-        name: "",
-        description: "",
-        is_active: true
+        category_name: "",
+        category_description: "",
+        category_status: true
       });
       setShowModal(false);
       fetchCategories();
@@ -916,9 +937,9 @@ const MenuManagement = () => {
               onClick={() => {
                 setShowModal("category");
                 setCategoryForm({
-                  name: "",
-                  description: "",
-                  is_active: true
+                  category_name: "",
+                  category_description: "",
+                  category_status: true
                 });
               }}
             >
@@ -1574,10 +1595,16 @@ const MenuManagement = () => {
         </>
       )}
 
-      {/* Menu Item Modal with Addon Section */}
-      {showModal === true && (
-        <div className="vendor-menu-management-modal-overlay vendor-menu-management-show">
-          <div className="vendor-menu-management-modal-content">
+      {/* Menu Item Drawer (Add/Edit) - rendered via portal so it always covers the
+          full viewport regardless of the menu table's expand/collapse state */}
+      {showModal === true && ReactDOM.createPortal(
+        <div
+          className="vendor-menu-management-modal-overlay vendor-menu-management-drawer-overlay vendor-menu-management-show"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) setShowModal(false);
+          }}
+        >
+          <div className="vendor-menu-management-modal-content vendor-menu-management-drawer">
             <div className="vendor-menu-management-modal-header">
               <h3>{editingItem ? "Edit Menu Item" : "Add New Menu Item"}</h3>
               <button className="vendor-menu-management-close-modal" onClick={() => setShowModal(false)}>
@@ -1585,7 +1612,7 @@ const MenuManagement = () => {
               </button>
             </div>
             
-            <form onSubmit={handleSubmitItem}>
+            <form onSubmit={handleSubmitItem} className="vendor-menu-management-drawer-form">
               <div className="vendor-menu-management-modal-body">
                 <div className="vendor-menu-management-modal-section">
                   <h4 className="vendor-menu-management-modal-section-title">
@@ -2024,12 +2051,18 @@ const MenuManagement = () => {
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Category Modal */}
-      {showModal === "category" && (
-        <div className="vendor-menu-management-modal-overlay vendor-menu-management-show">
+      {showModal === "category" && ReactDOM.createPortal(
+        <div
+          className="vendor-menu-management-modal-overlay vendor-menu-management-show"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) setShowModal(false);
+          }}
+        >
           <div className="vendor-menu-management-modal-content">
             <div className="vendor-menu-management-modal-header">
               <h3>{categoryForm.id ? "Edit Category" : "Add New Category"}</h3>
@@ -2098,12 +2131,18 @@ const MenuManagement = () => {
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Addon Group Modal */}
-      {showModal === "addon-group" && (
-        <div className="vendor-menu-management-modal-overlay vendor-menu-management-show">
+      {showModal === "addon-group" && ReactDOM.createPortal(
+        <div
+          className="vendor-menu-management-modal-overlay vendor-menu-management-show"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) setShowModal(false);
+          }}
+        >
           <div className="vendor-menu-management-modal-content vendor-menu-management-addon-group-modal">
             <div className="vendor-menu-management-modal-header">
               <h3>{addonGroupForm.id ? "Edit Add-on Group" : "Add New Add-on Group"}</h3>
@@ -2484,7 +2523,8 @@ const MenuManagement = () => {
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

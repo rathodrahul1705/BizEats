@@ -1374,8 +1374,8 @@
 }
 
 /* Image Upload - Compact */
-.vendor-menu-management-image-upload-area {
-  margin-top: 8px;
+.vendor-menu-management-image-upload {
+  margin-top: 4px;
 }
 
 .vendor-menu-management-file-input {
@@ -1387,55 +1387,89 @@
   cursor: pointer;
 }
 
-.vendor-menu-management-image-upload-placeholder {
+.vendor-menu-management-image-placeholder {
   border: 2px dashed #d1d5db;
-  border-radius: 6px;
+  border-radius: 8px;
   padding: 32px 16px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 6px;
   color: #9ca3af;
   transition: all 0.15s ease;
   text-align: center;
   background: #f9fafb;
 }
 
-.vendor-menu-management-image-upload-placeholder:hover {
+.vendor-menu-management-image-placeholder:hover {
   border-color: #4f46e5;
+  color: #4f46e5;
+  background: #eef2ff;
+}
+
+.vendor-menu-management-image-placeholder svg {
+  color: #9ca3af;
+  transition: color 0.15s ease;
+}
+
+.vendor-menu-management-image-placeholder:hover svg {
   color: #4f46e5;
 }
 
-.vendor-menu-management-image-upload-text {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.vendor-menu-management-image-upload-text span {
+.vendor-menu-management-image-placeholder span {
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 600;
+  color: #374151;
 }
 
-.vendor-menu-management-image-upload-text small {
+.vendor-menu-management-image-placeholder:hover span {
+  color: #4f46e5;
+}
+
+.vendor-menu-management-image-placeholder small {
   font-size: 11px;
   color: #9ca3af;
 }
 
 .vendor-menu-management-image-preview {
-  width: 160px;
-  height: 120px;
-  border-radius: 6px;
+  position: relative;
+  width: 100%;
+  max-width: 280px;
+  height: 160px;
+  border-radius: 8px;
   overflow: hidden;
   border: 1px solid #e5e7eb;
-  position: relative;
+  background: #f9fafb;
 }
 
 .vendor-menu-management-image-preview img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;
+}
+
+.vendor-menu-management-image-change {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(17, 24, 39, 0.72);
+  color: #ffffff;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  padding: 8px;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.vendor-menu-management-image-preview:hover .vendor-menu-management-image-change {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 /* Switch Styles - Compact */
@@ -2580,10 +2614,6 @@
 }
 
 /* Optimize performance */
-.vendor-menu-management {
-  contain: layout style paint;
-}
-
 .vendor-menu-management-table-section,
 .vendor-menu-management-categories-grid,
 .vendor-menu-management-addon-groups-grid,
