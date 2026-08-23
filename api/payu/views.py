@@ -53,6 +53,25 @@ def initiate_payment(request):
 
         # Extract and normalize data
         amount = data.get("total_amount")
+        coupon_discount = data.get("coupon_discount")
+        
+        if amount and coupon_discount:
+            
+            try:
+                amount = Decimal(amount) - Decimal(coupon_discount)
+                if amount < 0:
+                    logger.warning(f"Calculated amount is negative after discount: {amount}")
+                    return Response(
+                        {"error": "Invalid total amount after applying discount"},
+                        status=400
+                    )
+            except Exception as e:
+                logger.error(f"Error calculating discounted amount: {str(e)}")
+                return Response(
+                    {"error": "Invalid amount or discount value"},
+                    status=400
+                )
+                
         wallet_amount = data.get("wallet_amount")
         productinfo = data.get("productinfo")
         firstname = data.get("firstname")
