@@ -193,17 +193,19 @@ def calculate_delivery_cost(distance_km):
     """Calculate delivery cost based on distance."""
     logger.debug("calculate_delivery_cost: distance_km=%.2f", distance_km)
 
-    MIN_DISTANCE_KM = 0.5  # 500 meters
-    MIN_DELIVERY_FEE = 20  # ₹20
+    FREE_DELIVERY_DISTANCE_KM = 3.0
+    MIN_DISTANCE_KM = 0.5
+    MIN_DELIVERY_FEE = 20
 
-    if distance_km <= MIN_DISTANCE_KM:
+    if distance_km < FREE_DELIVERY_DISTANCE_KM:
+        cost = 0
+    elif distance_km <= MIN_DISTANCE_KM:
         cost = MIN_DELIVERY_FEE
     else:
         cost = distance_km * 11
 
     logger.debug("Delivery cost calculated: %.2f", cost)
     return round(cost, 2)
-
 
 def get_final_payment_checks(order_id, payment_method_display, order_payment_details):
     """
