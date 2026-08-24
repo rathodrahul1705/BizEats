@@ -188,12 +188,11 @@ def _get_routing_distance(
         logger.error("Routing failed: %s", str(e))
         return 0.0, 0, "0 km", 0
 
-
 def calculate_delivery_cost(distance_km):
     """Calculate delivery cost based on distance."""
     logger.debug("calculate_delivery_cost: distance_km=%.2f", distance_km)
 
-    FREE_DELIVERY_DISTANCE_KM = settings.FREE_DELIVERY_DISTANCE_KM
+    FREE_DELIVERY_DISTANCE_KM = 3.0
     MIN_DISTANCE_KM = 0.5
     MIN_DELIVERY_FEE = 20
 
