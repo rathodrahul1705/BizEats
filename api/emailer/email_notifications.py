@@ -119,6 +119,10 @@ def send_order_status_email(order):
     message_text = email_content["message"]
     restaurant_name = order.restaurant.restaurant_name
 
+    amount = order.total_amount if order.total_amount else Decimal('0.00')
+    if amount > 0 and discount_amount > 0:
+        amount = max(amount - discount_amount, Decimal('0.00'))
+
     html_message = f"""
     <html>
     <head>
@@ -197,7 +201,7 @@ def send_order_status_email(order):
                 </tr>
                 <tr>
                     <td>Grand Total</td>
-                    <td style="text-align: right;">₹{order.total_amount:.2f}</td>
+                    <td style="text-align: right;">₹{amount:.2f}</td>
                 </tr>
             </table>
 
