@@ -1,1370 +1,594 @@
-import React, { useState, useEffect } from 'react';
-import PropTypes from 'prop-types';
-import '../../src/assets/css/vendor/CouponManagement.css';
-import API_ENDPOINTS from "../components/config/apiConfig";
+import React, { useEffect, useState } from "react";
 import fetchData from "../components/services/apiService";
-import { useParams, useNavigate } from "react-router-dom";
+import API_ENDPOINTS from "../components/config/apiConfig";
+import "../assets/css/vendor/OrderManagement.css";
+import { useParams } from "react-router-dom";
+import { FaPhone, FaMapMarkerAlt, FaCreditCard, FaUser, FaClock, FaMotorcycle, FaWhatsapp } from "react-icons/fa";
+import StripeLoader from "../loader/StripeLoader";
 
-// Icons - using react-icons/fi
-import { 
-  FiPlus, FiRefreshCw, FiEdit2, FiTrash2, FiX, 
-  FiCheck, FiCalendar, FiTag, FiTruck, FiCreditCard,
-  FiPercent, FiDollarSign, FiClock, FiUsers, FiFilter,
-  FiSearch, FiAlertCircle, FiPackage,
-  FiGift, FiZap, FiTrendingUp,
-  FiUser, FiUserPlus, FiMapPin, FiGlobe, FiCopy
-} from 'react-icons/fi';
+const statusOptions = [
+  { id: 1, label: "Pending" },
+  { id: 2, label: "Confirmed" },
+  { id: 3, label: "Preparing" },
+  { id: 4, label: "Ready for Delivery/Pickup" },
+  { id: 5, label: "On the Way" },
+  { id: 6, label: "Delivered" },
+  { id: 7, label: "Cancelled" },
+  { id: 8, label: "Refunded" },
+];
 
-// ======================== CONSTANTS ========================
-const OFFER_TYPES = {
-  COUPON_CODE: 'coupon_code',
-  FREE_DELIVERY: 'free_delivery',
-  CREDIT: 'credit',
-  RESTAURANT_DEAL: 'restaurant_deal',
-  AUTO_DISCOUNT: 'auto_discount'
+// Map status strings to IDs
+const statusStringToId = {
+  "Pending": 1,
+  "Confirmed": 2,
+  "Preparing": 3,
+  "Ready for Delivery/Pickup": 4,
+  "On the Way": 5,
+  "Delivered": 6,
+  "Cancelled": 7,
+  "Refunded": 8
 };
 
-const SUB_FILTERS = {
-  NEW_USER: 'new_user',
-  MINIMUM_AMOUNT: 'minimum_amount',
-  SPECIFIC_RESTAURANT: 'specific_restaurant',
-  LOCATION_BASED: 'location_based',
-  REFERRAL_BONUS: 'referral_bonus',
-  CASHBACK: 'cashback'
+const paymentMethodIcons = {
+  "credit_card": <FaCreditCard />,
+  "debit_card": <FaCreditCard />,
+  "upi": "💳",
+  "net_banking": "🏦",
+  "cash_on_delivery": "💰",
+  "Eatoor Money": "💰"
 };
 
-const SUB_FILTER_DISPLAY = {
-  [SUB_FILTERS.NEW_USER]: { label: 'New User', icon: <FiUserPlus /> },
-  [SUB_FILTERS.MINIMUM_AMOUNT]: { label: 'Min Amount', icon: <FiDollarSign /> },
-  [SUB_FILTERS.SPECIFIC_RESTAURANT]: { label: 'Specific Restaurant', icon: <FiPackage /> },
-  [SUB_FILTERS.LOCATION_BASED]: { label: 'Location Based', icon: <FiMapPin /> },
-  [SUB_FILTERS.REFERRAL_BONUS]: { label: 'Referral Bonus', icon: <FiUsers /> },
-  [SUB_FILTERS.CASHBACK]: { label: 'Cashback', icon: <FiCreditCard /> }
-};
+const OrderManagement = ({ user }) => {
+  const { restaurant_id } = useParams();
+  const [orders, setOrders] = useState([]);
+  const [searchId, setSearchId] = useState("");
+  const [searchName, setSearchName] = useState("");
+  const [filterStatus, setFilterStatus] = useState("All");
+  const [recentlyUpdatedOrder, setRecentlyUpdatedOrder] = useState(null);
+  const [expandedOrder, setExpandedOrder] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-const OFFER_TYPE_DISPLAY = {
-  [OFFER_TYPES.COUPON_CODE]: { 
-    label: 'Coupon Code', 
-    icon: <FiTag />, 
-    color: '#f97316',
-    bgColor: '#fff7ed',
-    subFilters: [SUB_FILTERS.NEW_USER, SUB_FILTERS.MINIMUM_AMOUNT, SUB_FILTERS.SPECIFIC_RESTAURANT]
-  },
-  [OFFER_TYPES.FREE_DELIVERY]: { 
-    label: 'Free Delivery', 
-    icon: <FiTruck />, 
-    color: '#14b8a6',
-    bgColor: '#f0fdfa',
-    subFilters: [SUB_FILTERS.NEW_USER, SUB_FILTERS.MINIMUM_AMOUNT, SUB_FILTERS.LOCATION_BASED]
-  },
-  [OFFER_TYPES.CREDIT]: { 
-    label: 'Credit', 
-    icon: <FiCreditCard />, 
-    color: '#6366f1',
-    bgColor: '#eef2ff',
-    subFilters: [SUB_FILTERS.NEW_USER, SUB_FILTERS.REFERRAL_BONUS, SUB_FILTERS.CASHBACK]
-  },
-  [OFFER_TYPES.RESTAURANT_DEAL]: { 
-    label: 'Restaurant Deal', 
-    icon: <FiPackage />, 
-    color: '#f59e0b',
-    bgColor: '#fffbeb',
-    subFilters: [SUB_FILTERS.SPECIFIC_RESTAURANT]
-  },
-  [OFFER_TYPES.AUTO_DISCOUNT]: { 
-    label: 'Auto Discount', 
-    icon: <FiZap />, 
-    color: '#8b5cf6',
-    bgColor: '#f5f3ff',
-    subFilters: [SUB_FILTERS.NEW_USER, SUB_FILTERS.MINIMUM_AMOUNT]
-  }
-};
-
-const DISCOUNT_TYPES = {
-  PERCENTAGE: 'percentage',
-  FIXED_AMOUNT: 'fixed'
-};
-
-const CREDIT_TYPES = {
-  FIXED_AMOUNT: 'fixed_amount'
-};
-
-const STATUS = {
-  REJECT: 0,
-  APPROVED: 1,
-  PENDING_APPROVAL: 2
-};
-
-const STATUS_DISPLAY = {
-  [STATUS.REJECT]: { label: 'Rejected', color: '#dc2626', bgColor: '#fef2f2' },
-  [STATUS.APPROVED]: { label: 'Active', color: '#16a34a', bgColor: '#dcfce7' },
-  [STATUS.PENDING_APPROVAL]: { label: 'Pending', color: '#f59e0b', bgColor: '#fef3c7' }
-};
-
-const INITIAL_COUPON_STATE = {
-  id: null,
-  offer_type: '',
-  sub_filter: '',
-  code: '',
-  discount_type: '',
-  discount_value: '',
-  minimum_order_amount: 0,
-  valid_from: '',
-  valid_to: '',
-  max_uses: '',
-  max_uses_per_user: '',
-  times_used: 0,
-  is_active: STATUS.PENDING_APPROVAL,
-  restaurant: '',
-  max_delivery_distance: '',
-  max_delivery_fee: '',
-  credit_amount: '',
-  credit_type: CREDIT_TYPES.FIXED_AMOUNT,
-  credit_expiry_days: 30,
-};
-
-// ======================== HELPER FUNCTIONS ========================
-const formatDateForInput = (dateString) => {
-  if (!dateString) return '';
-  try {
-    const date = new Date(dateString);
-    const offset = date.getTimezoneOffset() * 60000;
-    return new Date(date.getTime() - offset).toISOString().slice(0, 16);
-  } catch {
-    return '';
-  }
-};
-
-const formatDisplayDate = (dateString) => {
-  if (!dateString) return 'N/A';
-  try {
-    return new Date(dateString).toLocaleDateString('en-IN', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric'
-    });
-  } catch {
-    return 'Invalid date';
-  }
-};
-
-// ======================== SUB-COMPONENTS ========================
-
-// Confirmation Popup
-const ConfirmationPopup = ({ message, onConfirm, onCancel }) => {
-  return (
-    <div className="cm-confirmation-overlay">
-      <div className="cm-confirmation-modal">
-        <div className="cm-confirmation-icon">
-          <FiAlertCircle size={48} />
-        </div>
-        <h3>Confirm Action</h3>
-        <p>{message}</p>
-        <div className="cm-confirmation-actions">
-          <button className="cm-confirmation-cancel" onClick={onCancel}>
-            Cancel
-          </button>
-          <button className="cm-confirmation-confirm" onClick={onConfirm}>
-            Confirm
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-ConfirmationPopup.propTypes = {
-  message: PropTypes.string.isRequired,
-  onConfirm: PropTypes.func.isRequired,
-  onCancel: PropTypes.func.isRequired
-};
-
-// Success Popup
-const SuccessPopup = ({ message, onClose }) => {
-  useEffect(() => {
-    const timer = setTimeout(onClose, 3000);
-    return () => clearTimeout(timer);
-  }, [onClose]);
-
-  return (
-    <div className="cm-success-overlay">
-      <div className="cm-success-modal">
-        <div className="cm-success-icon">
-          <FiCheck size={48} />
-        </div>
-        <h3>Success!</h3>
-        <p>{message}</p>
-      </div>
-    </div>
-  );
-};
-
-SuccessPopup.propTypes = {
-  message: PropTypes.string.isRequired,
-  onClose: PropTypes.func.isRequired
-};
-
-// Stats Card
-const StatsCard = ({ icon, label, value, color }) => (
-  <div className="cm-stats-card">
-    <div className="cm-stats-icon" style={{ backgroundColor: `${color}15`, color }}>
-      {icon}
-    </div>
-    <div className="cm-stats-content">
-      <span className="cm-stats-value">{value}</span>
-      <span className="cm-stats-label">{label}</span>
-    </div>
-  </div>
-);
-
-StatsCard.propTypes = {
-  icon: PropTypes.node.isRequired,
-  label: PropTypes.string.isRequired,
-  value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
-  color: PropTypes.string
-};
-
-// Offer Card
-const OfferCard = ({ offer, onEdit, onDelete, isAdmin }) => {
-  const [copied, setCopied] = useState(false);
-
-  const getDiscountDisplay = () => {
-    switch(offer.offer_type) {
-      case OFFER_TYPES.FREE_DELIVERY:
-        if (offer.sub_filter === SUB_FILTERS.LOCATION_BASED && offer.max_delivery_distance) {
-          return (
-            <span className="cm-offer-discount free-delivery">
-              Free Delivery up to {offer.max_delivery_distance}km
-            </span>
-          );
-        }
-        return <span className="cm-offer-discount free-delivery">Free Delivery</span>;
-      
-      case OFFER_TYPES.CREDIT:
-        const creditAmount = offer.credit_amount || offer.discount_value;
-        return creditAmount ? (
-          <span className="cm-offer-discount credit-offer">
-            ₹{parseFloat(creditAmount).toFixed(2)} Credit
-          </span>
-        ) : null;
-      
-      default:
-        if (!offer.discount_type || !offer.discount_value) return null;
-        return (
-          <span className="cm-offer-discount">
-            {offer.discount_type === DISCOUNT_TYPES.PERCENTAGE 
-              ? `${offer.discount_value}% OFF` 
-              : `₹${parseFloat(offer.discount_value).toFixed(2)} OFF`}
-          </span>
-        );
+  const isAdmin = user?.role === "Admin";
+  const getAllowedStatusOptions = () => {
+    if (isAdmin) {
+      return statusOptions;
     }
+    return statusOptions.slice(0, 4);
   };
 
-  const handleCopyCode = async () => {
-    if (offer.code) {
-      try {
-        await navigator.clipboard.writeText(offer.code);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-      } catch (err) {
-        console.error('Failed to copy:', err);
-      }
-    }
-  };
-
-  return (
-    <div className="cm-offer-card">
-      <div className="cm-offer-header">
-        <div className="cm-offer-type">
-          <span 
-            className="cm-offer-type-icon" 
-            style={{ color: OFFER_TYPE_DISPLAY[offer.offer_type]?.color }}
-          >
-            {OFFER_TYPE_DISPLAY[offer.offer_type]?.icon}
-          </span>
-          <span className="cm-offer-type-label">{OFFER_TYPE_DISPLAY[offer.offer_type]?.label}</span>
-          {offer.sub_filter && SUB_FILTER_DISPLAY[offer.sub_filter] && (
-            <span className="cm-sub-filter-badge">
-              {SUB_FILTER_DISPLAY[offer.sub_filter].icon}
-              <span className="cm-sub-filter-label">{SUB_FILTER_DISPLAY[offer.sub_filter].label}</span>
-            </span>
-          )}
-        </div>
-        <div className="cm-offer-status">
-          <span 
-            className="cm-status-badge"
-            style={{
-              color: STATUS_DISPLAY[offer.is_active]?.color,
-              backgroundColor: STATUS_DISPLAY[offer.is_active]?.bgColor
-            }}
-          >
-            {STATUS_DISPLAY[offer.is_active]?.label}
-          </span>
-        </div>
-      </div>
-      
-      <div className="cm-offer-content">
-        {offer.restaurant_details && (
-          <div className="cm-restaurant-display">
-            <FiPackage size={14} />
-            <span className="cm-restaurant-name">{offer.restaurant_details.restaurant_name}</span>
-          </div>
-        )}
-        
-        {offer.offer_type === OFFER_TYPES.COUPON_CODE && offer.code && (
-          <div className="cm-coupon-code-display">
-            <FiTag size={16} />
-            <span className="cm-coupon-code">{offer.code}</span>
-            <button 
-              className={`cm-copy-btn ${copied ? 'copied' : ''}`}
-              onClick={handleCopyCode}
-            >
-              {copied ? <FiCheck size={14} /> : <FiCopy size={14} />}
-              {copied ? 'Copied!' : 'Copy'}
-            </button>
-          </div>
-        )}
-        
-        <div className="cm-offer-details">
-          {getDiscountDisplay()}
-          <div className="cm-offer-meta">
-            <span className="cm-meta-item">
-              <FiCalendar size={14} />
-              {formatDisplayDate(offer.valid_from)} - {formatDisplayDate(offer.valid_to)}
-            </span>
-            <span className="cm-meta-item">
-              <FiUsers size={14} />
-              Used: {offer.times_used || 0}/{offer.max_uses || '∞'}
-            </span>
-          </div>
-          <p className="cm-min-order">
-            {offer.minimum_order_amount && parseFloat(offer.minimum_order_amount) > 0
-              ? `Min. order: ₹${parseFloat(offer.minimum_order_amount).toFixed(2)}`
-              : 'No minimum order'}
-          </p>
-        </div>
-      </div>
-      
-      {isAdmin && (
-        <div className="cm-offer-actions">
-          <button 
-            className="cm-edit-btn"
-            onClick={() => onEdit(offer)}
-          >
-            <FiEdit2 size={16} />
-            Edit
-          </button>
-          <button 
-            className="cm-delete-btn"
-            onClick={() => onDelete(offer.id)}
-          >
-            <FiTrash2 size={16} />
-            Delete
-          </button>
-        </div>
-      )}
-    </div>
-  );
-};
-
-OfferCard.propTypes = {
-  offer: PropTypes.object.isRequired,
-  onEdit: PropTypes.func.isRequired,
-  onDelete: PropTypes.func.isRequired,
-  isAdmin: PropTypes.bool
-};
-
-// Coupon Form
-const CouponForm = ({ coupon, setCoupon, onSubmit, onClose, isOpen, apiErrors, isSubmitting, isAdmin, restaurants }) => {  
-  const [errors, setErrors] = useState({});
-
-  const validateForm = () => {
-    const newErrors = {};
-    
-    if (!coupon.offer_type) newErrors.offer_type = 'Offer type is required';
-    
-    switch(coupon.offer_type) {
-      case OFFER_TYPES.COUPON_CODE:
-        if (!coupon.code) newErrors.code = 'Coupon code is required';
-        else if (coupon.code.length > 20) newErrors.code = 'Coupon code cannot exceed 20 characters';
-        break;
-      
-      case OFFER_TYPES.FREE_DELIVERY:
-        if (coupon.sub_filter === SUB_FILTERS.LOCATION_BASED) {
-          if (!coupon.max_delivery_distance || coupon.max_delivery_distance <= 0) {
-            newErrors.max_delivery_distance = 'Please enter a valid delivery distance';
-          }
-          if (!coupon.max_delivery_fee || coupon.max_delivery_fee < 0) {
-            newErrors.max_delivery_fee = 'Please enter a valid delivery fee amount';
-          }
-        }
-        if (coupon.sub_filter === SUB_FILTERS.MINIMUM_AMOUNT && !coupon.minimum_order_amount) {
-          newErrors.minimum_order_amount = 'Minimum order amount is required';
-        }
-        break;
-      
-      case OFFER_TYPES.CREDIT:
-        if (!coupon.credit_amount && !coupon.discount_value) {
-          newErrors.credit_amount = 'Credit amount or discount value is required';
-        } else if (coupon.credit_amount && coupon.credit_amount <= 0) {
-          newErrors.credit_amount = 'Credit amount must be positive';
-        }
-        if (coupon.credit_expiry_days && (coupon.credit_expiry_days < 1 || coupon.credit_expiry_days > 365)) {
-          newErrors.credit_expiry_days = 'Credit expiry must be between 1 and 365 days';
-        }
-        break;
-      
-      case OFFER_TYPES.RESTAURANT_DEAL:
-        if (!coupon.restaurant) newErrors.restaurant = 'Restaurant selection is required';
-        break;
-    }
-    
-    if ([OFFER_TYPES.COUPON_CODE, OFFER_TYPES.AUTO_DISCOUNT, OFFER_TYPES.CREDIT].includes(coupon.offer_type)) {
-      if (!coupon.discount_type) newErrors.discount_type = 'Discount type is required';
-      if (!coupon.discount_value || coupon.discount_value <= 0) {
-        newErrors.discount_value = 'Discount value must be positive';
-      }
-      if (coupon.discount_type === DISCOUNT_TYPES.PERCENTAGE && coupon.discount_value > 100) {
-        newErrors.discount_value = 'Percentage discount cannot exceed 100%';
-      }
-    }
-    
-    if (coupon.valid_from && coupon.valid_to && new Date(coupon.valid_from) >= new Date(coupon.valid_to)) {
-      newErrors.valid_to = 'End date must be after start date';
-    }
-    
-    if (coupon.minimum_order_amount < 0) {
-      newErrors.minimum_order_amount = 'Minimum order amount cannot be negative';
-    }
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleChange = (e) => {
-    const { name, value, type } = e.target;
-    
-    if (name === 'offer_type') {
-      const resetCoupon = {
-        ...INITIAL_COUPON_STATE,
-        offer_type: value,
-        restaurant: coupon.restaurant,
-        is_active: coupon.is_active,
-        id: coupon.id
-      };
-      setCoupon(resetCoupon);
-    } else if (name === 'sub_filter') {
-      const updatedCoupon = {
-        ...coupon,
-        [name]: value,
-        max_delivery_distance: '',
-        max_delivery_fee: '',
-        minimum_order_amount: 0
-      };
-      setCoupon(updatedCoupon);
-    } else {
-      setCoupon({
-        ...coupon,
-        [name]: type === 'number' ? (value === '' ? '' : Number(value)) : value
+  const fetchVendorOrders = async () => {
+    try {
+      setLoading(true);
+      const response = await fetchData(API_ENDPOINTS.ORDER.VENDOR_ORDERS, "POST", {
+        restaurant_id: restaurant_id,
       });
+
+      if (response.status === "success") {
+        const formattedOrders = response.orders.map((order) => {
+          // Map status string to status object
+          const statusId = statusStringToId[order.status] || 1;
+          const statusObj = statusOptions.find(s => s.id === statusId) || { id: 1, label: "Pending" };
+          
+          return {
+            ...order,
+            status: statusObj,
+            // Ensure payment_status is properly set
+            payment_status: order.payment_status || "Pending",
+            // Format amounts to numbers
+            subtotal: parseFloat(order.subtotal) || 0,
+            delivery_fee: parseFloat(order.delivery_fee) || 0,
+            total: parseFloat(order.total) || 0,
+            discount: parseFloat(order.discount) || 0,
+          };
+        });
+        setOrders(formattedOrders);
+      }
+    } catch (error) {
+      console.error("Error fetching vendor orders:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchVendorOrders();
+  }, [restaurant_id]);
+
+  const handleStatusChange = async (orderNumber, statusId) => {
+    try {
+      const newStatusObj = statusOptions.find(s => s.id === parseInt(statusId));
+      
+      // Check if status change is allowed for non-admin users
+      if (!isAdmin && parseInt(statusId) > 4) {
+        alert("You don't have permission to update to this status");
+        return;
+      }
+
+      const response = await fetchData(API_ENDPOINTS.ORDER.UPDATE_ORDER_STATUS, "POST", {
+        order_number: orderNumber,
+        new_status: parseInt(statusId),
+      });
+
+      if (response.status === "success") {
+        const updated = orders.map((order) =>
+          order.order_number === orderNumber ? { ...order, status: newStatusObj } : order
+        );
+        setOrders(updated);
+        setRecentlyUpdatedOrder(orderNumber);
+        setTimeout(() => setRecentlyUpdatedOrder(null), 3000);
+
+        if (newStatusObj.label === "On the Way") {
+          updateLiveLocation(orderNumber);
+        }
+      } else {
+        console.error("Failed to update status:", response.message);
+      }
+    } catch (error) {
+      console.error("Error updating status:", error);
+    }
+  };
+
+  const updateLiveLocation = async (orderNumber) => {
+    if (!navigator.geolocation) {
+      console.error("Geolocation is not supported.");
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(async (position) => {
+      const latitude = position.coords.latitude;
+      const longitude = position.coords.longitude;
+
+      try {
+        const response = await fetch(API_ENDPOINTS.TRACK.UPDATE_LIVE_LOCATION, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            order_number: orderNumber,
+            latitude,
+            longitude,
+          }),
+        });
+
+        const data = await response.json();
+        if (data.status === "success") {
+          console.log(`Live location updated for order ${orderNumber}`);
+        } else {
+          console.error("Live location update failed:", data.message);
+        }
+      } catch (error) {
+        console.error("Error updating live location:", error);
+      }
+    });
+  };
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const activeStatuses = ["On the Way", "Ready for Delivery/Pickup"];
+      const activeOrders = orders.filter(order =>
+        activeStatuses.includes(order.status.label)
+      );
+      activeOrders.forEach(order => {
+        updateLiveLocation(order.order_number);
+      });
+    }, 120000);
+
+    return () => clearInterval(interval);
+  }, [orders]);
+
+  const toggleOrderExpand = (orderNumber) => {
+    setExpandedOrder(expandedOrder === orderNumber ? null : orderNumber);
+  };
+
+  const filteredOrders = orders.filter((order) => {
+    const matchesId = order.order_number.toLowerCase().includes(searchId.toLowerCase());
+    const matchesName = order.full_name.toLowerCase().includes(searchName.toLowerCase());
+    const matchesStatus = filterStatus === "All" || order.status.label === filterStatus;
+
+    return matchesId && matchesName && matchesStatus;
+  });
+
+  const convertUTCtoIST = (utcDateString) => {
+    if (!utcDateString) return "N/A";
+    const utcDate = new Date(utcDateString.replace(' ', 'T') + 'Z');
+    if (isNaN(utcDate.getTime())) return "Invalid Date";
+  
+    const options = {
+      timeZone: 'Asia/Kolkata',
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    };
+  
+    const formatter = new Intl.DateTimeFormat('en-GB', options);
+    const formattedDate = formatter.format(utcDate).replace(',', '');
+  
+    const [datePart, timePart] = formattedDate.split(' ');
+    const dateWithHyphen = datePart.replace(/\//g, '-');
+    return `${dateWithHyphen}, ${timePart}`;
+  };
+
+  const markOrderAsPaid = async (orderNumber) => {
+    const accessToken = localStorage.getItem("access");
+    const response = await fetch(API_ENDPOINTS.PAYMENT.MARKED_PAYMENT(orderNumber), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${accessToken}`
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to mark order as paid');
     }
     
-    if (errors[name]) setErrors({...errors, [name]: null});
-    if (apiErrors && apiErrors[name]) setErrors({...apiErrors, [name]: null});
+    return response.json();
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (validateForm()) {
-      onSubmit();
+  const handleMarkAsPaid = async (orderNumber) => {
+    try {
+      await markOrderAsPaid(orderNumber);
+      
+      setOrders(prevOrders => 
+        prevOrders.map(order => 
+          order.order_number === orderNumber 
+            ? { ...order, payment_status: "Completed" } 
+            : order
+        )
+      );
+      
+      setRecentlyUpdatedOrder(orderNumber);
+      setTimeout(() => setRecentlyUpdatedOrder(null), 3000);
+    } catch (error) {
+      console.error('Failed to mark order as paid:', error);
+      alert('Failed to mark order as paid. Please try again.');
     }
   };
 
-  const allErrors = {...errors, ...apiErrors};
-
-  const renderSubFilterOptions = () => {
-    const offerTypeInfo = OFFER_TYPE_DISPLAY[coupon.offer_type];
-    if (!offerTypeInfo || !offerTypeInfo.subFilters) return null;
-
-    return (
-      <div className="cm-form-group">
-        <label>
-          <FiFilter className="cm-input-icon" />
-          Offer Filter
-        </label>
-        <div className="cm-sub-filter-selector">
-          {offerTypeInfo.subFilters.map(filterKey => (
-            <button
-              key={filterKey}
-              type="button"
-              className={`cm-sub-filter-option ${coupon.sub_filter === filterKey ? 'cm-sub-filter-active' : ''}`}
-              onClick={() => handleChange({ target: { name: 'sub_filter', value: filterKey } })}
-            >
-              <span className="cm-sub-filter-icon">
-                {SUB_FILTER_DISPLAY[filterKey]?.icon}
-              </span>
-              <span className="cm-sub-filter-name">{SUB_FILTER_DISPLAY[filterKey]?.label}</span>
-            </button>
-          ))}
-        </div>
-        {allErrors.sub_filter && <span className="cm-error-message">{allErrors.sub_filter}</span>}
-      </div>
-    );
-  };
-
-  const renderOfferTypeSpecificFields = () => {
-    switch(coupon.offer_type) {
-      case OFFER_TYPES.COUPON_CODE:
-        return (
-          <div className="cm-form-group">
-            <label>
-              <FiTag className="cm-input-icon" />
-              Coupon Code*
-            </label>
-            <input
-              type="text"
-              name="code"
-              value={coupon.code}
-              onChange={handleChange}
-              placeholder="e.g. SUMMER20"
-              className={allErrors.code ? 'cm-input-error' : ''}
-              maxLength="20"
-            />
-            {allErrors.code && <span className="cm-error-message">{allErrors.code}</span>}
-          </div>
-        );
-      
-      case OFFER_TYPES.FREE_DELIVERY:
-        if (coupon.sub_filter === SUB_FILTERS.LOCATION_BASED) {
-          return (
-            <>
-              <div className="cm-form-group">
-                <label>
-                  <FiMapPin className="cm-input-icon" />
-                  Max Delivery Distance (km)*
-                </label>
-                <input
-                  type="number"
-                  name="max_delivery_distance"
-                  value={coupon.max_delivery_distance}
-                  onChange={handleChange}
-                  placeholder="e.g., 5"
-                  step="0.5"
-                  min="0.1"
-                  className={allErrors.max_delivery_distance ? 'cm-input-error' : ''}
-                />
-                {allErrors.max_delivery_distance && <span className="cm-error-message">{allErrors.max_delivery_distance}</span>}
-              </div>
-              
-              <div className="cm-form-group">
-                <label>
-                  <FiDollarSign className="cm-input-icon" />
-                  Max Delivery Fee Covered (₹)*
-                </label>
-                <input
-                  type="number"
-                  name="max_delivery_fee"
-                  value={coupon.max_delivery_fee}
-                  onChange={handleChange}
-                  placeholder="e.g., 50"
-                  step="1"
-                  min="0"
-                  className={allErrors.max_delivery_fee ? 'cm-input-error' : ''}
-                />
-                {allErrors.max_delivery_fee && <span className="cm-error-message">{allErrors.max_delivery_fee}</span>}
-              </div>
-            </>
-          );
-        }
-        return null;
-      
-      case OFFER_TYPES.CREDIT:
-        return (
-          <>
-            <div className="cm-form-group">
-              <label>
-                <FiCreditCard className="cm-input-icon" />
-                Credit Amount (₹)
-              </label>
-              <input
-                type="number"
-                name="credit_amount"
-                value={coupon.credit_amount}
-                onChange={handleChange}
-                placeholder="e.g., 100"
-                step="1"
-                min="0"
-                className={allErrors.credit_amount ? 'cm-input-error' : ''}
-              />
-              {allErrors.credit_amount && <span className="cm-error-message">{allErrors.credit_amount}</span>}
-            </div>
-            
-            <div className="cm-form-group">
-              <label>
-                <FiClock className="cm-input-icon" />
-                Credit Expiry (Days)
-              </label>
-              <input
-                type="number"
-                name="credit_expiry_days"
-                value={coupon.credit_expiry_days}
-                onChange={handleChange}
-                placeholder="30"
-                step="1"
-                min="1"
-                max="365"
-                className={allErrors.credit_expiry_days ? 'cm-input-error' : ''}
-              />
-              {allErrors.credit_expiry_days && <span className="cm-error-message">{allErrors.credit_expiry_days}</span>}
-            </div>
-          </>
-        );
-      
-      default:
-        return null;
+  const getStatusColor = (status) => {
+    switch(status) {
+      case "Pending": return "#F59E0B";
+      case "Confirmed": return "#3B82F6";
+      case "Preparing": return "#6366F1";
+      case "Ready for Delivery/Pickup": return "#10B981";
+      case "On the Way": return "#8B5CF6";
+      case "Delivered": return "#10B981";
+      case "Cancelled": return "#EF4444";
+      case "Refunded": return "#6B7280";
+      default: return "#6B7280";
     }
   };
 
-  const renderDiscountFields = () => {
-    if ([OFFER_TYPES.COUPON_CODE, OFFER_TYPES.AUTO_DISCOUNT, OFFER_TYPES.CREDIT].includes(coupon.offer_type)) {
+  const shareOnWhatsApp = (order) => {
+    const orderDetails = `
+*Order Details*:
+📋 *Order Number*: #${order.order_number}
+
+*Customer Details*:
+👤 *Name*: ${order.full_name || 'N/A'}
+📞 *Contact*: ${order.phone_number || 'N/A'}
+📍 *Address*: ${order.delivery_address || 'N/A'}
+
+*Payment Information*:
+💳 *Method*: ${order.payment_method ? order.payment_method.replace(/_/g, ' ') : 'N/A'}
+✅ *Status*: ${order.payment_status || 'N/A'}
+💰 *Amount*: ₹${order.total.toFixed(2)}
+
+*Timing*:
+📅 *Order Placed*: ${convertUTCtoIST(order.placed_on)}
+⏱️ *Estimated Delivery*: ${convertUTCtoIST(order.estimated_delivery)}
+
+*Status*: ${order.status.label}
+    `;
+
+    const encodedMessage = encodeURIComponent(orderDetails);
+    const whatsappUrl = `https://wa.me/?text=${encodedMessage}`;
+    window.open(whatsappUrl, '_blank');
+  };
+
+  const renderPaymentStatusBadge = (order) => {
+    const status = order.status.label.toLowerCase();
+    const isCOD = order.payment_method === 'cash_on_delivery' || order.payment_method === 'Cash on Delivery';
+    const isEatoorMoney = order.payment_method === 'Eatoor Money';
+
+    // For cancelled or refunded orders
+    if (['cancelled', 'refunded'].includes(status)) {
       return (
-        <>
-          <div className="cm-form-group">
-            <label>
-              Discount Type*
-            </label>
-            <div className="cm-radio-group">
-              <label className="cm-radio-label">
-                <input
-                  type="radio"
-                  name="discount_type"
-                  value={DISCOUNT_TYPES.PERCENTAGE}
-                  checked={coupon.discount_type === DISCOUNT_TYPES.PERCENTAGE}
-                  onChange={handleChange}
-                />
-                <span className="cm-radio-custom"></span>
-                <FiPercent size={14} /> Percentage
-              </label>
-              <label className="cm-radio-label">
-                <input
-                  type="radio"
-                  name="discount_type"
-                  value={DISCOUNT_TYPES.FIXED_AMOUNT}
-                  checked={coupon.discount_type === DISCOUNT_TYPES.FIXED_AMOUNT}
-                  onChange={handleChange}
-                />
-                <span className="cm-radio-custom"></span>
-                <FiDollarSign size={14} /> Fixed Amount
-              </label>
-            </div>
-            {allErrors.discount_type && <span className="cm-error-message">{allErrors.discount_type}</span>}
-          </div>
-
-          <div className="cm-form-group">
-            <label>
-              Discount Value*
-            </label>
-            <input
-              type="number"
-              name="discount_value"
-              value={coupon.discount_value}
-              onChange={handleChange}
-              placeholder={coupon.discount_type === DISCOUNT_TYPES.PERCENTAGE ? 'e.g. 20' : 'e.g. 5.00'}
-              step={coupon.discount_type === DISCOUNT_TYPES.PERCENTAGE ? "1" : "0.01"}
-              min="0"
-              max={coupon.discount_type === DISCOUNT_TYPES.PERCENTAGE ? "100" : undefined}
-              className={allErrors.discount_value ? 'cm-input-error' : ''}
-            />
-            {allErrors.discount_value && <span className="cm-error-message">{allErrors.discount_value}</span>}
-          </div>
-        </>
+        <span className="marked-paid-badge" style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', color: '#EF4444' }}>
+          Payment: {order.payment_status === "Completed" ? '✅ Completed' : '❌ Failed'}
+        </span>
       );
     }
+
+    // For Eatoor Money or non-COD orders, they're always "paid"
+    if (isEatoorMoney || !isCOD) {
+      return (
+        <span className="marked-paid-badge" style={{ backgroundColor: 'rgba(0, 168, 120, 0.1)', color: '#00A878' }}>
+          Payment: {order.payment_status === "Completed" ? '✅ Completed' : '⏳ Pending'}
+        </span>
+      );
+    }
+
+    // For COD orders
+    if (isCOD) {
+      return (
+        <span className="marked-paid-badge" style={{ 
+          backgroundColor: order.payment_status === "Completed" ? 'rgba(0, 168, 120, 0.1)' : 'rgba(255, 159, 28, 0.1)',
+          color: order.payment_status === "Completed" ? '#00A878' : '#F59E0B'
+        }}>
+          Payment: {order.payment_status === "Completed" ? '✅ Completed' : '⏳ Pending'}
+        </span>
+      );
+    }
+
     return null;
   };
 
-  const renderRestaurantField = () => {
-    const showRestaurantField = isAdmin || 
-      coupon.offer_type === OFFER_TYPES.RESTAURANT_DEAL ||
-      coupon.sub_filter === SUB_FILTERS.SPECIFIC_RESTAURANT;
+  const shouldShowMarkAsPaidButton = (order) => {
+    const isDelivered = order.status.label.toLowerCase() === 'delivered';
+    const isCOD = order.payment_method === 'cash_on_delivery' || order.payment_method === 'Cash on Delivery';
+    const isNotPaid = order.payment_status !== "Completed";
     
-    if (!showRestaurantField) return null;
+    return isDelivered && isCOD && isNotPaid;
+  };
 
-    const isRequired = coupon.offer_type === OFFER_TYPES.RESTAURANT_DEAL || 
-      coupon.sub_filter === SUB_FILTERS.SPECIFIC_RESTAURANT;
+  // Show loader only during initial loading or when no orders and still loading
+  if (loading) {
+    return <StripeLoader />;
+  }
 
+  // Show no orders message when there are no orders
+  if (orders.length === 0) {
     return (
-      <div className="cm-form-group">
-        <label>
-          <FiPackage className="cm-input-icon" />
-          Restaurant{isRequired ? '*' : ' (Optional)'}
-        </label>
-        <select
-          name="restaurant"
-          value={coupon.restaurant}
-          onChange={handleChange}
-          className={allErrors.restaurant ? 'cm-input-error' : ''}
-        >
-          <option value="">{isRequired ? 'Select Restaurant' : 'Select Restaurant (Optional)'}</option>
-          {restaurants && restaurants.map(rest => (
-            <option key={rest.restaurant_id} value={rest.restaurant_id}>
-              {rest.restaurant_name}
-            </option>
-          ))}
-        </select>
-        {allErrors.restaurant && <span className="cm-error-message">{allErrors.restaurant}</span>}
+      <div className="vendor-orders">
+        <div className="vendor-orders-header">
+          <h2 className="vendor-order-title">Order Management</h2>
+        </div>
+        <div className="no-orders">
+          <p>No orders found for this restaurant</p>
+        </div>
       </div>
     );
-  };
+  }
 
   return (
-    <div className={`cm-modal-overlay ${isOpen ? 'cm-modal-active' : ''}`}>
-      <div className="cm-modal">
-        <div className="cm-modal-header">
-          <h2>{coupon.id ? 'Edit Offer' : 'Create New Offer'}</h2>
-          <button className="cm-close-btn" onClick={onClose} disabled={isSubmitting}>
-            <FiX size={24} />
-          </button>
-        </div>
-        
-        <form onSubmit={handleSubmit}>
-          <div className="cm-form-grid">
-            <div className="cm-form-group">
-              <label>
-                <FiTag className="cm-input-icon" />
-                Offer Type*
-              </label>
-              <div className="cm-offer-type-selector">
-                {Object.entries(OFFER_TYPE_DISPLAY).map(([key, value]) => (
-                  <button
-                    key={key}
-                    type="button"
-                    className={`cm-offer-type-option ${coupon.offer_type === key ? 'cm-offer-type-active' : ''}`}
-                    onClick={() => handleChange({ target: { name: 'offer_type', value: key } })}
-                    disabled={!!coupon.id && coupon.offer_type !== key}
-                    style={coupon.offer_type === key ? { 
-                      borderColor: value.color,
-                      backgroundColor: value.bgColor
-                    } : {}}
-                  >
-                    <span className="cm-offer-type-icon" style={{ color: value.color }}>
-                      {value.icon}
-                    </span>
-                    <span className="cm-offer-type-name">{value.label}</span>
-                  </button>
-                ))}
-              </div>
-              {allErrors.offer_type && <span className="cm-error-message">{allErrors.offer_type}</span>}
-            </div>
-
-            {renderSubFilterOptions()}
-            {renderOfferTypeSpecificFields()}
-            {renderDiscountFields()}
-            {renderRestaurantField()}
-
-            <div className="cm-form-group">
-              <label>
-                <FiDollarSign className="cm-input-icon" />
-                Minimum Order Amount (₹)
-              </label>
-              <input
-                type="number"
-                name="minimum_order_amount"
-                value={coupon.minimum_order_amount}
-                onChange={handleChange}
-                placeholder="0.00"
-                step="0.01"
-                min="0"
-                className={allErrors.minimum_order_amount ? 'cm-input-error' : ''}
-              />
-              {allErrors.minimum_order_amount && <span className="cm-error-message">{allErrors.minimum_order_amount}</span>}
-            </div>
-
-            <div className="cm-form-group">
-              <label>
-                <FiCalendar className="cm-input-icon" />
-                Valid From
-              </label>
-              <input
-                type="datetime-local"
-                name="valid_from"
-                value={formatDateForInput(coupon.valid_from)}
-                onChange={handleChange}
-                className={allErrors.valid_from ? 'cm-input-error' : ''}
-              />
-              {allErrors.valid_from && <span className="cm-error-message">{allErrors.valid_from}</span>}
-            </div>
-
-            <div className="cm-form-group">
-              <label>
-                <FiCalendar className="cm-input-icon" />
-                Valid To
-              </label>
-              <input
-                type="datetime-local"
-                name="valid_to"
-                value={formatDateForInput(coupon.valid_to)}
-                onChange={handleChange}
-                className={allErrors.valid_to ? 'cm-input-error' : ''}
-              />
-              {allErrors.valid_to && <span className="cm-error-message">{allErrors.valid_to}</span>}
-            </div>
-
-            <div className="cm-form-group">
-              <label>
-                <FiUsers className="cm-input-icon" />
-                Max Uses
-              </label>
-              <input
-                type="number"
-                name="max_uses"
-                value={coupon.max_uses}
-                onChange={handleChange}
-                placeholder="Unlimited"
-                min="1"
-              />
-              {allErrors.max_uses && <span className="cm-error-message">{allErrors.max_uses}</span>}
-            </div>
-
-            <div className="cm-form-group">
-              <label>
-                <FiUser className="cm-input-icon" />
-                Max Uses Per User
-              </label>
-              <input
-                type="number"
-                name="max_uses_per_user"
-                value={coupon.max_uses_per_user}
-                onChange={handleChange}
-                placeholder="Unlimited"
-                min="1"
-              />
-              {allErrors.max_uses_per_user && <span className="cm-error-message">{allErrors.max_uses_per_user}</span>}
-            </div>
-
-            {isAdmin && (
-              <div className="cm-form-group">
-                <label>
-                  <FiTrendingUp className="cm-input-icon" />
-                  Status*
-                </label>
-                <select
-                  name="is_active"
-                  value={coupon.is_active}
-                  onChange={handleChange}
-                  className={allErrors.is_active ? 'cm-input-error' : ''}
-                >
-                  <option value={STATUS.APPROVED}>Active</option>
-                  <option value={STATUS.REJECT}>Rejected</option>
-                  <option value={STATUS.PENDING_APPROVAL}>Pending Approval</option>
-                </select>
-                {allErrors.is_active && <span className="cm-error-message">{allErrors.is_active}</span>}
-              </div>
-            )}
-          </div>
-          
-          <div className="cm-modal-actions">
-            <button 
-              type="button" 
-              className="cm-btn cm-btn-secondary" 
-              onClick={onClose}
-              disabled={isSubmitting}
-            >
-              Cancel
-            </button>
-            <button 
-              type="submit" 
-              className="cm-btn cm-btn-primary"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? (
-                <>
-                  <span className="cm-spinner"></span>
-                  {coupon.id ? 'Updating...' : 'Creating...'}
-                </>
-              ) : coupon.id ? 'Update Offer' : 'Create Offer'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-};
-
-CouponForm.propTypes = {
-  coupon: PropTypes.object.isRequired,
-  setCoupon: PropTypes.func.isRequired,
-  onSubmit: PropTypes.func.isRequired,
-  onClose: PropTypes.func.isRequired,
-  isOpen: PropTypes.bool.isRequired,
-  apiErrors: PropTypes.object,
-  isSubmitting: PropTypes.bool.isRequired,
-  isAdmin: PropTypes.bool,
-  restaurants: PropTypes.array
-};
-
-// ======================== MAIN COMPONENT ========================
-const CouponManagement = ({ user }) => {
-  const { restaurant_id } = useParams();  
-  const [coupons, setCoupons] = useState([]);
-  const [coupon, setCoupon] = useState(INITIAL_COUPON_STATE);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState(null);
-  const [apiErrors, setApiErrors] = useState(null);
-  const [successMessage, setSuccessMessage] = useState(null);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [couponToDelete, setCouponToDelete] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [restaurants, setRestaurants] = useState([]);
-  const navigate = useNavigate();
-
-  const isAdmin = user?.role === "Admin";
-
-  // Calculate stats
-  const stats = {
-    total: Array.isArray(coupons) ? coupons.length : 0,
-    active: Array.isArray(coupons) ? coupons.filter(c => c.is_active === STATUS.APPROVED).length : 0,
-    pending: Array.isArray(coupons) ? coupons.filter(c => c.is_active === STATUS.PENDING_APPROVAL).length : 0,
-    expired: Array.isArray(coupons) ? coupons.filter(c => {
-      if (!c.valid_to) return false;
-      return new Date(c.valid_to) < new Date();
-    }).length : 0
-  };
-
-  // Filter coupons
-  const filteredCoupons = Array.isArray(coupons) ? coupons.filter(coupon => {
-    const matchesSearch = searchTerm === '' || 
-      coupon.code?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      OFFER_TYPE_DISPLAY[coupon.offer_type]?.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (coupon.restaurant_details && coupon.restaurant_details.restaurant_name?.toLowerCase().includes(searchTerm.toLowerCase()));
-    
-    const matchesStatus = statusFilter === 'all' || 
-      (statusFilter === 'active' && coupon.is_active === STATUS.APPROVED) ||
-      (statusFilter === 'pending' && coupon.is_active === STATUS.PENDING_APPROVAL) ||
-      (statusFilter === 'rejected' && coupon.is_active === STATUS.REJECT);
-    
-    return matchesSearch && matchesStatus;
-  }) : [];
-
-  // Fetch restaurants
-  const fetchRestaurants = async () => {
-    try {
-      if (isAdmin) {
-        const data = await fetchData(
-          API_ENDPOINTS.RESTAURANTS.FETCH_ALL,
-          "GET",
-          null,
-          localStorage.getItem("access")
-        );
-        setRestaurants(Array.isArray(data) ? data : []);
-      } else if (restaurant_id) {
-        const data = await fetchData(
-          API_ENDPOINTS.RESTAURANTS.FETCH(restaurant_id),
-          "GET",
-          null,
-          localStorage.getItem("access")
-        );
-        setRestaurants(Array.isArray(data) ? data : [data]);
-      }
-    } catch (err) {
-      console.error('Error fetching restaurants:', err);
-      setRestaurants([]);
-    }
-  };
-
-  // Fetch coupons
-  const fetchCoupons = async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const endpoint = API_ENDPOINTS.OFFER.FETCH(restaurant_id);
-      const data = await fetchData(
-        endpoint, 
-        "GET", 
-        null, 
-        localStorage.getItem("access")
-      );
-      
-      setCoupons(Array.isArray(data) ? data : []);
-    } catch (err) {
-      console.error('Error fetching coupons:', err);
-      setError(err.response?.data?.message || 'Failed to fetch offers. Please try again.');
-      setCoupons([]);
-      if (err.response?.status === 401) {
-        navigate('/login');
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchCoupons();
-    fetchRestaurants();
-  }, [restaurant_id, isAdmin]);
-
-  const handleSubmit = async () => {
-    setApiErrors(null);
-    setIsSubmitting(true);
-    try {
-      const payload = {
-        offer_type: coupon.offer_type,
-        sub_filter: coupon.sub_filter || null,
-        code: coupon.offer_type === OFFER_TYPES.COUPON_CODE ? coupon.code : null,
-        discount_type: [OFFER_TYPES.COUPON_CODE, OFFER_TYPES.AUTO_DISCOUNT, OFFER_TYPES.CREDIT].includes(coupon.offer_type) 
-          ? coupon.discount_type 
-          : null,
-        discount_value: [OFFER_TYPES.COUPON_CODE, OFFER_TYPES.AUTO_DISCOUNT, OFFER_TYPES.CREDIT].includes(coupon.offer_type) 
-          ? parseFloat(coupon.discount_value)
-          : null,
-        minimum_order_amount: parseFloat(coupon.minimum_order_amount || 0),
-        valid_from: coupon.valid_from || null,
-        valid_to: coupon.valid_to || null,
-        max_uses: coupon.max_uses ? parseInt(coupon.max_uses) : null,
-        max_uses_per_user: coupon.max_uses_per_user ? parseInt(coupon.max_uses_per_user) : null,
-        is_active: coupon.is_active,
-        max_delivery_distance: coupon.offer_type === OFFER_TYPES.FREE_DELIVERY && coupon.sub_filter === SUB_FILTERS.LOCATION_BASED
-          ? parseFloat(coupon.max_delivery_distance) 
-          : null,
-        max_delivery_fee: coupon.offer_type === OFFER_TYPES.FREE_DELIVERY && coupon.sub_filter === SUB_FILTERS.LOCATION_BASED
-          ? parseFloat(coupon.max_delivery_fee)
-          : null,
-        credit_amount: coupon.offer_type === OFFER_TYPES.CREDIT
-          ? parseFloat(coupon.credit_amount || coupon.discount_value)
-          : null,
-        credit_type: coupon.offer_type === OFFER_TYPES.CREDIT
-          ? coupon.credit_type
-          : null,
-        credit_expiry_days: coupon.offer_type === OFFER_TYPES.CREDIT
-          ? parseInt(coupon.credit_expiry_days || 30)
-          : null,
-      };
-
-      if (isAdmin && coupon.restaurant) {
-        payload.restaurant = coupon.restaurant;
-      } else if (!isAdmin && restaurant_id) {
-        payload.restaurant = restaurant_id;
-      }
-
-      Object.keys(payload).forEach(key => {
-        if (payload[key] === undefined || payload[key] === '') {
-          delete payload[key];
-        }
-      });
-
-      let response;
-      if (coupon.id) {
-        response = await fetchData(
-          API_ENDPOINTS.OFFER.UPDATE(coupon.id),
-          "PUT",
-          payload,
-          localStorage.getItem("access")
-        );
-        setCoupons(prevCoupons => {
-          const currentCoupons = Array.isArray(prevCoupons) ? prevCoupons : [];
-          return currentCoupons.map(c => c.id === coupon.id ? response : c);
-        });
-        setSuccessMessage('Offer updated successfully!');
-      } else {
-        response = await fetchData(
-          API_ENDPOINTS.OFFER.CREATE,
-          "POST",
-          payload,
-          localStorage.getItem("access")
-        );
-        setCoupons(prevCoupons => {
-          const currentCoupons = Array.isArray(prevCoupons) ? prevCoupons : [];
-          return [response, ...currentCoupons];
-        });
-        setSuccessMessage('Offer created successfully!');
-      }
-      
-      resetForm();
-      setIsModalOpen(false);
-    } catch (err) {
-      console.error('Error saving offer:', err);
-      if (err.response?.data) {
-        const backendErrors = err.response.data;
-        const formattedErrors = {};
-
-        Object.keys(backendErrors).forEach(key => {
-          if (key !== 'message') {
-            formattedErrors[key] = Array.isArray(backendErrors[key])
-              ? backendErrors[key].join(' ')
-              : backendErrors[key];
-          }
-        });
-
-        setApiErrors(formattedErrors);
-        setError(backendErrors.message || 'Failed to save offer. Please check the form for errors.');
-      } else {
-        setError('Network error. Please check your connection and try again.');
-      }
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleEdit = (couponToEdit) => {
-    setCoupon({
-      ...couponToEdit,
-      restaurant: couponToEdit.restaurant?.restaurant_id || couponToEdit.restaurant || '',
-      sub_filter: couponToEdit.sub_filter || '',
-      max_delivery_distance: couponToEdit.max_delivery_distance || '',
-      max_delivery_fee: couponToEdit.max_delivery_fee || '',
-      credit_amount: couponToEdit.credit_amount || '',
-      discount_value: couponToEdit.discount_value || '',
-      credit_expiry_days: couponToEdit.credit_expiry_days || 30,
-      minimum_order_amount: couponToEdit.minimum_order_amount || 0,
-    });
-    setIsModalOpen(true);
-    setApiErrors(null);
-    setError(null);
-  };
-
-  const handleDeleteClick = (id) => {
-    setCouponToDelete(id);
-    setShowDeleteConfirm(true);
-  };
-
-  const confirmDelete = async () => {
-    setShowDeleteConfirm(false);
-    try {
-      setIsLoading(true);
-      await fetchData(
-        API_ENDPOINTS.OFFER.DELETE(couponToDelete),
-        "DELETE",
-        null,
-        localStorage.getItem("access")
-      );
-      
-      setSuccessMessage('Offer deleted successfully!');
-      setCoupons(prevCoupons => {
-        const currentCoupons = Array.isArray(prevCoupons) ? prevCoupons : [];
-        return currentCoupons.filter(c => c.id !== couponToDelete);
-      });
-    } catch (err) {
-      console.error('Error deleting offer:', err);
-      setError(err.response?.data?.message || 'Failed to delete offer. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const resetForm = () => {
-    setCoupon({
-      ...INITIAL_COUPON_STATE,
-      restaurant: isAdmin ? '' : restaurant_id
-    });
-    setApiErrors(null);
-    setError(null);
-  };
-
-  const openNewCouponForm = () => {
-    resetForm();
-    setIsModalOpen(true);
-  };
-
-  return (
-    <div className="cm-container">
-      {/* Header */}
-      <div className="cm-header">
-        <div className="cm-header-content">
-          <h1 className="cm-title">
-            <span className="cm-title-icon"><FiGift /></span>
-            Offer Management
-          </h1>
-          <p className="cm-subtitle">
-            {isAdmin ? 'Manage offers for all restaurants' : `Manage offers for your restaurant`}
-          </p>
-        </div>
-        
-        <div className="cm-header-actions">
-          <div className="cm-search-box">
-            <FiSearch className="cm-search-icon" />
-            <input
-              type="text"
-              placeholder="Search offers..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="cm-search-input"
-            />
-          </div>
-          
-          <select 
-            className="cm-filter-select"
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-          >
-            <option value="all">All Status</option>
-            <option value="active">Active</option>
-            <option value="pending">Pending</option>
-            <option value="rejected">Rejected</option>
-          </select>
-          
-          <button 
-            className="cm-btn cm-btn-secondary cm-btn-icon"
-            onClick={() => {
-              fetchCoupons();
-              fetchRestaurants();
-            }}
-            disabled={isLoading}
-          >
-            <FiRefreshCw className={isLoading ? 'cm-spin' : ''} />
-            <span className="cm-btn-text">Refresh</span>
-          </button>
-          
-          <button 
-            className="cm-btn cm-btn-primary cm-btn-icon"
-            onClick={openNewCouponForm}
-            disabled={isLoading}
-          >
-            <FiPlus />
-            <span className="cm-btn-text">Create</span>
-          </button>
+    <div className="vendor-orders">
+      <div className="vendor-orders-header">
+        <h2 className="vendor-order-title">Order Management</h2>
+        <div className="order-stats">
+          <span>Total Orders: {orders.length}</span>
+          <span>Pending: {orders.filter(o => o.status.label === "Pending").length}</span>
+          <span>Delivered: {orders.filter(o => o.status.label === "Delivered").length}</span>
         </div>
       </div>
 
-      {/* Stats */}
-      <div className="cm-stats-grid">
-        <StatsCard 
-          icon={<FiGift />} 
-          label="Total Offers" 
-          value={stats.total}
-          color="#6366f1"
-        />
-        <StatsCard 
-          icon={<FiTrendingUp />} 
-          label="Active Offers" 
-          value={stats.active}
-          color="#22c55e"
-        />
-        <StatsCard 
-          icon={<FiClock />} 
-          label="Pending Approval" 
-          value={stats.pending}
-          color="#f59e0b"
-        />
-        <StatsCard 
-          icon={<FiAlertCircle />} 
-          label="Expired Offers" 
-          value={stats.expired}
-          color="#ef4444"
-        />
-      </div>
-
-      {/* Restaurant Filter for Admin */}
-      {isAdmin && restaurants.length > 0 && (
-        <div className="cm-restaurant-filter">
-          <div className="cm-restaurant-filter-header">
-            <FiGlobe className="cm-restaurant-filter-icon" />
-            <h3>Filter by Restaurant</h3>
-          </div>
-          <div className="cm-restaurant-filter-grid">
-            <button 
-              className={`cm-restaurant-filter-btn ${!coupon.restaurant ? 'active' : ''}`}
-              onClick={() => setCoupon({...coupon, restaurant: ''})}
-            >
-              All Restaurants
-            </button>
-            {restaurants.map(rest => (
-              <button
-                key={rest.restaurant_id}
-                className={`cm-restaurant-filter-btn ${coupon.restaurant === rest.restaurant_id ? 'active' : ''}`}
-                onClick={() => setCoupon({...coupon, restaurant: rest.restaurant_id})}
-              >
-                {rest.restaurant_name}
-              </button>
+      <div className="filter-bar">
+        <div className="search-group">
+          <input
+            type="text"
+            placeholder="Search by Order ID"
+            value={searchId}
+            onChange={(e) => setSearchId(e.target.value)}
+          />
+        </div>
+        <div className="search-group">
+          <input
+            type="text"
+            placeholder="Search by Customer Name"
+            value={searchName}
+            onChange={(e) => setSearchName(e.target.value)}
+          />
+        </div>
+        <div className="filter-group">
+          <select
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
+          >
+            <option value="All">All Statuses</option>
+            {statusOptions.map((status) => (
+              <option key={status.id} value={status.label}>{status.label}</option>
             ))}
-          </div>
+          </select>
         </div>
-      )}
+        <button className="refresh-btn" onClick={fetchVendorOrders}>
+          Refresh Orders
+        </button>
+      </div>
 
-      {/* Error Alert */}
-      {error && (
-        <div className="cm-alert cm-alert-error">
-          <FiAlertCircle />
-          <span>{error}</span>
-          <button 
-            className="cm-alert-close" 
-            onClick={() => setError(null)}
-          >
-            <FiX />
-          </button>
-        </div>
-      )}
-
-      {/* Success Message */}
-      {successMessage && (
-        <SuccessPopup 
-          message={successMessage}
-          onClose={() => setSuccessMessage(null)}
-        />
-      )}
-
-      {/* Offers Grid */}
-      {isLoading ? (
-        <div className="cm-loading">
-          <div className="cm-spinner-large"></div>
-          <p>Loading offers...</p>
-        </div>
-      ) : filteredCoupons.length === 0 ? (
-        <div className="cm-empty-state">
-          <FiGift size={64} />
-          <h3>No offers found</h3>
-          <p>{searchTerm || statusFilter !== 'all' ? 'Try changing your search or filters' : 'Create your first offer to get started'}</p>
-          <button 
-            className="cm-btn cm-btn-primary"
-            onClick={openNewCouponForm}
-          >
-            <FiPlus />
-            Create First Offer
-          </button>
+      {filteredOrders.length === 0 ? (
+        <div className="no-orders">
+          <p>No orders found matching your criteria</p>
         </div>
       ) : (
-        <div className="cm-offers-grid">
-          {filteredCoupons.map((offer) => (
-            <OfferCard
-              key={offer.id}
-              offer={offer}
-              onEdit={handleEdit}
-              onDelete={handleDeleteClick}
-              isAdmin={isAdmin}
-            />
-          ))}
+        <div className="vendor-order-list">
+          {filteredOrders.map((order) => {
+            // Check if status select should be disabled
+            const isStatusLocked = ['Cancelled', 'Refunded'].includes(order.status.label);
+            
+            return (
+              <div className={`vendor-card ${expandedOrder === order.order_number ? 'expanded' : ''}`} key={order.order_number}>
+                <div className="vendor-card-header" onClick={() => toggleOrderExpand(order.order_number)}>
+                  <div className="vendor-card-info">
+                    <div className="order-number-status">
+                      <h3 className="order-number">#{order.order_number}</h3>
+                      <span className="status-badge" style={{ backgroundColor: getStatusColor(order.status.label) }}>
+                        {order.status.label}
+                      </span>
+                      {renderPaymentStatusBadge(order)}
+                    </div>
+                    <p className="order-time"><FaClock /> {convertUTCtoIST(order.placed_on)}</p>
+                  </div>
+                  <div className="customer-info-mini">
+                    <p><FaUser /> {order.full_name}</p>
+                    <p>
+                      <FaPhone />{' '}
+                      {order.phone_number ? (
+                        <a
+                          href={`tel:${order.phone_number}`}
+                          style={{ color: '#007bff' }}
+                        >
+                          {order.phone_number}
+                        </a>
+                      ) : (
+                        'N/A'
+                      )}
+                    </p>
+                  </div>
+                  <div className="order-actions">
+                    <select
+                      className="status-select"
+                      value={order.status.id}
+                      onChange={(e) => handleStatusChange(order.order_number, e.target.value)}
+                      onClick={(e) => e.stopPropagation()}
+                      disabled={isStatusLocked}
+                    >
+                      {getAllowedStatusOptions().map((status) => (
+                        <option key={status.id} value={status.id}>{status.label}</option>
+                      ))}
+                    </select>
+                    
+                    {shouldShowMarkAsPaidButton(order) && (
+                      <button 
+                        className="mark-paid-button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleMarkAsPaid(order.order_number);
+                        }}
+                      >
+                        Mark as Paid
+                      </button>
+                    )}
+                    
+                    {recentlyUpdatedOrder === order.order_number && (
+                      <p className="status-update-success">Status updated ✅</p>
+                    )}
+                  </div>
+                </div>
+                {expandedOrder === order.order_number && (
+                  <div className="vendor-card-details">
+                    <div className="details-grid">
+                      <div className="customer-details">
+                        <h4><FaUser /> Customer Details</h4>
+                        <p><strong>Name:</strong> {order.full_name}</p>
+                        <p><strong>Phone:</strong> {order.phone_number || 'N/A'}</p>
+                        <p><strong>Email:</strong> {order.email || 'N/A'}</p>
+                      </div>
+
+                      <div className="delivery-details-class">
+                        <h4><FaMapMarkerAlt /> Delivery Address</h4>
+                        {order.delivery_address ? (
+                          <a
+                            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(order.delivery_address)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ color: '#007bff' }}
+                          >
+                            {order.delivery_address}
+                          </a>
+                        ) : (
+                          <p>N/A</p>
+                        )}
+                      </div>
+
+                      <div className="payment-details-class">
+                        <h4><FaCreditCard /> Payment Information</h4>
+                        <p>
+                          <strong>Method:</strong> 
+                          <span className="payment-method">
+                            {paymentMethodIcons[order.payment_method] || '💳'} 
+                            {order.payment_method ? order.payment_method.replace(/_/g, ' ') : 'N/A'}
+                          </span>
+                        </p>
+                        <p><strong>Status: </strong>{order.payment_status === 'Completed' ? 'Paid' : order.payment_status || 'Pending'}</p>
+                        <p><strong>Transaction ID:</strong> {order.transaction_id || 'N/A'}</p>
+                        <p><strong>Amount Paid:</strong> ₹{order.total.toFixed(2)}</p>
+                      </div>
+
+                      <div className="timeline-details">
+                        <h4><FaClock /> Order Timeline</h4>
+                        <p><strong>Placed:</strong> {convertUTCtoIST(order.placed_on)}</p>
+                        <p><strong>Estimated Delivery:</strong> {convertUTCtoIST(order.estimated_delivery)}</p>
+                        {order.status.label === "On the Way" && isAdmin && (
+                          <button
+                            className="update-location-btn"
+                            onClick={() => updateLiveLocation(order.order_number)}
+                          >
+                            <FaMotorcycle /> Update Live Location
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="item-list-container">
+                      <h4>Order Items</h4>
+                      <div className="item-list">
+                        {order.items && order.items.map((item, i) => (
+                          <div key={i} className="item">
+                            <div className="item-info">
+                              <span className="item-name">
+                                {item.item_name}
+                                {item.buy_one_get_one_free && (
+                                  <span style={{ color: "green", fontWeight: "bold", marginLeft: "0.5rem" }}>
+                                    (Buy 1 Get 1 Free)
+                                  </span>
+                                )}
+                              </span>
+                              {item.special_instructions && (
+                                <p className="special-instructions">Note: {item.special_instructions}</p>
+                              )}
+                            </div>
+                            <div className="item-quantity-price">
+                              <span className="item-quantity">x{item.quantity}</span>
+                              <span className="item-price">₹{parseFloat(item.total_price).toFixed(2)}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="order-summary">
+                      <div className="summary-row">
+                        <span>Item Total</span>
+                        <span>₹{order.subtotal.toFixed(2)}</span>
+                      </div>
+                      <div className="summary-row">
+                        <span>Delivery Fee</span>
+                        <span>₹{order.delivery_fee.toFixed(2)}</span>
+                      </div>
+                      {order.discount > 0 && (
+                        <div className="summary-row discount">
+                          <span>Discount</span>
+                          <span>-₹{order.discount.toFixed(2)}</span>
+                        </div>
+                      )}
+                      <div className="summary-row total">
+                        <span>Total</span>
+                        <span>₹{order.total.toFixed(2)}</span>
+                      </div>
+                    </div>
+
+                    <div className="share-order-container">
+                      <button 
+                        className="share-order-btn"
+                        onClick={() => shareOnWhatsApp(order)}
+                      >
+                        <FaWhatsapp /> Share Order Details on WhatsApp
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
-      )}
-
-      {/* Form Modal */}
-      <CouponForm
-        coupon={coupon}
-        setCoupon={setCoupon}
-        onSubmit={handleSubmit}
-        onClose={() => setIsModalOpen(false)}
-        isOpen={isModalOpen}
-        apiErrors={apiErrors}
-        isSubmitting={isSubmitting}
-        isAdmin={isAdmin}
-        restaurants={restaurants}
-      />
-
-      {/* Delete Confirmation */}
-      {showDeleteConfirm && (
-        <ConfirmationPopup
-          message="Are you sure you want to delete this offer? This action cannot be undone."
-          onConfirm={confirmDelete}
-          onCancel={() => setShowDeleteConfirm(false)}
-        />
       )}
     </div>
   );
 };
 
-CouponManagement.propTypes = {
-  user: PropTypes.object
-};
-
-export default CouponManagement;
+export default OrderManagement;
