@@ -199,7 +199,7 @@ def calculate_delivery_cost(distance_km):
     if distance_km <= MIN_DISTANCE_KM:
         cost = MIN_DELIVERY_FEE
     else:
-        cost = distance_km * 15
+        cost = distance_km * 11
 
     logger.debug("Delivery cost calculated: %.2f", cost)
     return round(cost, 2)
