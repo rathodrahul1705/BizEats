@@ -193,8 +193,14 @@ def calculate_delivery_cost(distance_km):
     """Calculate delivery cost based on distance."""
     logger.debug("calculate_delivery_cost: distance_km=%.2f", distance_km)
 
-    if distance_km < settings.FREE_DELIVERY_DISTANCE_KM:
+    FREE_DELIVERY_DISTANCE_KM = settings.FREE_DELIVERY_DISTANCE_KM
+    MIN_DISTANCE_KM = 0.5
+    MIN_DELIVERY_FEE = 20
+
+    if distance_km < FREE_DELIVERY_DISTANCE_KM:
         cost = 0
+    elif distance_km <= MIN_DISTANCE_KM:
+        cost = MIN_DELIVERY_FEE
     else:
         cost = distance_km * 11
 
