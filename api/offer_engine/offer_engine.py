@@ -44,51 +44,53 @@ def get_dummy_banners():
     return [
         {
             "id": 7,
-            "title": "Buy 1 Get 1 FREE",
-            "subtitle": "Double the cravings. Double the happiness! 😍",
-            "image_url": "https://eatoorprod.s3.eu-north-1.amazonaws.com/uploads/b1g1_cake_v1.jpg",
+            "title": "Happy Raksha Bandhan 💖",
+            "subtitle": "Celebrate the bond of love with a special treat! 🎁",
+            "image_url": "https://eatoorprod.s3.eu-north-1.amazonaws.com/uploads/happy_raksha_bandan.png",
             "theme": {
-                "bg_color": "#E65C00",
+                "bg_color": "#8E244D",
                 "text_color": "#FFFFFF",
                 "icon_color": "#FFFFFF",
                 "accent_color": "#FFD166",
-                "secondary_color": "#3D1A00",
+                "secondary_color": "#4A1028",
                 "gradient_colors": [
-                    "#E65C00",
-                    "#FF814E"
+                    "#8E244D",
+                    "#D94F70"
                 ],
                 "gradient_direction": "horizontal"
             },
             "event": {
-                "enabled": False,
-                "type": "regular",
-                "name": "Regular Offer",
-                "short_name": "Special Offer",
-                "icon": "🔥",
+                "enabled": True,
+                "type": "festival",
+                "name": "Raksha Bandhan",
+                "short_name": "Raksha Bandhan",
+                "icon": "🎀",
                 "year": 2026,
-                "theme": "default"
+                "theme": "raksha_bandhan"
             },
             "offer": {
                 "type": "bogo_offer",
-                "banner_type": "special",
-                "category": "BOGO",
-                "discount": "Buy 1 Get 1",
-                "code": "BOGOFREE",
+                "banner_type": "festival",
+                "category": "RAKSHA_BANDHAN",
+                "discount": "Buy 1 Get 1 FREE",
+                "code": "RAKHI2026",
                 "api_params": {
                     "offer_type": "BOGO",
                     "sort_by": "item_price"
                 }
             },
             "validity": {
-                "from": "2026-08-16T00:00:00",
-                "till": "2026-09-16T00:00:00"
+                "from": "2026-08-28T00:00:00",
+                "till": "2026-08-28T23:59:59"
             },
             "terms": [
+                "Raksha Bandhan special offer",
                 "Applicable on selected items only",
                 "Buy 1 and Get 1 FREE",
+                "Offer valid for today only",
                 "Terms and conditions apply"
             ],
-            "order": 3,
+            "order": 1,
             "is_active": True
         }
     ]
