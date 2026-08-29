@@ -81,7 +81,7 @@ def get_dummy_banners():
             },
             "validity": {
                 "from": "2026-08-29T00:00:00",
-                "till": "2026-08-29T23:59:59"
+                "till": "2026-09-29T23:59:59"
             },
             "terms": [
                 "Daily Buy 1 Get 1 FREE offer",
